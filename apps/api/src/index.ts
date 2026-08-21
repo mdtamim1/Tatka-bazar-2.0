@@ -2,6 +2,7 @@ import Fastify from "fastify";
 import cors from "@fastify/cors";
 import jwt from "@fastify/jwt";
 import sensible from "@fastify/sensible";
+import rateLimit from "@fastify/rate-limit";
 
 import { healthRoute } from "./routes/health.js";
 import { customerAuthRoutes } from "./routes/auth/customer.js";
@@ -58,6 +59,20 @@ async function bootstrap() {
   await app.register(jwt, {
     secret: JWT_SECRET,
     sign: { expiresIn: process.env["JWT_EXPIRY"] ?? "7d" },
+  });
+
+  // Enterprise Rate Limiting Protection against DDoS & Spammers
+  await app.register(rateLimit, {
+    max: 120, // 120 requests per minute per IP
+    timeWindow: "1 minute",
+    allowList: ["127.0.0.1", "localhost"],
+    errorResponseBuilder: (_request, context) => ({
+      success: false,
+      statusCode: 429,
+      error: "Too Many Requests",
+      message: "অতিরিক্ত রিকোয়েস্ট পাঠানো হয়েছে। অনুগ্রহ করে কিছুক্ষণ অপেক্ষা করুন। (Rate limit exceeded. Please wait a moment.)",
+      retryAfter: context.after,
+    }),
   });
 
   // ---------------------------------------------------------------------------

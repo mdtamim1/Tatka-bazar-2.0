@@ -13,6 +13,7 @@
   "dependencies": {
     "@fastify/cors": "^10.1.0",
     "@fastify/jwt": "^9.1.0",
+    "@fastify/rate-limit": "^11.2.0",
     "@fastify/sensible": "^6.0.3",
     "@tatka-bazar/database": "workspace:*",
     "@tatka-bazar/shared": "workspace:*",
