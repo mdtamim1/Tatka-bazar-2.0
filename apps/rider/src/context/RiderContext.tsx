@@ -1,6 +1,8 @@
 "use client";
 
-import React, { createContext, useContext, useState } from "react";
+import React, { createContext, useContext, useState, useEffect } from "react";
+
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
 import {
   RiderProfile,
   RiderDeliveryOrder,
@@ -123,6 +125,44 @@ export function RiderProvider({ children }: { children: React.ReactNode }) {
   const [deliveries, setDeliveries] = useState<RiderDeliveryOrder[]>(INITIAL_DELIVERIES);
   const [hubDepositStatus, setHubDepositStatus] = useState<"PENDING" | "DEPOSITED">("PENDING");
 
+  // Fetch live orders assigned to this rider from API
+  useEffect(() => {
+    async function loadRiderDeliveries() {
+      try {
+        const res = await fetch(`${API_BASE}/api/orders`);
+        const json = await res.json();
+        if (json.success && json.data?.length > 0) {
+          const mapped: RiderDeliveryOrder[] = json.data.map((o: any) => ({
+            id: o.id,
+            orderNumber: o.orderNumber,
+            customerName: o.customerName,
+            customerPhone: o.customerPhone,
+            deliveryAddress: o.customerAddress,
+            deliveryArea: o.deliveryArea,
+            mapQuery: o.customerAddress,
+            deliverySlot: o.deliverySlot,
+            items: o.items?.map((it: any) => ({
+              nameBn: it.name,
+              nameEn: it.name,
+              weight: `${it.quantity} pc`,
+              quantity: it.quantity,
+            })) || [],
+            isCod: o.paymentMethod === "COD",
+            codAmountToCollect: o.paymentMethod === "COD" ? o.totalAmount : 0,
+            codCollected: o.paymentStatus === "PAID",
+            status: o.status === "DELIVERED" ? "DELIVERED" : o.status === "OUT_FOR_DELIVERY" ? "EN_ROUTE" : "ASSIGNED",
+            assignedAt: o.createdAt,
+            notes: o.internalNotes || "তাজা শাকসবজি ও মাছ দ্রুত ডেলিভারি করুন।",
+          }));
+          setDeliveries(prev => [...mapped, ...prev.filter(d => !mapped.some(m => m.id === d.id))]);
+        }
+      } catch (err) {
+        console.warn("Rider API sync fallback:", err);
+      }
+    }
+    loadRiderDeliveries();
+  }, [currentRider.id]);
+
   const switchRider = (riderId: string) => {
     const r = AVAILABLE_RIDERS.find((rd) => rd.id === riderId);
     if (r) setCurrentRider(r);
@@ -146,6 +186,14 @@ export function RiderProvider({ children }: { children: React.ReactNode }) {
           : d
       )
     );
+
+    // Map Rider status to OrderStatus and sync to Fastify API & Supabase
+    const apiStatus = status === "DELIVERED" ? "DELIVERED" : status === "FAILED" ? "CANCELLED" : "OUT_FOR_DELIVERY";
+    fetch(`${API_BASE}/api/orders/${orderId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status: apiStatus, paymentStatus: status === "DELIVERED" ? "PAID" : undefined }),
+    }).catch(err => console.warn("API rider status sync error:", err));
   };
 
   const toggleCodCollected = (orderId: string) => {
