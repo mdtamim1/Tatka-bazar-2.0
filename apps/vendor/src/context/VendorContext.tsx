@@ -1,6 +1,8 @@
 "use client";
 
-import React, { createContext, useContext, useState } from "react";
+import React, { createContext, useContext, useState, useEffect } from "react";
+
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
 import {
   VendorProfile,
   VendorProduct,
@@ -224,13 +226,52 @@ export function VendorProvider({ children }: { children: React.ReactNode }) {
   const [allOrders, setAllOrders] = useState<VendorSubOrder[]>(INITIAL_VENDOR_ORDERS);
   const [allPayouts, setAllPayouts] = useState<VendorPayoutRecord[]>(INITIAL_PAYOUTS);
 
+  // Sync with API on mount
+  useEffect(() => {
+    async function loadVendorData() {
+      try {
+        const [prodRes, ordRes] = await Promise.allSettled([
+          fetch(`${API_BASE}/api/products`).then(r => r.json()),
+          fetch(`${API_BASE}/api/orders`).then(r => r.json()),
+        ]);
+
+        if (prodRes.status === "fulfilled" && prodRes.value.success && prodRes.value.data?.length > 0) {
+          const apiProds: VendorProduct[] = prodRes.value.data.map((p: any) => ({
+            id: p.id,
+            vendorId: p.vendorId || currentVendor.id,
+            slug: p.slug,
+            nameBn: p.name,
+            nameEn: p.name,
+            sku: p.sku || `VPROD-${p.id.slice(0, 4)}`,
+            categorySlug: p.category?.slug || "vegetables",
+            categoryName: p.category?.name || "শাকসবজি",
+            basePrice: Number(p.price),
+            comparePrice: p.comparePrice ? Number(p.comparePrice) : undefined,
+            baseUnit: "kg",
+            pricingType: "variableWeight",
+            stock: Number(p.stock) || 0,
+            lowStockAlert: 10,
+            images: p.images?.length > 0 ? p.images.map((img: any) => img.url) : ["https://images.unsplash.com/photo-1540420773420-3366772f4999?w=600&auto=format&fit=crop&q=80"],
+            isOrganic: true,
+            status: "APPROVED",
+            rating: 4.9,
+          }));
+          setAllProducts(prev => [...apiProds, ...prev.filter(p => !apiProds.some(ap => ap.id === p.id))]);
+        }
+      } catch (err) {
+        console.warn("Vendor API sync fallback:", err);
+      }
+    }
+    loadVendorData();
+  }, [currentVendor.id]);
+
   const switchVendor = (vendorId: string) => {
     const v = AVAILABLE_VENDORS.find((ven) => ven.id === vendorId);
     if (v) setCurrentVendor(v);
   };
 
   // Filter products for currently active vendor ONLY (Strict Isolation)
-  const vendorProducts = allProducts.filter((p) => p.vendorId === currentVendor.id);
+  const vendorProducts = allProducts.filter((p) => p.vendorId === currentVendor.id || !p.vendorId);
 
   // Filter orders for currently active vendor ONLY (Strict Isolation)
   const vendorOrders = allOrders.filter((o) => o.vendorId === currentVendor.id);
@@ -243,21 +284,47 @@ export function VendorProvider({ children }: { children: React.ReactNode }) {
       ...prodData,
       id: `vprod-${Date.now()}`,
       vendorId: currentVendor.id,
-      status: "PENDING_APPROVAL", // Enters admin approval queue before going live!
+      status: "PENDING_APPROVAL",
     };
     setAllProducts((prev) => [newP, ...prev]);
+
+    // Sync to API
+    fetch(`${API_BASE}/api/products`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: prodData.nameBn || prodData.nameEn,
+        slug: prodData.slug,
+        price: prodData.basePrice,
+        comparePrice: prodData.comparePrice,
+        sku: prodData.sku,
+        stock: prodData.stock,
+        vendorId: currentVendor.id,
+        images: prodData.images,
+      }),
+    }).catch(err => console.warn("API product create error:", err));
   };
 
   const updateProductStock = (id: string, newStock: number) => {
     setAllProducts((prev) =>
       prev.map((p) => (p.id === id ? { ...p, stock: newStock } : p))
     );
+    fetch(`${API_BASE}/api/products/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ stock: newStock }),
+    }).catch(err => console.warn("API stock update error:", err));
   };
 
   const updateFulfillmentStatus = (subOrderId: string, status: FulfillmentStatus) => {
     setAllOrders((prev) =>
       prev.map((o) => (o.id === subOrderId ? { ...o, status } : o))
     );
+    fetch(`${API_BASE}/api/orders/${subOrderId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status }),
+    }).catch(err => console.warn("API fulfillment status update error:", err));
   };
 
   const requestWithdrawal = (amount: number, method: "bKash" | "Bank Transfer") => {

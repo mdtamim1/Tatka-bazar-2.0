@@ -20,9 +20,24 @@ export default function PublicVendorApplyPage() {
     tagline: "",
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitted(true);
+
+    try {
+      await fetch("http://localhost:4000/api/vendors/apply", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          businessName: formData.shopNameBn || formData.shopNameEn,
+          phone: formData.phone,
+          email: formData.email || `vendor_${formData.phone}@tatkabazar.com`,
+          description: `${formData.tagline} | Location: ${formData.location}, ${formData.address} | Owner: ${formData.ownerName}`,
+        }),
+      });
+    } catch (err) {
+      console.warn("API apply sync error:", err);
+    }
   };
 
   return (
