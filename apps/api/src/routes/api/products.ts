@@ -1,8 +1,9 @@
 import type { FastifyInstance } from "fastify";
 import { prisma } from "@tatka-bazar/database";
+import { catalogCache } from "../../services/cache/memory-cache.js";
 
 export async function productRoutes(fastify: FastifyInstance) {
-  // GET /api/products — list products with search, category, vendor, organic filters
+  // GET /api/products — list products with search, category, vendor, organic filters (RAM Cached)
   fastify.get("/", async (request, reply) => {
     try {
       const query = request.query as {
@@ -13,6 +14,14 @@ export async function productRoutes(fastify: FastifyInstance) {
         limit?: string;
         page?: string;
       };
+
+      const cacheKey = `products:${JSON.stringify(query)}`;
+      const cached = catalogCache.get(cacheKey);
+
+      if (cached) {
+        reply.header("X-Cache", "HIT-RAM");
+        return reply.send(cached);
+      }
 
       const where: any = { isPublished: true };
 
@@ -52,11 +61,17 @@ export async function productRoutes(fastify: FastifyInstance) {
         prisma.product.count({ where }),
       ]);
 
-      return reply.send({
+      const responsePayload = {
         success: true,
         data: products,
         meta: { total, page: Number(query.page) || 1, limit: take },
-      });
+      };
+
+      // Store in RAM for 60 seconds
+      catalogCache.set(cacheKey, responsePayload, 60);
+
+      reply.header("X-Cache", "MISS-DB");
+      return reply.send(responsePayload);
     } catch (err: any) {
       fastify.log.error(err);
       return reply.status(500).send({ success: false, error: err.message });
@@ -118,6 +133,9 @@ export async function productRoutes(fastify: FastifyInstance) {
         include: { category: true, images: true },
       });
 
+      // Invalidate cache
+      catalogCache.invalidate("products");
+
       return reply.status(201).send({ success: true, data: product });
     } catch (err: any) {
       return reply.status(400).send({ success: false, error: err.message });
@@ -143,6 +161,9 @@ export async function productRoutes(fastify: FastifyInstance) {
         },
         include: { category: true, images: true },
       });
+
+      // Invalidate cache
+      catalogCache.invalidate("products");
 
       return reply.send({ success: true, data: product });
     } catch (err: any) {
