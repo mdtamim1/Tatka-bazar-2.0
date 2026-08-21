@@ -1,0 +1,29 @@
+{
+  "name": "@tatka-bazar/api",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "type-check": "tsc --noEmit",
+    "lint": "eslint src"
+  },
+  "dependencies": {
+    "@fastify/cors": "^10.1.0",
+    "@fastify/jwt": "^9.1.0",
+    "@fastify/sensible": "^6.0.3",
+    "@tatka-bazar/database": "workspace:*",
+    "@tatka-bazar/shared": "workspace:*",
+    "bcryptjs": "^3.0.2",
+    "fastify": "^5.4.0",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/node": "^22.15.30",
+    "tsx": "^4.19.3",
+    "typescript": "^5.8.3"
+  }
+}
