@@ -465,6 +465,27 @@ export function Header() {
               )}
             </Link>
 
+            {/* Live Track Order */}
+            <Link
+              href="/track"
+              style={{
+                display: "flex", alignItems: "center", gap: "5px",
+                padding: "8px 12px",
+                borderRadius: "var(--radius-full)",
+                background: "rgba(5, 150, 105, 0.08)",
+                color: "var(--primary-dark)",
+                fontWeight: 700, fontSize: "0.8rem",
+                border: "1.5px solid rgba(5, 150, 105, 0.2)",
+                transition: "all var(--t-fast)",
+              }}
+              title="অর্ডার ট্র্যাক করুন"
+              onMouseEnter={e => { e.currentTarget.style.background = "rgba(5, 150, 105, 0.15)"; }}
+              onMouseLeave={e => { e.currentTarget.style.background = "rgba(5, 150, 105, 0.08)"; }}
+            >
+              <Zap size={14} color="var(--primary)" />
+              <span>{locale === "bn" ? "ট্র্যাকিং" : "Track"}</span>
+            </Link>
+
             {/* Account */}
             <Link
               href="/login"
