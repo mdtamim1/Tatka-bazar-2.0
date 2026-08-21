@@ -101,6 +101,30 @@ export default function CheckoutPage() {
       setIsProcessing(false);
       const generatedOrderNo = result.data?.orderNumber || `TB-${Math.floor(100000 + Math.random() * 900000)}`;
 
+      if (paymentMethod === "SSLCOMMERZ") {
+        try {
+          const sslRes = await fetch("http://localhost:4000/api/payment/sslcommerz/init", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              amount: grandTotal,
+              orderNumber: generatedOrderNo,
+              customerName: formData.fullName,
+              customerPhone: formData.phone,
+              customerEmail: formData.email,
+              customerAddress: formData.address,
+            }),
+          });
+          const sslData = await sslRes.json();
+          if (sslData.gatewayUrl) {
+            window.location.href = sslData.gatewayUrl;
+            return;
+          }
+        } catch (err) {
+          console.warn("SSLCommerz redirect error:", err);
+        }
+      }
+
       if (paymentMethod === "BKASH" || paymentMethod === "NAGAD") {
         setPendingOrderNo(generatedOrderNo);
         setModalStep("PHONE");
