@@ -51,6 +51,14 @@ export default function CheckoutPage() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [orderSuccess, setOrderSuccess] = useState<any | null>(null);
 
+  // bKash / Nagad Interactive Sandbox Modal
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [modalStep, setModalStep] = useState<"PHONE" | "OTP" | "PIN">("PHONE");
+  const [walletPhone, setWalletPhone] = useState("01700000002");
+  const [walletOtp, setWalletOtp] = useState("123456");
+  const [walletPin, setWalletPin] = useState("12121");
+  const [pendingOrderNo, setPendingOrderNo] = useState("");
+
   const subtotal = getSubtotal();
   const discount = getDiscountAmount();
   const deliveryFee = getDeliveryFee();
@@ -93,6 +101,13 @@ export default function CheckoutPage() {
       setIsProcessing(false);
       const generatedOrderNo = result.data?.orderNumber || `TB-${Math.floor(100000 + Math.random() * 900000)}`;
 
+      if (paymentMethod === "BKASH" || paymentMethod === "NAGAD") {
+        setPendingOrderNo(generatedOrderNo);
+        setModalStep("PHONE");
+        setShowPaymentModal(true);
+        return;
+      }
+
       setOrderSuccess({
         orderNumber: generatedOrderNo,
         date: new Date().toLocaleDateString(locale === "bn" ? "bn-BD" : "en-US", {
@@ -106,21 +121,66 @@ export default function CheckoutPage() {
         address: formData.address,
       });
 
-      // Fire celebratory confetti!
       try {
         confetti({
           particleCount: 120,
           spread: 80,
           origin: { y: 0.6 },
         });
-      } catch (err) {
-        // ignore if not supported
-      }
+      } catch (err) {}
 
       clearCart();
     } catch (err) {
       setIsProcessing(false);
     }
+  };
+
+  const handleExecutePayment = async () => {
+    setIsProcessing(true);
+    try {
+      await fetch("http://localhost:4000/api/payment/bkash/execute", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          paymentID: `BKASH_${Date.now()}`,
+          orderNumber: pendingOrderNo,
+        }),
+      });
+    } catch (e) {
+      console.warn("bKash execute error:", e);
+    }
+
+    setIsProcessing(false);
+    setShowPaymentModal(false);
+
+    const slotMap: Record<string, string> = {
+      morning: "তাজা সকাল (০৭:০০ - ০৯:০০)",
+      midday: "দুপুর এক্সপ্রেস (১২:০০ - ১৪:০০)",
+      evening: "সন্ধ্যা স্লট (১৮:০০ - ২০:৩০)",
+    };
+
+    setOrderSuccess({
+      orderNumber: pendingOrderNo,
+      date: new Date().toLocaleDateString(locale === "bn" ? "bn-BD" : "en-US", {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      }),
+      total: grandTotal,
+      paymentMethod,
+      slot: slotMap[deliverySlot] || deliverySlot,
+      address: formData.address,
+    });
+
+    try {
+      confetti({
+        particleCount: 150,
+        spread: 90,
+        origin: { y: 0.6 },
+      });
+    } catch (err) {}
+
+    clearCart();
   };
 
   if (orderSuccess) {
@@ -626,10 +686,222 @@ export default function CheckoutPage() {
               </div>
             </div>
 
-          </div>
         </form>
 
       </div>
+
+      {/* Interactive bKash / Nagad PGW Sandbox Modal */}
+      {showPaymentModal && (
+        <div style={{
+          position: "fixed",
+          inset: 0,
+          background: "rgba(15, 23, 42, 0.75)",
+          backdropFilter: "blur(6px)",
+          zIndex: 10000,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          padding: "20px",
+        }}>
+          <div style={{
+            background: "#FFFFFF",
+            borderRadius: "20px",
+            width: "100%",
+            maxWidth: "420px",
+            overflow: "hidden",
+            boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
+            border: paymentMethod === "BKASH" ? "2px solid #E2136E" : "2px solid #F97316",
+            animation: "scaleIn 0.25s ease-out",
+          }}>
+            {/* Header */}
+            <div style={{
+              background: paymentMethod === "BKASH" ? "linear-gradient(135deg, #E2136E 0%, #C00456 100%)" : "linear-gradient(135deg, #EA580C 0%, #C2410C 100%)",
+              color: "#FFFFFF",
+              padding: "20px 24px",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+            }}>
+              <div>
+                <div style={{ fontSize: "1.25rem", fontWeight: 800 }}>
+                  {paymentMethod === "BKASH" ? "bKash Payment" : "Nagad Payment"}
+                </div>
+                <div style={{ fontSize: "0.78rem", opacity: 0.9 }}>
+                  Merchant: Tatka Bazar Online
+                </div>
+              </div>
+              <div style={{ textAlign: "right" }}>
+                <div style={{ fontSize: "0.72rem", opacity: 0.85 }}>পরিমাণ (Amount)</div>
+                <div style={{ fontSize: "1.25rem", fontWeight: 800 }}>{formatPrice(grandTotal)}</div>
+              </div>
+            </div>
+
+            {/* Modal Body */}
+            <div style={{ padding: "24px" }}>
+              <div style={{ background: "#F8FAFC", padding: "8px 12px", borderRadius: "8px", fontSize: "0.78rem", color: "#64748B", marginBottom: "16px", display: "flex", justifyContent: "space-between" }}>
+                <span>ইনভয়েস: <strong>#{pendingOrderNo}</strong></span>
+                <span style={{ color: "#10B981", fontWeight: 700 }}>Sandbox Live ⚡</span>
+              </div>
+
+              {modalStep === "PHONE" && (
+                <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+                  <label style={{ fontSize: "0.88rem", fontWeight: 700, color: "#1E293B" }}>
+                    আপনার {paymentMethod === "BKASH" ? "বিকাশ" : "নগদ"} একাউন্ট নম্বর দিন
+                  </label>
+                  <input
+                    type="tel"
+                    value={walletPhone}
+                    onChange={(e) => setWalletPhone(e.target.value)}
+                    placeholder="01XXXXXXXXX"
+                    style={{
+                      width: "100%",
+                      padding: "12px 14px",
+                      borderRadius: "10px",
+                      border: "1.5px solid #CBD5E1",
+                      fontSize: "1rem",
+                      fontWeight: 700,
+                      outline: "none",
+                    }}
+                  />
+                  <div style={{ fontSize: "0.72rem", color: "#64748B" }}>
+                    * টেস্ট মোডে যেকোনো ১১ ডিজিটের নম্বর দিন।
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setModalStep("OTP")}
+                    style={{
+                      width: "100%",
+                      padding: "12px",
+                      borderRadius: "10px",
+                      background: paymentMethod === "BKASH" ? "#E2136E" : "#EA580C",
+                      color: "#FFFFFF",
+                      fontWeight: 800,
+                      fontSize: "0.95rem",
+                      marginTop: "6px",
+                      cursor: "pointer",
+                      border: "none",
+                    }}
+                  >
+                    পরবর্তী (Next) →
+                  </button>
+                </div>
+              )}
+
+              {modalStep === "OTP" && (
+                <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+                  <label style={{ fontSize: "0.88rem", fontWeight: 700, color: "#1E293B" }}>
+                    ভেরিফিকেশন কোড (OTP) প্রবেশ করুন
+                  </label>
+                  <input
+                    type="text"
+                    value={walletOtp}
+                    onChange={(e) => setWalletOtp(e.target.value)}
+                    placeholder="123456"
+                    maxLength={6}
+                    style={{
+                      width: "100%",
+                      padding: "12px 14px",
+                      borderRadius: "10px",
+                      border: "1.5px solid #CBD5E1",
+                      fontSize: "1.2rem",
+                      fontWeight: 800,
+                      textAlign: "center",
+                      letterSpacing: "0.3em",
+                      outline: "none",
+                    }}
+                  />
+                  <div style={{ fontSize: "0.72rem", color: "#10B981", fontWeight: 700 }}>
+                    ✓ টেস্ট ভেরিফিকেশন কোড: <strong>123456</strong>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setModalStep("PIN")}
+                    style={{
+                      width: "100%",
+                      padding: "12px",
+                      borderRadius: "10px",
+                      background: paymentMethod === "BKASH" ? "#E2136E" : "#EA580C",
+                      color: "#FFFFFF",
+                      fontWeight: 800,
+                      fontSize: "0.95rem",
+                      cursor: "pointer",
+                      border: "none",
+                    }}
+                  >
+                    OTP নিশ্চিত করুন →
+                  </button>
+                </div>
+              )}
+
+              {modalStep === "PIN" && (
+                <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+                  <label style={{ fontSize: "0.88rem", fontWeight: 700, color: "#1E293B" }}>
+                    আপনার {paymentMethod === "BKASH" ? "বিকাশ" : "নগদ"} পিন (PIN) দিন
+                  </label>
+                  <input
+                    type="password"
+                    value={walletPin}
+                    onChange={(e) => setWalletPin(e.target.value)}
+                    placeholder="•••••"
+                    maxLength={5}
+                    style={{
+                      width: "100%",
+                      padding: "12px 14px",
+                      borderRadius: "10px",
+                      border: "1.5px solid #CBD5E1",
+                      fontSize: "1.3rem",
+                      fontWeight: 800,
+                      textAlign: "center",
+                      letterSpacing: "0.3em",
+                      outline: "none",
+                    }}
+                  />
+                  <div style={{ fontSize: "0.72rem", color: "#10B981", fontWeight: 700 }}>
+                    ✓ স্যান্ডবক্স টেস্ট পিন: <strong>12121</strong>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleExecutePayment}
+                    disabled={isProcessing}
+                    style={{
+                      width: "100%",
+                      padding: "13px",
+                      borderRadius: "10px",
+                      background: paymentMethod === "BKASH" ? "#E2136E" : "#EA580C",
+                      color: "#FFFFFF",
+                      fontWeight: 800,
+                      fontSize: "1rem",
+                      cursor: "pointer",
+                      border: "none",
+                      boxShadow: "0 4px 12px rgba(226, 19, 110, 0.3)",
+                    }}
+                  >
+                    {isProcessing ? "পেমেন্ট প্রসেসিং হচ্ছে..." : `পেমেন্ট সম্পন্ন করুন (${formatPrice(grandTotal)})`}
+                  </button>
+                </div>
+              )}
+
+              <button
+                type="button"
+                onClick={() => setShowPaymentModal(false)}
+                style={{
+                  width: "100%",
+                  padding: "8px",
+                  marginTop: "12px",
+                  color: "#64748B",
+                  fontSize: "0.8rem",
+                  cursor: "pointer",
+                  background: "transparent",
+                  border: "none",
+                }}
+              >
+                পেমেন্ট বাতিল করুন (Cancel)
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }

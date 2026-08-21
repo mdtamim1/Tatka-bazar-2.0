@@ -14,6 +14,8 @@ import { categoryRoutes } from "./routes/api/categories.js";
 import { orderRoutes } from "./routes/api/orders.js";
 import { riderRoutes } from "./routes/api/riders.js";
 import { vendorRoutes } from "./routes/api/vendors.js";
+import { paymentRoutes } from "./routes/api/payment.js";
+import { otpRoutes } from "./routes/api/otp.js";
 
 const PORT = Number(process.env["API_PORT"]) || 4000;
 const HOST = process.env["API_HOST"] || "0.0.0.0";
@@ -74,6 +76,8 @@ async function bootstrap() {
   await app.register(orderRoutes,        { prefix: "/api/orders" });
   await app.register(riderRoutes,        { prefix: "/api/riders" });
   await app.register(vendorRoutes,       { prefix: "/api/vendors" });
+  await app.register(paymentRoutes,      { prefix: "/api/payment" });
+  await app.register(otpRoutes,          { prefix: "/api/otp" });
 
   // ---------------------------------------------------------------------------
   // Global error handler
