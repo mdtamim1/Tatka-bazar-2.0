@@ -9,6 +9,11 @@ import { adminAuthRoutes } from "./routes/auth/admin.js";
 import { vendorAuthRoutes } from "./routes/auth/vendor.js";
 import { riderAuthRoutes } from "./routes/auth/rider.js";
 import { protectedRoutes } from "./routes/protected/index.js";
+import { productRoutes } from "./routes/api/products.js";
+import { categoryRoutes } from "./routes/api/categories.js";
+import { orderRoutes } from "./routes/api/orders.js";
+import { riderRoutes } from "./routes/api/riders.js";
+import { vendorRoutes } from "./routes/api/vendors.js";
 
 const PORT = Number(process.env["API_PORT"]) || 4000;
 const HOST = process.env["API_HOST"] || "0.0.0.0";
@@ -62,6 +67,13 @@ async function bootstrap() {
   await app.register(vendorAuthRoutes,   { prefix: "/auth/vendor" });
   await app.register(riderAuthRoutes,    { prefix: "/auth/rider" });
   await app.register(protectedRoutes,    { prefix: "/protected" });
+
+  // Public & Operational REST API Endpoints
+  await app.register(productRoutes,      { prefix: "/api/products" });
+  await app.register(categoryRoutes,     { prefix: "/api/categories" });
+  await app.register(orderRoutes,        { prefix: "/api/orders" });
+  await app.register(riderRoutes,        { prefix: "/api/riders" });
+  await app.register(vendorRoutes,       { prefix: "/api/vendors" });
 
   // ---------------------------------------------------------------------------
   // Global error handler

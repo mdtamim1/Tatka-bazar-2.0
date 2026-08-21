@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 import { useCartStore } from "@/lib/cart-store";
+import { submitOrder } from "@/lib/api-client";
 
 export default function CheckoutPage() {
   const router = useRouter();
@@ -56,13 +57,42 @@ export default function CheckoutPage() {
   const grandTotal = getGrandTotal();
   const vendorGroups = getVendorGroups();
 
-  const handlePlaceOrder = (e: React.FormEvent) => {
+  const handlePlaceOrder = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsProcessing(true);
 
-    setTimeout(() => {
+    try {
+      const slotMap: Record<string, string> = {
+        morning: "তাজা সকাল (০৭:০০ - ০৯:০০)",
+        midday: "দুপুর এক্সপ্রেস (১২:০০ - ১৪:০০)",
+        evening: "সন্ধ্যা স্লট (১৮:০০ - ২০:৩০)",
+      };
+
+      const result = await submitOrder({
+        customerName: formData.fullName,
+        customerPhone: formData.phone,
+        customerEmail: formData.email,
+        customerAddress: `${formData.address}${formData.landmark ? ` (${formData.landmark})` : ""}`,
+        deliveryArea: formData.area,
+        deliverySlot: slotMap[deliverySlot] || "Standard Delivery",
+        paymentMethod,
+        items: items.map(it => ({
+          productId: it.product.id,
+          name: it.product.nameBn || it.product.nameEn,
+          price: it.price,
+          quantity: it.quantity,
+          unit: it.unit,
+          vendorId: it.product.vendorId,
+        })),
+        totalAmount: grandTotal,
+        deliveryFee,
+        discount,
+        internalNotes: formData.note,
+      });
+
       setIsProcessing(false);
-      const generatedOrderNo = `TB-${Math.floor(100000 + Math.random() * 900000)}`;
+      const generatedOrderNo = result.data?.orderNumber || `TB-${Math.floor(100000 + Math.random() * 900000)}`;
+
       setOrderSuccess({
         orderNumber: generatedOrderNo,
         date: new Date().toLocaleDateString(locale === "bn" ? "bn-BD" : "en-US", {
@@ -72,7 +102,7 @@ export default function CheckoutPage() {
         }),
         total: grandTotal,
         paymentMethod,
-        slot: deliverySlot,
+        slot: slotMap[deliverySlot] || deliverySlot,
         address: formData.address,
       });
 
@@ -88,7 +118,9 @@ export default function CheckoutPage() {
       }
 
       clearCart();
-    }, 1500);
+    } catch (err) {
+      setIsProcessing(false);
+    }
   };
 
   if (orderSuccess) {

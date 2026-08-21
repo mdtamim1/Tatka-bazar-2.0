@@ -1,6 +1,8 @@
 "use client";
 
-import React, { createContext, useContext, useState } from "react";
+import React, { createContext, useContext, useState, useEffect } from "react";
+
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
 import {
   AdminUser,
   AdminRole,
@@ -93,6 +95,34 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
   const [reviews, setReviews] = useState<AdminReview[]>(INITIAL_REVIEWS);
   const [auditLogs, setAuditLogs] = useState<AuditLogEntry[]>(INITIAL_AUDIT_LOGS);
 
+  // Fetch live initial data from backend API on mount
+  useEffect(() => {
+    async function loadLiveData() {
+      try {
+        const [ordRes, riderRes, vendorRes, prodRes] = await Promise.allSettled([
+          fetch(`${API_BASE}/api/orders`).then(r => r.json()),
+          fetch(`${API_BASE}/api/riders`).then(r => r.json()),
+          fetch(`${API_BASE}/api/vendors`).then(r => r.json()),
+          fetch(`${API_BASE}/api/products`).then(r => r.json()),
+        ]);
+
+        if (ordRes.status === "fulfilled" && ordRes.value.success && ordRes.value.data?.length > 0) {
+          setOrders(ordRes.value.data);
+        }
+        if (riderRes.status === "fulfilled" && riderRes.value.success && riderRes.value.data?.length > 0) {
+          setRiders(riderRes.value.data);
+        }
+        if (vendorRes.status === "fulfilled" && vendorRes.value.success && vendorRes.value.data?.length > 0) {
+          setVendors(vendorRes.value.data);
+        }
+      } catch (err) {
+        console.warn("API sync fallback to mock dataset:", err);
+      }
+    }
+
+    loadLiveData();
+  }, []);
+
   const addAuditLog = (action: string, module: string, targetId: string, details: string) => {
     const newLog: AuditLogEntry = {
       id: `aud-${Date.now()}`,
@@ -118,6 +148,13 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
       prev.map((ord) => (ord.id === orderId ? { ...ord, status } : ord))
     );
     addAuditLog("ORDER_STATUS_UPDATE", "Orders", orderId, `Order status updated to ${status}`);
+
+    // Sync to API
+    fetch(`${API_BASE}/api/orders/${orderId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status }),
+    }).catch(err => console.warn("API order status update error:", err));
   };
 
   const assignRiderToOrder = (orderId: string, riderId: string, riderName: string) => {
@@ -129,6 +166,13 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
       )
     );
     addAuditLog("RIDER_ASSIGNMENT", "Orders", orderId, `Assigned order to rider: ${riderName}`);
+
+    // Sync to API
+    fetch(`${API_BASE}/api/orders/${orderId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ assignedRiderId: riderId, status: "OUT_FOR_DELIVERY" }),
+    }).catch(err => console.warn("API rider assignment error:", err));
   };
 
   const updateOrder = (orderId: string, updates: Partial<AdminOrder>) => {
@@ -136,6 +180,13 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
       prev.map((ord) => (ord.id === orderId ? { ...ord, ...updates } : ord))
     );
     addAuditLog("ORDER_UPDATE", "Orders", orderId, `Order details updated`);
+
+    // Sync to API
+    fetch(`${API_BASE}/api/orders/${orderId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(updates),
+    }).catch(err => console.warn("API order update error:", err));
   };
 
   const createOrder = (data: Omit<AdminOrder, "id" | "createdAt" | "subOrders">) => {
@@ -151,6 +202,13 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
     };
     setOrders((prev) => [newOrder, ...prev]);
     addAuditLog("ORDER_CREATE", "Orders", newOrder.id, `New order created: ${newOrder.orderNumber}`);
+
+    // Sync to API
+    fetch(`${API_BASE}/api/orders`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    }).catch(err => console.warn("API create order error:", err));
   };
 
   // Products Handlers
