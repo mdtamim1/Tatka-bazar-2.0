@@ -677,7 +677,7 @@ export default function CheckoutPage() {
                 {isProcessing ? (
                   <span>অর্ডার প্রসেসিং হচ্ছে...</span>
                 ) : (
-                  <span>{t.placeOrder}{formatPrice(grandTotal)})</span>
+                  <span>{t.placeOrder} ({formatPrice(grandTotal)})</span>
                 )}
               </button>
 
@@ -686,6 +686,7 @@ export default function CheckoutPage() {
               </div>
             </div>
 
+          </div>
         </form>
 
       </div>
