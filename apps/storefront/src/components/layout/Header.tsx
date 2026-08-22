@@ -11,6 +11,7 @@ import {
 import { useLanguage } from "@/context/LanguageContext";
 import { useCartStore } from "@/lib/cart-store";
 import { CATEGORIES, PRODUCTS, BRANCHES } from "@/lib/catalog";
+import { useDebounce } from "@/hooks/useDebounce";
 
 export function Header() {
   const router = useRouter();
@@ -18,6 +19,7 @@ export function Header() {
   const { getItemCount, getGrandTotal, openCart, wishlistIds, selectedHub, setSelectedHub } = useCartStore();
 
   const [searchQuery, setSearchQuery]         = useState("");
+  const debouncedSearchQuery                  = useDebounce(searchQuery, 250);
   const [isSearchOpen, setIsSearchOpen]       = useState(false);
   const [isHubDropdownOpen, setIsHubDropdownOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -49,9 +51,9 @@ export function Header() {
     }
   });
 
-  const searchResults = searchQuery.trim()
+  const searchResults = debouncedSearchQuery.trim()
     ? PRODUCTS.filter(p => {
-        const q = searchQuery.toLowerCase();
+        const q = debouncedSearchQuery.toLowerCase();
         return (
           p.nameBn.toLowerCase().includes(q) ||
           p.nameEn.toLowerCase().includes(q) ||

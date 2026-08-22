@@ -5,6 +5,7 @@ import sensible from "@fastify/sensible";
 import rateLimit from "@fastify/rate-limit";
 import helmet from "@fastify/helmet";
 import compress from "@fastify/compress";
+import underPressure from "@fastify/under-pressure";
 
 import { healthRoute } from "./routes/health.js";
 import { customerAuthRoutes } from "./routes/auth/customer.js";
@@ -60,6 +61,30 @@ async function bootstrap() {
     global: true,
     threshold: 1024, // Compress responses larger than 1KB
     encodings: ["br", "gzip", "deflate"],
+  });
+
+  // Memory & Event Loop Circuit Breaker Watchdog (Zero Out-Of-Memory Crash Guarantee)
+  await app.register(underPressure, {
+    maxEventLoopDelay: 1000, // 1 second event loop delay
+    maxHeapUsedBytes: 1024 * 1024 * 1024, // 1GB heap limit
+    maxRssBytes: 1536 * 1024 * 1024, // 1.5GB RSS limit
+    maxEventLoopUtilization: 0.98,
+    pressureHandler: (req: any, rep: any, type: string, value: number) => {
+      app.log.warn({ type, value }, "Tatka Bazar API under extreme pressure, shedding load gracefully!");
+      rep.status(503).send({
+        success: false,
+        statusCode: 503,
+        error: "ServiceOverloaded",
+        message: "তাতকা বাজার সার্ভার অতিরিক্ত ট্রাফিকের চাপে ব্যস্ত। অনুগ্রহ করে কয়েক সেকেন্ড পর আবার চেষ্টা করুন।",
+      });
+    },
+    exposeStatusRoute: {
+      routeOpts: {
+        logLevel: "silent",
+      },
+      routeUrl: "/health/pressure",
+      routeResponseSchema: false,
+    },
   });
 
   await app.register(cors, {
