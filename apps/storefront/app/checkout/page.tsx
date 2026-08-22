@@ -19,6 +19,7 @@ import {
 import { useLanguage } from "@/context/LanguageContext";
 import { useCartStore } from "@/lib/cart-store";
 import { submitOrder } from "@/lib/api-client";
+import { TrafficQueueGate } from "@/components/checkout/TrafficQueueGate";
 
 export default function CheckoutPage() {
   const router = useRouter();
@@ -53,6 +54,7 @@ export default function CheckoutPage() {
 
   // bKash / Nagad Interactive Sandbox Modal
   const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [showQueueGate, setShowQueueGate]       = useState(false);
   const [modalStep, setModalStep] = useState<"PHONE" | "OTP" | "PIN">("PHONE");
   const [walletPhone, setWalletPhone] = useState("01700000002");
   const [walletOtp, setWalletOtp] = useState("123456");
@@ -67,6 +69,12 @@ export default function CheckoutPage() {
 
   const handlePlaceOrder = async (e: React.FormEvent) => {
     e.preventDefault();
+    // Smooth Traffic Queue Gate before heavy database transaction & payment init
+    setShowQueueGate(true);
+  };
+
+  const executeOrderPlacement = async () => {
+    setShowQueueGate(false);
     setIsProcessing(true);
 
     try {
@@ -926,6 +934,14 @@ export default function CheckoutPage() {
           </div>
         </div>
       )}
+
+      {/* High-Traffic Virtual Queue Gate */}
+      <TrafficQueueGate
+        isOpen={showQueueGate}
+        onAdmit={executeOrderPlacement}
+        campaignTitle="তাতকা বাজার মেগা ক্যাম্পেইন ও ফ্ল্যাশ অফার"
+        estimatedSeconds={3}
+      />
 
     </div>
   );

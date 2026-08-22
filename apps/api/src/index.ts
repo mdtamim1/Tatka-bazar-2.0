@@ -42,6 +42,16 @@ async function bootstrap() {
     logger: process.env["NODE_ENV"] === "production"
       ? { level: "warn" }
       : true,
+    keepAliveTimeout: 65000, // 65s keep-alive timeout (aligned with Cloudflare/Vercel proxies)
+    connectionTimeout: 10000, // 10s connection timeout
+    maxRequestsPerSocket: 1000, // Reuse TCP sockets for up to 1000 requests
+    requestTimeout: 15000, // 15s request timeout
+  });
+
+  // Attach HTTP Keep-Alive & TCP Connection Reuse Headers
+  app.addHook("onSend", async (_req, reply) => {
+    reply.header("Connection", "keep-alive");
+    reply.header("Keep-Alive", "timeout=60, max=1000");
   });
 
   await app.register(sensible);
