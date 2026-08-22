@@ -3,6 +3,7 @@ import cors from "@fastify/cors";
 import jwt from "@fastify/jwt";
 import sensible from "@fastify/sensible";
 import rateLimit from "@fastify/rate-limit";
+import helmet from "@fastify/helmet";
 
 import { healthRoute } from "./routes/health.js";
 import { customerAuthRoutes } from "./routes/auth/customer.js";
@@ -40,10 +41,17 @@ async function bootstrap() {
       : true,
   });
 
-  // ---------------------------------------------------------------------------
-  // Plugins
-  // ---------------------------------------------------------------------------
   await app.register(sensible);
+
+  // Security Headers & MIME Sniffing Protection (X-Content-Type-Options: nosniff)
+  await app.register(helmet, {
+    contentSecurityPolicy: false, // Managed at edge / API level
+    crossOriginEmbedderPolicy: false,
+    noSniff: true, // X-Content-Type-Options: nosniff
+    frameguard: { action: "sameorigin" }, // X-Frame-Options: SAMEORIGIN
+    hidePoweredBy: true, // Remove X-Powered-By
+    hsts: { maxAge: 31536000, includeSubDomains: true, preload: true },
+  });
 
   await app.register(cors, {
     origin: (origin, cb) => {
