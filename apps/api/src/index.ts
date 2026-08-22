@@ -115,15 +115,30 @@ async function bootstrap() {
   await app.register(otpRoutes,          { prefix: "/api/otp" });
 
   // ---------------------------------------------------------------------------
-  // Global error handler
+  // Global Unified Mobile & Web Error Handler
   // ---------------------------------------------------------------------------
   app.setErrorHandler((error: any, _request, reply) => {
     app.log.error(error);
-    const statusCode = error.statusCode ?? 500;
-    reply.status(statusCode).send({
+    const statusCode = error.statusCode ?? (error.name === "ZodError" ? 400 : 500);
+    
+    return reply.status(statusCode).send({
       success: false,
-      error: statusCode === 500 ? "Internal server error" : error.message,
-      code: error.code,
+      statusCode,
+      error: error.name || (statusCode === 500 ? "InternalServerError" : "BadRequest"),
+      message: statusCode === 500
+        ? "সার্ভারে সাময়িক সমস্যা হয়েছে। অনুগ্রহ করে কিছুক্ষণ পর চেষ্টা করুন। (Internal server error)"
+        : error.message || "অনুরোধটি সম্পন্ন করা যায়নি।",
+      details: error.validation || error.issues || undefined,
+    });
+  });
+
+  // Global 404 Handler for REST APIs (Guarantees JSON response for Mobile Apps)
+  app.setNotFoundHandler((request, reply) => {
+    return reply.status(404).send({
+      success: false,
+      statusCode: 404,
+      error: "NotFound",
+      message: `অনুরোধকৃত এন্ডপয়েন্টটি (${request.method} ${request.url}) পাওয়া যায়নি।`,
     });
   });
 
