@@ -90,7 +90,11 @@ function OrderDetailDrawer({
             </div>
           </div>
           <div style={{ display: "flex", gap: "8px" }}>
-            <button className="admin-btn admin-btn-ghost admin-btn-icon" title="Print Invoice">
+            <button
+              className="admin-btn admin-btn-ghost admin-btn-icon"
+              title="Print Invoice / Challan"
+              onClick={() => window.open(`/orders/${order.orderNumber || order.id}/invoice`, "_blank")}
+            >
               <Printer size={16} />
             </button>
             <button className="admin-btn admin-btn-ghost admin-btn-icon" onClick={onClose}>

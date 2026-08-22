@@ -17,6 +17,8 @@ import {
   Sparkles,
   RotateCcw,
   Navigation,
+  FileText,
+  Printer,
 } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 
@@ -472,6 +474,30 @@ export default function OrderLiveTrackDetailPage() {
                 {displayOrder.paymentStatus === "PAID" ? "✓ পেইড (bKash/SSL)" : "ক্যাশ অন ডেলিভারি (COD)"}
               </span>
             </div>
+
+            {/* Print Cash Memo Action */}
+            <Link
+              href={`/track/${orderId}/invoice`}
+              style={{
+                marginTop: "16px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "8px",
+                padding: "12px",
+                borderRadius: "var(--radius-md)",
+                background: "rgba(16, 185, 129, 0.1)",
+                color: "var(--primary-dark)",
+                border: "1px solid rgba(16, 185, 129, 0.3)",
+                fontWeight: 700,
+                fontSize: "0.88rem",
+                textDecoration: "none",
+                transition: "all 0.2s ease",
+              }}
+            >
+              <Printer size={16} />
+              <span>🧾 ক্যাশ মেমো / চালান প্রিন্ট (PDF)</span>
+            </Link>
           </div>
 
         </div>
