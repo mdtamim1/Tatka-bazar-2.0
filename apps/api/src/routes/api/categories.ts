@@ -31,6 +31,10 @@ export async function categoryRoutes(fastify: FastifyInstance) {
       const responsePayload = { success: true, data: categories };
       catalogCache.set(cacheKey, responsePayload, 120); // 2 minutes TTL
 
+      // Edge CDN & Cloudflare Cache Headers
+      reply.header("Cache-Control", "public, max-age=120, s-maxage=600, stale-while-revalidate=1200");
+      reply.header("CDN-Cache-Control", "max-age=600");
+      reply.header("Cloudflare-CDN-Cache-Control", "max-age=1200");
       reply.header("X-Cache", "MISS-DB");
       return reply.send(responsePayload);
     } catch (err: any) {

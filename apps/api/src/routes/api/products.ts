@@ -70,6 +70,10 @@ export async function productRoutes(fastify: FastifyInstance) {
       // Store in RAM for 60 seconds
       catalogCache.set(cacheKey, responsePayload, 60);
 
+      // Edge CDN & Browser Cache Headers (Cloudflare / Vercel Edge caching)
+      reply.header("Cache-Control", "public, max-age=60, s-maxage=300, stale-while-revalidate=600");
+      reply.header("CDN-Cache-Control", "max-age=300");
+      reply.header("Cloudflare-CDN-Cache-Control", "max-age=600");
       reply.header("X-Cache", "MISS-DB");
       return reply.send(responsePayload);
     } catch (err: any) {

@@ -5,6 +5,14 @@ const nextConfig: NextConfig = {
   env: {
     NEXT_PUBLIC_API_URL: process.env["API_URL"] ?? "http://localhost:4000",
   },
+  images: {
+    formats: ["image/avif", "image/webp"],
+    minimumCacheTTL: 86400, // 24 hours image CDN cache
+    remotePatterns: [
+      { protocol: "https", hostname: "**" },
+      { protocol: "http", hostname: "**" },
+    ],
+  },
   async headers() {
     return [
       // 1. Edge & CDN Caching for Catalog & Static Routes (s-maxage=300, stale-while-revalidate=600)
