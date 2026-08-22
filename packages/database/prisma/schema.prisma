@@ -156,6 +156,7 @@ model Category {
 
   @@index([slug])
   @@index([parentId])
+  @@index([isActive, parentId, sortOrder])
   @@map("categories")
 }
 
@@ -188,6 +189,9 @@ model Product {
   @@index([slug])
   @@index([createdAt])
   @@index([isPublished])
+  @@index([isPublished, categoryId, price])
+  @@index([isPublished, isFeatured, createdAt(sort: Desc)])
+  @@index([vendorId, isPublished])
   @@map("products")
 }
 
@@ -277,6 +281,8 @@ model Order {
   @@index([status])
   @@index([createdAt])
   @@index([orderNumber])
+  @@index([userId, createdAt(sort: Desc)])
+  @@index([status, createdAt(sort: Desc)])
   @@map("orders")
 }
 
@@ -297,6 +303,8 @@ model OrderItem {
 
   @@index([orderId])
   @@index([vendorId])
+  @@index([orderId, vendorId])
+  @@index([productId])
   @@map("order_items")
 }
 
