@@ -1,5 +1,6 @@
 import type { FastifyInstance } from "fastify";
 import { prisma } from "@tatka-bazar/database";
+import { catalogCache } from "../../services/cache/memory-cache.js";
 
 export async function orderRoutes(fastify: FastifyInstance) {
   // GET /api/orders — list orders with status, rider, search filters
@@ -246,30 +247,60 @@ export async function orderRoutes(fastify: FastifyInstance) {
           }))
         : [];
 
-      // 4. Create Order & OrderItems in transaction
-      const order = await prisma.order.create({
-        data: {
-          orderNumber,
-          userId: user.id,
-          addressId: address.id,
-          status: "PENDING",
-          paymentStatus: body.paymentStatus === "PAID" ? "PAID" : "PENDING",
-          paymentMethod: paymentMethod || "COD",
-          subtotal,
-          deliveryFee,
-          discount,
-          total,
-          note: `Slot: ${deliverySlot || "Standard"} | Notes: ${body.internalNotes || "None"}`,
-          items: resolvedItems.length > 0 ? {
-            create: resolvedItems,
-          } : undefined,
-        },
-        include: {
-          user: { select: { id: true, name: true, phone: true } },
-          address: true,
-          items: true,
-        },
+      // 4. Create Order & Atomically Decrement Inventory in Transaction
+      const order = await prisma.$transaction(async (tx) => {
+        // Atomic stock decrement for each ordered product
+        for (const item of resolvedItems) {
+          if (item.productId && item.quantity > 0) {
+            const decrementResult = await tx.product.updateMany({
+              where: {
+                id: item.productId,
+                stock: { gte: item.quantity }, // Guarantees stock is sufficient
+              },
+              data: {
+                stock: { decrement: item.quantity }, // Atomic decrement in PostgreSQL
+              },
+            });
+
+            // If count === 0, another concurrent customer bought the last unit
+            if (decrementResult.count === 0) {
+              const currentProd = await tx.product.findUnique({ where: { id: item.productId } });
+              const availableStock = currentProd?.stock || 0;
+              throw new Error(
+                `স্টক শেষ: "${item.name}" পর্যাপ্ত পরিমাণে নেই। (বর্তমান স্টক: ${availableStock} টি)`
+              );
+            }
+          }
+        }
+
+        // Create Order and line items
+        return tx.order.create({
+          data: {
+            orderNumber,
+            userId: user.id,
+            addressId: address.id,
+            status: "PENDING",
+            paymentStatus: body.paymentStatus === "PAID" ? "PAID" : "PENDING",
+            paymentMethod: paymentMethod || "COD",
+            subtotal,
+            deliveryFee,
+            discount,
+            total,
+            note: `Slot: ${deliverySlot || "Standard"} | Notes: ${body.internalNotes || "None"}`,
+            items: resolvedItems.length > 0 ? {
+              create: resolvedItems,
+            } : undefined,
+          },
+          include: {
+            user: { select: { id: true, name: true, phone: true } },
+            address: true,
+            items: true,
+          },
+        });
       });
+
+      // Invalidate catalog cache so updated stocks reflect immediately
+      catalogCache.invalidate("products");
 
       return reply.status(201).send({
         success: true,
