@@ -12,12 +12,15 @@ import {
   FileText,
   AlertCircle,
   Package,
+  Volume2,
+  BellRing,
+  X,
 } from "lucide-react";
 import { useVendor } from "@/context/VendorContext";
 import { VendorSubOrder, FulfillmentStatus } from "@/types";
 
 export default function VendorOrdersPage() {
-  const { orders, updateFulfillmentStatus, currentVendor } = useVendor();
+  const { orders, updateFulfillmentStatus, currentVendor, newOrderAlert, dismissAlert, playTestSound } = useVendor();
 
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState<string>("all");
@@ -38,6 +41,66 @@ export default function VendorOrdersPage() {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+
+      {/* Live Audio Order Notification Banner */}
+      {newOrderAlert && (
+        <div style={{
+          background: "linear-gradient(135deg, #059669 0%, #047857 100%)",
+          border: "2px solid #34D399",
+          padding: "16px 20px",
+          borderRadius: "var(--radius-lg)",
+          color: "#FFFFFF",
+          boxShadow: "0 10px 25px -5px rgba(5, 150, 105, 0.5)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          animation: "pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite",
+        }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+            <div style={{ background: "rgba(255,255,255,0.2)", padding: "10px", borderRadius: "50%" }}>
+              <BellRing size={22} className="animate-bounce" />
+            </div>
+            <div>
+              <div style={{ fontWeight: 800, fontSize: "0.95rem" }}>🔔 আপনার দোকানে নতুন আইটেম অর্ডার হয়েছে!</div>
+              <div style={{ fontSize: "0.82rem", opacity: 0.9 }}>
+                অর্ডার: <strong>{newOrderAlert.orderNumber}</strong> • {newOrderAlert.customerName} • ৳{newOrderAlert.subtotal}
+              </div>
+            </div>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <button
+              onClick={playTestSound}
+              style={{
+                background: "#FFFFFF",
+                color: "#065F46",
+                border: "none",
+                padding: "8px 14px",
+                borderRadius: "var(--radius-sm)",
+                fontSize: "0.78rem",
+                fontWeight: 700,
+                display: "flex",
+                alignItems: "center",
+                gap: "5px",
+                cursor: "pointer",
+              }}
+            >
+              <Volume2 size={15} /> আবার শুনুন
+            </button>
+            <button
+              onClick={dismissAlert}
+              style={{
+                background: "transparent",
+                color: "rgba(255,255,255,0.8)",
+                border: "none",
+                cursor: "pointer",
+                padding: "4px",
+              }}
+            >
+              <X size={20} />
+            </button>
+          </div>
+        </div>
+      )}
       
       {/* Header */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "12px" }}>

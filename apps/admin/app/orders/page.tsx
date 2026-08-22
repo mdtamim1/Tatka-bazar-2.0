@@ -7,6 +7,7 @@ import {
   MapPin, Clock, User, Phone, CreditCard, Package,
   ChevronRight, Check, AlertCircle, Printer,
   FileText, Edit3, Truck, RefreshCw,
+  Volume2, BellRing,
 } from "lucide-react";
 import { useAdmin } from "@/context/AdminContext";
 import { AdminOrder, OrderStatus } from "@/types";
@@ -415,7 +416,7 @@ function CreateOrderModal({ onClose, onCreate }: {
 /* ── Main Page ─────────────────────────────────────────────── */
 export default function AdminOrdersPage() {
   const searchParams = useSearchParams();
-  const { orders, updateOrder, createOrder, riders } = useAdmin();
+  const { orders, updateOrder, createOrder, riders, newOrderAlert, dismissAlert, playTestSound } = useAdmin();
 
   const [search, setSearch]             = useState(searchParams.get("search") || "");
   const [filterStatus, setFilterStatus] = useState<string>("all");
@@ -459,6 +460,66 @@ export default function AdminOrdersPage() {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
 
+      {/* Live Audio Order Notification Banner */}
+      {newOrderAlert && (
+        <div style={{
+          background: "linear-gradient(135deg, #059669 0%, #047857 100%)",
+          border: "2px solid #34D399",
+          padding: "16px 20px",
+          borderRadius: "var(--r-lg)",
+          color: "#FFFFFF",
+          boxShadow: "0 10px 25px -5px rgba(5, 150, 105, 0.5)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          animation: "pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite",
+        }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+            <div style={{ background: "rgba(255,255,255,0.2)", padding: "10px", borderRadius: "50%" }}>
+              <BellRing size={22} className="animate-bounce" />
+            </div>
+            <div>
+              <div style={{ fontWeight: 800, fontSize: "0.95rem" }}>🔔 নতুন কাস্টমার অর্ডার এসেছে!</div>
+              <div style={{ fontSize: "0.82rem", opacity: 0.9 }}>
+                অর্ডার: <strong>{newOrderAlert.orderNumber}</strong> • {newOrderAlert.customerName} • ৳{newOrderAlert.totalAmount}
+              </div>
+            </div>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <button
+              onClick={playTestSound}
+              style={{
+                background: "#FFFFFF",
+                color: "#065F46",
+                border: "none",
+                padding: "8px 14px",
+                borderRadius: "var(--r-sm)",
+                fontSize: "0.78rem",
+                fontWeight: 700,
+                display: "flex",
+                alignItems: "center",
+                gap: "5px",
+                cursor: "pointer",
+              }}
+            >
+              <Volume2 size={15} /> আবার শুনুন
+            </button>
+            <button
+              onClick={dismissAlert}
+              style={{
+                background: "transparent",
+                color: "rgba(255,255,255,0.8)",
+                border: "none",
+                cursor: "pointer",
+                padding: "4px",
+              }}
+            >
+              <X size={20} />
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* ── Page Header ────────────────────────────────────── */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "12px" }}>
         <div>
@@ -469,10 +530,30 @@ export default function AdminOrdersPage() {
             {filteredOrders.length} অর্ডার দেখানো হচ্ছে · রাইডার অ্যাসাইনমেন্ট ও লাইভ স্ট্যাটাস ট্র্যাকিং
           </p>
         </div>
-        <button className="admin-btn admin-btn-primary" onClick={() => setShowCreate(true)}>
-          <Plus size={16} />
-          নতুন অর্ডার তৈরি
-        </button>
+        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+          <button
+            onClick={playTestSound}
+            style={{
+              background: "rgba(16, 185, 129, 0.1)",
+              color: "var(--green)",
+              border: "1px solid rgba(16, 185, 129, 0.3)",
+              padding: "7px 12px",
+              borderRadius: "var(--r-sm)",
+              fontSize: "0.78rem",
+              fontWeight: 600,
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              gap: "5px",
+            }}
+          >
+            <Volume2 size={14} /> অডিও টেস্ট
+          </button>
+          <button className="admin-btn admin-btn-primary" onClick={() => setShowCreate(true)}>
+            <Plus size={16} />
+            নতুন অর্ডার তৈরি
+          </button>
+        </div>
       </div>
 
       {/* ── Search + Status Tabs ───────────────────────────── */}

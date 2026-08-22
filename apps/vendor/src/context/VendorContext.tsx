@@ -11,6 +11,7 @@ import {
   VendorReview,
   FulfillmentStatus,
 } from "@/types";
+import { audioAlert } from "../utils/audioAlert";
 
 // Pre-seeded Partner Vendors
 export const AVAILABLE_VENDORS: VendorProfile[] = [
@@ -216,6 +217,10 @@ interface VendorContextType {
   
   // Profile Customizer
   updateShopProfile: (updates: Partial<VendorProfile>) => void;
+
+  newOrderAlert: { orderNumber: string; customerName: string; subtotal: number } | null;
+  dismissAlert: () => void;
+  playTestSound: () => void;
 }
 
 const VendorContext = createContext<VendorContextType | undefined>(undefined);
@@ -225,9 +230,13 @@ export function VendorProvider({ children }: { children: React.ReactNode }) {
   const [allProducts, setAllProducts] = useState<VendorProduct[]>(INITIAL_VENDOR_PRODUCTS);
   const [allOrders, setAllOrders] = useState<VendorSubOrder[]>(INITIAL_VENDOR_ORDERS);
   const [allPayouts, setAllPayouts] = useState<VendorPayoutRecord[]>(INITIAL_PAYOUTS);
+  const [knownOrderIds, setKnownOrderIds] = useState<Set<string>>(new Set(INITIAL_VENDOR_ORDERS.map(o => o.id)));
+  const [newOrderAlert, setNewOrderAlert] = useState<{ orderNumber: string; customerName: string; subtotal: number } | null>(null);
 
-  // Sync with API on mount
+  // Sync with API with periodic polling for sound alert
   useEffect(() => {
+    let isMounted = true;
+
     async function loadVendorData() {
       try {
         const [prodRes, ordRes] = await Promise.allSettled([
@@ -235,7 +244,7 @@ export function VendorProvider({ children }: { children: React.ReactNode }) {
           fetch(`${API_BASE}/api/orders`).then(r => r.json()),
         ]);
 
-        if (prodRes.status === "fulfilled" && prodRes.value.success && prodRes.value.data?.length > 0) {
+        if (prodRes.status === "fulfilled" && prodRes.value.success && prodRes.value.data?.length > 0 && isMounted) {
           const apiProds: VendorProduct[] = prodRes.value.data.map((p: any) => ({
             id: p.id,
             vendorId: p.vendorId || currentVendor.id,
@@ -258,12 +267,79 @@ export function VendorProvider({ children }: { children: React.ReactNode }) {
           }));
           setAllProducts(prev => [...apiProds, ...prev.filter(p => !apiProds.some(ap => ap.id === p.id))]);
         }
+
+        if (ordRes.status === "fulfilled" && ordRes.value.success && Array.isArray(ordRes.value.data) && isMounted) {
+          const rawOrders = ordRes.value.data;
+          const freshSubOrders: VendorSubOrder[] = [];
+
+          rawOrders.forEach((o: any) => {
+            if (o.items && o.items.length > 0) {
+              const vendorItems = o.items.filter((it: any) => it.vendorId === currentVendor.id || !it.vendorId);
+              if (vendorItems.length > 0) {
+                const subtotal = vendorItems.reduce((sum: number, it: any) => sum + Number(it.total), 0);
+                freshSubOrders.push({
+                  id: `sub-${o.id}`,
+                  vendorId: currentVendor.id,
+                  masterOrderNumber: o.orderNumber,
+                  customerName: o.customerName,
+                  customerPhone: o.customerPhone,
+                  deliveryArea: o.deliveryArea,
+                  deliverySlot: o.deliverySlot,
+                  items: vendorItems.map((it: any) => ({
+                    productId: it.productId,
+                    nameBn: it.name,
+                    nameEn: it.name,
+                    weight: it.quantity,
+                    unit: "kg",
+                    unitPrice: Number(it.price),
+                    quantity: it.quantity,
+                    totalPrice: Number(it.total),
+                  })),
+                  subtotal,
+                  commissionDeducted: Math.round(subtotal * 0.1),
+                  netEarnings: Math.round(subtotal * 0.9),
+                  status: o.status === "PENDING" ? "PENDING_ACCEPTANCE" : "PREPARING",
+                  createdAt: o.createdAt,
+                  assignedRiderName: o.assignedRiderName,
+                });
+              }
+            }
+          });
+
+          if (freshSubOrders.length > 0) {
+            setKnownOrderIds((prevKnown) => {
+              const newlyArrived = freshSubOrders.filter(so => !prevKnown.has(so.id));
+              if (newlyArrived.length > 0) {
+                const latest = newlyArrived[0];
+                // 🔔 Trigger sweet Ting-Tong sound!
+                audioAlert.playOrderAssignedSound();
+                setNewOrderAlert({
+                  orderNumber: latest.masterOrderNumber,
+                  customerName: latest.customerName,
+                  subtotal: latest.subtotal,
+                });
+              }
+              return new Set([...prevKnown, ...freshSubOrders.map(so => so.id)]);
+            });
+
+            setAllOrders(prev => [...freshSubOrders, ...prev.filter(p => !freshSubOrders.some(f => f.id === p.id))]);
+          }
+        }
       } catch (err) {
         console.warn("Vendor API sync fallback:", err);
       }
     }
+
     loadVendorData();
+    const interval = setInterval(loadVendorData, 6000); // 6s live polling
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
   }, [currentVendor.id]);
+
+  const dismissAlert = () => setNewOrderAlert(null);
+  const playTestSound = () => audioAlert.playOrderAssignedSound();
 
   const switchVendor = (vendorId: string) => {
     const v = AVAILABLE_VENDORS.find((ven) => ven.id === vendorId);
@@ -358,6 +434,9 @@ export function VendorProvider({ children }: { children: React.ReactNode }) {
         payouts: vendorPayouts,
         requestWithdrawal,
         updateShopProfile,
+        newOrderAlert,
+        dismissAlert,
+        playTestSound,
       }}
     >
       {children}

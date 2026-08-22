@@ -29,6 +29,7 @@ import {
   INITIAL_REVIEWS,
   INITIAL_AUDIT_LOGS,
 } from "@/lib/admin-data";
+import { audioAlert } from "../utils/audioAlert";
 
 interface AdminContextType {
   currentUser: AdminUser;
@@ -79,6 +80,10 @@ interface AdminContextType {
   // Audit Logs
   auditLogs: AuditLogEntry[];
   addAuditLog: (action: string, module: string, targetId: string, details: string) => void;
+
+  newOrderAlert: { orderNumber: string; customerName: string; totalAmount: number } | null;
+  dismissAlert: () => void;
+  playTestSound: () => void;
 }
 
 const AdminContext = createContext<AdminContextType | undefined>(undefined);
@@ -94,9 +99,13 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
   const [coupons, setCoupons] = useState<AdminCoupon[]>(INITIAL_COUPONS);
   const [reviews, setReviews] = useState<AdminReview[]>(INITIAL_REVIEWS);
   const [auditLogs, setAuditLogs] = useState<AuditLogEntry[]>(INITIAL_AUDIT_LOGS);
+  const [knownOrderIds, setKnownOrderIds] = useState<Set<string>>(new Set(INITIAL_ORDERS.map(o => o.id)));
+  const [newOrderAlert, setNewOrderAlert] = useState<{ orderNumber: string; customerName: string; totalAmount: number } | null>(null);
 
-  // Fetch live initial data from backend API on mount
+  // Fetch live initial data from backend API with periodic polling for sound alert
   useEffect(() => {
+    let isMounted = true;
+
     async function loadLiveData() {
       try {
         const [ordRes, riderRes, vendorRes, prodRes] = await Promise.allSettled([
@@ -106,13 +115,31 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
           fetch(`${API_BASE}/api/products`).then(r => r.json()),
         ]);
 
-        if (ordRes.status === "fulfilled" && ordRes.value.success && ordRes.value.data?.length > 0) {
-          setOrders(ordRes.value.data);
+        if (ordRes.status === "fulfilled" && ordRes.value.success && Array.isArray(ordRes.value.data) && isMounted) {
+          const freshOrders = ordRes.value.data;
+          
+          // Detect brand new incoming orders
+          setKnownOrderIds((prevKnown) => {
+            const newlyArrived = freshOrders.filter((o: any) => !prevKnown.has(o.id));
+            if (newlyArrived.length > 0) {
+              const latest = newlyArrived[0];
+              // 🔔 Trigger sweet Ting-Tong Audio Chime!
+              audioAlert.playOrderAssignedSound();
+              setNewOrderAlert({
+                orderNumber: latest.orderNumber,
+                customerName: latest.customerName,
+                totalAmount: latest.totalAmount,
+              });
+            }
+            return new Set([...prevKnown, ...freshOrders.map((o: any) => o.id)]);
+          });
+
+          setOrders(freshOrders);
         }
-        if (riderRes.status === "fulfilled" && riderRes.value.success && riderRes.value.data?.length > 0) {
+        if (riderRes.status === "fulfilled" && riderRes.value.success && riderRes.value.data?.length > 0 && isMounted) {
           setRiders(riderRes.value.data);
         }
-        if (vendorRes.status === "fulfilled" && vendorRes.value.success && vendorRes.value.data?.length > 0) {
+        if (vendorRes.status === "fulfilled" && vendorRes.value.success && vendorRes.value.data?.length > 0 && isMounted) {
           setVendors(vendorRes.value.data);
         }
       } catch (err) {
@@ -121,7 +148,15 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
     }
 
     loadLiveData();
+    const interval = setInterval(loadLiveData, 6000); // 6s polling for live orders
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
   }, []);
+
+  const dismissAlert = () => setNewOrderAlert(null);
+  const playTestSound = () => audioAlert.playOrderAssignedSound();
 
   const addAuditLog = (action: string, module: string, targetId: string, details: string) => {
     const newLog: AuditLogEntry = {
@@ -366,6 +401,9 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
         moderateReview,
         auditLogs,
         addAuditLog,
+        newOrderAlert,
+        dismissAlert,
+        playTestSound,
       }}
     >
       {children}

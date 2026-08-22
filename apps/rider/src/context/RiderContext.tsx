@@ -9,6 +9,7 @@ import {
   DeliveryStatus,
   DailySummary,
 } from "@/types";
+import { audioAlert } from "../utils/audioAlert";
 
 export const AVAILABLE_RIDERS: RiderProfile[] = [
   {
@@ -116,6 +117,10 @@ interface RiderContextType {
   
   dailySummary: DailySummary;
   depositCashToHub: () => void;
+
+  newOrderAlert: { orderNumber: string; customerName: string; area: string } | null;
+  dismissAlert: () => void;
+  playTestSound: () => void;
 }
 
 const RiderContext = createContext<RiderContextType | undefined>(undefined);
@@ -124,14 +129,18 @@ export function RiderProvider({ children }: { children: React.ReactNode }) {
   const [currentRider, setCurrentRider] = useState<RiderProfile>(AVAILABLE_RIDERS[0]!);
   const [deliveries, setDeliveries] = useState<RiderDeliveryOrder[]>(INITIAL_DELIVERIES);
   const [hubDepositStatus, setHubDepositStatus] = useState<"PENDING" | "DEPOSITED">("PENDING");
+  const [knownOrderIds, setKnownOrderIds] = useState<Set<string>>(new Set(INITIAL_DELIVERIES.map(d => d.id)));
+  const [newOrderAlert, setNewOrderAlert] = useState<{ orderNumber: string; customerName: string; area: string } | null>(null);
 
-  // Fetch live orders assigned to this rider from API
+  // Fetch live orders assigned to this rider from API with sound chime
   useEffect(() => {
+    let isMounted = true;
+
     async function loadRiderDeliveries() {
       try {
         const res = await fetch(`${API_BASE}/api/orders`);
         const json = await res.json();
-        if (json.success && json.data?.length > 0) {
+        if (json.success && Array.isArray(json.data) && isMounted) {
           const mapped: RiderDeliveryOrder[] = json.data.map((o: any) => ({
             id: o.id,
             orderNumber: o.orderNumber,
@@ -154,14 +163,40 @@ export function RiderProvider({ children }: { children: React.ReactNode }) {
             assignedAt: o.createdAt,
             notes: o.internalNotes || "তাজা শাকসবজি ও মাছ দ্রুত ডেলিভারি করুন।",
           }));
+
+          // Detect new assignments
+          setKnownOrderIds((prevKnown) => {
+            const newlyAssigned = mapped.filter(d => !prevKnown.has(d.id) && d.status === "ASSIGNED");
+            if (newlyAssigned.length > 0) {
+              const latest = newlyAssigned[0]!;
+              // 🔔 Trigger Live "Ting-Tong" Delivery Chime!
+              audioAlert.playOrderAssignedSound();
+              setNewOrderAlert({
+                orderNumber: latest.orderNumber,
+                customerName: latest.customerName,
+                area: latest.deliveryArea,
+              });
+            }
+            return new Set([...prevKnown, ...mapped.map(m => m.id)]);
+          });
+
           setDeliveries(prev => [...mapped, ...prev.filter(d => !mapped.some(m => m.id === d.id))]);
         }
       } catch (err) {
         console.warn("Rider API sync fallback:", err);
       }
     }
+
     loadRiderDeliveries();
+    const interval = setInterval(loadRiderDeliveries, 5000); // 5-second live polling
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
   }, [currentRider.id]);
+
+  const dismissAlert = () => setNewOrderAlert(null);
+  const playTestSound = () => audioAlert.playOrderAssignedSound();
 
   const switchRider = (riderId: string) => {
     const r = AVAILABLE_RIDERS.find((rd) => rd.id === riderId);
@@ -235,6 +270,9 @@ export function RiderProvider({ children }: { children: React.ReactNode }) {
         toggleCodCollected,
         dailySummary,
         depositCashToHub,
+        newOrderAlert,
+        dismissAlert,
+        playTestSound,
       }}
     >
       {children}

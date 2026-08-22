@@ -14,12 +14,15 @@ import {
   ChevronRight,
   DollarSign,
   Bike,
+  Volume2,
+  BellRing,
+  X,
 } from "lucide-react";
 import { useRider } from "@/context/RiderContext";
 import { DeliveryStatus } from "@/types";
 
 export default function RiderDeliveriesPage() {
-  const { deliveries, updateStatus, currentRider } = useRider();
+  const { deliveries, updateStatus, currentRider, newOrderAlert, dismissAlert, playTestSound } = useRider();
   const [activeTab, setActiveTab] = useState<"ACTIVE" | "COMPLETED">("ACTIVE");
 
   const activeDeliveries = deliveries.filter(
@@ -34,6 +37,101 @@ export default function RiderDeliveriesPage() {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
       
+      {/* Live Audio Chime Banner on New Order Assigned */}
+      {newOrderAlert && (
+        <div style={{
+          background: "linear-gradient(135deg, #059669 0%, #047857 100%)",
+          border: "2px solid #34D399",
+          padding: "16px",
+          borderRadius: "var(--radius-lg)",
+          color: "#FFFFFF",
+          boxShadow: "0 10px 25px -5px rgba(5, 150, 105, 0.5)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          animation: "pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite",
+        }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+            <div style={{ background: "rgba(255,255,255,0.2)", padding: "10px", borderRadius: "50%" }}>
+              <BellRing size={24} className="animate-bounce" />
+            </div>
+            <div>
+              <div style={{ fontWeight: 800, fontSize: "0.95rem" }}>🔔 নতুন অর্ডার নির্ধারিত হয়েছে!</div>
+              <div style={{ fontSize: "0.8rem", opacity: 0.9 }}>
+                অর্ডার: <strong>{newOrderAlert.orderNumber}</strong> • {newOrderAlert.customerName} ({newOrderAlert.area})
+              </div>
+            </div>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <button
+              onClick={playTestSound}
+              style={{
+                background: "#FFFFFF",
+                color: "#065F46",
+                border: "none",
+                padding: "8px 12px",
+                borderRadius: "var(--radius-sm)",
+                fontSize: "0.75rem",
+                fontWeight: 700,
+                display: "flex",
+                alignItems: "center",
+                gap: "4px",
+                cursor: "pointer",
+              }}
+            >
+              <Volume2 size={14} /> আবার শুনুন
+            </button>
+            <button
+              onClick={dismissAlert}
+              style={{
+                background: "transparent",
+                color: "rgba(255,255,255,0.8)",
+                border: "none",
+                cursor: "pointer",
+                padding: "4px",
+              }}
+            >
+              <X size={20} />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Sound Chime Readiness Bar */}
+      <div style={{
+        background: "var(--rider-surface)",
+        border: "1px solid var(--border-color)",
+        padding: "10px 14px",
+        borderRadius: "var(--radius-md)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        fontSize: "0.8rem",
+      }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "6px", color: "var(--text-muted)" }}>
+          <Volume2 size={16} style={{ color: "var(--primary)" }} />
+          <span>অ্যাসাইনমেন্ট সাউন্ড এলার্ট: <strong>সক্রিয় (Ting-Tong Chime)</strong></span>
+        </div>
+        <button
+          onClick={playTestSound}
+          style={{
+            background: "rgba(16, 185, 129, 0.1)",
+            color: "var(--primary)",
+            border: "1px solid rgba(16, 185, 129, 0.3)",
+            padding: "4px 10px",
+            borderRadius: "var(--radius-sm)",
+            fontSize: "0.75rem",
+            fontWeight: 700,
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            gap: "4px",
+          }}
+        >
+          বেল সাউন্ড টেস্ট
+        </button>
+      </div>
+
       {/* Shift Status Banner */}
       {!currentRider.isOnline && (
         <div style={{ background: "#FEE2E2", border: "1px solid #FECACA", padding: "12px 14px", borderRadius: "var(--radius-md)", fontSize: "0.82rem", color: "#991B1B", display: "flex", alignItems: "center", gap: "8px" }}>
