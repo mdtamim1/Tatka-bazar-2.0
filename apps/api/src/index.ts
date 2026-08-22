@@ -18,6 +18,7 @@ import { riderRoutes } from "./routes/api/riders.js";
 import { vendorRoutes } from "./routes/api/vendors.js";
 import { paymentRoutes } from "./routes/api/payment.js";
 import { otpRoutes } from "./routes/api/otp.js";
+import { xssSanitizerHook } from "./middleware/xss-sanitizer.js";
 
 const PORT = Number(process.env["API_PORT"]) || 4000;
 const HOST = process.env["API_HOST"] || "0.0.0.0";
@@ -82,6 +83,9 @@ async function bootstrap() {
       retryAfter: context.after,
     }),
   });
+
+  // Global XSS (Cross-Site Scripting) Request Payload Sanitizer
+  app.addHook("preValidation", xssSanitizerHook);
 
   // ---------------------------------------------------------------------------
   // Routes
