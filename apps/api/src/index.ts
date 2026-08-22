@@ -4,6 +4,7 @@ import jwt from "@fastify/jwt";
 import sensible from "@fastify/sensible";
 import rateLimit from "@fastify/rate-limit";
 import helmet from "@fastify/helmet";
+import compress from "@fastify/compress";
 
 import { healthRoute } from "./routes/health.js";
 import { customerAuthRoutes } from "./routes/auth/customer.js";
@@ -52,6 +53,13 @@ async function bootstrap() {
     frameguard: { action: "sameorigin" }, // X-Frame-Options: SAMEORIGIN
     hidePoweredBy: true, // Remove X-Powered-By
     hsts: { maxAge: 31536000, includeSubDomains: true, preload: true },
+  });
+
+  // High-Throughput Brotli & Gzip Fast Compression (70-85% payload size reduction)
+  await app.register(compress, {
+    global: true,
+    threshold: 1024, // Compress responses larger than 1KB
+    encodings: ["br", "gzip", "deflate"],
   });
 
   await app.register(cors, {
