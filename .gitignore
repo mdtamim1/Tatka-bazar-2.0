@@ -37,3 +37,7 @@ Thumbs.db
 
 # TypeScript
 *.tsbuildinfo
+
+# Redis dump
+dump.rdb
+
