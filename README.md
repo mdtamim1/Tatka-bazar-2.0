@@ -1,4 +1,4 @@
-# 🛒 Tatka Bazar 2.0 (তাতকা বাজার)
+# 🛒 Tatka Bazar 2.0 (টাটকা বাজার)
 
 Modern, Hyper-Fast Fullstack E-Commerce & Quick-Commerce Multi-Vendor Ecosystem built with Turborepo, Next.js, Fastify, PostgreSQL (Prisma), Redis, and TailwindCSS.
 
