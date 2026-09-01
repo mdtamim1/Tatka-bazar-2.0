@@ -54,6 +54,7 @@ export default function CustomerAccountPage() {
     items,
     wishlistIds,
     toggleWishlist,
+    moveWishlistToCart,
     addItem,
     removeItem,
     getGrandTotal,
@@ -679,8 +680,7 @@ export default function CustomerAccountPage() {
                             <button
                               type="button"
                               onClick={() => {
-                                addItem(p, 1, (p.baseUnit || "kg") as any, p.basePrice, 1);
-                                openCart();
+                                moveWishlistToCart(p, true);
                               }}
                               className={styles.moveToCartBtn}
                             >

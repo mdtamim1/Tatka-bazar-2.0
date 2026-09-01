@@ -22,6 +22,7 @@ const VALID_COUPONS: Record<string, Coupon> = {
 interface CartState {
   items: CartItem[];
   isOpen: boolean;
+  isWishlistOpen: boolean;
   appliedCoupon: Coupon | null;
   wishlistIds: string[];
   selectedHub: string;
@@ -30,6 +31,9 @@ interface CartState {
   openCart: () => void;
   closeCart: () => void;
   toggleCart: () => void;
+  openWishlist: () => void;
+  closeWishlist: () => void;
+  toggleWishlistDrawer: () => void;
   setSelectedHub: (hub: string) => void;
 
   // Cart operations
@@ -42,7 +46,11 @@ interface CartState {
 
   // Wishlist
   toggleWishlist: (productId: string) => void;
+  removeFromWishlist: (productId: string) => void;
+  clearWishlist: () => void;
   isInWishlist: (productId: string) => boolean;
+  moveWishlistToCart: (product: Product, openCartDrawer?: boolean) => void;
+  moveAllWishlistToCart: (products: Product[]) => void;
 
   // Computed helper values
   getItemCount: () => number;
@@ -58,13 +66,19 @@ export const useCartStore = create<CartState>()(
     (set, get) => ({
       items: [],
       isOpen: false,
+      isWishlistOpen: false,
       appliedCoupon: null,
-      wishlistIds: ["prod-ilish-padma"],
+      wishlistIds: ["prod-ilish-padma", "prod-beef-sirloin", "prod-honey-sundarban"],
       selectedHub: "dhaka-dhanmondi",
 
-      openCart: () => set({ isOpen: true }),
+      openCart: () => set({ isOpen: true, isWishlistOpen: false }),
       closeCart: () => set({ isOpen: false }),
-      toggleCart: () => set((state) => ({ isOpen: !state.isOpen })),
+      toggleCart: () => set((state) => ({ isOpen: !state.isOpen, isWishlistOpen: false })),
+
+      openWishlist: () => set({ isWishlistOpen: true, isOpen: false }),
+      closeWishlist: () => set({ isWishlistOpen: false }),
+      toggleWishlistDrawer: () => set((state) => ({ isWishlistOpen: !state.isWishlistOpen, isOpen: false })),
+
       setSelectedHub: (hub) => set({ selectedHub: hub }),
 
       addItem: (product, weight, unit, unitPrice, quantity = 1) => {
@@ -160,7 +174,108 @@ export const useCartStore = create<CartState>()(
         });
       },
 
+      removeFromWishlist: (productId) => {
+        set((state) => ({
+          wishlistIds: state.wishlistIds.filter((id) => id !== productId),
+        }));
+      },
+
+      clearWishlist: () => {
+        set({ wishlistIds: [] });
+      },
+
       isInWishlist: (productId) => get().wishlistIds.includes(productId),
+
+      moveWishlistToCart: (product, openCartDrawer = false) => {
+        const defaultWeight = product.weightOptions?.[0]?.value || 1;
+        const defaultUnit = product.baseUnit || "kg";
+        const unitPrice = product.basePrice;
+        const itemId = `${product.id}-${defaultWeight}-${defaultUnit}`;
+
+        set((state) => {
+          const existingIndex = state.items.findIndex((item) => item.id === itemId);
+          let updatedItems: CartItem[];
+          if (existingIndex > -1) {
+            updatedItems = [...state.items];
+            const existingItem = updatedItems[existingIndex]!;
+            const newQty = existingItem.quantity + 1;
+            updatedItems[existingIndex] = {
+              ...existingItem,
+              quantity: newQty,
+              totalPrice: newQty * existingItem.unitPrice,
+            };
+          } else {
+            const newItem: CartItem = {
+              id: itemId,
+              productId: product.id,
+              product,
+              selectedWeight: defaultWeight,
+              selectedUnit: defaultUnit,
+              unitPrice,
+              quantity: 1,
+              totalPrice: unitPrice,
+              vendorId: product.vendorId || "tatka-official",
+              vendorNameBn: product.vendorNameBn,
+              vendorNameEn: product.vendorNameEn,
+            };
+            updatedItems = [newItem, ...state.items];
+          }
+
+          return {
+            items: updatedItems,
+            wishlistIds: state.wishlistIds.filter((id) => id !== product.id),
+            ...(openCartDrawer ? { isOpen: true, isWishlistOpen: false } : {}),
+          };
+        });
+      },
+
+      moveAllWishlistToCart: (products) => {
+        set((state) => {
+          let updatedItems = [...state.items];
+          const addedProductIds = new Set<string>();
+
+          products.forEach((product) => {
+            if (product.stock > 0) {
+              const defaultWeight = product.weightOptions?.[0]?.value || 1;
+              const defaultUnit = product.baseUnit || "kg";
+              const unitPrice = product.basePrice;
+              const itemId = `${product.id}-${defaultWeight}-${defaultUnit}`;
+
+              const existingIndex = updatedItems.findIndex((item) => item.id === itemId);
+              if (existingIndex > -1) {
+                const existingItem = updatedItems[existingIndex]!;
+                const newQty = existingItem.quantity + 1;
+                updatedItems[existingIndex] = {
+                  ...existingItem,
+                  quantity: newQty,
+                  totalPrice: newQty * existingItem.unitPrice,
+                };
+              } else {
+                const newItem: CartItem = {
+                  id: itemId,
+                  productId: product.id,
+                  product,
+                  selectedWeight: defaultWeight,
+                  selectedUnit: defaultUnit,
+                  unitPrice,
+                  quantity: 1,
+                  totalPrice: unitPrice,
+                  vendorId: product.vendorId || "tatka-official",
+                  vendorNameBn: product.vendorNameBn,
+                  vendorNameEn: product.vendorNameEn,
+                };
+                updatedItems = [newItem, ...updatedItems];
+              }
+              addedProductIds.add(product.id);
+            }
+          });
+
+          return {
+            items: updatedItems,
+            wishlistIds: state.wishlistIds.filter((id) => !addedProductIds.has(id)),
+          };
+        });
+      },
 
       getItemCount: () => get().items.reduce((sum, item) => sum + item.quantity, 0),
 

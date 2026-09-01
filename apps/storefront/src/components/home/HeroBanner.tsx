@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
-import { ChevronLeft, ChevronRight, Heart, Star, ShoppingBag } from "lucide-react";
+import { ChevronLeft, ChevronRight, Heart, Star, ShoppingBag, Sparkles, ArrowRight } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 import { useCartStore } from "@/lib/cart-store";
 import { PRODUCTS } from "@/lib/catalog";
@@ -10,18 +10,24 @@ import styles from "./HeroBanner.module.css";
 
 export function HeroBanner() {
   const { locale, formatPrice } = useLanguage();
-  const { toggleWishlist, isInWishlist, addItem, openCart } = useCartStore();
+  const { toggleWishlist, wishlistIds, addItem, openCart } = useCartStore();
 
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [animKey, setAnimKey] = useState(0);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const slides = [
     {
       id: "slide-1",
-      title: locale === "bn" ? "আপনার প্রতিদিনের তাজা বাজার" : "Your Complete Fresh Routine",
+      tag: locale === "bn" ? "🌿 ১০০% তাজা ও অর্গানিক | প্রতিদিন ভোরে সংগ্রহ" : "🌿 100% Organic & Chemical-Free",
+      title: locale === "bn" ? "আপনার প্রতিদিনের তাজা বাজার" : "Your Daily Farm-Fresh Routine",
       subtitle: locale === "bn"
-        ? "রাসায়নিকমুক্ত শাকসবজি ও পদ্মার তাজা মাছ প্রতিদিন ভোরে সরাসরি সংগ্রহ করে আপনার দরজায় পৌঁছে দিচ্ছি।"
+        ? "রাসায়নিকমুক্ত শাকসবজি ও পদ্মার তাজা রূপালি ইলিশ প্রতিদিন ভোরে সরাসরি সংগ্রহ করে আপনার দরজায় পৌঁছে দিচ্ছি।"
         : "A curated farm-fresh collection designed to nourish, energize, and provide chemical-free freshness daily.",
       ctaText: locale === "bn" ? "বাজার করুন" : "Shop Now",
       ctaLink: "/category/vegetables",
@@ -41,6 +47,7 @@ export function HeroBanner() {
     },
     {
       id: "slide-2",
+      tag: locale === "bn" ? "🍅 বিষমুক্ত ও কীটনাশকমুক্ত খামারের ফসল" : "🍅 Direct Farm-to-Table Harvest",
       title: locale === "bn" ? "১০০% খাঁটি ও অর্গানিক সবজি" : "Pure Organic Farm Produce",
       subtitle: locale === "bn"
         ? "কীটনাশকমুক্ত তাজা টমেটো, ফুলকপি ও শাকসবজি সরাসরি প্রত্যয়িত কৃষক থেকে আপনার রান্নাঘরে।"
@@ -49,38 +56,39 @@ export function HeroBanner() {
       ctaLink: "/category/vegetables",
       bgImage: "https://images.unsplash.com/photo-1566385101042-1a0aa0c1268c?w=1920&auto=format&fit=crop&q=90",
       featuredProduct: {
-        id: PRODUCTS[2]?.id || "p3",
+        id: PRODUCTS[1]?.id || "p2",
         category: locale === "bn" ? "অর্গানিক সবজি" : "ORGANIC VEGGIES",
-        title: locale === "bn" ? "ফার্ম ফ্রেশ টমেটো প্যাক" : "Farm Fresh Tomato Set",
-        price: 130,
-        comparePrice: 160,
+        title: locale === "bn" ? "ফার্ম ফ্রেশ পাকা টমেটো" : "Farm Fresh Vine Tomatoes",
+        price: 65,
+        comparePrice: 80,
         rating: "4.9K REVIEWS",
         badge1: "ORGANIC",
         badge2: "NEW",
-        image: PRODUCTS[2]?.images[0] || "https://images.unsplash.com/photo-1540420773420-3366772f4999?w=600&auto=format&fit=crop&q=80",
-        productRef: PRODUCTS[2],
+        image: PRODUCTS[1]?.images[0] || "https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=600&auto=format&fit=crop&q=80",
+        productRef: PRODUCTS[1],
       },
     },
     {
       id: "slide-3",
+      tag: locale === "bn" ? "🌾 পরিবারের জন্য সাশ্রয়ী পাইকারি বাজার" : "🌾 Wholesale Family Bundles",
       title: locale === "bn" ? "পাইকারি দামে পরিবারের বাজার" : "Family Grocery Essentials",
       subtitle: locale === "bn"
-        ? "চাল, ডাল, তেল ও খাঁটি মশলার সেরা হোলসেল ডিল। বড় অর্ডারে সর্বোচ্চ সাশ্রয় নিশ্চিত।"
-        : "Premium rice, lentils, pure mustard oil and authentic spices at unbeatable wholesale rates.",
-      ctaText: locale === "bn" ? "হোলসেল ডিল" : "Shop Essentials",
+        ? "দিনাজপুরের সুগন্ধি চাল, দেশি ডাল ও ঘানিভাঙা সরিষার তেলের সেরা হোলসেল ডিল। বড় অর্ডারে সর্বোচ্চ সাশ্রয়।"
+        : "Premium aromatic rice, organic lentils and cold-pressed mustard oil at unbeatable wholesale rates.",
+      ctaText: locale === "bn" ? "হোলসেল ডিল" : "Shop Deals",
       ctaLink: "/category/rice-and-staples",
       bgImage: "https://images.unsplash.com/photo-1586201375761-83865001e31c?w=1920&auto=format&fit=crop&q=90",
       featuredProduct: {
-        id: PRODUCTS[1]?.id || "p2",
+        id: PRODUCTS[2]?.id || "p3",
         category: locale === "bn" ? "দেশি তাজা মাছ" : "FRESH RUI FISH",
-        title: locale === "bn" ? "দেশি রুই মাছ (কেটে পরিষ্কার)" : "Cleaned Local Rui Pack",
+        title: locale === "bn" ? "দেশি রুই মাছ (কাটা ও ধোয়া)" : "Cleaned Local Rui Pack",
         price: 485,
         comparePrice: 560,
         rating: "6.2K REVIEWS",
         badge1: "HOT DEAL",
         badge2: "CLEANED",
-        image: PRODUCTS[1]?.images[0] || "https://images.unsplash.com/photo-1534939561126-855b8675edd7?w=600&auto=format&fit=crop&q=80",
-        productRef: PRODUCTS[1],
+        image: PRODUCTS[2]?.images[0] || "https://images.unsplash.com/photo-1534939561126-855b8675edd7?w=600&auto=format&fit=crop&q=80",
+        productRef: PRODUCTS[2],
       },
     },
   ];
@@ -105,9 +113,9 @@ export function HeroBanner() {
     return () => clearInterval(timer);
   }, [nextSlide]);
 
-  const slide = slides[currentSlide]!;
+  const slide = slides[currentSlide] || slides[0]!;
   const feat = slide.featuredProduct;
-  const isFav = isInWishlist(feat.id);
+  const isFav = mounted ? wishlistIds.includes(feat.id) : false;
 
   const handleQuickAdd = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -120,102 +128,63 @@ export function HeroBanner() {
 
   return (
     <div className={styles.heroWrapper}>
-      
-      {/* ── Main Hero Container (Full Bleed) ── */}
+      {/* ── Main Hero Container ── */}
       <div className={styles.heroContainer}>
-        
         {/* Background Image with Cinematic Dark Gradient */}
-        <div style={{ position: "absolute", inset: 0, zIndex: 0 }}>
+        <div className={styles.bgLayer}>
           <img
             key={`bg-${currentSlide}`}
             src={slide.bgImage}
             alt=""
             aria-hidden="true"
-            style={{
-              width: "100%",
-              height: "100%",
-              objectFit: "cover",
-              objectPosition: "center",
-              animation: "fadeIn 0.7s ease",
-            }}
+            className={styles.bgImage}
           />
-          {/* Subtle Dark Vignette & Gradient Overlays */}
-          <div
-            style={{
-              position: "absolute",
-              inset: 0,
-              background: "linear-gradient(90deg, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.55) 45%, rgba(0,0,0,0.2) 75%, rgba(0,0,0,0.4) 100%)",
-            }}
-          />
-          <div
-            style={{
-              position: "absolute",
-              inset: 0,
-              background: "radial-gradient(ellipse at center, transparent 30%, rgba(0,0,0,0.6) 100%)",
-            }}
-          />
+          <div className={styles.bgOverlayGradient} />
+          <div className={styles.bgVignette} />
         </div>
 
         {/* Content Max-Width Container */}
         <div className={styles.contentWrapper}>
-          
-          {/* ── Left Content (Headline, Subtitle, Shop Now Pill) ── */}
+          {/* ── Left Content ── */}
           <div key={`text-${animKey}`} className={styles.textContent}>
-            <h1 className={styles.heroTitle}>
-              {slide.title}
-            </h1>
+            <div className={styles.heroTagBadge}>
+              <Sparkles size={13} />
+              <span>{slide.tag}</span>
+            </div>
 
-            <p className={styles.heroSubtitle}>
-              {slide.subtitle}
-            </p>
+            <h1 className={styles.heroTitle}>{slide.title}</h1>
 
-            <Link href={slide.ctaLink} className={styles.shopNowBtn}>
-              <span>{slide.ctaText}</span>
-            </Link>
+            <p className={styles.heroSubtitle}>{slide.subtitle}</p>
+
+            <div className={styles.ctaGroup}>
+              <Link href={slide.ctaLink} className={styles.shopNowBtn}>
+                <span>{slide.ctaText}</span>
+                <ArrowRight size={16} />
+              </Link>
+
+              <Link href="/bundles" className={styles.dealsBtn}>
+                <span>{locale === "bn" ? "🔥 আজকের ডিল" : "Daily Deals"}</span>
+              </Link>
+            </div>
           </div>
 
-          {/* ── Right Floating Product Card (Desktop Only) ── */}
+          {/* ── Right Floating Highlight Card (Desktop Only) ── */}
           <div key={`card-${animKey}`} className={styles.floatingCard}>
             {/* Card Product Image */}
-            <div style={{ position: "relative", width: "100%", height: "220px", background: "#f8fafc" }}>
+            <div className={styles.cardImageWrapper}>
               <img
                 src={feat.image}
                 alt={feat.title}
-                style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                className={styles.cardImg}
               />
 
-              {/* Badges (BEST SELLER / NEW) */}
-              <div style={{ position: "absolute", top: "12px", left: "12px", display: "flex", flexDirection: "column", gap: "4px" }}>
-                <span
-                  style={{
-                    background: "#000000",
-                    color: "#ffffff",
-                    fontSize: "0.62rem",
-                    fontWeight: 800,
-                    padding: "3px 8px",
-                    borderRadius: "4px",
-                    letterSpacing: "0.05em",
-                  }}
-                >
-                  {feat.badge1}
-                </span>
-                <span
-                  style={{
-                    background: "#ffffff",
-                    color: "#000000",
-                    fontSize: "0.62rem",
-                    fontWeight: 800,
-                    padding: "3px 8px",
-                    borderRadius: "4px",
-                    letterSpacing: "0.05em",
-                    border: "1px solid #e2e8f0",
-                  }}
-                >
-                  {feat.badge2}
-                </span>
+              {/* Badges */}
+              <div className={styles.cardBadges}>
+                <span className={styles.badgeDark}>{feat.badge1}</span>
+                <span className={styles.badgeLight}>{feat.badge2}</span>
               </div>
 
-              {/* Wishlist Heart Icon (Top-Right) */}
+              {/* Wishlist Heart Icon Button */}
               <button
                 type="button"
                 onClick={(e) => {
@@ -224,71 +193,23 @@ export function HeroBanner() {
                   toggleWishlist(feat.id);
                 }}
                 aria-label="Wishlist"
-                style={{
-                  position: "absolute",
-                  top: "12px",
-                  right: "12px",
-                  width: "32px",
-                  height: "32px",
-                  borderRadius: "50%",
-                  background: "rgba(255, 255, 255, 0.9)",
-                  border: "none",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  cursor: "pointer",
-                  color: isFav ? "#ef4444" : "#64748b",
-                  boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
-                }}
+                className={styles.cardWishlistBtn}
               >
-                <Heart size={15} fill={isFav ? "#ef4444" : "none"} />
+                <Heart size={15} fill={isFav ? "#ef4444" : "none"} color={isFav ? "#ef4444" : "#64748b"} />
               </button>
             </div>
 
             {/* Card Product Info */}
-            <div style={{ padding: "16px" }}>
-              <div
-                style={{
-                  fontSize: "0.68rem",
-                  fontWeight: 700,
-                  color: "#64748b",
-                  textTransform: "uppercase",
-                  letterSpacing: "0.06em",
-                  marginBottom: "4px",
-                }}
-              >
-                {feat.category}
-              </div>
+            <div className={styles.cardBody}>
+              <div className={styles.cardCategory}>{feat.category}</div>
 
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "baseline",
-                  justifyContent: "space-between",
-                  gap: "10px",
-                  marginBottom: "8px",
-                }}
-              >
-                <h4
-                  style={{
-                    fontSize: "0.95rem",
-                    fontWeight: 800,
-                    color: "#0f172a",
-                    margin: 0,
-                    whiteSpace: "nowrap",
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                  }}
-                >
-                  {feat.title}
-                </h4>
+              <div className={styles.cardTitlePriceRow}>
+                <h4 className={styles.cardTitle}>{feat.title}</h4>
 
-                <div style={{ display: "flex", alignItems: "baseline", gap: "6px", flexShrink: 0 }}>
-                  <span style={{ fontSize: "0.95rem", fontWeight: 800, color: "#0f172a" }}>
-                    {formatPrice(feat.price)}
-                  </span>
+                <div className={styles.cardPriceGroup}>
+                  <span className={styles.cardCurrentPrice}>{formatPrice(feat.price)}</span>
                   {feat.comparePrice && (
-                    <span style={{ fontSize: "0.75rem", color: "#94a3b8", textDecoration: "line-through" }}>
+                    <span className={styles.cardComparePrice}>
                       {formatPrice(feat.comparePrice)}
                     </span>
                   )}
@@ -296,36 +217,22 @@ export function HeroBanner() {
               </div>
 
               {/* Rating & Quick Buy */}
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingTop: "8px", borderTop: "1px solid #f1f5f9" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                  <div style={{ display: "flex", gap: "1px" }}>
+              <div className={styles.cardFooter}>
+                <div className={styles.cardRating}>
+                  <div className={styles.cardStars}>
                     {[...Array(5)].map((_, i) => (
-                      <Star key={i} size={11} fill="#0f172a" color="#0f172a" />
+                      <Star key={i} size={11} fill="#F5C842" color="#F5C842" />
                     ))}
                   </div>
-                  <span style={{ fontSize: "0.65rem", fontWeight: 700, color: "#64748b" }}>
-                    {feat.rating}
-                  </span>
+                  <span className={styles.cardReviewsText}>{feat.rating}</span>
                 </div>
 
                 <button
                   type="button"
                   onClick={handleQuickAdd}
-                  style={{
-                    padding: "4px 10px",
-                    borderRadius: "6px",
-                    background: "#0f172a",
-                    color: "#ffffff",
-                    border: "none",
-                    fontSize: "0.72rem",
-                    fontWeight: 700,
-                    cursor: "pointer",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "4px",
-                  }}
+                  className={styles.quickBuyBtn}
                 >
-                  <ShoppingBag size={11} />
+                  <ShoppingBag size={12} />
                   <span>{locale === "bn" ? "কিনুন" : "Buy"}</span>
                 </button>
               </div>
@@ -333,7 +240,7 @@ export function HeroBanner() {
           </div>
         </div>
 
-        {/* ── Left & Right Minimal Chevron Arrows (Image 1 Style) ── */}
+        {/* ── Left & Right Chevron Arrows ── */}
         <button
           type="button"
           onClick={prevSlide}
@@ -341,7 +248,7 @@ export function HeroBanner() {
           className={styles.arrowBtn}
           style={{ left: "14px" }}
         >
-          <ChevronLeft size={18} />
+          <ChevronLeft size={20} />
         </button>
 
         <button
@@ -351,9 +258,21 @@ export function HeroBanner() {
           className={styles.arrowBtn}
           style={{ right: "14px" }}
         >
-          <ChevronRight size={18} />
+          <ChevronRight size={20} />
         </button>
 
+        {/* ── Slide Indicator Dots ── */}
+        <div className={styles.dotsContainer}>
+          {slides.map((_, idx) => (
+            <button
+              key={idx}
+              type="button"
+              onClick={() => goToSlide(idx)}
+              className={`${styles.dot} ${currentSlide === idx ? styles.dotActive : ""}`}
+              aria-label={`Go to slide ${idx + 1}`}
+            />
+          ))}
+        </div>
       </div>
     </div>
   );

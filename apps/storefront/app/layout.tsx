@@ -3,6 +3,7 @@ import { LanguageProvider } from "@/context/LanguageContext";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { CartDrawer } from "@/components/layout/CartDrawer";
+import { WishlistDrawer } from "@/components/layout/WishlistDrawer";
 import { OrganizationJsonLd } from "@/components/seo/JsonLd";
 import { LiveSupportWidget } from "@/components/chat/LiveSupportWidget";
 import "./globals.css";
@@ -38,6 +39,7 @@ export default function RootLayout({
             <Header />
             <div style={{ flex: 1 }}>{children}</div>
             <CartDrawer />
+            <WishlistDrawer />
             <Footer />
             <LiveSupportWidget />
           </div>

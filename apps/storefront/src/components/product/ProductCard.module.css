@@ -155,13 +155,13 @@
   }
 }
 
-/* ── Price & Swatches Row ── */
+/* ── Price Row ── */
 .priceRow {
   display: flex;
-  align-items: center;
+  align-items: baseline;
   justifyContent: space-between;
-  gap: 10px;
-  margin-bottom: 16px;
+  gap: 8px;
+  margin-bottom: 12px;
 }
 
 .priceGroup {
@@ -171,9 +171,10 @@
 }
 
 .currentPrice {
-  font-size: 1.25rem;
+  font-size: 1.3rem;
   font-weight: 900;
   color: #0f172a;
+  letter-spacing: -0.02em;
 }
 
 .comparePrice {
@@ -183,30 +184,85 @@
   font-weight: 500;
 }
 
-/* Color / Weight Dots Swatches (Dribbble prototype) */
-.swatchGroup {
+.unitHint {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #64748b;
+  background: #f1f5f9;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+/* ── Weight / Portion Selection Pills ── */
+.weightSelectorContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.weightLabelRow {
+  display: flex;
+  align-items: center;
+  justifyContent: space-between;
+  font-size: 0.72rem;
+}
+
+.weightSectionTitle {
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.activeWeightBadge {
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.weightPillList {
   display: flex;
   align-items: center;
   gap: 6px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  padding: 2px 1px;
 }
 
-.swatchDot {
-  width: 14px;
-  height: 14px;
-  border-radius: 50%;
-  border: 2px solid #ffffff;
+.weightPillList::-webkit-scrollbar {
+  display: none;
+}
+
+.weightPill {
+  padding: 5px 10px;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  color: #475569;
+  font-size: 0.75rem;
+  font-weight: 700;
   cursor: pointer;
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
-  outline: 1.5px solid transparent;
+  white-space: nowrap;
+  transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
 }
 
-.swatchDot:hover {
-  transform: scale(1.18);
+.weightPill:hover {
+  border-color: #cbd5e1;
+  background: #f8fafc;
+  color: #0f172a;
 }
 
-.swatchDotActive {
-  outline-color: #0f172a;
-  box-shadow: 0 0 0 1px #0f172a;
+.weightPillActive {
+  background: #0f172a !important;
+  color: #ffffff !important;
+  border-color: #0f172a !important;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.2);
+  transform: translateY(-1px);
 }
 
 /* ── Stacked Action Buttons ── */

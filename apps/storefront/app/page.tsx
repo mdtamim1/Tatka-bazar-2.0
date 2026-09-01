@@ -10,9 +10,7 @@ import { useLanguage } from "@/context/LanguageContext";
 import { HeroBanner }        from "@/components/home/HeroBanner";
 import { CategoryQuickNav }  from "@/components/home/CategoryQuickNav";
 import { FlashDeals }        from "@/components/home/FlashDeals";
-import { VendorRail }        from "@/components/home/VendorRail";
 import { Testimonials }      from "@/components/home/Testimonials";
-import { RecipeToCartRail }  from "@/components/home/RecipeToCartRail";
 import { ProductCard }       from "@/components/product/ProductCard";
 import { ScrollProgress }    from "@/components/ui/ScrollProgress";
 import { PRODUCTS }          from "@/lib/catalog";
@@ -284,20 +282,7 @@ export default function StorefrontHomePage() {
         </div>
       </section>
 
-      {/* 7. Recipe-to-Cart Rail */}
-      <section style={{ padding: "36px 0" }}>
-        <div className="container">
-          <RecipeToCartRail />
-        </div>
-      </section>
-
-      {/* Divider */}
-      <div className="section-divider" style={{ margin: "0 auto", width: "100%", maxWidth: "1280px" }} />
-
-      {/* 8. Vendor Rail */}
-      <VendorRail />
-
-      {/* 9. App Download CTA */}
+      {/* 7. App Download CTA */}
       <section
         ref={appRef as React.RefObject<HTMLElement>}
         style={{ padding: "8px 0 60px" }}
