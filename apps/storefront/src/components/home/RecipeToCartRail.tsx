@@ -60,8 +60,10 @@ export function RecipeToCartRail() {
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
-          gap: "22px",
+          gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
+          gap: "20px",
+          width: "100%",
+          boxSizing: "border-box",
         }}
       >
         {POPULAR_RECIPES.map((recipe, idx) => (

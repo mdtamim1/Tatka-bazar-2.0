@@ -81,8 +81,10 @@ export function Testimonials() {
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(290px, 1fr))",
-            gap: "20px",
+            gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
+            gap: "18px",
+            width: "100%",
+            boxSizing: "border-box",
             marginBottom: "32px",
           }}
         >

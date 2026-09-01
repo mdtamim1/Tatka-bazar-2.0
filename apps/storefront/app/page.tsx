@@ -115,12 +115,14 @@ export default function StorefrontHomePage() {
         ref={trustRef as React.RefObject<HTMLElement>}
         style={{ padding: "24px 0 36px" }}
       >
-        <div className="container">
+        <div className="container" style={{ overflow: "hidden" }}>
           <div
             style={{
               display: "flex", gap: "12px",
               overflowX: "auto", scrollbarWidth: "none",
               paddingBottom: "4px",
+              width: "100%", maxWidth: "100%",
+              boxSizing: "border-box",
             }}
           >
             {trustItems.map(({ Icon, color, bg, border, label, sub }, i) => (
@@ -187,7 +189,7 @@ export default function StorefrontHomePage() {
       <CategoryQuickNav />
 
       {/* Divider */}
-      <div className="section-divider" style={{ margin: "0 2.5rem" }} />
+      <div className="section-divider" style={{ margin: "0 auto", width: "100%", maxWidth: "1280px" }} />
 
       {/* 4. Flash Deals */}
       <FlashDeals />
@@ -232,7 +234,7 @@ export default function StorefrontHomePage() {
       </section>
 
       {/* Divider */}
-      <div className="section-divider" style={{ margin: "0 2.5rem" }} />
+      <div className="section-divider" style={{ margin: "0 auto", width: "100%", maxWidth: "1280px" }} />
 
       {/* 6. Organic Section */}
       <section
@@ -290,7 +292,7 @@ export default function StorefrontHomePage() {
       </section>
 
       {/* Divider */}
-      <div className="section-divider" style={{ margin: "0 2.5rem" }} />
+      <div className="section-divider" style={{ margin: "0 auto", width: "100%", maxWidth: "1280px" }} />
 
       {/* 8. Vendor Rail */}
       <VendorRail />
