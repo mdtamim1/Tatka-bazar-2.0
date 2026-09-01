@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { VendorProvider } from "@/context/VendorContext";
-import { VendorSidebar } from "@/components/layout/VendorSidebar";
-import { VendorHeader } from "@/components/layout/VendorHeader";
+import { VendorLayoutShell } from "@/components/layout/VendorLayoutShell";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -21,15 +20,9 @@ export default function VendorRootLayout({
     <html lang="bn">
       <body>
         <VendorProvider>
-          <div style={{ display: "flex", minHeight: "100vh" }}>
-            <VendorSidebar />
-            <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0 }}>
-              <VendorHeader />
-              <main style={{ flex: 1, padding: "24px", overflowY: "auto" }}>
-                {children}
-              </main>
-            </div>
-          </div>
+          <VendorLayoutShell>
+            {children}
+          </VendorLayoutShell>
         </VendorProvider>
       </body>
     </html>

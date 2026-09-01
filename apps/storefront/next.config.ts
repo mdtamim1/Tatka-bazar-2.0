@@ -63,6 +63,41 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+  async rewrites() {
+    const adminUrl = process.env["ADMIN_URL"] ?? "http://localhost:3001";
+    const vendorUrl = process.env["VENDOR_URL"] ?? "http://localhost:3002";
+    const riderUrl = process.env["RIDER_URL"] ?? "http://localhost:3003";
+
+    return [
+      // Admin Portal Multi-Zone Proxying
+      {
+        source: "/admin",
+        destination: `${adminUrl}`,
+      },
+      {
+        source: "/admin/:path*",
+        destination: `${adminUrl}/:path*`,
+      },
+      // Vendor Portal Multi-Zone Proxying
+      {
+        source: "/vendor",
+        destination: `${vendorUrl}`,
+      },
+      {
+        source: "/vendor/:path*",
+        destination: `${vendorUrl}/:path*`,
+      },
+      // Rider Portal Multi-Zone Proxying
+      {
+        source: "/rider",
+        destination: `${riderUrl}`,
+      },
+      {
+        source: "/rider/:path*",
+        destination: `${riderUrl}/:path*`,
+      },
+    ];
+  },
 };
 
 export default nextConfig;

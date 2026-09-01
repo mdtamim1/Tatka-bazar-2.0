@@ -2,60 +2,27 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import {
-  X, Plus, Minus, Trash2, ShoppingBag, ArrowRight, Tag, ShieldCheck,
-  Sparkles, Store, Check, Zap, Truck, AlertCircle, RefreshCw
-} from "lucide-react";
+import { X, Plus, Minus, ShoppingBag } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 import { useCartStore } from "@/lib/cart-store";
 
 export function CartDrawer() {
-  const { locale, t, formatPrice } = useLanguage();
+  const { locale, formatPrice } = useLanguage();
   const {
     items,
     isOpen,
     closeCart,
     updateQuantity,
     removeItem,
-    getSubtotal,
-    getDiscountAmount,
-    getDeliveryFee,
     getGrandTotal,
-    appliedCoupon,
-    applyCoupon,
-    removeCoupon,
-    getVendorGroups,
   } = useCartStore();
 
-  const [couponCode, setCouponCode] = useState("");
-  const [couponMsg, setCouponMsg] = useState<{ text: string; isError: boolean } | null>(null);
-  const [animatingItemId, setAnimatingItemId] = useState<string | null>(null);
+  const [orderInstructions, setOrderInstructions] = useState("");
+  const [showInstructions, setShowInstructions] = useState(false);
 
   if (!isOpen) return null;
 
-  const vendorGroups = getVendorGroups();
-  const subtotal = getSubtotal();
-  const discount = getDiscountAmount();
-  const deliveryFee = getDeliveryFee();
   const grandTotal = getGrandTotal();
-  const freeShippingThreshold = 999;
-  const freeShippingPercent = Math.min(100, Math.round((subtotal / freeShippingThreshold) * 100));
-
-  const handleApplyCoupon = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!couponCode.trim()) return;
-    const res = applyCoupon(couponCode);
-    setCouponMsg({ text: res.message, isError: !res.success });
-    if (res.success) {
-      setCouponCode("");
-    }
-  };
-
-  const handleUpdateQty = (itemId: string, newQty: number) => {
-    setAnimatingItemId(itemId);
-    updateQuantity(itemId, newQty);
-    setTimeout(() => setAnimatingItemId(null), 300);
-  };
 
   return (
     <div
@@ -65,19 +32,18 @@ export function CartDrawer() {
         zIndex: 9999,
         display: "flex",
         justifyContent: "flex-end",
-        animation: "fadeIn 0.25s var(--ease-out)",
+        animation: "fadeIn 0.2s ease-out",
       }}
     >
-      {/* Dynamic Backdrop */}
+      {/* Backdrop */}
       <div
         onClick={closeCart}
         style={{
           position: "absolute",
           inset: 0,
-          background: "rgba(4, 6, 8, 0.75)",
-          backdropFilter: "blur(12px)",
-          WebkitBackdropFilter: "blur(12px)",
-          transition: "opacity 0.3s ease",
+          background: "rgba(0, 0, 0, 0.65)",
+          backdropFilter: "blur(6px)",
+          WebkitBackdropFilter: "blur(6px)",
         }}
       />
 
@@ -86,211 +52,65 @@ export function CartDrawer() {
         style={{
           position: "relative",
           width: "100%",
-          maxWidth: "480px",
+          maxWidth: "460px",
           height: "100%",
-          background: "linear-gradient(180deg, #0D1117 0%, #080A0F 100%)",
+          background: "#ffffff",
+          color: "#0f172a",
           display: "flex",
           flexDirection: "column",
-          boxShadow: "-12px 0 60px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.08)",
+          boxShadow: "-8px 0 32px rgba(0, 0, 0, 0.25)",
           zIndex: 10000,
-          animation: "slideInRight 0.35s cubic-bezier(0.16, 1, 0.3, 1)",
-          overflow: "hidden",
+          animation: "slideInRight 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
+          fontFamily: "var(--font-body, system-ui, -apple-system, sans-serif)",
         }}
       >
-        {/* Neon Accent Glow Line */}
-        <div
-          style={{
-            position: "absolute",
-            top: 0,
-            left: 0,
-            right: 0,
-            height: "2px",
-            background: "linear-gradient(90deg, #10D876, #F5C842, #4F9EFF)",
-            boxShadow: "0 0 16px rgba(16, 216, 118, 0.8)",
-            zIndex: 10,
-          }}
-        />
-
         {/* ── Header ── */}
         <div
           style={{
             padding: "20px 24px",
-            borderBottom: "1px solid rgba(255, 255, 255, 0.07)",
+            borderBottom: "1px solid #e2e8f0",
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
-            background: "rgba(16, 216, 118, 0.03)",
-            backdropFilter: "blur(20px)",
+            background: "#ffffff",
           }}
         >
-          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-            <div
-              style={{
-                width: "42px",
-                height: "42px",
-                borderRadius: "12px",
-                background: "linear-gradient(135deg, rgba(16,216,118,0.2), rgba(5,158,87,0.1))",
-                border: "1px solid rgba(16,216,118,0.3)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                boxShadow: "0 4px 18px rgba(16,216,118,0.25)",
-              }}
-            >
-              <ShoppingBag size={20} color="var(--emerald)" />
-            </div>
-            <div>
-              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                <h2
-                  style={{
-                    fontSize: "1.15rem",
-                    fontWeight: 800,
-                    color: "var(--text-main)",
-                    letterSpacing: "-0.03em",
-                    fontFamily: "var(--font-heading)",
-                  }}
-                >
-                  {t.myCart}
-                </h2>
-                <span
-                  style={{
-                    fontSize: "0.68rem",
-                    fontWeight: 800,
-                    padding: "2px 8px",
-                    borderRadius: "999px",
-                    background: "rgba(16,216,118,0.15)",
-                    color: "var(--emerald)",
-                    border: "1px solid rgba(16,216,118,0.3)",
-                  }}
-                >
-                  {items.length} {locale === "bn" ? "টি পণ্য" : "items"}
-                </span>
-              </div>
-              <p style={{ fontSize: "0.74rem", color: "var(--text-muted)", marginTop: "2px" }}>
-                {locale === "bn" ? "তাজা খামারের নিরাপদ ডেলিভারি" : "Farm-fresh certified express dispatch"}
-              </p>
-            </div>
-          </div>
+          <h2
+            style={{
+              fontSize: "1.35rem",
+              fontWeight: 800,
+              color: "#0f172a",
+              letterSpacing: "-0.02em",
+              margin: 0,
+            }}
+          >
+            Shopping Cart
+          </h2>
 
           <button
             onClick={closeCart}
             aria-label="Close Cart"
             style={{
-              width: "36px",
-              height: "36px",
-              borderRadius: "50%",
-              background: "rgba(255, 255, 255, 0.06)",
-              border: "1px solid rgba(255, 255, 255, 0.1)",
-              color: "var(--text-muted)",
+              width: "32px",
+              height: "32px",
+              borderRadius: "6px",
+              background: "#0f172a",
+              border: "none",
+              color: "#ffffff",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               cursor: "pointer",
-              transition: "all var(--t-fast)",
+              transition: "transform 0.15s ease",
             }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = "rgba(255, 77, 109, 0.15)";
-              e.currentTarget.style.color = "var(--rose)";
-              e.currentTarget.style.borderColor = "rgba(255, 77, 109, 0.3)";
-              e.currentTarget.style.transform = "rotate(90deg)";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = "rgba(255, 255, 255, 0.06)";
-              e.currentTarget.style.color = "var(--text-muted)";
-              e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.1)";
-              e.currentTarget.style.transform = "rotate(0deg)";
-            }}
+            onMouseEnter={e => { e.currentTarget.style.transform = "scale(1.05)"; }}
+            onMouseLeave={e => { e.currentTarget.style.transform = "scale(1)"; }}
           >
-            <X size={18} />
+            <X size={16} />
           </button>
         </div>
 
-        {/* ── Free Shipping Progress Bar (Gamified) ── */}
-        <div
-          style={{
-            padding: "12px 24px",
-            background: "rgba(13, 17, 23, 0.95)",
-            borderBottom: "1px solid rgba(255, 255, 255, 0.06)",
-          }}
-        >
-          {subtotal >= freeShippingThreshold ? (
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "8px",
-                fontSize: "0.82rem",
-                color: "var(--emerald)",
-                fontWeight: 700,
-                padding: "4px 0",
-              }}
-            >
-              <div
-                style={{
-                  width: "22px",
-                  height: "22px",
-                  borderRadius: "50%",
-                  background: "rgba(16,216,118,0.2)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                <Sparkles size={13} color="var(--emerald)" />
-              </div>
-              <span>
-                {locale === "bn"
-                  ? "🎉 অভিনন্দন! আপনি ফ্রি এক্সপ্রেস ডেলিভারি পেয়েছেন!"
-                  : "🎉 High Five! You unlocked 100% FREE Express Delivery!"}
-              </span>
-            </div>
-          ) : (
-            <div>
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  fontSize: "0.78rem",
-                  fontWeight: 600,
-                  color: "var(--text-body)",
-                  marginBottom: "8px",
-                }}
-              >
-                <span style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                  <Truck size={14} color="var(--gold)" />
-                  {locale === "bn"
-                    ? `আর ${formatPrice(freeShippingThreshold - subtotal)} যোগ করলেই ফ্রি ডেলিভারি!`
-                    : `Add ${formatPrice(freeShippingThreshold - subtotal)} more to unlock FREE Delivery`}
-                </span>
-                <span style={{ color: "var(--emerald)", fontWeight: 800 }}>{freeShippingPercent}%</span>
-              </div>
-              <div
-                style={{
-                  width: "100%",
-                  height: "7px",
-                  background: "rgba(255, 255, 255, 0.07)",
-                  borderRadius: "999px",
-                  overflow: "hidden",
-                  padding: "1px",
-                  border: "1px solid rgba(255, 255, 255, 0.05)",
-                }}
-              >
-                <div
-                  style={{
-                    width: `${freeShippingPercent}%`,
-                    height: "100%",
-                    background: "linear-gradient(90deg, #10D876 0%, #F5C842 100%)",
-                    borderRadius: "999px",
-                    transition: "width 0.4s cubic-bezier(0.16, 1, 0.3, 1)",
-                    boxShadow: "0 0 12px rgba(16, 216, 118, 0.6)",
-                  }}
-                />
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* ── Drawer Body — Multi-Vendor Grouped Items ── */}
+        {/* ── Items List ── */}
         <div
           style={{
             flex: 1,
@@ -298,7 +118,8 @@ export function CartDrawer() {
             padding: "20px 24px",
             display: "flex",
             flexDirection: "column",
-            gap: "18px",
+            gap: "16px",
+            background: "#f8fafc",
           }}
         >
           {items.length === 0 ? (
@@ -311,517 +132,331 @@ export function CartDrawer() {
                 alignItems: "center",
                 justifyContent: "center",
                 height: "100%",
+                color: "#64748b",
               }}
             >
               <div
                 style={{
-                  width: "88px",
-                  height: "88px",
-                  borderRadius: "28px",
-                  background: "linear-gradient(135deg, rgba(16,216,118,0.1), rgba(245,200,66,0.05))",
-                  border: "1px solid rgba(16,216,118,0.2)",
+                  width: "64px",
+                  height: "64px",
+                  borderRadius: "50%",
+                  background: "#e2e8f0",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  marginBottom: "20px",
-                  animation: "gravityFloat 4s ease-in-out infinite",
-                  boxShadow: "0 12px 36px rgba(0, 0, 0, 0.4)",
+                  marginBottom: "16px",
+                  color: "#0f172a",
                 }}
               >
-                <ShoppingBag size={42} color="var(--emerald)" />
+                <ShoppingBag size={28} />
               </div>
-              <h3
-                style={{
-                  fontSize: "1.2rem",
-                  fontWeight: 800,
-                  color: "var(--text-main)",
-                  marginBottom: "8px",
-                  fontFamily: "var(--font-heading)",
-                }}
-              >
-                {t.emptyCart}
+              <h3 style={{ fontSize: "1.1rem", fontWeight: 700, color: "#0f172a", margin: "0 0 6px 0" }}>
+                Your cart is empty
               </h3>
-              <p
-                style={{
-                  fontSize: "0.85rem",
-                  color: "var(--text-muted)",
-                  maxWidth: "280px",
-                  lineHeight: 1.6,
-                  marginBottom: "28px",
-                }}
-              >
-                {t.emptyCartMsg || (locale === "bn" ? "আপনার ঝুড়িতে এখনও কোনো পণ্য যোগ করা হয়নি।" : "Your fresh basket is currently empty.")}
+              <p style={{ fontSize: "0.85rem", color: "#64748b", margin: "0 0 20px 0" }}>
+                Add farm-fresh groceries, fish, and produce to get started.
               </p>
               <button
                 onClick={closeCart}
-                className="btn-primary"
                 style={{
-                  width: "100%",
-                  maxWidth: "260px",
-                  padding: "14px 24px",
-                  fontSize: "0.9rem",
-                  fontWeight: 800,
+                  padding: "10px 24px",
+                  background: "#0f172a",
+                  color: "#ffffff",
+                  borderRadius: "8px",
+                  fontWeight: 700,
+                  fontSize: "0.88rem",
+                  border: "none",
+                  cursor: "pointer",
                 }}
               >
-                <span>{t.startShopping}</span>
-                <ArrowRight size={16} />
+                Start Shopping
               </button>
             </div>
           ) : (
-            vendorGroups.map((group) => (
+            items.map((item) => (
               <div
-                key={group.vendorId}
+                key={item.id}
                 style={{
-                  background: "rgba(255, 255, 255, 0.025)",
-                  borderRadius: "var(--radius-lg)",
-                  border: "1px solid rgba(255, 255, 255, 0.07)",
+                  background: "#ffffff",
+                  border: "1px solid #e2e8f0",
+                  borderRadius: "14px",
                   padding: "16px",
-                  boxShadow: "var(--shadow-sm)",
+                  boxShadow: "0 2px 8px rgba(0, 0, 0, 0.04)",
                   display: "flex",
-                  flexDirection: "column",
-                  gap: "12px",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  gap: "14px",
                 }}
               >
-                {/* Vendor Header */}
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    paddingBottom: "10px",
-                    borderBottom: "1px solid rgba(255, 255, 255, 0.05)",
-                  }}
-                >
-                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                    <div
+                {/* Left: Thumbnail & Details */}
+                <div style={{ display: "flex", alignItems: "center", gap: "14px", flex: 1, minWidth: 0 }}>
+                  <img
+                    src={item.product?.images?.[0] || "https://images.unsplash.com/photo-1544943910-4c1dc44a0b27?w=300&auto=format&fit=crop&q=80"}
+                    alt={locale === "bn" ? item.product?.nameBn : item.product?.nameEn}
+                    style={{
+                      width: "74px",
+                      height: "74px",
+                      borderRadius: "10px",
+                      objectFit: "cover",
+                      backgroundColor: "#f1f5f9",
+                      border: "1px solid #e2e8f0",
+                      flexShrink: 0,
+                    }}
+                  />
+                  <div style={{ minWidth: 0, flex: 1 }}>
+                    <h4
                       style={{
-                        padding: "4px 8px",
-                        borderRadius: "6px",
-                        background: "rgba(16,216,118,0.1)",
-                        color: "var(--emerald)",
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "5px",
-                        fontSize: "0.72rem",
+                        fontSize: "0.95rem",
                         fontWeight: 700,
-                        border: "1px solid rgba(16,216,118,0.2)",
+                        color: "#0f172a",
+                        margin: "0 0 3px 0",
+                        whiteSpace: "nowrap",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
                       }}
                     >
-                      <Store size={12} />
-                      <span>{locale === "bn" ? group.vendorNameBn : group.vendorNameEn}</span>
-                    </div>
-                  </div>
-                  <span
-                    style={{
-                      fontSize: "0.7rem",
-                      color: "var(--text-muted)",
-                      fontWeight: 600,
-                    }}
-                  >
-                    {group.items.length} {locale === "bn" ? "টি আইটেম" : "items"}
-                  </span>
-                </div>
-
-                {/* Items in Vendor Group */}
-                <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-                  {group.items.map((item) => {
-                    const isBouncing = animatingItemId === item.id;
-                    return (
-                      <div
-                        key={item.id}
+                      {locale === "bn" ? item.product?.nameBn : item.product?.nameEn}
+                    </h4>
+                    <p
+                      style={{
+                        fontSize: "0.78rem",
+                        color: "#64748b",
+                        margin: "0 0 6px 0",
+                      }}
+                    >
+                      Weight: {item.selectedWeight} {item.selectedUnit} • Fresh
+                    </p>
+                    <div style={{ display: "flex", alignItems: "baseline", gap: "8px" }}>
+                      <span
                         style={{
-                          display: "flex",
-                          gap: "12px",
-                          background: "rgba(19, 23, 32, 0.7)",
-                          padding: "12px",
-                          borderRadius: "var(--radius-md)",
-                          alignItems: "center",
-                          border: "1px solid rgba(255, 255, 255, 0.04)",
-                          transition: "all var(--t-fast)",
-                          transform: isBouncing ? "scale(1.02)" : "scale(1)",
+                          fontSize: "1.05rem",
+                          fontWeight: 800,
+                          color: "#e11d48",
                         }}
                       >
-                        {/* Thumbnail */}
-                        <div
+                        {formatPrice(item.unitPrice * item.quantity)}
+                      </span>
+                      {item.product?.comparePrice && (
+                        <span
                           style={{
-                            width: "56px",
-                            height: "56px",
-                            borderRadius: "var(--radius-sm)",
-                            overflow: "hidden",
-                            background: "var(--bg-subtle)",
-                            border: "1px solid rgba(255, 255, 255, 0.08)",
-                            flexShrink: 0,
-                            position: "relative",
+                            fontSize: "0.78rem",
+                            color: "#94a3b8",
+                            textDecoration: "line-through",
                           }}
                         >
-                          <img
-                            src={item.product.images[0]}
-                            alt={locale === "bn" ? item.product.nameBn : item.product.nameEn}
-                            style={{
-                              width: "100%",
-                              height: "100%",
-                              objectFit: "cover",
-                            }}
-                          />
-                        </div>
+                          {formatPrice(item.product.comparePrice * item.quantity)}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
 
-                        {/* Details */}
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <h4
-                            style={{
-                              fontSize: "0.85rem",
-                              fontWeight: 700,
-                              color: "var(--text-main)",
-                              lineHeight: 1.3,
-                              overflow: "hidden",
-                              textOverflow: "ellipsis",
-                              whiteSpace: "nowrap",
-                              fontFamily: "var(--font-heading)",
-                            }}
-                          >
-                            {locale === "bn" ? item.product.nameBn : item.product.nameEn}
-                          </h4>
+                {/* Right: Quantity Controls & Remove */}
+                <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "8px", flexShrink: 0 }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      border: "1px solid #cbd5e1",
+                      borderRadius: "6px",
+                      padding: "3px 8px",
+                      gap: "10px",
+                      background: "#ffffff",
+                    }}
+                  >
+                    <button
+                      onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                      style={{
+                        background: "none",
+                        border: "none",
+                        color: "#0f172a",
+                        cursor: "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        padding: "2px",
+                      }}
+                      aria-label="Decrease quantity"
+                    >
+                      <Minus size={13} />
+                    </button>
+                    <span style={{ fontSize: "0.9rem", fontWeight: 700, color: "#0f172a", minWidth: "16px", textAlign: "center" }}>
+                      {item.quantity}
+                    </span>
+                    <button
+                      onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                      style={{
+                        background: "none",
+                        border: "none",
+                        color: "#0f172a",
+                        cursor: "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        padding: "2px",
+                      }}
+                      aria-label="Increase quantity"
+                    >
+                      <Plus size={13} />
+                    </button>
+                  </div>
 
-                          <div
-                            style={{
-                              display: "flex",
-                              alignItems: "center",
-                              gap: "8px",
-                              marginTop: "4px",
-                              flexWrap: "wrap",
-                            }}
-                          >
-                            <span
-                              style={{
-                                fontSize: "0.68rem",
-                                fontWeight: 700,
-                                color: "var(--emerald)",
-                                background: "rgba(16,216,118,0.1)",
-                                padding: "2px 7px",
-                                borderRadius: "var(--radius-full)",
-                                border: "1px solid rgba(16,216,118,0.25)",
-                              }}
-                            >
-                              {item.selectedWeight} {item.selectedUnit}
-                            </span>
-                            <span
-                              style={{
-                                fontSize: "0.86rem",
-                                fontWeight: 800,
-                                color: "var(--text-main)",
-                              }}
-                            >
-                              {formatPrice(item.totalPrice)}
-                            </span>
-                          </div>
-                        </div>
-
-                        {/* Quantity Stepper */}
-                        <div
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "4px",
-                            background: "rgba(255, 255, 255, 0.05)",
-                            borderRadius: "var(--radius-full)",
-                            padding: "3px 6px",
-                            border: "1px solid rgba(255, 255, 255, 0.08)",
-                          }}
-                        >
-                          <button
-                            onClick={() => handleUpdateQty(item.id, item.quantity - 1)}
-                            aria-label="Decrease quantity"
-                            style={{
-                              width: "22px",
-                              height: "22px",
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              background: "rgba(255, 255, 255, 0.08)",
-                              borderRadius: "50%",
-                              color: "var(--text-body)",
-                              cursor: "pointer",
-                              border: "none",
-                              transition: "all var(--t-fast)",
-                            }}
-                            onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(255, 77, 109, 0.2)")}
-                            onMouseLeave={(e) => (e.currentTarget.style.background = "rgba(255, 255, 255, 0.08)")}
-                          >
-                            <Minus size={11} />
-                          </button>
-                          <span
-                            style={{
-                              fontSize: "0.82rem",
-                              fontWeight: 800,
-                              minWidth: "18px",
-                              textAlign: "center",
-                              color: "var(--text-main)",
-                            }}
-                          >
-                            {item.quantity}
-                          </span>
-                          <button
-                            onClick={() => handleUpdateQty(item.id, item.quantity + 1)}
-                            aria-label="Increase quantity"
-                            style={{
-                              width: "22px",
-                              height: "22px",
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              background: "linear-gradient(135deg, #10D876, #059E57)",
-                              borderRadius: "50%",
-                              color: "var(--bg-page)",
-                              cursor: "pointer",
-                              border: "none",
-                              transition: "all var(--t-fast)",
-                            }}
-                            onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.15)")}
-                            onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
-                          >
-                            <Plus size={11} />
-                          </button>
-                        </div>
-
-                        {/* Remove Trash Button */}
-                        <button
-                          onClick={() => removeItem(item.id)}
-                          aria-label="Remove item"
-                          style={{
-                            color: "var(--text-subtle)",
-                            padding: "6px",
-                            cursor: "pointer",
-                            border: "none",
-                            background: "none",
-                            borderRadius: "6px",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            transition: "all var(--t-fast)",
-                          }}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.color = "var(--rose)";
-                            e.currentTarget.style.background = "rgba(255, 77, 109, 0.1)";
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.color = "var(--text-subtle)";
-                            e.currentTarget.style.background = "none";
-                          }}
-                        >
-                          <Trash2 size={14} />
-                        </button>
-                      </div>
-                    );
-                  })}
+                  <button
+                    onClick={() => removeItem(item.id)}
+                    style={{
+                      background: "none",
+                      border: "none",
+                      color: "#e11d48",
+                      fontSize: "0.78rem",
+                      fontWeight: 600,
+                      textDecoration: "underline",
+                      cursor: "pointer",
+                      padding: "2px",
+                    }}
+                  >
+                    Remove
+                  </button>
                 </div>
               </div>
             ))
           )}
         </div>
 
-        {/* ── Drawer Footer — Calculations & Checkout Action ── */}
+        {/* ── Footer / Summary Section ── */}
         {items.length > 0 && (
           <div
             style={{
               padding: "20px 24px",
-              borderTop: "1px solid rgba(255, 255, 255, 0.08)",
-              background: "rgba(10, 13, 18, 0.98)",
-              boxShadow: "0 -8px 32px rgba(0, 0, 0, 0.6)",
-              backdropFilter: "blur(20px)",
+              background: "#ffffff",
+              borderTop: "1px solid #e2e8f0",
               display: "flex",
               flexDirection: "column",
-              gap: "14px",
+              gap: "16px",
             }}
           >
-            {/* Coupon Box */}
-            <form onSubmit={handleApplyCoupon} style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-              <div style={{ display: "flex", gap: "8px" }}>
-                <div style={{ position: "relative", flex: 1 }}>
-                  <input
-                    type="text"
-                    placeholder={t.couponPlaceholder || (locale === "bn" ? "কুপন কোড (যেমন: TATKA10)" : "Promo Code (e.g. TATKA10)")}
-                    value={couponCode}
-                    onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
-                    style={{
-                      width: "100%",
-                      padding: "10px 14px 10px 34px",
-                      borderRadius: "var(--radius-md)",
-                      background: "rgba(255, 255, 255, 0.04)",
-                      border: "1px solid rgba(255, 255, 255, 0.1)",
-                      color: "var(--text-main)",
-                      fontSize: "0.82rem",
-                      fontWeight: 600,
-                      outline: "none",
-                      transition: "all var(--t-fast)",
-                    }}
-                    onFocus={(e) => (e.currentTarget.style.borderColor = "var(--emerald)")}
-                    onBlur={(e) => (e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.1)")}
-                  />
-                  <Tag
-                    size={14}
-                    color="var(--text-muted)"
-                    style={{ position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)" }}
-                  />
-                </div>
-                <button
-                  type="submit"
-                  style={{
-                    padding: "10px 18px",
-                    background: "rgba(16, 216, 118, 0.15)",
-                    border: "1px solid rgba(16, 216, 118, 0.3)",
-                    color: "var(--emerald)",
-                    borderRadius: "var(--radius-md)",
-                    fontWeight: 700,
-                    fontSize: "0.82rem",
-                    cursor: "pointer",
-                    transition: "all var(--t-fast)",
-                    whiteSpace: "nowrap",
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.background = "var(--emerald)";
-                    e.currentTarget.style.color = "var(--bg-page)";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = "rgba(16, 216, 118, 0.15)";
-                    e.currentTarget.style.color = "var(--emerald)";
-                  }}
-                >
-                  {t.applyCoupon}
-                </button>
-              </div>
-
-              {couponMsg && (
-                <div
-                  style={{
-                    fontSize: "0.74rem",
-                    color: couponMsg.isError ? "var(--rose)" : "var(--emerald)",
-                    fontWeight: 600,
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "5px",
-                    paddingLeft: "4px",
-                  }}
-                >
-                  {couponMsg.isError ? <AlertCircle size={12} /> : <Check size={12} />}
-                  <span>{couponMsg.text}</span>
-                </div>
-              )}
-
-              {appliedCoupon && (
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    padding: "6px 12px",
-                    background: "rgba(16,216,118,0.1)",
-                    border: "1px solid rgba(16,216,118,0.25)",
-                    borderRadius: "var(--radius-sm)",
-                    fontSize: "0.75rem",
-                    fontWeight: 700,
-                    color: "var(--emerald)",
-                  }}
-                >
-                  <span style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                    <Sparkles size={12} />
-                    {appliedCoupon.code} (-{formatPrice(discount)})
-                  </span>
-                  <button
-                    type="button"
-                    onClick={removeCoupon}
-                    aria-label="Remove coupon"
-                    style={{
-                      color: "var(--rose)",
-                      cursor: "pointer",
-                      border: "none",
-                      background: "none",
-                      padding: "2px",
-                    }}
-                  >
-                    <X size={13} />
-                  </button>
-                </div>
-              )}
-            </form>
-
-            {/* Calculations Breakdown */}
+            {/* TOTAL Card (Dark High-Contrast Box) */}
             <div
               style={{
-                display: "flex",
-                flexDirection: "column",
-                gap: "7px",
-                fontSize: "0.84rem",
-                padding: "12px 14px",
-                background: "rgba(255, 255, 255, 0.02)",
-                borderRadius: "var(--radius-md)",
-                border: "1px solid rgba(255, 255, 255, 0.05)",
+                background: "#0f172a",
+                borderRadius: "14px",
+                padding: "18px 22px",
+                color: "#ffffff",
               }}
             >
-              <div style={{ display: "flex", justifyContent: "space-between", color: "var(--text-muted)" }}>
-                <span>{t.subtotal}</span>
-                <span style={{ fontWeight: 600, color: "var(--text-body)" }}>{formatPrice(subtotal)}</span>
-              </div>
-              {discount > 0 && (
-                <div style={{ display: "flex", justifyContent: "space-between", color: "var(--emerald)" }}>
-                  <span>{t.discount}</span>
-                  <span style={{ fontWeight: 700 }}>-{formatPrice(discount)}</span>
-                </div>
-              )}
-              <div style={{ display: "flex", justifyContent: "space-between", color: "var(--text-muted)" }}>
-                <span>{t.deliveryFee}</span>
-                <span style={{ fontWeight: 600, color: deliveryFee === 0 ? "var(--emerald)" : "var(--text-body)" }}>
-                  {deliveryFee === 0 ? t.freeDelivery : formatPrice(deliveryFee)}
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <span style={{ fontSize: "1.1rem", fontWeight: 800, letterSpacing: "0.02em" }}>
+                  TOTAL
+                </span>
+                <span style={{ fontSize: "1.45rem", fontWeight: 900 }}>
+                  {formatPrice(grandTotal)}
                 </span>
               </div>
-              <div
+              <p
                 style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  fontSize: "1.1rem",
-                  fontWeight: 900,
-                  color: "var(--text-main)",
-                  paddingTop: "8px",
-                  borderTop: "1px dashed rgba(255, 255, 255, 0.1)",
-                  fontFamily: "var(--font-heading)",
+                  fontSize: "0.74rem",
+                  color: "#94a3b8",
+                  margin: "6px 0 0 0",
+                  lineHeight: 1.4,
                 }}
               >
-                <span>{t.grandTotal}</span>
-                <span className="gradient-text-emerald">{formatPrice(grandTotal)}</span>
-              </div>
+                Taxes, discounts and shipping calculated at checkout
+              </p>
             </div>
 
-            {/* Action Buttons */}
-            <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+            {/* ORDER SPECIAL INSTRUCTIONS */}
+            <div>
+              <button
+                type="button"
+                onClick={() => setShowInstructions(!showInstructions)}
+                style={{
+                  width: "100%",
+                  background: "none",
+                  border: "none",
+                  padding: "0",
+                  textAlign: "left",
+                  fontSize: "0.82rem",
+                  fontWeight: 700,
+                  color: "#0f172a",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.05em",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                }}
+              >
+                <span>ORDER SPECIAL INSTRUCTIONS</span>
+                <span style={{ fontSize: "1.1rem", color: "#64748b" }}>{showInstructions ? "−" : "+"}</span>
+              </button>
+
+              {showInstructions && (
+                <textarea
+                  rows={2}
+                  value={orderInstructions}
+                  onChange={(e) => setOrderInstructions(e.target.value)}
+                  placeholder="e.g. Leave package with security guard, please deliver before 2 PM..."
+                  style={{
+                    width: "100%",
+                    marginTop: "8px",
+                    padding: "10px 12px",
+                    borderRadius: "8px",
+                    border: "1px solid #cbd5e1",
+                    fontSize: "0.82rem",
+                    color: "#0f172a",
+                    outline: "none",
+                    fontFamily: "inherit",
+                    resize: "none",
+                  }}
+                />
+              )}
+            </div>
+
+            {/* Bottom Action Buttons (Checkout & View Cart) */}
+            <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
               <Link
                 href="/checkout"
                 onClick={closeCart}
-                className="btn-primary"
                 style={{
-                  width: "100%",
-                  padding: "14px",
-                  fontSize: "1rem",
-                  fontWeight: 800,
-                  letterSpacing: "-0.01em",
+                  flex: 1,
+                  height: "46px",
+                  background: "#0f172a",
+                  color: "#ffffff",
+                  borderRadius: "8px",
+                  fontWeight: 700,
+                  fontSize: "0.92rem",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  textDecoration: "none",
+                  transition: "background 0.2s ease, transform 0.1s ease",
+                  boxShadow: "0 4px 12px rgba(15, 23, 42, 0.2)",
                 }}
+                onMouseEnter={e => { e.currentTarget.style.background = "#1e293b"; }}
+                onMouseLeave={e => { e.currentTarget.style.background = "#0f172a"; }}
               >
-                <span>{t.proceedToCheckout}</span>
-                <ArrowRight size={18} />
+                Checkout
               </Link>
+
               <Link
                 href="/cart"
                 onClick={closeCart}
                 style={{
-                  textAlign: "center",
-                  fontSize: "0.8rem",
-                  fontWeight: 600,
-                  color: "var(--text-muted)",
-                  padding: "6px",
-                  transition: "color var(--t-fast)",
+                  flex: 1,
+                  height: "46px",
+                  background: "#ffffff",
+                  border: "1.5px solid #cbd5e1",
+                  color: "#0f172a",
+                  borderRadius: "8px",
+                  fontWeight: 700,
+                  fontSize: "0.92rem",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  textDecoration: "none",
+                  transition: "background 0.2s ease, border-color 0.2s ease",
                 }}
-                onMouseEnter={(e) => (e.currentTarget.style.color = "var(--emerald)")}
-                onMouseLeave={(e) => (e.currentTarget.style.color = "var(--text-muted)")}
+                onMouseEnter={e => { e.currentTarget.style.background = "#f8fafc"; e.currentTarget.style.borderColor = "#94a3b8"; }}
+                onMouseLeave={e => { e.currentTarget.style.background = "#ffffff"; e.currentTarget.style.borderColor = "#cbd5e1"; }}
               >
-                {locale === "bn" ? "বিস্তারিত কার্ট এবং নোটস দেখুন →" : "View full cart breakdown & notes →"}
+                View Cart
               </Link>
             </div>
           </div>

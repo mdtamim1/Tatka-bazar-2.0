@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import {
   Search, Bell, ExternalLink, Shield, X,
   ShoppingBag, Package, AlertTriangle,
-  ChevronDown, Clock, Zap,
+  ChevronDown, Clock, Zap, LogOut,
 } from "lucide-react";
 import { useAdmin } from "@/context/AdminContext";
 import { AdminRole } from "@/types";
@@ -304,6 +304,39 @@ export function AdminHeader() {
             </div>
           </div>
         </div>
+
+        {/* Logout Button */}
+        <button
+          onClick={() => {
+            if (typeof window !== "undefined") {
+              localStorage.removeItem("tatka_admin_token");
+            }
+            router.push("/login");
+          }}
+          title="লগআউট করুন"
+          style={{
+            padding: "8px",
+            background: "var(--bg-raised)",
+            border: "1px solid var(--border-1)",
+            borderRadius: "var(--r-md)",
+            color: "var(--text-3)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            cursor: "pointer",
+            transition: "all var(--t-fast)",
+          }}
+          onMouseEnter={e => {
+            e.currentTarget.style.borderColor = "var(--red)";
+            e.currentTarget.style.color = "var(--red)";
+          }}
+          onMouseLeave={e => {
+            e.currentTarget.style.borderColor = "var(--border-1)";
+            e.currentTarget.style.color = "var(--text-3)";
+          }}
+        >
+          <LogOut size={16} />
+        </button>
 
       </div>
     </header>

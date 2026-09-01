@@ -1,7 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { RiderProvider } from "@/context/RiderContext";
-import { RiderHeader } from "@/components/layout/RiderHeader";
-import { RiderBottomNav } from "@/components/layout/RiderBottomNav";
+import { RiderLayoutShell } from "@/components/layout/RiderLayoutShell";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -28,13 +27,9 @@ export default function RiderRootLayout({
     <html lang="bn">
       <body>
         <RiderProvider>
-          <div className="rider-app-container">
-            <RiderHeader />
-            <main style={{ flex: 1, padding: "16px" }}>
-              {children}
-            </main>
-            <RiderBottomNav />
-          </div>
+          <RiderLayoutShell>
+            {children}
+          </RiderLayoutShell>
         </RiderProvider>
       </body>
     </html>
