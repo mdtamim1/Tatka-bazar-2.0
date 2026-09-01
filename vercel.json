@@ -1,0 +1,6 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "buildCommand": "pnpm --filter @tatka-bazar/storefront build",
+  "outputDirectory": "apps/storefront/.next",
+  "framework": "nextjs"
+}
