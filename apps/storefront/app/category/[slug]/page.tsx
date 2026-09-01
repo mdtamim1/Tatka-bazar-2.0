@@ -2,10 +2,11 @@
 
 import React, { useState, useMemo, use } from "react";
 import Link from "next/link";
-import { Filter, SlidersHorizontal, ChevronRight, X, Sparkles, Store, Leaf } from "lucide-react";
+import { SlidersHorizontal, ChevronRight, Filter, X } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 import { CATEGORIES, PRODUCTS, VENDORS } from "@/lib/catalog";
 import { ProductCard } from "@/components/product/ProductCard";
+import styles from "./page.module.css";
 
 interface CategoryPageProps {
   params: Promise<{ slug: string }>;
@@ -13,7 +14,7 @@ interface CategoryPageProps {
 
 export default function CategoryListingPage({ params }: CategoryPageProps) {
   const resolvedParams = use(params);
-  const { locale, t, formatPrice } = useLanguage();
+  const { locale, formatPrice } = useLanguage();
 
   const isAll = resolvedParams.slug === "all";
   const category = CATEGORIES.find((c) => c.slug === resolvedParams.slug) || {
@@ -34,6 +35,7 @@ export default function CategoryListingPage({ params }: CategoryPageProps) {
   const [dailyDealsOnly, setDailyDealsOnly] = useState(false);
   const [maxPrice, setMaxPrice] = useState<number>(2000);
   const [sortBy, setSortBy] = useState<"featured" | "price-asc" | "price-desc" | "rating">("featured");
+  const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
 
   const filteredProducts = useMemo(() => {
     return PRODUCTS.filter((p) => {
@@ -62,111 +64,127 @@ export default function CategoryListingPage({ params }: CategoryPageProps) {
     );
   };
 
+  const handleResetFilters = () => {
+    setSelectedVendors([]);
+    setOrganicOnly(false);
+    setDailyDealsOnly(false);
+    setMaxPrice(2000);
+  };
+
+  const hasActiveFilters = selectedVendors.length > 0 || organicOnly || dailyDealsOnly || maxPrice < 2000;
+
   return (
-    <div style={{ padding: "20px 0 60px" }}>
-      <div className="container">
+    <div className={styles.pageWrapper}>
+      <div className={styles.container}>
         
         {/* Breadcrumb Navigation */}
-        <div style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "0.82rem", color: "var(--text-muted)", marginBottom: "16px" }}>
-          <Link href="/" style={{ color: "var(--primary)" }}>হোম</Link>
+        <div className={styles.breadcrumb}>
+          <Link href="/">হোম</Link>
           <ChevronRight size={14} />
-          <span style={{ color: "var(--text-main)", fontWeight: 600 }}>
+          <span className={styles.breadcrumbCurrent}>
             {locale === "bn" ? category.nameBn : category.nameEn}
           </span>
         </div>
 
         {/* Category Hero Header Banner */}
-        <div
-          style={{
-            background: "linear-gradient(135deg, #104C2A 0%, #1B8A4C 100%)",
-            borderRadius: "var(--radius-xl)",
-            color: "#FFFFFF",
-            padding: "32px",
-            marginBottom: "30px",
-            boxShadow: "var(--shadow-md)",
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-          }}
-        >
+        <div className={styles.heroBanner}>
           <div>
-            <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "8px" }}>
-              <span style={{ fontSize: "2rem" }}>{category.icon}</span>
-              <h1 style={{ fontSize: "clamp(1.5rem, 3vw, 2rem)", fontWeight: 800 }}>
+            <div className={styles.bannerTitleRow}>
+              <span className={styles.bannerIcon}>{category.icon}</span>
+              <h1 className={styles.bannerTitle}>
                 {locale === "bn" ? category.nameBn : category.nameEn}
               </h1>
             </div>
-            <p style={{ color: "rgba(255, 255, 255, 0.85)", fontSize: "0.95rem", maxWidth: "600px" }}>
+            <p className={styles.bannerDesc}>
               {locale === "bn" ? category.descriptionBn : category.descriptionEn}
             </p>
           </div>
-          <div className="hidden md:block">
-            <span style={{ background: "rgba(255, 255, 255, 0.18)", backdropFilter: "blur(6px)", padding: "8px 16px", borderRadius: "var(--radius-full)", fontWeight: 700, fontSize: "0.9rem" }}>
-              {filteredProducts.length} {locale === "bn" ? "টি পণ্য উপলব্ধ" : "Products available"}
-            </span>
+          <div className={styles.bannerCountBadge}>
+            {filteredProducts.length} {locale === "bn" ? "টি পণ্য উপলব্ধ" : "Products available"}
           </div>
         </div>
 
-        {/* Layout: Sidebar Filters + Main Product Grid */}
-        <div style={{ display: "grid", gridTemplateColumns: "260px 1fr", gap: "30px", alignItems: "flex-start" }}>
-          
-          {/* Left Filter Sidebar */}
-          <div
-            style={{
-              background: "var(--bg-surface)",
-              borderRadius: "var(--radius-lg)",
-              border: "1px solid var(--border-subtle)",
-              padding: "20px",
-              boxShadow: "var(--shadow-sm)",
-            }}
+        {/* Mobile Quick Filter Bar (Visible only on mobile <= 900px) */}
+        <div className={styles.mobileFilterBar}>
+          <button
+            type="button"
+            onClick={() => setMobileFilterOpen((prev) => !prev)}
+            className={styles.mobileFilterBtn}
           >
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px", paddingBottom: "10px", borderBottom: "1px solid var(--border-subtle)" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "6px", fontWeight: 800, fontSize: "0.95rem" }}>
-                <SlidersHorizontal size={16} color="var(--primary)" />
+            <SlidersHorizontal size={14} />
+            <span>{mobileFilterOpen ? "ফিল্টার বন্ধ" : "ফিল্টার"}</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setOrganicOnly((prev) => !prev)}
+            className={`${styles.mobileFilterChip} ${organicOnly ? styles.mobileFilterChipActive : ""}`}
+          >
+            🌱 অর্গানিক
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setDailyDealsOnly((prev) => !prev)}
+            className={`${styles.mobileFilterChip} ${dailyDealsOnly ? styles.mobileFilterChipActive : ""}`}
+          >
+            ⚡ ফ্ল্যাশ অফার
+          </button>
+
+          {hasActiveFilters && (
+            <button
+              type="button"
+              onClick={handleResetFilters}
+              className={styles.mobileFilterChip}
+              style={{ color: "#ef4444", borderColor: "#fca5a5" }}
+            >
+              <X size={12} /> রিসেট
+            </button>
+          )}
+        </div>
+
+        {/* Layout: Sidebar Filters + Main Product Grid */}
+        <div className={styles.mainGrid}>
+          
+          {/* Filter Sidebar (Desktop + Expandable on Mobile) */}
+          <div className={`${styles.sidebarCard} ${mobileFilterOpen ? styles.sidebarCardOpen : ""}`}>
+            <div className={styles.filterHeader}>
+              <div className={styles.filterTitle}>
+                <SlidersHorizontal size={16} color="#3056D3" />
                 <span>{locale === "bn" ? "ফিল্টার সমূহ" : "Filters"}</span>
               </div>
-              {(selectedVendors.length > 0 || organicOnly || dailyDealsOnly) && (
-                <button
-                  onClick={() => {
-                    setSelectedVendors([]);
-                    setOrganicOnly(false);
-                    setDailyDealsOnly(false);
-                    setMaxPrice(2000);
-                  }}
-                  style={{ fontSize: "0.75rem", color: "var(--crimson)", fontWeight: 700 }}
-                >
+              {hasActiveFilters && (
+                <button onClick={handleResetFilters} className={styles.resetBtn}>
                   রিসেট
                 </button>
               )}
             </div>
 
             {/* Quick Toggle Checkboxes */}
-            <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginBottom: "20px" }}>
-              <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "0.85rem", cursor: "pointer", fontWeight: 600 }}>
+            <div className={styles.toggleGroup}>
+              <label className={styles.filterCheckboxLabel}>
                 <input
                   type="checkbox"
                   checked={organicOnly}
                   onChange={(e) => setOrganicOnly(e.target.checked)}
-                  style={{ accentColor: "var(--primary)", width: "16px", height: "16px" }}
                 />
                 <span>🌱 {locale === "bn" ? "শুধুমাত্র অর্গানিক" : "Organic Only"}</span>
               </label>
-              <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "0.85rem", cursor: "pointer", fontWeight: 600 }}>
+              <label className={styles.filterCheckboxLabel}>
                 <input
                   type="checkbox"
                   checked={dailyDealsOnly}
                   onChange={(e) => setDailyDealsOnly(e.target.checked)}
-                  style={{ accentColor: "var(--primary)", width: "16px", height: "16px" }}
                 />
                 <span>⚡ {locale === "bn" ? "আজকের ফ্ল্যাশ অফার" : "Flash Deals Only"}</span>
               </label>
             </div>
 
             {/* Price Range Slider */}
-            <div style={{ marginBottom: "24px" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.85rem", fontWeight: 700, marginBottom: "8px" }}>
+            <div className={styles.priceFilterGroup}>
+              <div className={styles.priceLabelRow}>
                 <span>{locale === "bn" ? "সর্বোচ্চ মূল্য:" : "Max Price:"}</span>
-                <span style={{ color: "var(--primary-dark)" }}>{formatPrice(maxPrice)}</span>
+                <span className={styles.priceValue}>{formatPrice(maxPrice)}</span>
               </div>
               <input
                 type="range"
@@ -175,32 +193,30 @@ export default function CategoryListingPage({ params }: CategoryPageProps) {
                 step={50}
                 value={maxPrice}
                 onChange={(e) => setMaxPrice(Number(e.target.value))}
-                style={{ width: "100%", accentColor: "var(--primary)" }}
+                className={styles.rangeInput}
               />
             </div>
 
             {/* Multi-Vendor Partner Filter */}
             <div>
-              <div style={{ fontWeight: 700, fontSize: "0.85rem", marginBottom: "10px", color: "var(--text-main)" }}>
+              <div className={styles.vendorGroupTitle}>
                 {locale === "bn" ? "বিক্রেতা দোকানসমূহ" : "Partner Sellers"}
               </div>
-              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "0.82rem", cursor: "pointer" }}>
+              <div className={styles.vendorList}>
+                <label className={styles.filterCheckboxLabel}>
                   <input
                     type="checkbox"
                     checked={selectedVendors.includes("tatka-bazar-official")}
                     onChange={() => toggleVendorFilter("tatka-bazar-official")}
-                    style={{ accentColor: "var(--primary)" }}
                   />
                   <span>✓ {locale === "bn" ? "তাতকা বাজার অফিসিয়াল" : "Tatka Bazar Official"}</span>
                 </label>
                 {VENDORS.map((v) => (
-                  <label key={v.id} style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "0.82rem", cursor: "pointer" }}>
+                  <label key={v.id} className={styles.filterCheckboxLabel}>
                     <input
                       type="checkbox"
                       checked={selectedVendors.includes(v.slug)}
                       onChange={() => toggleVendorFilter(v.slug)}
-                      style={{ accentColor: "var(--primary)" }}
                     />
                     <span>{locale === "bn" ? v.nameBn : v.nameEn}</span>
                   </label>
@@ -211,41 +227,20 @@ export default function CategoryListingPage({ params }: CategoryPageProps) {
           </div>
 
           {/* Right Main Product Area */}
-          <div>
+          <div className={styles.productArea}>
             {/* Top Sort & Count Bar */}
-            <div
-              style={{
-                background: "var(--bg-surface)",
-                borderRadius: "var(--radius-md)",
-                border: "1px solid var(--border-subtle)",
-                padding: "12px 18px",
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                marginBottom: "20px",
-                flexWrap: "wrap",
-                gap: "12px",
-              }}
-            >
-              <div style={{ fontSize: "0.9rem", fontWeight: 700, color: "var(--text-main)" }}>
+            <div className={styles.sortBar}>
+              <div className={styles.productCount}>
                 {filteredProducts.length} {locale === "bn" ? "টি তাজা পণ্য প্রদর্শিত হচ্ছে" : "fresh products found"}
               </div>
 
               {/* Sort Selector */}
-              <div style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "0.85rem" }}>
-                <span style={{ color: "var(--text-muted)" }}>{locale === "bn" ? "সাজান:" : "Sort by:"}</span>
+              <div className={styles.sortGroup}>
+                <span className={styles.sortLabel}>{locale === "bn" ? "সাজান:" : "Sort by:"}</span>
                 <select
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value as any)}
-                  style={{
-                    padding: "6px 12px",
-                    borderRadius: "var(--radius-md)",
-                    border: "1px solid var(--border-medium)",
-                    background: "var(--bg-surface)",
-                    color: "var(--text-main)",
-                    fontWeight: 600,
-                    outline: "none",
-                  }}
+                  className={styles.sortSelect}
                 >
                   <option value="featured">{locale === "bn" ? "জনপ্রিয় ও সেরা" : "Popular & Featured"}</option>
                   <option value="price-asc">{locale === "bn" ? "দাম: কম থেকে বেশি" : "Price: Low to High"}</option>
@@ -257,36 +252,24 @@ export default function CategoryListingPage({ params }: CategoryPageProps) {
 
             {/* Product Grid */}
             {filteredProducts.length === 0 ? (
-              <div
-                style={{
-                  background: "var(--bg-surface)",
-                  borderRadius: "var(--radius-lg)",
-                  padding: "60px 20px",
-                  textAlign: "center",
-                  border: "1px solid var(--border-subtle)",
-                }}
-              >
-                <div style={{ fontSize: "2.5rem", marginBottom: "10px" }}>🥬</div>
-                <h3 style={{ fontSize: "1.2rem", fontWeight: 700, marginBottom: "6px" }}>
+              <div className={styles.emptyState}>
+                <div className={styles.emptyIcon}>🥬</div>
+                <h3 className={styles.emptyTitle}>
                   {locale === "bn" ? "কোনো পণ্য পাওয়া যায়নি" : "No matching fresh products"}
                 </h3>
-                <p style={{ color: "var(--text-muted)", fontSize: "0.9rem", marginBottom: "16px" }}>
+                <p className={styles.emptyDesc}>
                   {locale === "bn" ? "ফিল্টার পরিবর্তন করে আবার চেষ্টা করুন।" : "Try adjusting your filters to see more results."}
                 </p>
                 <button
-                  onClick={() => {
-                    setSelectedVendors([]);
-                    setOrganicOnly(false);
-                    setDailyDealsOnly(false);
-                    setMaxPrice(2000);
-                  }}
-                  className="btn-primary"
+                  type="button"
+                  onClick={handleResetFilters}
+                  className={styles.emptyResetBtn}
                 >
                   ফিল্টার রিসেট করুন
                 </button>
               </div>
             ) : (
-              <div className="product-grid">
+              <div className={styles.productsGrid}>
                 {filteredProducts.map((prod) => (
                   <ProductCard key={prod.id} product={prod} />
                 ))}

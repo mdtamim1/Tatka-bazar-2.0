@@ -1,0 +1,389 @@
+/* =============================================================================
+   Category Listing Page CSS Module (100% Mobile & Desktop Responsive)
+   ============================================================================= */
+
+.pageWrapper {
+  padding: 24px 0 60px;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+  background: #f8fafc;
+  min-height: calc(100vh - 200px);
+}
+
+.container {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 20px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+@media (max-width: 640px) {
+  .container {
+    padding: 0 12px;
+  }
+}
+
+/* ── Breadcrumb ── */
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.82rem;
+  color: #64748b;
+  margin-bottom: 16px;
+}
+
+.breadcrumb a {
+  color: #3056D3;
+  text-decoration: none;
+}
+
+.breadcrumbCurrent {
+  color: #0f172a;
+  font-weight: 600;
+}
+
+/* ── Category Banner ── */
+.heroBanner {
+  background: linear-gradient(135deg, #104C2A 0%, #1B8A4C 100%);
+  border-radius: 20px;
+  color: #FFFFFF;
+  padding: 28px 32px;
+  margin-bottom: 24px;
+  box-shadow: 0 8px 24px rgba(16, 76, 42, 0.15);
+  display: flex;
+  justifyContent: space-between;
+  align-items: center;
+}
+
+@media (max-width: 640px) {
+  .heroBanner {
+    padding: 20px 16px;
+    border-radius: 16px;
+    margin-bottom: 16px;
+  }
+}
+
+.bannerTitleRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 6px;
+}
+
+.bannerIcon {
+  font-size: 1.8rem;
+}
+
+.bannerTitle {
+  font-size: clamp(1.3rem, 2.5vw, 1.8rem);
+  font-weight: 800;
+  margin: 0;
+}
+
+.bannerDesc {
+  color: rgba(255, 255, 255, 0.88);
+  font-size: 0.88rem;
+  max-width: 600px;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.bannerCountBadge {
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(6px);
+  padding: 8px 16px;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+
+@media (max-width: 768px) {
+  .bannerCountBadge {
+    display: none;
+  }
+}
+
+/* ── Main Layout: Sidebar & Products ── */
+.mainGrid {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  gap: 24px;
+  align-items: flex-start;
+  width: 100%;
+}
+
+@media (max-width: 900px) {
+  .mainGrid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+}
+
+/* ── Left Filter Sidebar (Desktop) ── */
+.sidebarCard {
+  background: #ffffff;
+  border-radius: 20px;
+  border: 1px solid #e2e8f0;
+  padding: 20px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.03);
+}
+
+@media (max-width: 900px) {
+  .sidebarCard {
+    display: none;
+  }
+  .sidebarCardOpen {
+    display: block !important;
+    margin-bottom: 16px;
+  }
+}
+
+.filterHeader {
+  display: flex;
+  align-items: center;
+  justifyContent: space-between;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.filterTitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 800;
+  font-size: 0.95rem;
+  color: #0f172a;
+}
+
+.resetBtn {
+  font-size: 0.78rem;
+  color: #ef4444;
+  font-weight: 700;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.toggleGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.filterCheckboxLabel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  font-weight: 600;
+  color: #334155;
+}
+
+.filterCheckboxLabel input {
+  accent-color: #3056D3;
+  width: 16px;
+  height: 16px;
+}
+
+.priceFilterGroup {
+  margin-bottom: 24px;
+}
+
+.priceLabelRow {
+  display: flex;
+  justifyContent: space-between;
+  font-size: 0.85rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+  color: #0f172a;
+}
+
+.priceValue {
+  color: #3056D3;
+}
+
+.rangeInput {
+  width: 100%;
+  accent-color: #3056D3;
+}
+
+.vendorGroupTitle {
+  font-weight: 700;
+  font-size: 0.85rem;
+  margin-bottom: 10px;
+  color: #0f172a;
+}
+
+.vendorList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* ── Mobile Filter Toggle Bar ── */
+.mobileFilterBar {
+  display: none;
+}
+
+@media (max-width: 900px) {
+  .mobileFilterBar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 14px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+  }
+}
+
+.mobileFilterBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 999px;
+  padding: 8px 14px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #0f172a;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.mobileFilterChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 999px;
+  padding: 8px 12px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #475569;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.mobileFilterChipActive {
+  background: #eff6ff;
+  border-color: #3056D3;
+  color: #3056D3;
+  font-weight: 700;
+}
+
+/* ── Right Product Area ── */
+.productArea {
+  width: 100%;
+  min-width: 0;
+}
+
+.sortBar {
+  background: #ffffff;
+  border-radius: 16px;
+  border: 1px solid #e2e8f0;
+  padding: 12px 18px;
+  display: flex;
+  justifyContent: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+@media (max-width: 640px) {
+  .sortBar {
+    padding: 10px 14px;
+    border-radius: 12px;
+    margin-bottom: 14px;
+  }
+}
+
+.productCount {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.sortGroup {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.82rem;
+}
+
+.sortLabel {
+  color: #64748b;
+}
+
+.sortSelect {
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  color: #0f172a;
+  font-weight: 600;
+  font-size: 0.82rem;
+  outline: none;
+}
+
+/* ── Product Grid ── */
+.productsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 20px;
+  width: 100%;
+}
+
+@media (max-width: 640px) {
+  .productsGrid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+}
+
+/* Empty State */
+.emptyState {
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 60px 20px;
+  text-align: center;
+  border: 1px solid #e2e8f0;
+}
+
+.emptyIcon {
+  font-size: 2.5rem;
+  margin-bottom: 10px;
+}
+
+.emptyTitle {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin-bottom: 6px;
+}
+
+.emptyDesc {
+  color: #64748b;
+  font-size: 0.88rem;
+  margin-bottom: 16px;
+}
+
+.emptyResetBtn {
+  background: #3056D3;
+  color: #ffffff;
+  padding: 10px 20px;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 0.88rem;
+  border: none;
+  cursor: pointer;
+}

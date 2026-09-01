@@ -24,8 +24,9 @@
 
 @media (max-width: 640px) {
   .cardContainer {
-    border-radius: 20px;
-    padding: 14px;
+    border-radius: 16px;
+    padding: 10px;
+    border-color: #e2e8f0;
   }
 }
 
@@ -235,6 +236,35 @@
 
 .buyNowBtn:hover {
   background: #000000;
+}
+
+@media (max-width: 640px) {
+  .priceRow {
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+  .currentPrice {
+    font-size: 1.05rem;
+  }
+  .comparePrice {
+    font-size: 0.75rem;
+  }
+  .swatchDot {
+    width: 11px;
+    height: 11px;
+  }
+  .btnStack {
+    gap: 6px;
+  }
+  .buyNowBtn {
+    height: 36px;
+    font-size: 0.78rem;
+  }
+  .addToCartBtn {
+    height: 36px;
+    font-size: 0.78rem;
+  }
 }
 
 .addToCartBtn {
