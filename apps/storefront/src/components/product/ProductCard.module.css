@@ -1,0 +1,265 @@
+/* =============================================================================
+   Dribbble Product Card Prototype (by Ananthu)
+   Aesthetic: Ultra-clean, modern squircle, stacked pills & interactive swatches
+   ============================================================================= */
+
+.cardContainer {
+  background: #ffffff;
+  border-radius: 28px;
+  padding: 20px;
+  border: 1px solid #f1f5f9;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.04);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease, border-color 0.25s ease;
+  font-family: var(--font-body, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif);
+}
+
+.cardContainer:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.08);
+  border-color: #e2e8f0;
+}
+
+@media (max-width: 640px) {
+  .cardContainer {
+    border-radius: 20px;
+    padding: 14px;
+  }
+}
+
+/* ── Top Image Squircle ── */
+.imageFrame {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border-radius: 20px;
+  background: #f8fafc;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justifyContent: center;
+  text-decoration: none;
+}
+
+@media (max-width: 640px) {
+  .imageFrame {
+    border-radius: 14px;
+  }
+}
+
+.productImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.4s ease;
+}
+
+.cardContainer:hover .productImg {
+  transform: scale(1.06);
+}
+
+/* Wishlist Heart Icon (Top Right) */
+.wishlistBtn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(4px);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  justifyContent: center;
+  cursor: pointer;
+  z-index: 10;
+  transition: transform 0.15s ease, color 0.15s ease;
+}
+
+.wishlistBtn:hover {
+  transform: scale(1.1);
+  color: #ef4444;
+}
+
+.wishlistBtnActive {
+  color: #ef4444 !important;
+}
+
+/* Discount / Freshness Badge */
+.discountBadge {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  background: #0f172a;
+  color: #ffffff;
+  font-size: 0.68rem;
+  font-weight: 800;
+  padding: 4px 8px;
+  border-radius: 6px;
+  z-index: 10;
+  letter-spacing: 0.04em;
+}
+
+/* ── Card Body ── */
+.bodyContent {
+  display: flex;
+  flex-direction: column;
+  padding-top: 16px;
+  flex: 1;
+}
+
+.productTitle {
+  font-size: 1.12rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0 0 6px 0;
+  line-height: 1.3;
+  text-decoration: none;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  letter-spacing: -0.02em;
+}
+
+.productTitle:hover {
+  color: #3056D3;
+}
+
+@media (max-width: 640px) {
+  .productTitle {
+    font-size: 1rem;
+  }
+}
+
+.specSubtitle {
+  font-size: 0.78rem;
+  line-height: 1.45;
+  color: #64748b;
+  margin: 0 0 14px 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+@media (max-width: 640px) {
+  .specSubtitle {
+    font-size: 0.72rem;
+    margin-bottom: 10px;
+  }
+}
+
+/* ── Price & Swatches Row ── */
+.priceRow {
+  display: flex;
+  align-items: center;
+  justifyContent: space-between;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.priceGroup {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.currentPrice {
+  font-size: 1.25rem;
+  font-weight: 900;
+  color: #0f172a;
+}
+
+.comparePrice {
+  font-size: 0.85rem;
+  color: #94a3b8;
+  text-decoration: line-through;
+  font-weight: 500;
+}
+
+/* Color / Weight Dots Swatches (Dribbble prototype) */
+.swatchGroup {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.swatchDot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid #ffffff;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  outline: 1.5px solid transparent;
+}
+
+.swatchDot:hover {
+  transform: scale(1.18);
+}
+
+.swatchDotActive {
+  outline-color: #0f172a;
+  box-shadow: 0 0 0 1px #0f172a;
+}
+
+/* ── Stacked Action Buttons ── */
+.btnStack {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: auto;
+}
+
+.buyNowBtn {
+  width: 100%;
+  height: 44px;
+  border-radius: 999px;
+  background: #18181b;
+  color: #ffffff;
+  font-size: 0.88rem;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s ease, transform 0.15s ease;
+  text-decoration: none;
+}
+
+.buyNowBtn:hover {
+  background: #000000;
+}
+
+.addToCartBtn {
+  width: 100%;
+  height: 44px;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #0f172a;
+  border: 1.5px solid #e2e8f0;
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.addToCartBtn:hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+}
+
+.addedState {
+  background: #f0fdf4 !important;
+  border-color: #86efac !important;
+  color: #166534 !important;
+}

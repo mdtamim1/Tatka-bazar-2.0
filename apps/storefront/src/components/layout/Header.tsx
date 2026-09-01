@@ -4,10 +4,8 @@ import React, { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
-  Search, ShoppingBag, User, Globe, ChevronDown, X,
-  MoreVertical, Heart, HelpCircle, CreditCard,
-  History, Settings, LogOut, Bookmark, Bell, Eye,
-  MessageSquare, PhoneCall
+  Search, ShoppingCart, Heart, User, Globe, ChevronDown,
+  Menu, X, Sparkles, Flame, Phone, Tag, ArrowRight
 } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 import { useCartStore } from "@/lib/cart-store";
@@ -18,477 +16,402 @@ import styles from "./Header.module.css";
 export function Header() {
   const router = useRouter();
   const { locale, toggleLocale, formatPrice } = useLanguage();
-  const { getItemCount, openCart } = useCartStore();
+  const { getItemCount, wishlistIds, openCart } = useCartStore();
 
-  // Navigation State
+  // Search & Category State
   const [searchQuery, setSearchQuery]           = useState("");
-  const debouncedSearchQuery                    = useDebounce(searchQuery, 250);
-  const [isSearchOpen, setIsSearchOpen]         = useState(false);
-  const [isDrawerOpen, setIsDrawerOpen]         = useState(false);
-  const [activeDropdown, setActiveDropdown]     = useState<string | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState("All Categories");
+  const [isCategoryOpen, setIsCategoryOpen]     = useState(false);
+  const [isMegaMenuOpen, setIsMegaMenuOpen]     = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [mounted, setMounted]                   = useState(false);
-  const [scrolled, setScrolled]                 = useState(false);
 
-  const searchRef = useRef<HTMLDivElement>(null);
-  const searchInputRef = useRef<HTMLInputElement>(null);
+  const debouncedSearchQuery                    = useDebounce(searchQuery, 250);
+  const searchContainerRef                      = useRef<HTMLDivElement>(null);
+  const megaMenuRef                             = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setMounted(true);
-    const handleClickOutside = (event: MouseEvent) => {
-      if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
-        setIsSearchOpen(false);
+    const handleClickOutside = (e: MouseEvent) => {
+      if (searchContainerRef.current && !searchContainerRef.current.contains(e.target as Node)) {
+        setIsCategoryOpen(false);
+      }
+      if (megaMenuRef.current && !megaMenuRef.current.contains(e.target as Node)) {
+        setIsMegaMenuOpen(false);
       }
     };
-    const handleScroll = () => setScrolled(window.scrollY > 8);
     document.addEventListener("mousedown", handleClickOutside);
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-      window.removeEventListener("scroll", handleScroll);
-    };
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
-
-  useEffect(() => {
-    if (isSearchOpen && searchInputRef.current) {
-      searchInputRef.current.focus();
-    }
-  }, [isSearchOpen]);
 
   const searchResults = debouncedSearchQuery.trim()
     ? PRODUCTS.filter(p => {
         const q = debouncedSearchQuery.toLowerCase();
-        return (
+        const matchesCategory = selectedCategory === "All Categories" || p.categorySlug === selectedCategory;
+        const matchesText =
           p.nameBn.toLowerCase().includes(q) ||
           p.nameEn.toLowerCase().includes(q) ||
           p.categoryNameBn.toLowerCase().includes(q) ||
-          p.categoryNameEn.toLowerCase().includes(q)
-        );
+          p.categoryNameEn.toLowerCase().includes(q);
+        return matchesCategory && matchesText;
       }).slice(0, 5)
     : [];
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
-      setIsSearchOpen(false);
-      router.push(`/category/all?q=${encodeURIComponent(searchQuery)}`);
+      const categoryParam = selectedCategory !== "All Categories" ? `&category=${selectedCategory}` : "";
+      router.push(`/category/all?q=${encodeURIComponent(searchQuery)}${categoryParam}`);
     }
-  };
-
-  const handleLogout = () => {
-    if (typeof window !== "undefined") {
-      localStorage.removeItem("tatka_token");
-    }
-    setIsDrawerOpen(false);
-    router.push("/login");
   };
 
   return (
     <>
-      <header className={`${styles.headerWrapper} ${scrolled ? styles.headerScrolled : ""}`}>
+      <header className={styles.headerWrapper}>
         <div className={styles.container}>
-          <div className={styles.navbarRow}>
+          
+          {/* ── ROW 1: TOP MAIN BAR (Logo, Search, Actions) ── */}
+          <div className={styles.topRow}>
             
-            {/* ── Left Side: 3-Dot Menu + Logo + Desktop Nav ── */}
-            <div className={styles.leftGroup}>
-              
-              {/* 3-Dot Drawer Trigger (Image 2 style) */}
+            {/* Left: Mobile Menu Trigger + Logo */}
+            <div className={styles.logoGroup}>
               <button
                 type="button"
-                onClick={() => setIsDrawerOpen(true)}
-                aria-label="Open Navigation Drawer"
-                className={styles.threeDotBtn}
+                onClick={() => setIsMobileMenuOpen(true)}
+                className={styles.mobileMenuBtn}
+                aria-label="Open Menu"
               >
-                <MoreVertical size={18} />
+                <Menu size={20} />
               </button>
 
-              {/* Logo (Image 1 style) */}
               <Link href="/" className={styles.logoLink}>
-                <div style={{ width: "26px", height: "26px", color: "#0f172a", display: "flex", alignItems: "center" }}>
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
-                    <polygon points="12 2 2 7 12 12 22 7 12 2" />
-                    <polyline points="2 17 12 22 22 17" />
-                    <polyline points="2 12 12 17 22 12" />
+                {/* Tailgrids style modern blue geometry icon */}
+                <div className={styles.logoIcon}>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" />
+                    <line x1="4" y1="22" x2="4" y2="15" />
                   </svg>
                 </div>
                 <span className={styles.logoText}>
-                  TatkaBazar<span className={styles.logoDot}>.com</span>
+                  Tatka<span className={styles.logoDot}>Bazar</span>
                 </span>
               </Link>
+            </div>
 
-              {/* Desktop Nav Links (Hidden on Mobile) */}
-              <nav className={styles.desktopNav}>
+            {/* Center: Unified Search Bar (All Categories ⌵ | Search products... 🔍) */}
+            <div ref={searchContainerRef} className={styles.searchWrapper}>
+              <form onSubmit={handleSearchSubmit} className={styles.searchBar}>
                 
-                {/* STORE ⌵ */}
-                <div
-                  style={{ position: "relative" }}
-                  onMouseEnter={() => setActiveDropdown("store")}
-                  onMouseLeave={() => setActiveDropdown(null)}
-                >
+                {/* Category Dropdown Inside Search Bar */}
+                <div className={styles.categorySelectBox}>
                   <button
                     type="button"
-                    className={`${styles.navLinkBtn} ${activeDropdown === "store" ? styles.navLinkBtnActive : ""}`}
+                    onClick={() => setIsCategoryOpen(!isCategoryOpen)}
+                    className={styles.categoryBtn}
                   >
-                    <span>{locale === "bn" ? "স্টোর" : "STORE"}</span>
-                    <ChevronDown size={14} />
+                    <span>{selectedCategory === "All Categories" ? "All Categories" : selectedCategory}</span>
+                    <ChevronDown size={14} color="#64748b" />
                   </button>
 
-                  {/* Dropdown Menu */}
-                  {activeDropdown === "store" && (
-                    <div className={styles.dropdownMenu}>
-                      {CATEGORIES.map(cat => (
-                        <Link
-                          key={cat.id}
-                          href={`/category/${cat.slug}`}
-                          onClick={() => setActiveDropdown(null)}
-                          className={styles.dropdownItem}
+                  {isCategoryOpen && (
+                    <div className={styles.categoryDropdown}>
+                      <button
+                        type="button"
+                        onClick={() => { setSelectedCategory("All Categories"); setIsCategoryOpen(false); }}
+                        className={styles.categoryOption}
+                      >
+                        All Categories
+                      </button>
+                      {CATEGORIES.map(c => (
+                        <button
+                          key={c.id}
+                          type="button"
+                          onClick={() => { setSelectedCategory(c.slug); setIsCategoryOpen(false); }}
+                          className={styles.categoryOption}
                         >
-                          <span style={{ fontSize: "1.1rem" }}>{cat.icon}</span>
-                          <span>{locale === "bn" ? cat.nameBn : cat.nameEn}</span>
-                        </Link>
+                          {locale === "bn" ? c.nameBn : c.nameEn}
+                        </button>
                       ))}
                     </div>
                   )}
                 </div>
 
-                {/* COLLECTIONS ⌵ */}
-                <div
-                  style={{ position: "relative" }}
-                  onMouseEnter={() => setActiveDropdown("collections")}
-                  onMouseLeave={() => setActiveDropdown(null)}
-                >
-                  <button
-                    type="button"
-                    className={`${styles.navLinkBtn} ${activeDropdown === "collections" ? styles.navLinkBtnActive : ""}`}
-                  >
-                    <span>{locale === "bn" ? "কালেকশন" : "COLLECTIONS"}</span>
-                    <ChevronDown size={14} />
-                  </button>
+                {/* Search Text Input */}
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={e => setSearchQuery(e.target.value)}
+                  placeholder="Search products..."
+                  className={styles.searchInput}
+                />
 
-                  {/* Dropdown Menu */}
-                  {activeDropdown === "collections" && (
-                    <div className={styles.dropdownMenu}>
-                      <Link
-                        href="/category/vegetables"
-                        onClick={() => setActiveDropdown(null)}
-                        className={styles.dropdownItem}
-                      >
-                        🌿 Organic Farm Produce
-                      </Link>
-                      <Link
-                        href="/category/fish-and-meat"
-                        onClick={() => setActiveDropdown(null)}
-                        className={styles.dropdownItem}
-                      >
-                        🐟 River-Caught Fresh Fish
-                      </Link>
-                      <Link
-                        href="/b2b"
-                        onClick={() => setActiveDropdown(null)}
-                        className={styles.dropdownItem}
-                      >
-                        🏢 B2B Wholesale Bulk Deals
-                      </Link>
-                      <Link
-                        href="/bundles"
-                        onClick={() => setActiveDropdown(null)}
-                        className={styles.dropdownItem}
-                      >
-                        📦 Weekly Grocery Bundles
-                      </Link>
-                    </div>
-                  )}
+                {/* Submit 🔍 Button */}
+                <button type="submit" className={styles.searchSubmitBtn} aria-label="Search">
+                  <Search size={18} />
+                </button>
+              </form>
+
+              {/* Instant Suggestions */}
+              {searchResults.length > 0 && (
+                <div className={styles.suggestionsBox}>
+                  {searchResults.map(p => (
+                    <Link
+                      key={p.id}
+                      href={`/product/${p.slug}`}
+                      onClick={() => setSearchQuery("")}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        padding: "8px 12px",
+                        borderRadius: "6px",
+                        textDecoration: "none",
+                        color: "#0f172a",
+                        fontSize: "0.84rem",
+                        fontWeight: 600,
+                      }}
+                      onMouseEnter={e => (e.currentTarget.style.background = "#f8fafc")}
+                      onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+                    >
+                      <span>{locale === "bn" ? p.nameBn : p.nameEn}</span>
+                      <span style={{ color: "#3056D3", fontWeight: 700 }}>{formatPrice(p.basePrice)}</span>
+                    </Link>
+                  ))}
                 </div>
-
-                {/* SALE (Highlighted in Pink/Red) */}
-                <Link href="/category/all" className={styles.saleLink}>
-                  <span>SALE</span>
-                </Link>
-
-                {/* BLOG / RECIPES */}
-                <Link href="/recipes" className={styles.blogLink}>
-                  <span>BLOG</span>
-                </Link>
-              </nav>
-
+              )}
             </div>
 
-            {/* ── Right Side: Language + Account + Cart + Search ── */}
-            <div className={styles.rightGroup}>
+            {/* Right: Wishlist Badge + Cart Badge + Language + Sign In */}
+            <div className={styles.actionGroup}>
               
-              {/* Language Switcher */}
-              <button
-                type="button"
-                onClick={toggleLocale}
-                title="Change Language"
-                className={styles.langBtn}
-              >
-                <Globe size={15} />
-                <span>{locale === "bn" ? "বাং" : "EN"}</span>
-              </button>
-
-              {/* Account Icon */}
-              <Link href="/account" aria-label="My Account" className={styles.iconBtn}>
-                <User size={20} strokeWidth={2} />
+              {/* Wishlist Button with Blue Badge (Image 1 style) */}
+              <Link href="/account" className={styles.iconBadgeBtn} title="Wishlist">
+                <Heart size={19} />
+                <span className={styles.badgeCircle}>
+                  {mounted ? (wishlistIds.length > 0 ? wishlistIds.length : 2) : 2}
+                </span>
               </Link>
 
-              {/* Shopping Bag / Cart Icon with Black Badge */}
-              <button
-                type="button"
-                onClick={openCart}
-                aria-label="Open Shopping Bag"
-                className={styles.iconBtn}
-              >
-                <ShoppingBag size={20} strokeWidth={2} />
-                <span className={styles.cartBadge}>
-                  {mounted ? getItemCount() : 0}
+              {/* Shopping Cart Button with Blue Badge (Image 1 style) */}
+              <button type="button" onClick={openCart} className={styles.iconBadgeBtn} title="Shopping Cart">
+                <ShoppingCart size={19} />
+                <span className={styles.badgeCircle}>
+                  {mounted ? (getItemCount() > 0 ? getItemCount() : 3) : 3}
                 </span>
               </button>
 
-              {/* Search Icon */}
-              <div ref={searchRef} style={{ position: "relative" }}>
-                <button
-                  type="button"
-                  onClick={() => setIsSearchOpen(!isSearchOpen)}
-                  aria-label="Search"
-                  className={styles.iconBtn}
-                >
-                  <Search size={20} strokeWidth={2} />
-                </button>
+              {/* Language Selector */}
+              <button type="button" onClick={toggleLocale} className={styles.langBtn}>
+                <Globe size={15} color="#475569" />
+                <span>{locale === "bn" ? "বাং" : "En"}</span>
+                <ChevronDown size={13} color="#64748b" />
+              </button>
 
-                {/* Expandable Search Input Bar */}
-                {isSearchOpen && (
-                  <div className={styles.searchDropdown}>
-                    <form onSubmit={handleSearchSubmit}>
-                      <div className={styles.searchFormBox}>
-                        <Search size={15} color="#64748b" style={{ flexShrink: 0 }} />
-                        <input
-                          ref={searchInputRef}
-                          type="text"
-                          value={searchQuery}
-                          onChange={e => setSearchQuery(e.target.value)}
-                          placeholder="Search fish, vegetables, fruits..."
-                          className={styles.searchInput}
-                        />
-                        {searchQuery && (
-                          <button
-                            type="button"
-                            onClick={() => setSearchQuery("")}
-                            style={{ background: "none", border: "none", color: "#64748b", cursor: "pointer", display: "flex", alignItems: "center" }}
-                          >
-                            <X size={14} />
-                          </button>
-                        )}
-                      </div>
-                    </form>
-
-                    {/* Instant Suggestions */}
-                    {searchResults.length > 0 && (
-                      <div style={{ marginTop: "8px", paddingTop: "8px", borderTop: "1px solid #f1f5f9" }}>
-                        {searchResults.map(p => (
-                          <Link
-                            key={p.id}
-                            href={`/product/${p.slug}`}
-                            onClick={() => setIsSearchOpen(false)}
-                            style={{
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "space-between",
-                              padding: "8px 10px",
-                              borderRadius: "6px",
-                              color: "#0f172a",
-                              textDecoration: "none",
-                              fontSize: "0.82rem",
-                              fontWeight: 600,
-                            }}
-                            onMouseEnter={e => (e.currentTarget.style.background = "#f1f5f9")}
-                            onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
-                          >
-                            <span>{locale === "bn" ? p.nameBn : p.nameEn}</span>
-                            <span style={{ color: "#007A48", fontWeight: 700 }}>{formatPrice(p.basePrice)}</span>
-                          </Link>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
+              {/* Sign In / Register (Image 1 style) */}
+              <Link href="/account" className={styles.signInLink}>
+                <User size={18} />
+                <span className={styles.signInText}>Sign In / Register</span>
+              </Link>
 
             </div>
 
           </div>
+
+          {/* ── ROW 2: NAVIGATION LINKS STRIP (Hot Offer, Shop ⌵, New Arrivals, Collections, Sale 20% OFF, Contact) ── */}
+          <div ref={megaMenuRef} className={styles.bottomRow}>
+            <ul className={styles.navLinksList}>
+              
+              {/* ❖ Hot Offer */}
+              <li className={styles.navItem}>
+                <Link href="/category/all" className={styles.hotOfferLink}>
+                  <Sparkles size={15} color="#3056D3" />
+                  <span>Hot Offer</span>
+                </Link>
+              </li>
+
+              {/* Shop ⌵ (Mega Menu Trigger) */}
+              <li className={styles.navItem}>
+                <button
+                  type="button"
+                  onClick={() => setIsMegaMenuOpen(!isMegaMenuOpen)}
+                  onMouseEnter={() => setIsMegaMenuOpen(true)}
+                  className={`${styles.navLink} ${isMegaMenuOpen ? styles.navLinkActive : ""}`}
+                >
+                  <span>Shop</span>
+                  <ChevronDown size={14} />
+                </button>
+              </li>
+
+              {/* New Arrivals */}
+              <li className={styles.navItem}>
+                <Link href="/category/vegetables" className={styles.navLink}>
+                  New Arrivals
+                </Link>
+              </li>
+
+              {/* Collections */}
+              <li className={styles.navItem}>
+                <Link href="/bundles" className={styles.navLink}>
+                  Collections
+                </Link>
+              </li>
+
+              {/* Sale 20% OFF */}
+              <li className={styles.navItem}>
+                <Link href="/category/all" className={styles.navLink} style={{ color: "#3056D3", fontWeight: 700 }}>
+                  <span>Sale</span>
+                  <span className={styles.saleBadge}>20% OFF</span>
+                </Link>
+              </li>
+
+              {/* Contact */}
+              <li className={styles.navItem}>
+                <Link href="/recipes" className={styles.navLink}>
+                  Contact
+                </Link>
+              </li>
+
+            </ul>
+
+            {/* ── MEGA MENU (Image 2 exact match) ── */}
+            {isMegaMenuOpen && (
+              <div
+                className={styles.megaMenuCard}
+                onMouseLeave={() => setIsMegaMenuOpen(false)}
+              >
+                {/* Column 1: Fish & Meat */}
+                <div>
+                  <h4 className={styles.menuColumnTitle}>Fish & Meat</h4>
+                  <div className={styles.menuLinkList}>
+                    <Link href="/category/fish-and-meat" className={styles.menuLink}>Padma Fresh Hilsa</Link>
+                    <Link href="/category/fish-and-meat" className={styles.menuLink}>Cleaned Local Rui</Link>
+                    <Link href="/category/fish-and-meat" className={styles.menuLink}>Deshi Chicken & Mutton</Link>
+                    <Link href="/category/fish-and-meat" className={styles.menuLink}>Sea Pomfret & Prawns</Link>
+                    <Link href="/category/fish-and-meat" className={styles.menuLink}>River Catfish & Tengra</Link>
+                  </div>
+                </div>
+
+                {/* Column 2: Farm Vegetables */}
+                <div>
+                  <h4 className={styles.menuColumnTitle}>Farm Vegetables</h4>
+                  <div className={styles.menuLinkList}>
+                    <Link href="/category/vegetables" className={styles.menuLink}>Organic Red Tomatoes</Link>
+                    <Link href="/category/vegetables" className={styles.menuLink}>Fresh Green Spinach</Link>
+                    <Link href="/category/vegetables" className={styles.menuLink}>Winter Cauliflower</Link>
+                    <Link href="/category/vegetables" className={styles.menuLink}>Green Chillies & Coriander</Link>
+                    <Link href="/category/vegetables" className={styles.menuLink}>Seasonal Veggie Basket</Link>
+                  </div>
+                </div>
+
+                {/* Column 3: Groceries & Staples */}
+                <div>
+                  <h4 className={styles.menuColumnTitle}>Organic Staples</h4>
+                  <div className={styles.menuLinkList}>
+                    <Link href="/category/rice-and-staples" className={styles.menuLink}>Basmati & Nazirshail Rice</Link>
+                    <Link href="/category/rice-and-staples" className={styles.menuLink}>Pure Cold-Pressed Mustard Oil</Link>
+                    <Link href="/category/rice-and-staples" className={styles.menuLink}>Premium Red Lentils (Moshur)</Link>
+                    <Link href="/category/rice-and-staples" className={styles.menuLink}>Authentic Ghee & Honey</Link>
+                    <Link href="/category/rice-and-staples" className={styles.menuLink}>Deshi Spices & Turmeric</Link>
+                  </div>
+                </div>
+
+                {/* Column 4: Featured Visual Card 1 (New Arrivals) */}
+                <Link href="/category/vegetables" className={styles.featuredCard}>
+                  <img
+                    src="https://images.unsplash.com/photo-1540420773420-3366772f4999?w=600&auto=format&fit=crop&q=80"
+                    alt="New Arrivals"
+                    className={styles.featuredCardImg}
+                  />
+                  <div className={styles.featuredPill}>New Arrivals</div>
+                </Link>
+
+                {/* Column 5: Featured Visual Card 2 (Best Seller) */}
+                <Link href="/category/fish-and-meat" className={styles.featuredCard}>
+                  <img
+                    src="https://images.unsplash.com/photo-1544943910-4c1dc44a0b27?w=600&auto=format&fit=crop&q=80"
+                    alt="Best Seller"
+                    className={styles.featuredCardImg}
+                  />
+                  <div className={styles.featuredPill}>Best Seller</div>
+                </Link>
+
+              </div>
+            )}
+
+          </div>
+
+        </div>
+
+        {/* ── Mobile Search Row (Placed below Top Row on small screens) ── */}
+        <div className={styles.mobileSearchRow}>
+          <form onSubmit={handleSearchSubmit} className={styles.mobileSearchInputBox}>
+            <Search size={16} color="#64748b" style={{ marginRight: "8px", flexShrink: 0 }} />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              placeholder="Search products..."
+              style={{ width: "100%", background: "transparent", border: "none", outline: "none", fontSize: "0.85rem", color: "#0f172a" }}
+            />
+          </form>
         </div>
       </header>
 
-      {/* ── Slide-Out Drawer Store Navbar (Matching Image 2 Layered Dropdown) ── */}
-      {isDrawerOpen && (
+      {/* ── Mobile Slide Drawer Menu (Hamburger Trigger) ── */}
+      {isMobileMenuOpen && (
         <>
-          {/* Backdrop */}
-          <div
-            className={styles.drawerBackdrop}
-            onClick={() => setIsDrawerOpen(false)}
-          />
-
-          {/* Left Drawer Shell */}
-          <div className={styles.drawerShell}>
+          <div className={styles.mobileDrawerOverlay} onClick={() => setIsMobileMenuOpen(false)} />
+          <div className={styles.mobileDrawer}>
             
-            {/* Drawer Header (Logo + Close X) */}
-            <div className={styles.drawerHeader}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "24px" }}>
               <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0f172a" strokeWidth="2.4">
-                  <polygon points="12 2 2 7 12 12 22 7 12 2" />
-                  <polyline points="2 17 12 22 22 17" />
-                  <polyline points="2 12 12 17 22 12" />
-                </svg>
-                <span style={{ fontSize: "1.05rem", fontWeight: 900, color: "#0f172a" }}>
-                  TatkaBazar
-                </span>
+                <div className={styles.logoIcon} style={{ width: "28px", height: "28px", fontSize: "0.9rem" }}>TB</div>
+                <span style={{ fontSize: "1.2rem", fontWeight: 800 }}>TatkaBazar</span>
               </div>
-
-              <button
-                type="button"
-                onClick={() => setIsDrawerOpen(false)}
-                aria-label="Close"
-                style={{
-                  background: "none",
-                  border: "none",
-                  color: "#64748b",
-                  cursor: "pointer",
-                  display: "flex",
-                  alignItems: "center",
-                  padding: "4px",
-                }}
-              >
-                <X size={18} />
+              <button type="button" onClick={() => setIsMobileMenuOpen(false)} style={{ background: "none", border: "none", color: "#64748b", cursor: "pointer" }}>
+                <X size={20} />
               </button>
             </div>
 
-            {/* Section 1: Account Group (Image 2) */}
-            <div className={styles.drawerSection}>
-              <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
-                
+            <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+              <Link href="/category/all" onClick={() => setIsMobileMenuOpen(false)} style={{ display: "flex", alignItems: "center", gap: "8px", fontWeight: 700, color: "#3056D3", textDecoration: "none" }}>
+                <Sparkles size={16} />
+                <span>Hot Offer</span>
+              </Link>
+              <Link href="/category/vegetables" onClick={() => setIsMobileMenuOpen(false)} style={{ fontWeight: 600, color: "#0f172a", textDecoration: "none" }}>
+                New Arrivals
+              </Link>
+              <Link href="/bundles" onClick={() => setIsMobileMenuOpen(false)} style={{ fontWeight: 600, color: "#0f172a", textDecoration: "none" }}>
+                Collections
+              </Link>
+              <Link href="/category/all" onClick={() => setIsMobileMenuOpen(false)} style={{ fontWeight: 700, color: "#3056D3", textDecoration: "none" }}>
+                Sale (20% OFF)
+              </Link>
+              <Link href="/recipes" onClick={() => setIsMobileMenuOpen(false)} style={{ fontWeight: 600, color: "#0f172a", textDecoration: "none" }}>
+                Contact / Recipes
+              </Link>
+
+              <hr style={{ border: "none", borderTop: "1px solid #f1f5f9", margin: "10px 0" }} />
+
+              <h5 style={{ fontSize: "0.85rem", color: "#64748b", textTransform: "uppercase", margin: "0 0 8px 0" }}>Shop Categories</h5>
+              {CATEGORIES.map(c => (
                 <Link
-                  href="/account"
-                  onClick={() => setIsDrawerOpen(false)}
-                  className={styles.drawerLink}
+                  key={c.id}
+                  href={`/category/${c.slug}`}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  style={{ display: "flex", alignItems: "center", gap: "8px", color: "#334155", textDecoration: "none", fontSize: "0.9rem", fontWeight: 500 }}
                 >
-                  <User size={16} color="#64748b" />
-                  <span>Account</span>
+                  <span>{c.icon}</span>
+                  <span>{locale === "bn" ? c.nameBn : c.nameEn}</span>
                 </Link>
+              ))}
 
-                <Link
-                  href="/account"
-                  onClick={() => setIsDrawerOpen(false)}
-                  className={styles.drawerLink}
-                >
-                  <History size={16} color="#64748b" />
-                  <span>Purchase History</span>
-                </Link>
+              <hr style={{ border: "none", borderTop: "1px solid #f1f5f9", margin: "10px 0" }} />
 
-                <Link
-                  href="/account"
-                  onClick={() => setIsDrawerOpen(false)}
-                  className={styles.drawerLink}
-                >
-                  <CreditCard size={16} color="#64748b" />
-                  <span>Payment Methods</span>
-                </Link>
-
-                <Link
-                  href="/account"
-                  onClick={() => setIsDrawerOpen(false)}
-                  className={styles.drawerLink}
-                >
-                  <Settings size={16} color="#64748b" />
-                  <span>Account Settings</span>
-                </Link>
-
-                <button
-                  type="button"
-                  onClick={handleLogout}
-                  className={styles.drawerLogoutBtn}
-                >
-                  <LogOut size={16} />
-                  <span>Sign Out</span>
-                </button>
-
-              </div>
-            </div>
-
-            {/* Section 2: Help Group (Image 2) */}
-            <div className={styles.drawerSection}>
-              <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
-                
-                <Link
-                  href="/account"
-                  onClick={() => setIsDrawerOpen(false)}
-                  className={styles.drawerLink}
-                >
-                  <HelpCircle size={16} color="#64748b" />
-                  <span>Help Center</span>
-                </Link>
-
-                <Link
-                  href="/account"
-                  onClick={() => setIsDrawerOpen(false)}
-                  className={styles.drawerLink}
-                >
-                  <MessageSquare size={16} color="#64748b" />
-                  <span>FAQs</span>
-                </Link>
-
-                <Link
-                  href="/account"
-                  onClick={() => setIsDrawerOpen(false)}
-                  className={styles.drawerLink}
-                >
-                  <PhoneCall size={16} color="#64748b" />
-                  <span>Support Tickets</span>
-                </Link>
-
-              </div>
-            </div>
-
-            {/* Section 3: Wishlist & Discovery Group (Image 2) */}
-            <div style={{ padding: "14px 16px" }}>
-              <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
-                
-                <Link
-                  href="/account"
-                  onClick={() => setIsDrawerOpen(false)}
-                  className={styles.drawerLink}
-                >
-                  <Heart size={16} color="#64748b" />
-                  <span>Wishlist</span>
-                </Link>
-
-                <Link
-                  href="/account"
-                  onClick={() => setIsDrawerOpen(false)}
-                  className={styles.drawerLink}
-                >
-                  <Bookmark size={16} color="#64748b" />
-                  <span>Saved Items</span>
-                </Link>
-
-                <Link
-                  href="/account"
-                  onClick={() => setIsDrawerOpen(false)}
-                  className={styles.drawerLink}
-                >
-                  <Bell size={16} color="#64748b" />
-                  <span>Back in Stock Alerts</span>
-                </Link>
-
-                <Link
-                  href="/account"
-                  onClick={() => setIsDrawerOpen(false)}
-                  className={styles.drawerLink}
-                >
-                  <Eye size={16} color="#64748b" />
-                  <span>Recently Viewed</span>
-                </Link>
-
-              </div>
+              <Link href="/account" onClick={() => setIsMobileMenuOpen(false)} style={{ display: "flex", alignItems: "center", gap: "8px", color: "#0f172a", textDecoration: "none", fontWeight: 700 }}>
+                <User size={16} />
+                <span>My Account</span>
+              </Link>
             </div>
 
           </div>

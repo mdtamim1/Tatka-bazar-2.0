@@ -1,0 +1,364 @@
+/* =============================================================================
+   Shadcnblocks — Ecommerce Footer with Support Info Row & Accordion Links
+   ============================================================================= */
+
+.footerWrapper {
+  background: #ffffff;
+  color: #0f172a;
+  padding-top: 64px;
+  padding-bottom: 36px;
+  border-top: 1px solid #e2e8f0;
+  font-family: var(--font-body, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif);
+}
+
+.container {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding: 0 16px;
+  }
+}
+
+/* ── 1. Top Newsletter Banner (2-Column Card) ── */
+.newsletterCard {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 20px;
+  padding: 24px;
+  display: grid;
+  grid-template-columns: 1fr 1.15fr;
+  gap: 40px;
+  align-items: center;
+  margin-bottom: 32px;
+}
+
+@media (max-width: 860px) {
+  .newsletterCard {
+    grid-template-columns: 1fr;
+    gap: 24px;
+    padding: 16px;
+  }
+}
+
+.newsletterImageWrapper {
+  width: 100%;
+  height: 280px;
+  border-radius: 16px;
+  overflow: hidden;
+  background: #f1f5f9;
+  position: relative;
+}
+
+@media (max-width: 768px) {
+  .newsletterImageWrapper {
+    height: 200px;
+  }
+}
+
+.newsletterImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.newsletterContent {
+  display: flex;
+  flex-direction: column;
+}
+
+.newsletterTitle {
+  font-size: clamp(1.8rem, 2.5vw, 2.3rem);
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0 0 10px 0;
+  letter-spacing: -0.02em;
+}
+
+.newsletterDesc {
+  font-size: 0.88rem;
+  line-height: 1.6;
+  color: #475569;
+  margin: 0 0 20px 0;
+  max-width: 480px;
+}
+
+.newsletterForm {
+  display: flex;
+  gap: 10px;
+  max-width: 480px;
+  margin-bottom: 12px;
+}
+
+@media (max-width: 540px) {
+  .newsletterForm {
+    flex-direction: column;
+  }
+}
+
+.newsletterInput {
+  flex: 1;
+  padding: 11px 16px;
+  border-radius: 6px;
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  font-size: 0.88rem;
+  color: #0f172a;
+  outline: none;
+}
+
+.newsletterInput:focus {
+  border-color: #0f172a;
+}
+
+.subscribeBtn {
+  padding: 11px 24px;
+  border-radius: 6px;
+  background: #000000;
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 0.88rem;
+  border: none;
+  cursor: pointer;
+  transition: background 0.15s ease;
+  white-space: nowrap;
+}
+
+.subscribeBtn:hover {
+  background: #1e293b;
+}
+
+.newsletterLegal {
+  font-size: 0.75rem;
+  color: #64748b;
+  margin: 0;
+}
+
+.newsletterLegal a {
+  color: #0f172a;
+  text-decoration: underline;
+}
+
+/* ── 2. Support Info Row (4 Columns) ── */
+.supportRow {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 22px 28px;
+  margin-bottom: 56px;
+  background: #ffffff;
+}
+
+@media (max-width: 960px) {
+  .supportRow {
+    grid-template-columns: repeat(2, 1fr);
+    padding: 18px 20px;
+    gap: 18px;
+  }
+}
+
+@media (max-width: 540px) {
+  .supportRow {
+    grid-template-columns: 1fr;
+    padding: 16px;
+    gap: 14px;
+    margin-bottom: 40px;
+  }
+}
+
+.supportItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.supportIcon {
+  color: #0f172a;
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+
+.supportHeading {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin-bottom: 2px;
+}
+
+.supportSubtext {
+  font-size: 0.78rem;
+  color: #64748b;
+}
+
+/* ── 3. Main Footer Links & Brand Section ── */
+.mainLinksGrid {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr 1fr 1fr;
+  gap: 40px;
+  padding-bottom: 48px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+@media (max-width: 900px) {
+  .mainLinksGrid {
+    grid-template-columns: 1fr 1fr;
+    gap: 32px;
+  }
+}
+
+@media (max-width: 580px) {
+  .mainLinksGrid {
+    grid-template-columns: 1fr;
+    gap: 28px;
+  }
+}
+
+/* Brand Panel (Left) */
+.brandPanel {
+  display: flex;
+  flex-direction: column;
+}
+
+.brandLogo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+  margin-bottom: 16px;
+}
+
+.brandLogoText {
+  font-size: 1.25rem;
+  font-weight: 900;
+  color: #0f172a;
+  letter-spacing: -0.03em;
+}
+
+.brandDesc {
+  font-size: 0.85rem;
+  line-height: 1.6;
+  color: #64748b;
+  margin: 0 0 20px 0;
+  max-width: 320px;
+}
+
+.langDropdownBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
+  border-radius: 6px;
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #0f172a;
+  cursor: pointer;
+  margin-bottom: 20px;
+  align-self: flex-start;
+}
+
+.paymentBadgesRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.paymentBadge {
+  padding: 4px 8px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  font-weight: 800;
+  color: #475569;
+}
+
+/* Link Columns */
+.columnTitle {
+  font-size: 0.92rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.columnLinks {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.footerLink {
+  color: #64748b;
+  text-decoration: none;
+  font-size: 0.85rem;
+  transition: color 0.15s ease;
+}
+
+.footerLink:hover {
+  color: #0f172a;
+  text-decoration: underline;
+}
+
+/* Social Icons */
+.socialRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.socialCircleBtn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #000000;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justifyContent: center;
+  text-decoration: none;
+  transition: transform 0.15s ease;
+}
+
+.socialCircleBtn:hover {
+  transform: scale(1.08);
+}
+
+/* ── 4. Bottom Legal & Policy Bar ── */
+.bottomLegalBar {
+  padding-top: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 14px;
+  font-size: 0.8rem;
+  color: #64748b;
+}
+
+.policyLinksRow {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+
+.policyLink {
+  color: #64748b;
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+
+.policyLink:hover {
+  color: #0f172a;
+}
