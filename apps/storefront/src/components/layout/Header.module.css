@@ -1,0 +1,414 @@
+/* =============================================================================
+   Shadcnblocks — Ecommerce Storefront Header & Drawer (100% Responsive)
+   ============================================================================= */
+
+.headerWrapper {
+  position: sticky;
+  top: 0;
+  z-index: 500;
+  width: 100%;
+  background: #ffffff;
+  border-bottom: 1px solid #e2e8f0;
+  transition: box-shadow 0.2s ease;
+  font-family: var(--font-body, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif);
+}
+
+.headerScrolled {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+}
+
+.container {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 24px;
+  width: 100%;
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding: 0 14px;
+  }
+}
+
+.navbarRow {
+  display: flex;
+  align-items: center;
+  justifyContent: space-between;
+  height: 68px;
+  gap: 16px;
+  width: 100%;
+}
+
+@media (max-width: 768px) {
+  .navbarRow {
+    height: 58px;
+    gap: 8px;
+  }
+}
+
+/* ── Left Side ── */
+.leftGroup {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-shrink: 0;
+}
+
+@media (max-width: 768px) {
+  .leftGroup {
+    gap: 10px;
+  }
+}
+
+.threeDotBtn {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  color: #0f172a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.15s ease;
+}
+
+.threeDotBtn:hover {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+}
+
+@media (max-width: 768px) {
+  .threeDotBtn {
+    width: 32px;
+    height: 32px;
+  }
+}
+
+.logoLink {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+  flex-shrink: 0;
+}
+
+.logoText {
+  font-size: 1.22rem;
+  font-weight: 900;
+  color: #0f172a;
+  letter-spacing: -0.03em;
+  white-space: nowrap;
+}
+
+.logoDot {
+  color: #10D876;
+}
+
+@media (max-width: 768px) {
+  .logoText {
+    font-size: 1.05rem;
+  }
+}
+
+/* ── Desktop Navigation Links ── */
+.desktopNav {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  margin-left: 8px;
+}
+
+@media (max-width: 900px) {
+  .desktopNav {
+    display: none !important;
+  }
+}
+
+.navLinkBtn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: none;
+  border: none;
+  font-size: 0.84rem;
+  font-weight: 700;
+  color: #0f172a;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  padding: 8px 0;
+  transition: color 0.15s ease;
+}
+
+.navLinkBtn:hover,
+.navLinkBtnActive {
+  color: #007A48;
+}
+
+.saleLink {
+  font-size: 0.84rem;
+  font-weight: 800;
+  color: #e11d48;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  text-decoration: none;
+  transition: opacity 0.15s ease;
+}
+
+.saleLink:hover {
+  opacity: 0.8;
+}
+
+.blogLink {
+  font-size: 0.84rem;
+  font-weight: 700;
+  color: #0f172a;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+
+.blogLink:hover {
+  color: #007A48;
+}
+
+/* Dropdown Menu */
+.dropdownMenu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 240px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 10px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.08);
+  z-index: 550;
+  animation: fadeIn 0.15s ease;
+}
+
+.dropdownItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  border-radius: 8px;
+  color: #334155;
+  text-decoration: none;
+  font-size: 0.85rem;
+  font-weight: 600;
+  transition: all 0.15s ease;
+}
+
+.dropdownItem:hover {
+  background: #f8fafc;
+  color: #007A48;
+}
+
+/* ── Right Side Actions ── */
+.rightGroup {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-shrink: 0;
+}
+
+@media (max-width: 768px) {
+  .rightGroup {
+    gap: 8px;
+  }
+}
+
+.langBtn {
+  background: none;
+  border: none;
+  color: #64748b;
+  font-weight: 700;
+  font-size: 0.8rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px;
+}
+
+@media (max-width: 768px) {
+  .langBtn {
+    display: none;
+  }
+}
+
+.iconBtn {
+  position: relative;
+  background: none;
+  border: none;
+  color: #0f172a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 6px;
+  text-decoration: none;
+  transition: background 0.15s ease;
+}
+
+.iconBtn:hover {
+  background: #f8fafc;
+}
+
+@media (max-width: 768px) {
+  .iconBtn {
+    padding: 4px;
+  }
+}
+
+.cartBadge {
+  position: absolute;
+  top: -2px;
+  right: -4px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #000000;
+  color: #ffffff;
+  font-size: 0.65rem;
+  font-weight: 900;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ── Expandable Search Bar ── */
+.searchDropdown {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 12px);
+  width: 320px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.12);
+  padding: 10px;
+  z-index: 600;
+}
+
+@media (max-width: 768px) {
+  .searchDropdown {
+    position: fixed;
+    top: 60px;
+    left: 10px;
+    right: 10px;
+    width: auto;
+  }
+}
+
+.searchFormBox {
+  display: flex;
+  align-items: center;
+  background: #f8fafc;
+  border-radius: 10px;
+  padding: 6px 12px;
+  border: 1px solid #cbd5e1;
+}
+
+.searchInput {
+  width: 100%;
+  background: transparent;
+  border: none;
+  outline: none;
+  padding: 6px 8px;
+  font-size: 0.85rem;
+  color: #0f172a;
+}
+
+/* ── Left Slide-Out Drawer ── */
+.drawerBackdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  z-index: 9998;
+}
+
+.drawerShell {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 300px;
+  max-width: 85vw;
+  background: #ffffff;
+  box-shadow: 8px 0 32px rgba(0, 0, 0, 0.15);
+  display: flex;
+  flex-direction: column;
+  z-index: 9999;
+  overflow-y: auto;
+  font-family: var(--font-body, system-ui, -apple-system, sans-serif);
+  animation: slideInLeft 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.drawerHeader {
+  padding: 18px 20px;
+  display: flex;
+  align-items: center;
+  justifyContent: space-between;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.drawerSection {
+  padding: 14px 16px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.drawerLink {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 12px;
+  border-radius: 8px;
+  color: #0f172a;
+  text-decoration: none;
+  font-size: 0.88rem;
+  font-weight: 600;
+  transition: background 0.15s ease;
+}
+
+.drawerLink:hover {
+  background: #f8fafc;
+}
+
+.drawerLogoutBtn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 12px;
+  border-radius: 8px;
+  color: #ef4444;
+  background: none;
+  border: none;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  width: 100%;
+  text-align: left;
+  transition: background 0.15s ease;
+}
+
+.drawerLogoutBtn:hover {
+  background: #fef2f2;
+}
+
+@keyframes slideInLeft {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
