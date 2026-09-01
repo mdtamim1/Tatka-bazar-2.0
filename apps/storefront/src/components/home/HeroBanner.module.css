@@ -1,0 +1,162 @@
+/* Hero Banner Responsive CSS Module */
+.heroWrapper {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+}
+
+.heroContainer {
+  position: relative;
+  width: 100%;
+  min-height: clamp(440px, 46vw, 600px);
+  display: flex;
+  align-items: center;
+  color: #ffffff;
+  background: #0a0e14;
+}
+
+@media (max-width: 768px) {
+  .heroContainer {
+    min-height: 220px;
+    padding: 24px 0;
+  }
+}
+
+.contentWrapper {
+  position: relative;
+  zIndex: 10;
+  max-width: 1280px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 0 32px;
+  display: flex;
+  align-items: center;
+  justifyContent: space-between;
+  gap: 36px;
+}
+
+@media (max-width: 768px) {
+  .contentWrapper {
+    padding: 0 20px;
+    gap: 16px;
+  }
+}
+
+.textContent {
+  flex: 1 1 480px;
+  max-width: 620px;
+}
+
+.heroTitle {
+  font-family: var(--font-heading, serif, Georgia, "Times New Roman");
+  font-size: clamp(2.1rem, 3.8vw, 3.2rem);
+  font-weight: 700;
+  line-height: 1.15;
+  color: #ffffff;
+  letter-spacing: -0.02em;
+  margin: 0 0 16px 0;
+  text-shadow: 0 2px 14px rgba(0,0,0,0.6);
+}
+
+@media (max-width: 768px) {
+  .heroTitle {
+    font-size: 1.35rem;
+    line-height: 1.25;
+    margin: 0 0 8px 0;
+  }
+}
+
+.heroSubtitle {
+  font-size: clamp(0.88rem, 1.4vw, 1.05rem);
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.9);
+  margin: 0 0 28px 0;
+  max-width: 480px;
+  text-shadow: 0 1px 8px rgba(0,0,0,0.6);
+}
+
+@media (max-width: 768px) {
+  .heroSubtitle {
+    font-size: 0.78rem;
+    line-height: 1.4;
+    margin: 0 0 16px 0;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+}
+
+.shopNowBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 28px;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #000000;
+  font-size: 0.92rem;
+  font-weight: 800;
+  text-decoration: none;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+  transition: all 0.2s ease;
+}
+
+@media (max-width: 768px) {
+  .shopNowBtn {
+    padding: 8px 20px;
+    font-size: 0.82rem;
+  }
+}
+
+.shopNowBtn:hover {
+  transform: scale(1.04);
+}
+
+/* Floating Card on Desktop */
+.floatingCard {
+  flex: 0 0 auto;
+  width: 100%;
+  max-width: 310px;
+  background: #ffffff;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.1);
+  color: #0f172a;
+}
+
+@media (max-width: 768px) {
+  .floatingCard {
+    display: none;
+  }
+}
+
+.arrowBtn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(4px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justifyContent: center;
+  cursor: pointer;
+  z-index: 20;
+  transition: all 0.2s ease;
+}
+
+@media (max-width: 768px) {
+  .arrowBtn {
+    width: 32px;
+    height: 32px;
+  }
+}
+
+.arrowBtn:hover {
+  background: rgba(0, 0, 0, 0.6);
+}

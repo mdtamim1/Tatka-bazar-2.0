@@ -1,11 +1,12 @@
 "use client";
 
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
-import { ChevronLeft, ChevronRight, Heart, Star, ShoppingBag, ArrowRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Heart, Star, ShoppingBag } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 import { useCartStore } from "@/lib/cart-store";
 import { PRODUCTS } from "@/lib/catalog";
+import styles from "./HeroBanner.module.css";
 
 export function HeroBanner() {
   const { locale, formatPrice } = useLanguage();
@@ -118,20 +119,11 @@ export function HeroBanner() {
   };
 
   return (
-    <div style={{ position: "relative", width: "100%", overflow: "hidden" }}>
+    <div className={styles.heroWrapper}>
       
       {/* ── Main Hero Container (Full Bleed) ── */}
-      <div
-        style={{
-          position: "relative",
-          width: "100%",
-          minHeight: "clamp(460px, 48vw, 640px)",
-          display: "flex",
-          alignItems: "center",
-          color: "#ffffff",
-          background: "#0a0e14",
-        }}
-      >
+      <div className={styles.heroContainer}>
+        
         {/* Background Image with Cinematic Dark Gradient */}
         <div style={{ position: "absolute", inset: 0, zIndex: 0 }}>
           <img
@@ -165,96 +157,25 @@ export function HeroBanner() {
         </div>
 
         {/* Content Max-Width Container */}
-        <div
-          style={{
-            position: "relative",
-            zIndex: 10,
-            maxWidth: "1280px",
-            width: "100%",
-            margin: "0 auto",
-            padding: "0 32px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            gap: "36px",
-            flexWrap: "wrap",
-          }}
-        >
+        <div className={styles.contentWrapper}>
+          
           {/* ── Left Content (Headline, Subtitle, Shop Now Pill) ── */}
-          <div
-            key={`text-${animKey}`}
-            style={{
-              flex: "1 1 480px",
-              maxWidth: "620px",
-              animation: "slideInLeft 0.5s cubic-bezier(0.16, 1, 0.3, 1)",
-            }}
-          >
-            <h1
-              style={{
-                fontFamily: "var(--font-heading, serif, Georgia, 'Times New Roman')",
-                fontSize: "clamp(2.1rem, 4vw, 3.4rem)",
-                fontWeight: 700,
-                lineHeight: 1.15,
-                color: "#ffffff",
-                letterSpacing: "-0.02em",
-                margin: "0 0 16px 0",
-                textShadow: "0 2px 14px rgba(0,0,0,0.5)",
-              }}
-            >
+          <div key={`text-${animKey}`} className={styles.textContent}>
+            <h1 className={styles.heroTitle}>
               {slide.title}
             </h1>
 
-            <p
-              style={{
-                fontSize: "clamp(0.88rem, 1.4vw, 1.05rem)",
-                lineHeight: 1.6,
-                color: "rgba(255, 255, 255, 0.88)",
-                margin: "0 0 28px 0",
-                maxWidth: "480px",
-                textShadow: "0 1px 8px rgba(0,0,0,0.5)",
-              }}
-            >
+            <p className={styles.heroSubtitle}>
               {slide.subtitle}
             </p>
 
-            <Link
-              href={slide.ctaLink}
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "8px",
-                padding: "11px 28px",
-                borderRadius: "999px",
-                background: "#ffffff",
-                color: "#000000",
-                fontSize: "0.92rem",
-                fontWeight: 800,
-                textDecoration: "none",
-                boxShadow: "0 6px 20px rgba(0, 0, 0, 0.35)",
-                transition: "all 0.2s ease",
-              }}
-              onMouseEnter={e => { e.currentTarget.style.transform = "scale(1.04)"; }}
-              onMouseLeave={e => { e.currentTarget.style.transform = "scale(1)"; }}
-            >
+            <Link href={slide.ctaLink} className={styles.shopNowBtn}>
               <span>{slide.ctaText}</span>
             </Link>
           </div>
 
-          {/* ── Right Floating Product Card (Shadcnblocks Exact Component) ── */}
-          <div
-            key={`card-${animKey}`}
-            style={{
-              flex: "0 0 auto",
-              width: "100%",
-              maxWidth: "310px",
-              background: "#ffffff",
-              borderRadius: "16px",
-              overflow: "hidden",
-              boxShadow: "0 16px 40px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.1)",
-              animation: "slideInRight 0.5s cubic-bezier(0.16, 1, 0.3, 1)",
-              color: "#0f172a",
-            }}
-          >
+          {/* ── Right Floating Product Card (Desktop Only) ── */}
+          <div key={`card-${animKey}`} className={styles.floatingCard}>
             {/* Card Product Image */}
             <div style={{ position: "relative", width: "100%", height: "220px", background: "#f8fafc" }}>
               <img
@@ -417,58 +338,20 @@ export function HeroBanner() {
           type="button"
           onClick={prevSlide}
           aria-label="Previous Slide"
-          style={{
-            position: "absolute",
-            left: "18px",
-            top: "50%",
-            transform: "translateY(-50%)",
-            width: "42px",
-            height: "42px",
-            borderRadius: "50%",
-            background: "rgba(0, 0, 0, 0.35)",
-            backdropFilter: "blur(4px)",
-            border: "1px solid rgba(255, 255, 255, 0.2)",
-            color: "#ffffff",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            cursor: "pointer",
-            zIndex: 20,
-            transition: "all 0.2s ease",
-          }}
-          onMouseEnter={e => { e.currentTarget.style.background = "rgba(0,0,0,0.6)"; }}
-          onMouseLeave={e => { e.currentTarget.style.background = "rgba(0,0,0,0.35)"; }}
+          className={styles.arrowBtn}
+          style={{ left: "14px" }}
         >
-          <ChevronLeft size={20} />
+          <ChevronLeft size={18} />
         </button>
 
         <button
           type="button"
           onClick={nextSlide}
           aria-label="Next Slide"
-          style={{
-            position: "absolute",
-            right: "18px",
-            top: "50%",
-            transform: "translateY(-50%)",
-            width: "42px",
-            height: "42px",
-            borderRadius: "50%",
-            background: "rgba(0, 0, 0, 0.35)",
-            backdropFilter: "blur(4px)",
-            border: "1px solid rgba(255, 255, 255, 0.2)",
-            color: "#ffffff",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            cursor: "pointer",
-            zIndex: 20,
-            transition: "all 0.2s ease",
-          }}
-          onMouseEnter={e => { e.currentTarget.style.background = "rgba(0,0,0,0.6)"; }}
-          onMouseLeave={e => { e.currentTarget.style.background = "rgba(0,0,0,0.35)"; }}
+          className={styles.arrowBtn}
+          style={{ right: "14px" }}
         >
-          <ChevronRight size={20} />
+          <ChevronRight size={18} />
         </button>
 
       </div>
