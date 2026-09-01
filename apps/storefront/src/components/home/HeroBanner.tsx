@@ -41,7 +41,7 @@ export function HeroBanner() {
         rating: "5.8K REVIEWS",
         badge1: "BEST SELLER",
         badge2: "FRESH",
-        image: PRODUCTS[0]?.images[0] || "https://images.unsplash.com/photo-1544943910-4c1dc44a0b27?w=600&auto=format&fit=crop&q=80",
+        image: PRODUCTS[0]?.images[0] || "https://images.unsplash.com/photo-1534939561126-855b8675edd7?w=800&auto=format&fit=crop&q=80",
         productRef: PRODUCTS[0],
       },
     },
@@ -64,7 +64,7 @@ export function HeroBanner() {
         rating: "4.9K REVIEWS",
         badge1: "ORGANIC",
         badge2: "NEW",
-        image: PRODUCTS[1]?.images[0] || "https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=600&auto=format&fit=crop&q=80",
+        image: PRODUCTS[1]?.images[0] || "https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=800&auto=format&fit=crop&q=80",
         productRef: PRODUCTS[1],
       },
     },
@@ -87,7 +87,7 @@ export function HeroBanner() {
         rating: "6.2K REVIEWS",
         badge1: "HOT DEAL",
         badge2: "CLEANED",
-        image: PRODUCTS[2]?.images[0] || "https://images.unsplash.com/photo-1534939561126-855b8675edd7?w=600&auto=format&fit=crop&q=80",
+        image: PRODUCTS[2]?.images[0] || "https://images.unsplash.com/photo-1534939561126-855b8675edd7?w=800&auto=format&fit=crop&q=80",
         productRef: PRODUCTS[2],
       },
     },
@@ -138,6 +138,7 @@ export function HeroBanner() {
             alt=""
             aria-hidden="true"
             className={styles.bgImage}
+            suppressHydrationWarning
           />
           <div className={styles.bgOverlayGradient} />
           <div className={styles.bgVignette} />
@@ -176,6 +177,7 @@ export function HeroBanner() {
                 src={feat.image}
                 alt={feat.title}
                 className={styles.cardImg}
+                suppressHydrationWarning
               />
 
               {/* Badges */}

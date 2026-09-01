@@ -46,7 +46,7 @@
     height: 58px;
     display: flex;
     align-items: center;
-    justifyContent: space-between;
+    justify-content: space-between;
     gap: 8px;
   }
 }
@@ -115,7 +115,7 @@
 .desktopNav {
   display: flex;
   align-items: center;
-  justifyContent: center;
+  justify-content: center;
   gap: 36px;
   list-style: none;
   margin: 0 auto;
@@ -130,32 +130,31 @@
 
 .navItem {
   position: relative;
+  display: flex;
+  align-items: center;
 }
 
 .navLink {
-  font-size: 0.74rem;
-  font-weight: 700;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: #4a4a4a;
-  text-decoration: none;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 5px;
-  padding: 10px 0;
+  font-size: 0.84rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #1a1a1a;
+  text-decoration: none;
+  padding: 8px 0;
+  position: relative;
   transition: color 0.15s ease;
 }
 
 .navLink:hover {
-  color: #000000;
-}
-
-.navLinkActive {
-  color: #000000 !important;
+  color: #3056D3;
 }
 
 .chevronIcon {
-  color: #8a8a8a;
+  color: #64748b;
   transition: transform 0.2s ease;
 }
 
@@ -163,23 +162,22 @@
   transform: rotate(180deg);
 }
 
-/* Dropdown Menu on Hover */
+/* Hover Dropdown Menu */
 .dropdownMenu {
   position: absolute;
   top: 100%;
-  left: 50%;
-  transform: translateX(-50%);
-  min-width: 220px;
+  left: 0;
+  width: 220px;
   background: #ffffff;
-  border: 1px solid #eae8e2;
   border-radius: 12px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
-  padding: 10px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08), 0 0 1px rgba(0,0,0,0.15);
+  border: 1px solid #f1f5f9;
+  padding: 8px;
   display: none;
   flex-direction: column;
-  gap: 4px;
-  z-index: 600;
-  animation: fadeIn 0.2s ease;
+  gap: 2px;
+  z-index: 1000;
+  animation: slideDown 0.15s ease;
 }
 
 .navItem:hover .dropdownMenu {
@@ -189,7 +187,7 @@
 .dropdownItem {
   display: flex;
   align-items: center;
-  justifyContent: space-between;
+  justify-content: space-between;
   padding: 8px 12px;
   border-radius: 8px;
   font-size: 0.82rem;
@@ -208,7 +206,7 @@
 .actionGroup {
   display: flex;
   align-items: center;
-  justifyContent: flex-end;
+  justify-content: flex-end;
   gap: 22px;
 }
 

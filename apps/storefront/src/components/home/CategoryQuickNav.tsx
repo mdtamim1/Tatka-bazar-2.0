@@ -74,8 +74,8 @@ export function CategoryQuickNav() {
                   display: "flex",
                   flexDirection: "column",
                   alignItems: "center",
-                  gap: "11px",
-                  padding: "clamp(16px, 3vw, 24px) clamp(10px, 1.5vw, 16px)",
+                  gap: "10px",
+                  padding: "clamp(12px, 2.5vw, 20px) clamp(6px, 1.2vw, 14px)",
                   borderRadius: "var(--radius-xl)",
                   background: isHovered ? style.grad : "var(--bg-card)",
                   border: isHovered ? `1px solid ${style.border}` : "1px solid var(--border-subtle)",
@@ -90,6 +90,9 @@ export function CategoryQuickNav() {
                   overflow: "hidden",
                   opacity: isVisible ? 1 : 0,
                   transitionDelay: isVisible ? `${i * 0.06}s` : "0s",
+                  minWidth: 0,
+                  width: "100%",
+                  boxSizing: "border-box",
                 }}
                 onMouseEnter={() => setHoveredIdx(i)}
                 onMouseLeave={() => setHoveredIdx(null)}

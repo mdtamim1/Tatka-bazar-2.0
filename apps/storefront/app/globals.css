@@ -209,21 +209,50 @@ img { display: block; max-width: 100%; }
 }
 @media (min-width: 768px)  { .container { padding-left: 1.75rem; padding-right: 1.75rem; } }
 @media (min-width: 1280px) { .container { padding-left: 2.25rem; padding-right: 2.25rem; } }
+@media (max-width: 640px)  { .container { padding-left: 12px; padding-right: 12px; } }
+@media (max-width: 380px)  { .container { padding-left: 8px; padding-right: 8px; } }
 
 /* ── Universal Responsive Grids ── */
 .product-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 20px;
   width: 100%;
   box-sizing: border-box;
 }
 
-@media (max-width: 640px) {
+@media (max-width: 1100px) {
   .product-grid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+  }
+}
+
+@media (max-width: 768px) {
+  .product-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 10px;
   }
+}
+
+@media (max-width: 480px) {
+  .product-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+}
+
+@media (max-width: 360px) {
+  .product-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+  }
+}
+
+.product-grid > * {
+  min-width: 0;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .cat-grid {
@@ -617,15 +646,6 @@ img { display: block; max-width: 100%; }
   box-shadow: 0 3px 12px rgba(255, 77, 109, 0.4);
 }
 
-/* ── Product Grid ────────────────────────────────────────── */
-.product-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 1.25rem;
-}
-@media (max-width: 1100px) { .product-grid { grid-template-columns: repeat(3, 1fr); } }
-@media (max-width: 768px)  { .product-grid { grid-template-columns: repeat(2, 1fr); gap: 0.875rem; } }
-@media (max-width: 380px)  { .product-grid { grid-template-columns: repeat(2, 1fr); gap: 0.625rem; } }
 
 /* ── 3D Premium Card ─────────────────────────────────────── */
 .premium-card {
@@ -847,24 +867,40 @@ img { display: block; max-width: 100%; }
 /* ── Flash Grid ──────────────────────────────────────────── */
 .flash-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 14px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+  width: 100%;
+  box-sizing: border-box;
 }
-@media (max-width: 1100px) { .flash-grid { grid-template-columns: repeat(3, 1fr) !important; } }
+@media (max-width: 1100px) {
+  .flash-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+  }
+}
 @media (max-width: 768px) {
   .flash-grid {
-    display: flex !important;
-    overflow-x: auto !important;
-    gap: 12px !important;
-    padding-bottom: 4px;
-    scroll-snap-type: x mandatory;
-    scrollbar-width: none;
-    -ms-overflow-style: none;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
   }
-  .flash-grid::-webkit-scrollbar { display: none; }
-  .flash-grid > * { min-width: 200px; scroll-snap-align: start; flex-shrink: 0; }
 }
-@media (max-width: 480px) { .flash-grid > * { min-width: 175px; } }
+@media (max-width: 480px) {
+  .flash-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+}
+@media (max-width: 360px) {
+  .flash-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+  }
+}
+.flash-grid > * {
+  min-width: 0;
+  width: 100%;
+  box-sizing: border-box;
+}
 
 /* ── Neon Accent Lines ───────────────────────────────────── */
 .neon-line-top {

@@ -45,7 +45,7 @@ export function ProductJsonLd({ product }: { product: any }) {
       availability: "https://schema.org/InStock",
       seller: {
         "@type": "Organization",
-        name: product.vendorName || "Tatka Bazar",
+        name: "Tatka Bazar",
       },
     },
     aggregateRating: {

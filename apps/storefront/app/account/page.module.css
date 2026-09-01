@@ -115,7 +115,7 @@
   transition: all 0.2s ease;
   display: flex;
   align-items: center;
-  justifyContent: space-between;
+  justify-content: space-between;
   white-space: nowrap;
 }
 
@@ -185,7 +185,7 @@
   font-weight: 800;
   display: flex;
   align-items: center;
-  justifyContent: center;
+  justify-content: center;
   border: 3px solid #e2e8f0;
 }
 
@@ -200,7 +200,7 @@
   color: #ffffff;
   display: flex;
   align-items: center;
-  justifyContent: center;
+  justify-content: center;
   border: 2px solid #ffffff;
   cursor: pointer;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
@@ -240,7 +240,7 @@
   color: #334155;
   display: flex;
   align-items: center;
-  justifyContent: space-between;
+  justify-content: space-between;
 }
 
 .lockedNotice {
@@ -327,7 +327,7 @@
 .orderHeader {
   display: flex;
   align-items: center;
-  justifyContent: space-between;
+  justify-content: space-between;
   padding-bottom: 14px;
   border-bottom: 1px solid #f1f5f9;
   flex-wrap: wrap;
@@ -369,7 +369,7 @@
 .orderItemRow {
   display: flex;
   align-items: center;
-  justifyContent: space-between;
+  justify-content: space-between;
   padding: 14px 0;
   border-bottom: 1px solid #f8fafc;
 }
@@ -403,7 +403,7 @@
   padding: 14px;
   display: flex;
   flex-direction: column;
-  justifyContent: space-between;
+  justify-content: space-between;
   gap: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
 }
@@ -441,7 +441,7 @@
   cursor: pointer;
   display: flex;
   align-items: center;
-  justifyContent: center;
+  justify-content: center;
   gap: 6px;
   transition: opacity 0.2s ease;
 }
@@ -464,7 +464,7 @@
   background: #ffffff;
   display: flex;
   flex-direction: column;
-  justifyContent: space-between;
+  justify-content: space-between;
   gap: 14px;
 }
 

@@ -44,24 +44,25 @@ export function FlashDeals() {
 
   function FlipDigit({ value, label, isFlipping }: { value: number; label: string; isFlipping?: boolean }) {
     return (
-      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "5px" }}>
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "2px" }}>
         <div
           style={{
-            minWidth: "clamp(46px, 6.5vw, 58px)",
-            height: "clamp(50px, 7vw, 62px)",
-            background: "linear-gradient(180deg, #0D1018 0%, #080B10 50%, #050709 100%)",
-            borderRadius: "var(--radius-md)",
+            minWidth: "clamp(34px, 5.2vw, 48px)",
+            height: "clamp(36px, 5.8vw, 52px)",
+            background: "linear-gradient(180deg, #18080c 0%, #0d0407 50%, #060204 100%)",
+            borderRadius: "8px",
             display: "flex", alignItems: "center", justifyContent: "center",
-            fontSize: "clamp(1.2rem, 3vw, 1.65rem)",
+            fontSize: "clamp(1rem, 2.2vw, 1.4rem)",
             fontWeight: 900,
             fontFamily: "var(--font-heading)",
             letterSpacing: "-0.04em",
             color: "var(--rose)",
-            boxShadow: "0 6px 20px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.05), inset 0 -1px 0 rgba(0,0,0,0.4)",
+            boxShadow: "0 4px 14px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.08)",
             animation: isFlipping ? "countPop 0.4s var(--ease-bounce)" : "none",
             position: "relative",
             overflow: "hidden",
-            border: "1px solid rgba(255,77,109,0.15)",
+            border: "1px solid rgba(255,77,109,0.22)",
+            padding: "0 2px",
           }}
         >
           <div style={{ position: "absolute", left: 0, right: 0, top: "50%", height: "1px", background: "rgba(0,0,0,0.6)", zIndex: 2 }} />
@@ -73,9 +74,9 @@ export function FlashDeals() {
         </div>
         <span
           style={{
-            fontSize: "0.55rem", fontWeight: 700,
+            fontSize: "0.52rem", fontWeight: 700,
             color: "var(--text-subtle)",
-            letterSpacing: "0.14em", textTransform: "uppercase",
+            letterSpacing: "0.06em", textTransform: "uppercase",
             fontFamily: "var(--font-heading)",
           }}
         >
@@ -117,127 +118,127 @@ export function FlashDeals() {
           {/* Top neon line */}
           <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: "2px", background: "linear-gradient(90deg, transparent, var(--rose), #FB923C, var(--rose), transparent)", zIndex: 2 }} />
 
-          <div style={{ padding: "clamp(24px, 4vw, 38px) clamp(20px, 3.5vw, 34px) clamp(20px, 3.5vw, 28px)" }}>
+          <div style={{ padding: "clamp(16px, 3vw, 32px) clamp(12px, 2.5vw, 26px)" }}>
 
-            {/* Header */}
-            <div
-              style={{
-                display: "flex", justifyContent: "space-between",
-                alignItems: "center", flexWrap: "wrap", gap: "16px",
-                marginBottom: "26px",
-              }}
-            >
-              {/* Left: icon + text */}
-              <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+            {/* Header Area */}
+            <div style={{ marginBottom: "20px" }}>
+              {/* Top Row: Icon + Title */}
+              <div style={{ display: "flex", alignItems: "center", gap: "12px", minWidth: 0 }}>
                 <div
                   style={{
-                    width: "clamp(44px, 6.5vw, 54px)", height: "clamp(44px, 6.5vw, 54px)",
+                    width: "clamp(38px, 5.5vw, 48px)", height: "clamp(38px, 5.5vw, 48px)",
                     borderRadius: "var(--radius-lg)",
                     background: "linear-gradient(135deg, #FF4D6D 0%, #FB923C 100%)",
                     display: "flex", alignItems: "center", justifyContent: "center",
                     color: "#FFF",
-                    boxShadow: "0 6px 28px rgba(255,77,109,0.55), inset 0 1px 0 rgba(255,255,255,0.25)",
+                    boxShadow: "0 6px 24px rgba(255,77,109,0.45), inset 0 1px 0 rgba(255,255,255,0.25)",
                     flexShrink: 0,
                     animation: "glowPulse 2.5s ease-in-out infinite",
                   }}
                 >
-                  <Flame size={22} />
+                  <Flame size={20} />
                 </div>
-                <div>
+                <div style={{ minWidth: 0, flex: 1 }}>
                   <div
                     style={{
-                      display: "inline-flex", alignItems: "center", gap: "6px",
-                      padding: "3px 10px", marginBottom: "6px",
+                      display: "inline-flex", alignItems: "center", gap: "4px",
+                      padding: "2px 8px", marginBottom: "4px",
                       background: "rgba(255,77,109,0.12)",
                       border: "1px solid rgba(255,77,109,0.22)",
                       borderRadius: "var(--radius-full)",
-                      fontSize: "0.66rem", fontWeight: 700,
-                      color: "var(--rose)", letterSpacing: "0.1em",
+                      fontSize: "0.62rem", fontWeight: 700,
+                      color: "var(--rose)", letterSpacing: "0.08em",
                       textTransform: "uppercase",
                     }}
                   >
-                    <Zap size={10} fill="var(--rose)" /> {locale === "bn" ? "সীমিত সময়" : "Limited Time"}
+                    <Zap size={9} fill="var(--rose)" /> {locale === "bn" ? "সীমিত সময়" : "Limited Time"}
                   </div>
                   <h2
                     style={{
                       fontFamily: "var(--font-heading)",
-                      fontSize: "clamp(1.1rem, 3vw, 1.6rem)",
+                      fontSize: "clamp(1.05rem, 2.5vw, 1.55rem)",
                       fontWeight: 800, color: "var(--text-main)",
-                      lineHeight: 1.15, letterSpacing: "-0.04em",
+                      lineHeight: 1.2, letterSpacing: "-0.03em",
+                      margin: 0,
                     }}
                   >
                     {t.flashDealsTitle || (locale === "bn" ? "আজকের ফ্ল্যাশ অফার" : "Flash Deals")}
                   </h2>
-                  <p style={{ fontSize: "var(--text-xs)", color: "var(--text-muted)", marginTop: "3px" }}>
+                  <p style={{ fontSize: "0.76rem", color: "var(--text-muted)", marginTop: "2px", lineHeight: 1.35, margin: "2px 0 0 0" }}>
                     {t.flashDealsSubtitle || (locale === "bn" ? "সীমিত স্টক — তাড়াতাড়ি অর্ডার করুন" : "Limited stock — order before time runs out")}
                   </p>
                 </div>
               </div>
 
-              {/* Right: countdown + link */}
-              <div style={{ display: "flex", alignItems: "center", gap: "clamp(14px, 3vw, 28px)", flexWrap: "wrap" }}>
-                <div>
-                  <div
+              {/* Bottom Control Row: Countdown Timer (Left) + View All Button (Right) */}
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  flexWrap: "wrap",
+                  gap: "10px",
+                  marginTop: "14px",
+                  paddingTop: "12px",
+                  borderTop: "1px solid rgba(255,77,109,0.15)",
+                }}
+              >
+                {/* Countdown timer with label */}
+                <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "nowrap" }}>
+                  <span
                     style={{
-                      fontSize: "0.62rem", color: "var(--text-subtle)", fontWeight: 700,
-                      textAlign: "center", marginBottom: "8px", letterSpacing: "0.08em",
-                      textTransform: "uppercase",
+                      fontSize: "0.64rem", color: "rgba(255, 255, 255, 0.6)", fontWeight: 700,
+                      letterSpacing: "0.04em", textTransform: "uppercase",
+                      whiteSpace: "nowrap",
                     }}
                   >
-                    {locale === "bn" ? "শেষ হবে" : "Ends in"}
-                  </div>
-                  <div style={{ display: "flex", alignItems: "flex-start", gap: "6px" }}>
+                    ⏰ {locale === "bn" ? "শেষ হতে:" : "Ends in:"}
+                  </span>
+                  <div style={{ display: "flex", alignItems: "center", gap: "3px" }}>
                     <FlipDigit value={timeLeft.hours}   label={locale === "bn" ? "ঘণ্টা" : "HRS"} />
-                    <span style={{ color: "var(--rose)", fontWeight: 900, fontSize: "1.5rem", lineHeight: "62px", opacity: 0.75 }}>:</span>
+                    <span style={{ color: "var(--rose)", fontWeight: 900, fontSize: "1rem", lineHeight: "36px", opacity: 0.75 }}>:</span>
                     <FlipDigit value={timeLeft.minutes} label={locale === "bn" ? "মিনিট" : "MIN"} />
-                    <span style={{ color: "var(--rose)", fontWeight: 900, fontSize: "1.5rem", lineHeight: "62px", opacity: 0.75 }}>:</span>
+                    <span style={{ color: "var(--rose)", fontWeight: 900, fontSize: "1rem", lineHeight: "36px", opacity: 0.75 }}>:</span>
                     <FlipDigit value={timeLeft.seconds} label={locale === "bn" ? "সেকেন্ড" : "SEC"} {...(flipping["s"] ? { isFlipping: true } : {})} />
                   </div>
                 </div>
 
+                {/* View All Button */}
                 <Link
                   href="/category/all?sort=discount"
                   style={{
-                    display: "inline-flex", alignItems: "center", gap: "6px",
-                    padding: "10px 18px",
+                    display: "inline-flex", alignItems: "center", gap: "5px",
+                    padding: "6px 14px",
                     borderRadius: "var(--radius-full)",
-                    background: "rgba(255,77,109,0.1)",
-                    border: "1.5px solid rgba(255,77,109,0.25)",
+                    background: "rgba(255,77,109,0.12)",
+                    border: "1px solid rgba(255,77,109,0.3)",
                     color: "var(--rose)",
-                    fontWeight: 700, fontSize: "var(--text-sm)",
+                    fontWeight: 700, fontSize: "0.78rem",
                     transition: "all var(--t-smooth)",
                     whiteSpace: "nowrap",
+                    marginLeft: "auto",
                   }}
                   onMouseEnter={e => {
-                    e.currentTarget.style.background = "rgba(255,77,109,0.2)";
-                    e.currentTarget.style.transform = "translateX(3px)";
-                    e.currentTarget.style.boxShadow = "0 6px 20px rgba(255,77,109,0.25)";
+                    e.currentTarget.style.background = "rgba(255,77,109,0.22)";
+                    e.currentTarget.style.transform = "translateX(2px)";
+                    e.currentTarget.style.boxShadow = "0 4px 16px rgba(255,77,109,0.25)";
                   }}
                   onMouseLeave={e => {
-                    e.currentTarget.style.background = "rgba(255,77,109,0.1)";
+                    e.currentTarget.style.background = "rgba(255,77,109,0.12)";
                     e.currentTarget.style.transform = "translateX(0)";
                     e.currentTarget.style.boxShadow = "none";
                   }}
                 >
                   <span>{locale === "bn" ? "সব দেখুন" : "View All"}</span>
-                  <ArrowRight size={14} />
+                  <ArrowRight size={13} />
                 </Link>
               </div>
             </div>
 
-            {/* Divider */}
-            <div
-              style={{
-                height: "1px",
-                background: "linear-gradient(90deg, transparent, rgba(255,77,109,0.2) 30%, rgba(251,146,60,0.15) 70%, transparent)",
-                marginBottom: "24px",
-              }}
-            />
-
-            {/* Products */}
+            {/* Products Responsive Grid */}
             <div className="flash-grid">
               {flashProducts.map(product => (
-                <div key={product.id}>
+                <div key={product.id} style={{ minWidth: 0, width: "100%", boxSizing: "border-box" }}>
                   <ProductCard product={product} />
                 </div>
               ))}

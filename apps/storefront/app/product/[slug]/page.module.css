@@ -113,7 +113,7 @@
   color: #0f172a;
   display: flex;
   align-items: center;
-  justifyContent: center;
+  justify-content: center;
   cursor: pointer;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
   transition: all 0.15s ease;
@@ -193,7 +193,7 @@
 .weightSectionHeader {
   display: flex;
   align-items: center;
-  justifyContent: space-between;
+  justify-content: space-between;
   margin-bottom: 12px;
 }
 
@@ -313,7 +313,7 @@
 .quantityBox {
   display: flex;
   align-items: center;
-  justifyContent: space-between;
+  justify-content: space-between;
   border: 1.5px solid #e2e8f0;
   border-radius: 12px;
   background: #f8fafc;

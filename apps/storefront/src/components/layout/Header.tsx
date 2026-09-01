@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 import { useCartStore } from "@/lib/cart-store";
-import { PRODUCTS, CATEGORIES, VENDORS } from "@/lib/catalog";
+import { PRODUCTS, CATEGORIES } from "@/lib/catalog";
 import { useDebounce } from "@/hooks/useDebounce";
 import styles from "./Header.module.css";
 
@@ -113,30 +113,17 @@ export function Header() {
                 </div>
               </li>
 
-              {/* BRANDS / FARMS Dropdown */}
-              <li className={styles.navItem}>
-                <Link href="/category/all" className={styles.navLink}>
-                  <span>FARMS & BRANDS</span>
-                  <ChevronDown size={12} className={styles.chevronIcon} />
-                </Link>
-                <div className={styles.dropdownMenu}>
-                  {VENDORS.map((v) => (
-                    <Link
-                      key={v.id}
-                      href={`/shop/${v.slug}`}
-                      className={styles.dropdownItem}
-                    >
-                      <span>{locale === "bn" ? v.nameBn : v.nameEn}</span>
-                      <span style={{ fontSize: "0.72rem", color: "#64748b" }}>{v.rating} ★</span>
-                    </Link>
-                  ))}
-                </div>
-              </li>
-
               {/* DAILY BAZAR */}
               <li className={styles.navItem}>
                 <Link href="/bundles" className={styles.navLink}>
                   <span>DAILY BAZAR</span>
+                </Link>
+              </li>
+
+              {/* ORGANIC HARVEST */}
+              <li className={styles.navItem}>
+                <Link href="/category/vegetables" className={styles.navLink}>
+                  <span>ORGANIC HARVEST</span>
                 </Link>
               </li>
 
@@ -341,27 +328,7 @@ export function Header() {
                 </div>
               </div>
 
-              {/* 3. Farms & Brands (A-Z) */}
-              <div className={styles.drawerSection}>
-                <span className={styles.drawerSectionTitle}>
-                  {locale === "bn" ? "খামার ও ব্র্যান্ড (A-Z)" : "Farms & Brands (A-Z)"}
-                </span>
-                <div className={styles.drawerItemList}>
-                  {VENDORS.map((v) => (
-                    <Link
-                      key={v.id}
-                      href={`/shop/${v.slug}`}
-                      onClick={() => setMobileDrawerOpen(false)}
-                      className={styles.drawerItemLink}
-                    >
-                      <span>{locale === "bn" ? v.nameBn : v.nameEn}</span>
-                      <span style={{ fontSize: "0.72rem", color: "#64748b" }}>★ {v.rating}</span>
-                    </Link>
-                  ))}
-                </div>
-              </div>
-
-              {/* 4. Bazar Tools & Services */}
+              {/* 3. Bazar Tools & Services */}
               <div className={styles.drawerSection}>
                 <span className={styles.drawerSectionTitle}>
                   {locale === "bn" ? "বাজার টুলস ও সেবা" : "Bazar Tools & Services"}

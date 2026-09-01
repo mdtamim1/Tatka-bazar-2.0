@@ -325,7 +325,7 @@
   color: #ffffff;
   display: flex;
   align-items: center;
-  justifyContent: center;
+  justify-content: center;
   text-decoration: none;
   transition: transform 0.15s ease;
 }

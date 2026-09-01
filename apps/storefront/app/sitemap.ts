@@ -49,18 +49,5 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.85,
   }));
 
-  // Dynamic Vendor Public Shop routes
-  const vendorSlugs = [
-    "green-grocer-bd",
-    "padma-fish-house",
-    "bogura-shahi-dairy",
-  ];
-  const vendorRoutes = vendorSlugs.map((slug) => ({
-    url: `${baseUrl}/shop/${slug}`,
-    lastModified: new Date().toISOString(),
-    changeFrequency: "weekly" as const,
-    priority: 0.8,
-  }));
-
-  return [...routes, ...productRoutes, ...categoryRoutes, ...vendorRoutes];
+  return [...routes, ...productRoutes, ...categoryRoutes];
 }

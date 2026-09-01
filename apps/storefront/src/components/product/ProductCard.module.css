@@ -1,52 +1,63 @@
 /* =============================================================================
-   Dribbble Product Card Prototype (by Ananthu)
-   Aesthetic: Ultra-clean, modern squircle, stacked pills & interactive swatches
+   Beauty Glowry Exact Aesthetic — Ultra-Luxury Product Card
+   Aesthetic: Refined luxury frame, image dual-action bar (ADD / BUY NOW),
+   top badges, vendor/rating row, 2-line title, interactive weight/portion dropdown.
    ============================================================================= */
 
 .cardContainer {
   background: #ffffff;
-  border-radius: 28px;
-  padding: 20px;
-  border: 1px solid #f1f5f9;
-  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.04);
+  border-radius: 18px;
+  padding: 12px;
+  border: 1px solid #eae6de;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
   display: flex;
   flex-direction: column;
   position: relative;
   transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease, border-color 0.25s ease;
   font-family: var(--font-body, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif);
+  height: 100%;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
 .cardContainer:hover {
   transform: translateY(-4px);
-  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.08);
-  border-color: #e2e8f0;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.08);
+  border-color: #d6cebf;
 }
 
 @media (max-width: 640px) {
   .cardContainer {
-    border-radius: 16px;
-    padding: 10px;
-    border-color: #e2e8f0;
+    border-radius: 14px;
+    padding: 8px 7px;
   }
 }
 
-/* ── Top Image Squircle ── */
+@media (max-width: 380px) {
+  .cardContainer {
+    border-radius: 12px;
+    padding: 6px 5px;
+  }
+}
+
+/* ── 1. Top Image Frame with Action Bar ── */
 .imageFrame {
   position: relative;
   width: 100%;
   aspect-ratio: 1 / 1;
-  border-radius: 20px;
-  background: #f8fafc;
+  border-radius: 12px;
+  background: #f7f5f0;
   overflow: hidden;
-  display: flex;
-  align-items: center;
-  justifyContent: center;
+  display: block;
   text-decoration: none;
+  min-width: 0;
 }
 
 @media (max-width: 640px) {
   .imageFrame {
-    border-radius: 14px;
+    border-radius: 10px;
   }
 }
 
@@ -55,34 +66,100 @@
   height: 100%;
   object-fit: cover;
   transition: transform 0.4s ease;
+  display: block;
 }
 
 .cardContainer:hover .productImg {
-  transform: scale(1.06);
+  transform: scale(1.05);
+}
+
+/* ── Badges on Image ── */
+.topBadgesStack {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  z-index: 5;
+}
+
+.badgeBest {
+  background: rgba(18, 18, 18, 0.92);
+  color: #ffffff;
+  font-size: 0.54rem;
+  font-weight: 800;
+  padding: 1px 5px;
+  border-radius: 3px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  line-height: 1.2;
+}
+
+.badgeNew {
+  background: rgba(255, 255, 255, 0.9);
+  color: #1e293b;
+  font-size: 0.52rem;
+  font-weight: 800;
+  padding: 1px 5px;
+  border-radius: 3px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  line-height: 1.2;
+}
+
+.badgeDiscount {
+  position: absolute;
+  top: 6px;
+  right: 32px;
+  background: #d49567;
+  color: #ffffff;
+  font-size: 0.54rem;
+  font-weight: 800;
+  padding: 1px 5px;
+  border-radius: 3px;
+  z-index: 5;
+  letter-spacing: 0.02em;
+  line-height: 1.2;
+}
+
+@media (max-width: 380px) {
+  .badgeDiscount {
+    right: 28px;
+    font-size: 0.5rem;
+    padding: 1px 3px;
+  }
 }
 
 /* Wishlist Heart Icon (Top Right) */
 .wishlistBtn {
   position: absolute;
-  top: 12px;
-  right: 12px;
-  width: 34px;
-  height: 34px;
+  top: 6px;
+  right: 6px;
+  width: 24px;
+  height: 24px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.92);
+  background: rgba(255, 255, 255, 0.9);
   backdrop-filter: blur(4px);
-  border: 1px solid rgba(226, 232, 240, 0.8);
+  -webkit-backdrop-filter: blur(4px);
+  border: 1px solid rgba(0, 0, 0, 0.06);
   color: #64748b;
   display: flex;
   align-items: center;
-  justifyContent: center;
+  justify-content: center;
   cursor: pointer;
-  z-index: 10;
-  transition: transform 0.15s ease, color 0.15s ease;
+  z-index: 6;
+  transition: transform 0.15s ease, color 0.15s ease, background 0.15s ease;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
 }
 
 .wishlistBtn:hover {
-  transform: scale(1.1);
+  transform: scale(1.12);
+  background: #ffffff;
   color: #ef4444;
 }
 
@@ -90,262 +167,432 @@
   color: #ef4444 !important;
 }
 
-/* Discount / Freshness Badge */
-.discountBadge {
+/* ── Pinned Bottom Action Bar (ADD | BUY NOW) on Image ── */
+.imageActionBar {
   position: absolute;
-  top: 12px;
-  left: 12px;
-  background: #0f172a;
-  color: #ffffff;
-  font-size: 0.68rem;
-  font-weight: 800;
-  padding: 4px 8px;
-  border-radius: 6px;
-  z-index: 10;
-  letter-spacing: 0.04em;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 30px;
+  background: rgba(18, 18, 18, 0.94);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  z-index: 8;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  width: 100%;
+  box-sizing: border-box;
 }
 
-/* ── Card Body ── */
+@media (max-width: 640px) {
+  .imageActionBar {
+    height: 28px;
+  }
+}
+
+.actionAddBtn,
+.actionBuyBtn {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  background: transparent;
+  border: none;
+  color: #ffffff;
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+  padding: 0 2px;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.actionAddBtn span,
+.actionBuyBtn span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 640px) {
+  .actionAddBtn,
+  .actionBuyBtn {
+    font-size: 0.58rem;
+    gap: 2px;
+  }
+}
+
+.actionAddBtn:hover,
+.actionBuyBtn:hover {
+  background: rgba(255, 255, 255, 0.18);
+  color: #ffffff;
+}
+
+.actionAddBtn:active,
+.actionBuyBtn:active {
+  background: rgba(255, 255, 255, 0.28);
+}
+
+.actionBarDivider {
+  width: 1px;
+  height: 12px;
+  background: rgba(255, 255, 255, 0.22);
+  flex-shrink: 0;
+}
+
+.addedState {
+  color: #10d876 !important;
+}
+
+/* ── 2. Card Body ── */
 .bodyContent {
   display: flex;
   flex-direction: column;
-  padding-top: 16px;
+  padding-top: 8px;
   flex: 1;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
-.productTitle {
-  font-size: 1.12rem;
+@media (max-width: 640px) {
+  .bodyContent {
+    padding-top: 6px;
+  }
+}
+
+.attributeIcon {
+  font-size: 0.68rem;
+  color: #94a3b8;
+  margin-bottom: 2px;
+  display: inline-block;
+  line-height: 1;
+}
+
+/* Brand & Rating Row */
+.brandRatingRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+  margin-bottom: 3px;
+  width: 100%;
+  min-width: 0;
+}
+
+.brandName {
+  font-size: 0.62rem;
   font-weight: 800;
-  color: #0f172a;
-  margin: 0 0 6px 0;
+  color: #8c827a;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+  min-width: 0;
+}
+
+.ratingGroup {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  font-size: 0.62rem;
+  font-weight: 800;
+  color: #d49567;
+  flex-shrink: 0;
+}
+
+.starIcon {
+  color: #d49567;
+  fill: #d49567;
+  flex-shrink: 0;
+}
+
+/* Product Title */
+.productTitle {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #1a1a1a;
   line-height: 1.3;
+  margin: 0 0 6px 0;
   text-decoration: none;
   display: -webkit-box;
-  -webkit-line-clamp: 1;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.01em;
+  min-height: 2.2em;
+  word-break: break-word;
+  transition: color 0.15s ease;
+  width: 100%;
 }
 
 .productTitle:hover {
-  color: #3056D3;
+  color: #3056d3;
 }
 
 @media (max-width: 640px) {
   .productTitle {
-    font-size: 1rem;
+    font-size: 0.76rem;
+    min-height: 2.1em;
+    margin-bottom: 4px;
   }
 }
 
-.specSubtitle {
-  font-size: 0.78rem;
-  line-height: 1.45;
-  color: #64748b;
-  margin: 0 0 14px 0;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-@media (max-width: 640px) {
-  .specSubtitle {
-    font-size: 0.72rem;
-    margin-bottom: 10px;
-  }
-}
-
-/* ── Price Row ── */
-.priceRow {
+/* ── 3. Bottom Price & Weight Dropdown Row ── */
+.priceWeightRow {
   display: flex;
-  align-items: baseline;
-  justifyContent: space-between;
-  gap: 8px;
-  margin-bottom: 12px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+  margin-top: auto;
+  padding-top: 4px;
+  position: relative;
+  width: 100%;
+  min-width: 0;
 }
 
 .priceGroup {
   display: flex;
   align-items: baseline;
-  gap: 6px;
+  gap: 3px;
+  min-width: 0;
+  flex-shrink: 1;
+  overflow: hidden;
 }
 
 .currentPrice {
-  font-size: 1.3rem;
+  font-size: 0.92rem;
   font-weight: 900;
-  color: #0f172a;
-  letter-spacing: -0.02em;
-}
-
-.comparePrice {
-  font-size: 0.85rem;
-  color: #94a3b8;
-  text-decoration: line-through;
-  font-weight: 500;
-}
-
-.unitHint {
-  font-size: 0.75rem;
-  font-weight: 700;
-  color: #64748b;
-  background: #f1f5f9;
-  padding: 2px 6px;
-  border-radius: 4px;
-}
-
-/* ── Weight / Portion Selection Pills ── */
-.weightSelectorContainer {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  margin-bottom: 16px;
-}
-
-.weightLabelRow {
-  display: flex;
-  align-items: center;
-  justifyContent: space-between;
-  font-size: 0.72rem;
-}
-
-.weightSectionTitle {
-  font-weight: 700;
-  color: #64748b;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-
-.activeWeightBadge {
-  font-weight: 800;
-  color: #0f172a;
-}
-
-.weightPillList {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  overflow-x: auto;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-  padding: 2px 1px;
-}
-
-.weightPillList::-webkit-scrollbar {
-  display: none;
-}
-
-.weightPill {
-  padding: 5px 10px;
-  border-radius: 8px;
-  border: 1px solid #e2e8f0;
-  background: #ffffff;
-  color: #475569;
-  font-size: 0.75rem;
-  font-weight: 700;
-  cursor: pointer;
+  color: #1a1a1a;
+  letter-spacing: -0.01em;
   white-space: nowrap;
-  transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.weightPill:hover {
-  border-color: #cbd5e1;
-  background: #f8fafc;
-  color: #0f172a;
-}
-
-.weightPillActive {
-  background: #0f172a !important;
-  color: #ffffff !important;
-  border-color: #0f172a !important;
-  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.2);
-  transform: translateY(-1px);
-}
-
-/* ── Stacked Action Buttons ── */
-.btnStack {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin-top: auto;
-}
-
-.buyNowBtn {
-  width: 100%;
-  height: 44px;
-  border-radius: 999px;
-  background: #18181b;
-  color: #ffffff;
-  font-size: 0.88rem;
-  font-weight: 700;
-  border: none;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background 0.15s ease, transform 0.15s ease;
-  text-decoration: none;
-}
-
-.buyNowBtn:hover {
-  background: #000000;
 }
 
 @media (max-width: 640px) {
-  .priceRow {
-    margin-bottom: 10px;
-    flex-wrap: wrap;
-    gap: 4px;
-  }
   .currentPrice {
-    font-size: 1.05rem;
-  }
-  .comparePrice {
-    font-size: 0.75rem;
-  }
-  .swatchDot {
-    width: 11px;
-    height: 11px;
-  }
-  .btnStack {
-    gap: 6px;
-  }
-  .buyNowBtn {
-    height: 36px;
-    font-size: 0.78rem;
-  }
-  .addToCartBtn {
-    height: 36px;
-    font-size: 0.78rem;
+    font-size: 0.86rem;
   }
 }
 
-.addToCartBtn {
-  width: 100%;
-  height: 44px;
-  border-radius: 999px;
-  background: #ffffff;
-  color: #0f172a;
-  border: 1.5px solid #e2e8f0;
-  font-size: 0.88rem;
+@media (max-width: 380px) {
+  .currentPrice {
+    font-size: 0.8rem;
+  }
+}
+
+.comparePrice {
+  font-size: 0.68rem;
+  color: #94a3b8;
+  text-decoration: line-through;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+@media (max-width: 380px) {
+  .comparePrice {
+    font-size: 0.62rem;
+  }
+}
+
+/* Interactive Weight / Portion Dropdown Trigger */
+.weightPickerWrapper {
+  position: relative;
+  display: inline-flex;
+  flex-shrink: 0;
+}
+
+.weightPillBtn {
+  background: #f4f1eb;
+  border: 1px solid #dfd8cb;
+  color: #3e3832;
+  font-size: 0.62rem;
   font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 6px;
   cursor: pointer;
+  transition: all 0.15s ease;
+  letter-spacing: 0.01em;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  max-width: 86px;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.weightPillLabel {
+  display: inline-block;
+  max-width: 52px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 380px) {
+  .weightPillBtn {
+    padding: 2px 4px;
+    gap: 2px;
+    font-size: 0.58rem;
+    max-width: 74px;
+  }
+  .weightPillLabel {
+    max-width: 42px;
+  }
+}
+
+.weightPillBtn:hover {
+  background: #ebe4d5;
+  border-color: #1a1a1a;
+  color: #1a1a1a;
+}
+
+.weightPillBtnActive {
+  background: #1a1a1a !important;
+  color: #ffffff !important;
+  border-color: #1a1a1a !important;
+}
+
+.scaleIcon {
+  color: #15803d;
+  flex-shrink: 0;
+}
+
+.weightPillBtnActive .scaleIcon {
+  color: #10d876;
+}
+
+.chevronIcon {
+  color: #8c827a;
+  transition: transform 0.2s ease;
+  flex-shrink: 0;
+}
+
+.weightPillBtnActive .chevronIcon {
+  color: #ffffff;
+}
+
+.chevronRotated {
+  transform: rotate(180deg);
+}
+
+/* Floating Luxury Portion Selector Menu */
+.pickerBackdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  cursor: default;
+}
+
+.portionDropdown {
+  position: absolute;
+  bottom: calc(100% + 5px);
+  right: 0;
+  width: min(175px, 85vw);
+  max-width: 100vw;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.18), 0 0 0 1px rgba(0, 0, 0, 0.08);
+  padding: 6px;
+  z-index: 100;
+  animation: popUp 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes popUp {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.portionDropdownHeader {
+  font-size: 0.62rem;
+  font-weight: 800;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 4px 6px 6px 6px;
+  border-bottom: 1px solid #f1f5f9;
+  margin-bottom: 4px;
   display: flex;
   align-items: center;
-  justify-content: center;
-  transition: all 0.15s ease;
+  gap: 5px;
 }
 
-.addToCartBtn:hover {
+.portionOptionList {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.portionOptionBtn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 6px 8px;
+  border-radius: 7px;
+  border: 1px solid transparent;
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.12s ease;
+  text-align: left;
+}
+
+.portionOptionBtn:hover {
   background: #f8fafc;
-  border-color: #cbd5e1;
 }
 
-.addedState {
+.portionOptionSelected {
   background: #f0fdf4 !important;
-  border-color: #86efac !important;
-  color: #166534 !important;
+  border-color: #bbf7d0 !important;
+}
+
+.portionOptionLabel {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.optionRadioDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #cbd5e1;
+  flex-shrink: 0;
+}
+
+.optionRadioDotActive {
+  background: #15803d;
+  box-shadow: 0 0 0 2px rgba(21, 128, 61, 0.25);
+}
+
+.optionWeightName {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #1e293b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.optionPriceTag {
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: #0f172a;
+  flex-shrink: 0;
 }

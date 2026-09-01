@@ -33,6 +33,7 @@ export interface Product {
   categorySlug: string;
   categoryNameBn: string;
   categoryNameEn: string;
+  subcategorySlug?: string;
   basePrice: number; // Price per base unit (e.g. ৳75 per 1 kg)
   comparePrice?: number;
   baseUnit: WeightUnit;

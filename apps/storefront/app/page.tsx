@@ -38,18 +38,18 @@ function SectionHeader({
   viewAllHref?: string; viewAllLabel?: string;
 }) {
   return (
-    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: "28px", gap: "16px" }}>
-      <div>
-        <div className={`section-eyebrow ${eyebrowClass}`} style={{ marginBottom: "10px" }}>
+    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: "22px", gap: "12px", flexWrap: "wrap" }}>
+      <div style={{ minWidth: 0, flex: "1 1 auto" }}>
+        <div className={`section-eyebrow ${eyebrowClass}`} style={{ marginBottom: "8px" }}>
           {eyebrow}
         </div>
         <h2 className="section-heading">{heading}</h2>
         {sub && <p className="section-subheading">{sub}</p>}
       </div>
       {viewAllHref && (
-        <Link href={viewAllHref} className="view-all-link">
+        <Link href={viewAllHref} className="view-all-link" style={{ flexShrink: 0 }}>
           <span>{viewAllLabel}</span>
-          <ArrowRight size={15} />
+          <ArrowRight size={14} />
         </Link>
       )}
     </div>
@@ -111,14 +111,14 @@ export default function StorefrontHomePage() {
       {/* 2. Trust Strip */}
       <section
         ref={trustRef as React.RefObject<HTMLElement>}
-        style={{ padding: "24px 0 36px" }}
+        style={{ padding: "10px 0 18px" }}
       >
         <div className="container" style={{ overflow: "hidden" }}>
           <div
             style={{
-              display: "flex", gap: "12px",
+              display: "flex", gap: "8px",
               overflowX: "auto", scrollbarWidth: "none",
-              paddingBottom: "4px",
+              paddingBottom: "2px",
               width: "100%", maxWidth: "100%",
               boxSizing: "border-box",
             }}
@@ -127,53 +127,53 @@ export default function StorefrontHomePage() {
               <div
                 key={i}
                 style={{
-                  display: "flex", alignItems: "center", gap: "13px",
-                  padding: "16px 20px",
+                  display: "flex", alignItems: "center", gap: "9px",
+                  padding: "8px 12px",
                   background: "var(--bg-card)",
-                  borderRadius: "var(--radius-lg)",
+                  borderRadius: "12px",
                   border: `1px solid var(--border-subtle)`,
-                  boxShadow: "var(--shadow-card)",
-                  flexShrink: 0, flex: "1 1 0", minWidth: "180px",
+                  boxShadow: "0 2px 6px rgba(0,0,0,0.02)",
+                  flexShrink: 0, flex: "1 1 0", minWidth: "135px",
                   transition: "all var(--t-smooth)",
                   cursor: "default",
                   position: "relative",
                   overflow: "hidden",
                   opacity: trustVis ? 1 : 0,
-                  transform: trustVis ? "translateY(0)" : "translateY(20px)",
-                  transitionDelay: trustVis ? `${i * 0.07}s` : "0s",
+                  transform: trustVis ? "translateY(0)" : "translateY(14px)",
+                  transitionDelay: trustVis ? `${i * 0.05}s` : "0s",
                 }}
                 onMouseEnter={e => {
-                  e.currentTarget.style.transform = "translateY(-6px)";
+                  e.currentTarget.style.transform = "translateY(-3px)";
                   e.currentTarget.style.borderColor = border;
-                  e.currentTarget.style.boxShadow = `var(--shadow-lg), 0 0 30px ${bg}`;
+                  e.currentTarget.style.boxShadow = `0 6px 16px rgba(0,0,0,0.06), 0 0 16px ${bg}`;
                   e.currentTarget.style.background = bg;
                 }}
                 onMouseLeave={e => {
                   e.currentTarget.style.transform = "translateY(0)";
                   e.currentTarget.style.borderColor = "var(--border-subtle)";
-                  e.currentTarget.style.boxShadow = "var(--shadow-card)";
+                  e.currentTarget.style.boxShadow = "0 2px 6px rgba(0,0,0,0.02)";
                   e.currentTarget.style.background = "var(--bg-card)";
                 }}
               >
                 {/* Top accent line */}
-                <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: "2px", background: `linear-gradient(90deg, transparent, ${color}, transparent)`, opacity: 0.6 }} />
+                <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: "1.5px", background: `linear-gradient(90deg, transparent, ${color}, transparent)`, opacity: 0.7 }} />
                 <div
                   style={{
-                    width: "42px", height: "42px",
-                    borderRadius: "var(--radius-md)",
+                    width: "28px", height: "28px",
+                    borderRadius: "8px",
                     background: bg,
                     border: `1px solid ${border}`,
                     display: "flex", alignItems: "center", justifyContent: "center",
                     flexShrink: 0,
                   }}
                 >
-                  <Icon size={20} color={color} />
+                  <Icon size={14} color={color} />
                 </div>
-                <div>
-                  <div style={{ fontSize: "var(--text-sm)", fontWeight: 700, color: "var(--text-main)", lineHeight: 1.2, fontFamily: "var(--font-heading)" }}>
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ fontSize: "0.74rem", fontWeight: 700, color: "var(--text-main)", lineHeight: 1.15, fontFamily: "var(--font-heading)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                     {label}
                   </div>
-                  <div style={{ fontSize: "var(--text-xs)", color: "var(--text-muted)", marginTop: "3px" }}>
+                  <div style={{ fontSize: "0.62rem", color: "var(--text-muted)", marginTop: "2px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                     {sub}
                   </div>
                 </div>
@@ -218,6 +218,9 @@ export default function StorefrontHomePage() {
               <div
                 key={prod.id}
                 style={{
+                  minWidth: 0,
+                  width: "100%",
+                  boxSizing: "border-box",
                   opacity: bestVis ? 1 : 0,
                   transform: bestVis ? "translateY(0) scale(1)" : "translateY(20px) scale(0.97)",
                   transition: "all 0.6s var(--ease-out)",
@@ -269,6 +272,9 @@ export default function StorefrontHomePage() {
               <div
                 key={prod.id}
                 style={{
+                  minWidth: 0,
+                  width: "100%",
+                  boxSizing: "border-box",
                   opacity: organicVis ? 1 : 0,
                   transform: organicVis ? "translateY(0) scale(1)" : "translateY(20px) scale(0.97)",
                   transition: "all 0.6s var(--ease-out)",
