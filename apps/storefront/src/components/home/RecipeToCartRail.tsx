@@ -143,7 +143,7 @@ export function RecipeToCartRail() {
                   }}
                 >
                   <Clock size={10} />
-                  {recipe.cookTime || "30 min"}
+                  {recipe.cookingTime || "30 min"}
                 </span>
                 <span
                   style={{
@@ -154,7 +154,7 @@ export function RecipeToCartRail() {
                   }}
                 >
                   <Users size={10} />
-                  {recipe.serves || "4"} {locale === "bn" ? "জন" : "serves"}
+                  {recipe.servings || 4} {locale === "bn" ? "জন" : "serves"}
                 </span>
               </div>
             </div>

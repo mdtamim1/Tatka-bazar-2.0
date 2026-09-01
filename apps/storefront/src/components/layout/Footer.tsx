@@ -3,15 +3,15 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import {
-  MapPin, Phone, Mail, Clock, Send,
-  ShieldCheck, Award, Truck, Check,
+  MapPin, Phone, Mail, Send,
+  ShieldCheck, Award, Truck, Clock, Check,
 } from "lucide-react";
 
-// Brand icons removed from lucide-react — inline SVG replacements
 const Facebook  = ({ size = 18 }: { size?: number }) => (<svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" /></svg>);
 const Instagram = ({ size = 18 }: { size?: number }) => (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5" /><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" /><line x1="17.5" y1="6.5" x2="17.51" y2="6.5" /></svg>);
 const Youtube   = ({ size = 18 }: { size?: number }) => (<svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.95-1.96C18.88 4 12 4 12 4s-6.88 0-8.59.46A2.78 2.78 0 0 0 1.46 6.42 29 29 0 0 0 1 12a29 29 0 0 0 .46 5.58 2.78 2.78 0 0 0 1.95 1.96C5.12 20 12 20 12 20s6.88 0 8.59-.46a2.78 2.78 0 0 0 1.95-1.96A29 29 0 0 0 23 12a29 29 0 0 0-.46-5.58z" /><polygon points="9.75 15.02 15.5 12 9.75 8.98 9.75 15.02" fill="white" /></svg>);
 const Twitter   = ({ size = 18 }: { size?: number }) => (<svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.73-8.835L1.254 2.25H8.08l4.259 5.63 5.905-5.63zm-1.161 17.52h1.833L7.084 4.126H5.117z" /></svg>);
+
 import { useLanguage } from "@/context/LanguageContext";
 import { BRANCHES, CATEGORIES } from "@/lib/catalog";
 
@@ -26,10 +26,10 @@ export function Footer() {
   };
 
   const trustPillars = [
-    { Icon: ShieldCheck, color: "#4ADE80", bg: "rgba(74, 222, 128, 0.12)", titleKey: "trust1Title" as const, descKey: "trust1Desc" as const },
-    { Icon: Truck,       color: "#FB923C", bg: "rgba(251, 146, 60, 0.12)", titleKey: "trust2Title" as const, descKey: "trust2Desc" as const },
-    { Icon: Award,       color: "#4ADE80", bg: "rgba(74, 222, 128, 0.12)", titleKey: "trust3Title" as const, descKey: "trust3Desc" as const },
-    { Icon: Clock,       color: "#60A5FA", bg: "rgba(96, 165, 250, 0.12)", titleKey: "trust4Title" as const, descKey: "trust4Desc" as const },
+    { Icon: ShieldCheck, color: "var(--emerald)", bg: "rgba(16,216,118,0.08)", border: "rgba(16,216,118,0.15)", titleKey: "trust1Title" as const, descKey: "trust1Desc" as const },
+    { Icon: Truck,       color: "#FB923C",         bg: "rgba(251,146,60,0.08)", border: "rgba(251,146,60,0.15)", titleKey: "trust2Title" as const, descKey: "trust2Desc" as const },
+    { Icon: Award,       color: "var(--emerald)", bg: "rgba(16,216,118,0.08)", border: "rgba(16,216,118,0.15)", titleKey: "trust3Title" as const, descKey: "trust3Desc" as const },
+    { Icon: Clock,       color: "var(--sapphire)", bg: "rgba(79,158,255,0.08)", border: "rgba(79,158,255,0.15)", titleKey: "trust4Title" as const, descKey: "trust4Desc" as const },
   ];
 
   const socialLinks = [
@@ -42,8 +42,8 @@ export function Footer() {
   return (
     <footer
       style={{
-        background: "linear-gradient(180deg, #060F08 0%, #040A06 100%)",
-        color: "#E2E8F0",
+        background: "linear-gradient(180deg, #06080A 0%, #04060A 100%)",
+        color: "var(--text-body)",
         paddingTop: "64px",
         paddingBottom: "32px",
         marginTop: "80px",
@@ -51,23 +51,33 @@ export function Footer() {
         overflow: "hidden",
       }}
     >
-      {/* Aurora background effect */}
+      {/* Aurora background */}
       <div
         style={{
           position: "absolute", inset: 0, pointerEvents: "none",
           background: `
-            radial-gradient(ellipse 60% 40% at 10% 0%, rgba(34,197,94,0.07) 0%, transparent 55%),
-            radial-gradient(ellipse 50% 35% at 90% 100%, rgba(245,158,11,0.05) 0%, transparent 50%)
+            radial-gradient(ellipse 70% 40% at 10% 0%, rgba(16,216,118,0.06) 0%, transparent 60%),
+            radial-gradient(ellipse 50% 35% at 90% 100%, rgba(245,200,66,0.04) 0%, transparent 55%)
           `,
         }}
       />
 
-      {/* Top green accent line */}
+      {/* Top neon accent line */}
       <div
         style={{
           position: "absolute", top: 0, left: 0, right: 0,
-          height: "3px",
-          background: "linear-gradient(90deg, transparent 0%, #22C55E 30%, #86EFAC 50%, #22C55E 70%, transparent 100%)",
+          height: "2px",
+          background: "linear-gradient(90deg, transparent 0%, rgba(16,216,118,0.7) 30%, rgba(245,200,66,0.5) 55%, rgba(16,216,118,0.5) 80%, transparent 100%)",
+        }}
+      />
+
+      {/* Grid pattern */}
+      <div
+        style={{
+          position: "absolute", inset: 0, pointerEvents: "none",
+          backgroundImage: "linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px)",
+          backgroundSize: "60px 60px",
+          maskImage: "linear-gradient(to bottom, black 0%, transparent 100%)",
         }}
       />
 
@@ -78,40 +88,45 @@ export function Footer() {
           style={{
             display: "grid",
             gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-            gap: "20px",
-            paddingBottom: "44px",
-            borderBottom: "1px solid rgba(255,255,255,0.07)",
-            marginBottom: "52px",
+            gap: "16px",
+            paddingBottom: "48px",
+            borderBottom: "1px solid var(--border-subtle)",
+            marginBottom: "56px",
           }}
         >
-          {trustPillars.map(({ Icon, color, bg, titleKey, descKey }, i) => (
+          {trustPillars.map(({ Icon, color, bg, border, titleKey, descKey }, i) => (
             <div
               key={i}
               style={{
                 display: "flex", gap: "14px", alignItems: "flex-start",
                 padding: "18px",
-                background: "rgba(255,255,255,0.03)",
+                background: "var(--bg-glass)",
                 borderRadius: "var(--radius-lg)",
-                border: "1px solid rgba(255,255,255,0.06)",
+                border: "1px solid var(--border-subtle)",
                 transition: "all var(--t-smooth)",
+                position: "relative",
+                overflow: "hidden",
               }}
-              onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.06)"; e.currentTarget.style.borderColor = "rgba(34,197,94,0.15)"; }}
-              onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.03)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.06)"; }}
+              onMouseEnter={e => {
+                e.currentTarget.style.background = bg;
+                e.currentTarget.style.borderColor = border;
+                e.currentTarget.style.transform = "translateY(-4px)";
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.background = "var(--bg-glass)";
+                e.currentTarget.style.borderColor = "var(--border-subtle)";
+                e.currentTarget.style.transform = "translateY(0)";
+              }}
             >
-              <div
-                style={{
-                  padding: "11px", borderRadius: "12px",
-                  background: bg, color,
-                  flexShrink: 0,
-                }}
-              >
-                <Icon size={24} />
+              <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: "1px", background: `linear-gradient(90deg, transparent, ${color}, transparent)`, opacity: 0.4 }} />
+              <div style={{ padding: "10px", borderRadius: "10px", background: bg, border: `1px solid ${border}`, flexShrink: 0 }}>
+                <Icon size={20} color={color} />
               </div>
               <div>
-                <h4 style={{ color: "#F8FAFC", fontSize: "0.94rem", fontWeight: 700, marginBottom: "5px" }}>
+                <h4 style={{ color: "var(--text-main)", fontSize: "0.94rem", fontWeight: 700, marginBottom: "5px", fontFamily: "var(--font-heading)" }}>
                   {t[titleKey]}
                 </h4>
-                <p style={{ fontSize: "0.8rem", color: "#94A3B8", lineHeight: 1.5 }}>
+                <p style={{ fontSize: "0.8rem", color: "var(--text-muted)", lineHeight: 1.55 }}>
                   {t[descKey]}
                 </p>
               </div>
@@ -123,9 +138,9 @@ export function Footer() {
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
-            gap: "44px",
-            marginBottom: "52px",
+            gridTemplateColumns: "repeat(auto-fit, minmax(230px, 1fr))",
+            gap: "48px",
+            marginBottom: "56px",
           }}
         >
           {/* Column 1: Brand */}
@@ -134,37 +149,37 @@ export function Footer() {
               <div
                 style={{
                   width: "44px", height: "44px",
-                  borderRadius: "14px",
-                  background: "linear-gradient(135deg, #22C55E, #15803D)",
+                  borderRadius: "12px",
+                  background: "linear-gradient(135deg, #10D876, #059E57)",
                   display: "flex", alignItems: "center", justifyContent: "center",
-                  fontSize: "1.4rem",
-                  boxShadow: "0 6px 20px rgba(34,197,94,0.3)",
+                  fontSize: "1.3rem",
+                  boxShadow: "0 6px 24px rgba(16,216,118,0.35)",
                 }}
               >
                 🌾
               </div>
               <div>
-                <div style={{ fontSize: "1.3rem", fontWeight: 900, color: "#F8FAFC", letterSpacing: "-0.03em" }}>
+                <div style={{ fontSize: "1.2rem", fontWeight: 800, color: "var(--text-main)", letterSpacing: "-0.04em", fontFamily: "var(--font-heading)" }}>
                   {locale === "bn" ? "তাতকা বাজার" : "Tatka Bazar"}
                 </div>
-                <div style={{ fontSize: "0.68rem", color: "#4ADE80", fontWeight: 600, letterSpacing: "0.04em" }}>
+                <div style={{ fontSize: "0.66rem", color: "var(--emerald)", fontWeight: 600, letterSpacing: "0.04em" }}>
                   Bangladesh's Premium Fresh Marketplace
                 </div>
               </div>
             </div>
-            <p style={{ fontSize: "0.84rem", color: "#94A3B8", lineHeight: 1.7, marginBottom: "22px" }}>
+            <p style={{ fontSize: "0.84rem", color: "var(--text-muted)", lineHeight: 1.75, marginBottom: "22px" }}>
               {t.footerAbout}
             </p>
-            <div style={{ display: "flex", flexDirection: "column", gap: "10px", fontSize: "0.84rem", color: "#CBD5E1" }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: "10px", fontSize: "0.84rem", color: "var(--text-body)" }}>
               <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                <div style={{ padding: "6px", background: "rgba(34,197,94,0.1)", borderRadius: "8px" }}>
-                  <Phone size={14} color="#4ADE80" />
+                <div style={{ padding: "6px", background: "rgba(16,216,118,0.08)", borderRadius: "8px", border: "1px solid rgba(16,216,118,0.15)" }}>
+                  <Phone size={14} color="var(--emerald)" />
                 </div>
                 <span>{t.hotline}</span>
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                <div style={{ padding: "6px", background: "rgba(34,197,94,0.1)", borderRadius: "8px" }}>
-                  <Mail size={14} color="#4ADE80" />
+                <div style={{ padding: "6px", background: "rgba(16,216,118,0.08)", borderRadius: "8px", border: "1px solid rgba(16,216,118,0.15)" }}>
+                  <Mail size={14} color="var(--emerald)" />
                 </div>
                 <span>support@tatkabazar.com</span>
               </div>
@@ -180,23 +195,23 @@ export function Footer() {
                   style={{
                     width: "38px", height: "38px",
                     borderRadius: "10px",
-                    background: "rgba(255,255,255,0.06)",
-                    border: "1px solid rgba(255,255,255,0.1)",
+                    background: "var(--bg-glass)",
+                    border: "1px solid var(--border-medium)",
                     display: "flex", alignItems: "center", justifyContent: "center",
-                    color: "#94A3B8",
+                    color: "var(--text-muted)",
                     transition: "all var(--t-fast)",
                   }}
                   onMouseEnter={e => {
-                    e.currentTarget.style.background = `${color}22`;
-                    e.currentTarget.style.borderColor = `${color}44`;
+                    e.currentTarget.style.background = `${color}18`;
+                    e.currentTarget.style.borderColor = `${color}40`;
                     e.currentTarget.style.color = color;
-                    e.currentTarget.style.transform = "translateY(-3px)";
+                    e.currentTarget.style.transform = "translateY(-4px) scale(1.1)";
                   }}
                   onMouseLeave={e => {
-                    e.currentTarget.style.background = "rgba(255,255,255,0.06)";
-                    e.currentTarget.style.borderColor = "rgba(255,255,255,0.1)";
-                    e.currentTarget.style.color = "#94A3B8";
-                    e.currentTarget.style.transform = "translateY(0)";
+                    e.currentTarget.style.background = "var(--bg-glass)";
+                    e.currentTarget.style.borderColor = "var(--border-medium)";
+                    e.currentTarget.style.color = "var(--text-muted)";
+                    e.currentTarget.style.transform = "translateY(0) scale(1)";
                   }}
                 >
                   <Icon size={17} />
@@ -209,33 +224,40 @@ export function Footer() {
           <div>
             <h3
               style={{
-                color: "#F8FAFC", fontSize: "1rem", fontWeight: 800,
+                color: "var(--text-main)", fontSize: "0.95rem", fontWeight: 700,
                 marginBottom: "20px",
                 display: "flex", alignItems: "center", gap: "8px",
+                fontFamily: "var(--font-heading)",
               }}
             >
-              <MapPin size={16} color="#4ADE80" />
+              <MapPin size={16} color="var(--emerald)" />
               {t.hubLocations}
             </h3>
-            <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
               {BRANCHES.map(b => (
                 <div
                   key={b.id}
                   style={{
-                    padding: "12px",
-                    background: "rgba(255,255,255,0.03)",
+                    padding: "12px 14px",
+                    background: "var(--bg-glass)",
                     borderRadius: "var(--radius-md)",
-                    border: "1px solid rgba(255,255,255,0.06)",
+                    border: "1px solid var(--border-subtle)",
                     fontSize: "0.82rem",
                     transition: "all var(--t-fast)",
                   }}
-                  onMouseEnter={e => { e.currentTarget.style.background = "rgba(34,197,94,0.06)"; e.currentTarget.style.borderColor = "rgba(34,197,94,0.15)"; }}
-                  onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.03)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.06)"; }}
+                  onMouseEnter={e => {
+                    e.currentTarget.style.background = "rgba(16,216,118,0.05)";
+                    e.currentTarget.style.borderColor = "rgba(16,216,118,0.15)";
+                  }}
+                  onMouseLeave={e => {
+                    e.currentTarget.style.background = "var(--bg-glass)";
+                    e.currentTarget.style.borderColor = "var(--border-subtle)";
+                  }}
                 >
-                  <div style={{ fontWeight: 700, color: "#F8FAFC", marginBottom: "3px" }}>
+                  <div style={{ fontWeight: 700, color: "var(--text-main)", marginBottom: "3px" }}>
                     {locale === "bn" ? b.nameBn : b.nameEn}
                   </div>
-                  <div style={{ color: "#94A3B8" }}>
+                  <div style={{ color: "var(--text-muted)" }}>
                     {locale === "bn" ? b.addressBn : b.addressEn}
                   </div>
                 </div>
@@ -245,22 +267,28 @@ export function Footer() {
 
           {/* Column 3: Categories */}
           <div>
-            <h3 style={{ color: "#F8FAFC", fontSize: "1rem", fontWeight: 800, marginBottom: "20px" }}>
+            <h3 style={{ color: "var(--text-main)", fontSize: "0.95rem", fontWeight: 700, marginBottom: "20px", fontFamily: "var(--font-heading)" }}>
               {locale === "bn" ? "বাজারের বিভাগ" : "Quick Categories"}
             </h3>
-            <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: "10px" }}>
+            <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: "8px" }}>
               {CATEGORIES.map(c => (
                 <li key={c.id}>
                   <Link
                     href={`/category/${c.slug}`}
                     style={{
-                      color: "#94A3B8", transition: "all var(--t-fast)",
+                      color: "var(--text-muted)", transition: "all var(--t-fast)",
                       display: "flex", alignItems: "center", gap: "8px",
-                      fontSize: "0.85rem", fontWeight: 500,
+                      fontSize: "0.84rem", fontWeight: 500,
                       padding: "4px 0",
                     }}
-                    onMouseEnter={e => { e.currentTarget.style.color = "#4ADE80"; e.currentTarget.style.paddingLeft = "6px"; }}
-                    onMouseLeave={e => { e.currentTarget.style.color = "#94A3B8"; e.currentTarget.style.paddingLeft = "0"; }}
+                    onMouseEnter={e => {
+                      e.currentTarget.style.color = "var(--emerald)";
+                      e.currentTarget.style.paddingLeft = "6px";
+                    }}
+                    onMouseLeave={e => {
+                      e.currentTarget.style.color = "var(--text-muted)";
+                      e.currentTarget.style.paddingLeft = "0";
+                    }}
                   >
                     <span>{c.icon}</span>
                     <span>{locale === "bn" ? c.nameBn : c.nameEn}</span>
@@ -271,12 +299,12 @@ export function Footer() {
                 <Link
                   href="/b2b"
                   style={{
-                    color: "#FDE047", fontWeight: 700, fontSize: "0.85rem",
+                    color: "var(--gold)", fontWeight: 700, fontSize: "0.84rem",
                     display: "flex", alignItems: "center", gap: "6px",
                     transition: "all var(--t-fast)",
                   }}
-                  onMouseEnter={e => { e.currentTarget.style.color = "#FEF08A"; e.currentTarget.style.paddingLeft = "4px"; }}
-                  onMouseLeave={e => { e.currentTarget.style.color = "#FDE047"; e.currentTarget.style.paddingLeft = "0"; }}
+                  onMouseEnter={e => { e.currentTarget.style.opacity = "0.8"; e.currentTarget.style.paddingLeft = "4px"; }}
+                  onMouseLeave={e => { e.currentTarget.style.opacity = "1"; e.currentTarget.style.paddingLeft = "0"; }}
                 >
                   🏢 {locale === "bn" ? "পাইকারি / B2B অ্যাকাউন্ট →" : "Wholesale / B2B Account →"}
                 </Link>
@@ -286,16 +314,16 @@ export function Footer() {
 
           {/* Column 4: Newsletter */}
           <div>
-            <h3 style={{ color: "#F8FAFC", fontSize: "1rem", fontWeight: 800, marginBottom: "8px" }}>
+            <h3 style={{ color: "var(--text-main)", fontSize: "0.95rem", fontWeight: 700, marginBottom: "8px", fontFamily: "var(--font-heading)" }}>
               {locale === "bn" ? "বিশেষ অফার ও আপডেট" : "Newsletter & Deals"}
             </h3>
-            <p style={{ fontSize: "0.82rem", color: "#94A3B8", marginBottom: "16px", lineHeight: 1.6 }}>
+            <p style={{ fontSize: "0.82rem", color: "var(--text-muted)", marginBottom: "16px", lineHeight: 1.65 }}>
               {locale === "bn"
                 ? "প্রতিদিনের তাজা বাজার ও বিশেষ ছাড়ের আপডেট পেতে সাবস্ক্রাইব করুন।"
                 : "Subscribe to get daily fresh deals and special discount notifications."}
             </p>
 
-            <form onSubmit={handleSubscribe} style={{ display: "flex", gap: "8px", marginBottom: "20px" }}>
+            <form onSubmit={handleSubscribe} style={{ display: "flex", gap: "8px", marginBottom: "16px" }}>
               <input
                 type="email" required
                 value={email}
@@ -304,26 +332,32 @@ export function Footer() {
                 style={{
                   flex: 1, padding: "10px 14px",
                   borderRadius: "var(--radius-md)",
-                  background: "rgba(255,255,255,0.07)",
-                  border: "1px solid rgba(255,255,255,0.12)",
-                  color: "#FFF", fontSize: "0.84rem", outline: "none",
+                  background: "var(--bg-glass)",
+                  border: "1px solid var(--border-medium)",
+                  color: "var(--text-main)", fontSize: "0.84rem", outline: "none",
                   transition: "all var(--t-fast)",
                 }}
-                onFocus={e => { e.currentTarget.style.borderColor = "rgba(34,197,94,0.4)"; e.currentTarget.style.boxShadow = "0 0 0 3px rgba(34,197,94,0.1)"; }}
-                onBlur={e => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.12)"; e.currentTarget.style.boxShadow = "none"; }}
+                onFocus={e => {
+                  e.currentTarget.style.borderColor = "rgba(16,216,118,0.4)";
+                  e.currentTarget.style.boxShadow = "0 0 0 3px rgba(16,216,118,0.08)";
+                }}
+                onBlur={e => {
+                  e.currentTarget.style.borderColor = "var(--border-medium)";
+                  e.currentTarget.style.boxShadow = "none";
+                }}
               />
               <button
                 type="submit"
                 style={{
-                  background: "linear-gradient(135deg, #22C55E, #15803D)",
-                  color: "#FFF", padding: "10px 16px",
+                  background: "linear-gradient(135deg, #10D876, #059E57)",
+                  color: "var(--bg-page)", padding: "10px 16px",
                   borderRadius: "var(--radius-md)",
                   fontWeight: 700, border: "none", cursor: "pointer",
                   display: "flex", alignItems: "center",
-                  boxShadow: "0 4px 14px rgba(34,197,94,0.3)",
+                  boxShadow: "0 4px 16px rgba(16,216,118,0.35)",
                   transition: "all var(--t-fast)",
                 }}
-                onMouseEnter={e => { e.currentTarget.style.transform = "scale(1.06)"; }}
+                onMouseEnter={e => { e.currentTarget.style.transform = "scale(1.08)"; }}
                 onMouseLeave={e => { e.currentTarget.style.transform = "scale(1)"; }}
               >
                 <Send size={16} />
@@ -334,11 +368,11 @@ export function Footer() {
               <div
                 style={{
                   display: "flex", alignItems: "center", gap: "7px",
-                  color: "#4ADE80", fontSize: "0.82rem", fontWeight: 700,
+                  color: "var(--emerald)", fontSize: "0.82rem", fontWeight: 700,
                   padding: "8px 14px",
-                  background: "rgba(34,197,94,0.1)",
+                  background: "rgba(16,216,118,0.08)",
                   borderRadius: "var(--radius-md)",
-                  border: "1px solid rgba(34,197,94,0.2)",
+                  border: "1px solid rgba(16,216,118,0.2)",
                   animation: "scaleIn 0.3s var(--ease-bounce)",
                 }}
               >
@@ -348,8 +382,8 @@ export function Footer() {
             )}
 
             {/* Payment badges */}
-            <div style={{ marginTop: "22px" }}>
-              <div style={{ fontSize: "0.72rem", color: "#64748B", marginBottom: "10px", fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase" }}>
+            <div style={{ marginTop: "24px" }}>
+              <div style={{ fontSize: "0.68rem", color: "var(--text-subtle)", marginBottom: "12px", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase" }}>
                 {locale === "bn" ? "পেমেন্ট পার্টনার" : "Accepted Payments"}
               </div>
               <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", alignItems: "center" }}>
@@ -358,18 +392,19 @@ export function Footer() {
                   { label: "Nagad",      bg: "#F7941D" },
                   { label: "VISA",       bg: "#1A1F71" },
                   { label: "Mastercard", bg: "#EB001B" },
-                  { label: "💵 COD",    bg: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.15)" },
+                  { label: "💵 COD",    bg: "rgba(255,255,255,0.06)" },
                 ].map(p => (
                   <span
                     key={p.label}
                     style={{
                       background: p.bg,
-                      border: p.border,
+                      border: "1px solid rgba(255,255,255,0.1)",
                       color: "#FFF",
-                      padding: "5px 10px",
+                      padding: "5px 11px",
                       borderRadius: "6px",
-                      fontSize: "0.7rem", fontWeight: 800,
-                      boxShadow: "0 2px 8px rgba(0,0,0,0.25)",
+                      fontSize: "0.68rem", fontWeight: 800,
+                      boxShadow: "0 2px 8px rgba(0,0,0,0.35)",
+                      fontFamily: "var(--font-heading)",
                     }}
                   >
                     {p.label}
@@ -384,16 +419,20 @@ export function Footer() {
         <div
           style={{
             paddingTop: "24px",
-            borderTop: "1px solid rgba(255,255,255,0.07)",
+            borderTop: "1px solid var(--border-subtle)",
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
             flexWrap: "wrap",
             gap: "16px",
-            fontSize: "0.8rem", color: "#4B5563",
+            fontSize: "0.78rem", color: "var(--text-subtle)",
           }}
         >
-          <div>{t.allRightsReserved}</div>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <span>{t.allRightsReserved}</span>
+            <span style={{ color: "var(--border-medium)" }}>•</span>
+            <span style={{ color: "var(--emerald)", fontSize: "0.72rem" }}>Made with 💚 in Bangladesh</span>
+          </div>
           <div style={{ display: "flex", gap: "24px" }}>
             {[
               { label: t.terms,     href: "/terms"   },
@@ -403,9 +442,9 @@ export function Footer() {
               <Link
                 key={link.href}
                 href={link.href}
-                style={{ color: "#64748B", transition: "color var(--t-fast)" }}
-                onMouseEnter={e => (e.currentTarget.style.color = "#94A3B8")}
-                onMouseLeave={e => (e.currentTarget.style.color = "#64748B")}
+                style={{ color: "var(--text-subtle)", transition: "color var(--t-fast)", fontSize: "0.78rem" }}
+                onMouseEnter={e => (e.currentTarget.style.color = "var(--emerald)")}
+                onMouseLeave={e => (e.currentTarget.style.color = "var(--text-subtle)")}
               >
                 {link.label}
               </Link>

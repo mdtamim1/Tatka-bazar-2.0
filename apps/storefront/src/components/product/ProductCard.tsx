@@ -76,9 +76,9 @@ export function ProductCard({ product }: ProductCardProps) {
         <div
           style={{
             position: "absolute", inset: 0,
-            background: "linear-gradient(180deg, transparent 50%, rgba(10,20,12,0.55) 100%)",
+            background: "linear-gradient(180deg, transparent 40%, rgba(8,9,11,0.75) 100%)",
             transition: "opacity var(--t-smooth)",
-            opacity: isHovered ? 1 : 0.6,
+            opacity: isHovered ? 1 : 0.65,
           }}
         />
 
@@ -104,7 +104,7 @@ export function ProductCard({ product }: ProductCardProps) {
               <span>{locale === "bn" ? "জৈব" : "Organic"}</span>
             </span>
           )}
-          {product.isNew && <span className="badge-new">NEW</span>}
+          {product.isDailyBazar && <span className="badge-new">DAILY</span>}
         </div>
 
         {/* Wishlist button */}
@@ -116,12 +116,12 @@ export function ProductCard({ product }: ProductCardProps) {
             position: "absolute", top: "8px", right: "8px",
             width: "36px", height: "36px",
             borderRadius: "50%",
-            background: isFav ? "rgba(239,68,68,0.12)" : "rgba(255,255,255,0.92)",
-            backdropFilter: "blur(8px)",
+            background: isFav ? "rgba(255,77,109,0.15)" : "rgba(8,9,11,0.7)",
+            backdropFilter: "blur(12px)",
             display: "flex", alignItems: "center", justifyContent: "center",
-            color: isFav ? "var(--crimson)" : "var(--text-muted)",
-            boxShadow: "0 2px 12px rgba(0,0,0,0.14)",
-            zIndex: 10, border: isFav ? "1px solid rgba(239,68,68,0.3)" : "1px solid rgba(255,255,255,0.6)",
+            color: isFav ? "var(--rose)" : "var(--text-muted)",
+            boxShadow: "0 2px 12px rgba(0,0,0,0.4)",
+            zIndex: 10, border: isFav ? "1px solid rgba(255,77,109,0.35)" : "1px solid rgba(255,255,255,0.12)",
             cursor: "pointer",
             transition: "all 0.25s var(--ease-bounce)",
             transform: isHovered ? "scale(1.08)" : "scale(1)",
@@ -129,7 +129,7 @@ export function ProductCard({ product }: ProductCardProps) {
           onMouseEnter={e => { e.currentTarget.style.transform = "scale(1.18)"; }}
           onMouseLeave={e => { e.currentTarget.style.transform = isHovered ? "scale(1.08)" : "scale(1)"; }}
         >
-          <Heart size={15} fill={isFav ? "var(--crimson)" : "none"} strokeWidth={2.5} />
+          <Heart size={15} fill={isFav ? "var(--rose)" : "none"} strokeWidth={2.5} />
         </button>
 
         {/* Bottom info overlay */}
@@ -214,7 +214,7 @@ export function ProductCard({ product }: ProductCardProps) {
         <Link href={`/product/${product.slug}`} style={{ textDecoration: "none" }}>
           <h3
             style={{
-              fontFamily: "var(--font-en)",
+              fontFamily: "var(--font-heading)",
               fontSize: "var(--text-sm)",
               fontWeight: 700,
               color: "var(--text-main)",
@@ -226,7 +226,7 @@ export function ProductCard({ product }: ProductCardProps) {
               minHeight: "2.4rem",
               transition: "color var(--t-fast)",
             }}
-            onMouseEnter={e => (e.currentTarget.style.color = "var(--primary-dark)")}
+            onMouseEnter={e => (e.currentTarget.style.color = "var(--emerald)")}
             onMouseLeave={e => (e.currentTarget.style.color = "var(--text-main)")}
           >
             {locale === "bn" ? product.nameBn : product.nameEn}
@@ -255,15 +255,15 @@ export function ProductCard({ product }: ProductCardProps) {
                     padding: "5px 10px",
                     borderRadius: "var(--radius-sm)",
                     border: isActive
-                      ? "1.5px solid var(--primary)"
-                      : "1px solid var(--border-subtle)",
-                    background: isActive ? "rgba(34,197,94,0.1)" : "var(--bg-subtle)",
-                    color: isActive ? "var(--primary-dark)" : "var(--text-muted)",
+                      ? "1.5px solid var(--emerald)"
+                      : "1px solid var(--border-medium)",
+                    background: isActive ? "rgba(16,216,118,0.1)" : "var(--bg-subtle)",
+                    color: isActive ? "var(--emerald)" : "var(--text-muted)",
                     fontSize: "0.7rem", fontWeight: 700,
                     whiteSpace: "nowrap", cursor: "pointer",
                     transition: "all 0.18s ease",
                     flexShrink: 0, gap: "1px",
-                    boxShadow: isActive ? "0 2px 8px rgba(34,197,94,0.2)" : "none",
+                    boxShadow: isActive ? "0 2px 8px rgba(16,216,118,0.2)" : "none",
                   }}
                 >
                   <span>{locale === "bn" ? w.labelBn.split(" ")[0] : w.labelEn.split(" ")[0]}</span>
@@ -296,10 +296,11 @@ export function ProductCard({ product }: ProductCardProps) {
               style={{
                 fontSize: "var(--text-lg)", fontWeight: 900,
                 lineHeight: 1,
-                background: "linear-gradient(135deg, #15803D, #22C55E)",
+                background: "linear-gradient(135deg, #10D876, #4EEEA0)",
                 WebkitBackgroundClip: "text",
                 WebkitTextFillColor: "transparent",
                 backgroundClip: "text",
+                fontFamily: "var(--font-heading)",
               }}
             >
               {formatPrice(currentPrice)}
@@ -326,19 +327,20 @@ export function ProductCard({ product }: ProductCardProps) {
               padding: "9px 14px",
               borderRadius: "var(--radius-md)",
               background: isAdded
-                ? "linear-gradient(135deg, #15803D, #14532D)"
-                : "linear-gradient(135deg, #22C55E, #15803D)",
-              color: "#FFFFFF",
+                ? "linear-gradient(135deg, #059E57, #047A43)"
+                : "linear-gradient(135deg, #10D876, #059E57)",
+              color: "var(--bg-page)",
               fontWeight: 800,
               fontSize: "var(--text-xs)",
-              boxShadow: isAdded ? "none" : "0 4px 14px rgba(34,197,94,0.4)",
+              boxShadow: isAdded ? "none" : "0 4px 16px rgba(16,216,118,0.45)",
               transition: "all 0.3s var(--ease-bounce)",
               border: "none", cursor: "pointer",
               whiteSpace: "nowrap",
               transform: isAdded ? "scale(0.97)" : "scale(1)",
+              fontFamily: "var(--font-heading)",
             }}
-            onMouseEnter={e => { if (!isAdded) { e.currentTarget.style.transform = "translateY(-2px) scale(1.03)"; e.currentTarget.style.boxShadow = "0 8px 24px rgba(34,197,94,0.45)"; } }}
-            onMouseLeave={e => { e.currentTarget.style.transform = "scale(1)"; e.currentTarget.style.boxShadow = isAdded ? "none" : "0 4px 14px rgba(34,197,94,0.4)"; }}
+            onMouseEnter={e => { if (!isAdded) { e.currentTarget.style.transform = "translateY(-2px) scale(1.03)"; e.currentTarget.style.boxShadow = "0 10px 28px rgba(16,216,118,0.55)"; } }}
+            onMouseLeave={e => { e.currentTarget.style.transform = "scale(1)"; e.currentTarget.style.boxShadow = isAdded ? "none" : "0 4px 16px rgba(16,216,118,0.45)"; }}
           >
             {isAdded
               ? <Check size={14} strokeWidth={3} style={{ animation: "scaleIn 0.3s var(--ease-bounce)" }} />

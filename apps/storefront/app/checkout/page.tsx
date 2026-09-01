@@ -5,16 +5,9 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import confetti from "canvas-confetti";
 import {
-  MapPin,
-  Clock,
-  CreditCard,
-  CheckCircle2,
-  Truck,
-  ShieldCheck,
-  Store,
-  ArrowLeft,
-  Sparkles,
-  ShoppingBag,
+  MapPin, Clock, CreditCard, CheckCircle2, Truck, ShieldCheck,
+  Store, ArrowLeft, Sparkles, ShoppingBag, Lock, Check, ChevronRight,
+  Sun, Sunset, Sunrise, AlertCircle, Phone, ArrowRight, Zap, RefreshCw, X
 } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 import { useCartStore } from "@/lib/cart-store";
@@ -44,7 +37,7 @@ export default function CheckoutPage() {
     area: "ধানমন্ডি (Dhanmondi)",
     address: "বাড়ি ২৭, রোড ৮/এ, ফ্ল্যাট ৪বি, ধানমন্ডি আ/এ",
     landmark: "ইবনে সিনা হাসপাতালের বিপরীতে",
-    note: "মাছটা যেন ভালোভাবে ড্রাম প্যাকেজিং করা থাকে।",
+    note: "মাছ ও শাকসবজি যেন আলাদা থার্মাল ব্যাগে প্যাকেজিং করা থাকে।",
   });
 
   const [deliverySlot, setDeliverySlot] = useState<string>("morning");
@@ -69,7 +62,7 @@ export default function CheckoutPage() {
 
   const handlePlaceOrder = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Smooth Traffic Queue Gate before heavy database transaction & payment init
+    if (items.length === 0) return;
     setShowQueueGate(true);
   };
 
@@ -95,10 +88,10 @@ export default function CheckoutPage() {
         items: items.map(it => ({
           productId: it.product.id,
           name: it.product.nameBn || it.product.nameEn,
-          price: it.price,
+          price: it.totalPrice,
           quantity: it.quantity,
-          unit: it.unit,
-          vendorId: it.product.vendorId,
+          unit: it.selectedUnit,
+          vendorId: it.product.vendorId || "default-vendor",
         })),
         totalAmount: grandTotal,
         deliveryFee,
@@ -215,734 +208,948 @@ export default function CheckoutPage() {
     clearCart();
   };
 
+  // ── Success View ──
   if (orderSuccess) {
     return (
       <div style={{ padding: "60px 0", minHeight: "80vh", display: "flex", alignItems: "center" }}>
-        <div className="container" style={{ maxWidth: "600px" }}>
+        <div className="container" style={{ maxWidth: "620px" }}>
           <div
             style={{
-              background: "var(--bg-surface)",
-              borderRadius: "var(--radius-xl)",
-              padding: "40px 30px",
+              background: "rgba(14, 17, 23, 0.95)",
+              backdropFilter: "blur(24px)",
+              WebkitBackdropFilter: "blur(24px)",
+              borderRadius: "var(--radius-2xl)",
+              padding: "48px 36px",
               textAlign: "center",
-              border: "2px solid var(--primary)",
-              boxShadow: "var(--shadow-xl)",
-              animation: "scaleIn 0.3s ease-out",
+              border: "1px solid rgba(16, 216, 118, 0.3)",
+              boxShadow: "var(--shadow-2xl), 0 0 80px rgba(16, 216, 118, 0.15)",
+              animation: "scaleIn 0.35s cubic-bezier(0.16, 1, 0.3, 1)",
+              position: "relative",
+              overflow: "hidden",
             }}
           >
+            {/* Top Neon Accent */}
             <div
               style={{
-                width: "76px",
-                height: "76px",
+                position: "absolute",
+                top: 0,
+                left: 0,
+                right: 0,
+                height: "2px",
+                background: "linear-gradient(90deg, #10D876, #F5C842, #10D876)",
+              }}
+            />
+
+            <div
+              style={{
+                width: "80px",
+                height: "80px",
                 borderRadius: "50%",
-                background: "var(--primary-light)",
-                color: "var(--primary)",
+                background: "linear-gradient(135deg, rgba(16,216,118,0.25), rgba(5,158,87,0.1))",
+                border: "1px solid rgba(16, 216, 118, 0.4)",
+                color: "var(--emerald)",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                margin: "0 auto 20px",
-                boxShadow: "0 0 20px var(--primary-glow)",
+                margin: "0 auto 24px",
+                boxShadow: "0 0 40px rgba(16, 216, 118, 0.4)",
               }}
             >
-              <CheckCircle2 size={44} />
+              <CheckCircle2 size={46} strokeWidth={2.5} />
             </div>
 
-            <h1 style={{ fontSize: "1.6rem", fontWeight: 800, color: "var(--primary-dark)", marginBottom: "8px" }}>
-              {t.orderSuccessTitle}
+            <h1
+              style={{
+                fontSize: "1.8rem",
+                fontWeight: 900,
+                color: "var(--text-main)",
+                marginBottom: "8px",
+                letterSpacing: "-0.04em",
+                fontFamily: "var(--font-heading)",
+              }}
+            >
+              {locale === "bn" ? "অর্ডার সফলভাবে সম্পন্ন হয়েছে!" : "Order Confirmed Successfully!"}
             </h1>
-            <p style={{ color: "var(--text-muted)", fontSize: "0.95rem", marginBottom: "24px" }}>
-              {t.orderTrackingMsg}
+
+            <p style={{ color: "var(--text-muted)", fontSize: "0.95rem", marginBottom: "28px", lineHeight: 1.6 }}>
+              {locale === "bn"
+                ? "ধন্যবাদ! আপনার তাজা বাজার অর্ডারটি আমাদের হাব প্রসেসিং টিমে পাঠানো হয়েছে।"
+                : "Thank you! Your farm-fresh basket has been queued for immediate express packing."}
             </p>
 
-            {/* Order Receipt Box */}
+            {/* Order Receipt Card */}
             <div
               style={{
-                background: "var(--bg-subtle)",
-                borderRadius: "var(--radius-lg)",
-                padding: "20px",
+                background: "rgba(255, 255, 255, 0.03)",
+                borderRadius: "var(--radius-xl)",
+                padding: "20px 24px",
+                border: "1px solid rgba(255, 255, 255, 0.08)",
+                marginBottom: "32px",
                 textAlign: "left",
-                marginBottom: "28px",
-                fontSize: "0.9rem",
                 display: "flex",
                 flexDirection: "column",
-                gap: "10px",
+                gap: "12px",
               }}
             >
-              <div style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px solid var(--border-subtle)", paddingBottom: "8px" }}>
-                <span style={{ color: "var(--text-muted)" }}>{t.orderNumber}:</span>
-                <span style={{ fontWeight: 800, color: "var(--primary-dark)" }}>{orderSuccess.orderNumber}</span>
-              </div>
-              <div style={{ display: "flex", justifyContent: "space-between" }}>
-                <span style={{ color: "var(--text-muted)" }}>মোট পরিশোধ:</span>
-                <span style={{ fontWeight: 800 }}>{formatPrice(orderSuccess.total)}</span>
-              </div>
-              <div style={{ display: "flex", justifyContent: "space-between" }}>
-                <span style={{ color: "var(--text-muted)" }}>পেমেন্ট মাধ্যম:</span>
-                <span style={{ fontWeight: 700 }}>{orderSuccess.paymentMethod}</span>
-              </div>
-              <div style={{ display: "flex", justifyContent: "space-between" }}>
-                <span style={{ color: "var(--text-muted)" }}>ডেলিভারি ঠিকানা:</span>
-                <span style={{ fontWeight: 600, maxWidth: "260px", textAlign: "right" }}>{orderSuccess.address}</span>
-              </div>
-            </div>
-
-            {/* Action buttons */}
-            <div style={{ display: "flex", gap: "12px", justifyContent: "center" }}>
-              <Link href="/account" className="btn-primary" style={{ padding: "12px 24px" }}>
-                <span>{t.trackOrder}</span>
-              </Link>
-              <Link href="/" className="btn-secondary" style={{ padding: "12px 24px" }}>
-                <span>{t.backToHome}</span>
-              </Link>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (items.length === 0) {
-    return (
-      <div style={{ padding: "60px 0", textAlign: "center" }}>
-        <div className="container" style={{ maxWidth: "400px" }}>
-          <h2 style={{ fontSize: "1.4rem", fontWeight: 800, marginBottom: "12px" }}>{t.emptyCart}</h2>
-          <Link href="/" className="btn-primary">
-            {t.startShopping}
-          </Link>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div style={{ padding: "20px 0 60px" }}>
-      <div className="container">
-        
-        {/* Top Header */}
-        <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "28px" }}>
-          <Link href="/cart" style={{ color: "var(--text-muted)", display: "flex", alignItems: "center", gap: "4px", fontSize: "0.9rem" }}>
-            <ArrowLeft size={18} />
-            <span>{locale === "bn" ? "কার্টে ফিরুন" : "Back to Cart"}</span>
-          </Link>
-          <span style={{ color: "var(--border-medium)" }}>|</span>
-          <h1 style={{ fontSize: "1.6rem", fontWeight: 800, color: "var(--text-main)" }}>
-            {t.checkoutTitle}
-          </h1>
-        </div>
-
-        <form onSubmit={handlePlaceOrder}>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 380px", gap: "30px", alignItems: "flex-start" }}>
-            
-            {/* Left Steps Column */}
-            <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
-              
-              {/* Step 1: Delivery Address */}
-              <div
-                style={{
-                  background: "var(--bg-surface)",
-                  borderRadius: "var(--radius-xl)",
-                  border: "1px solid var(--border-subtle)",
-                  padding: "24px",
-                  boxShadow: "var(--shadow-sm)",
-                }}
-              >
-                <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "18px" }}>
-                  <div style={{ padding: "8px", borderRadius: "8px", background: "var(--primary-light)", color: "var(--primary)" }}>
-                    <MapPin size={20} />
-                  </div>
-                  <h2 style={{ fontSize: "1.15rem", fontWeight: 800 }}>{t.step1Title}</h2>
-                </div>
-
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginBottom: "16px" }}>
-                  <div>
-                    <label style={{ fontSize: "0.82rem", fontWeight: 700, display: "block", marginBottom: "6px" }}>{t.fullName} *</label>
-                    <input
-                      type="text"
-                      required
-                      value={formData.fullName}
-                      onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-                      style={{ width: "100%", padding: "10px 14px", borderRadius: "var(--radius-md)", border: "1px solid var(--border-medium)", outline: "none" }}
-                    />
-                  </div>
-                  <div>
-                    <label style={{ fontSize: "0.82rem", fontWeight: 700, display: "block", marginBottom: "6px" }}>{t.phoneNumber} *</label>
-                    <input
-                      type="tel"
-                      required
-                      value={formData.phone}
-                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                      style={{ width: "100%", padding: "10px 14px", borderRadius: "var(--radius-md)", border: "1px solid var(--border-medium)", outline: "none" }}
-                    />
-                  </div>
-                </div>
-
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginBottom: "16px" }}>
-                  <div>
-                    <label style={{ fontSize: "0.82rem", fontWeight: 700, display: "block", marginBottom: "6px" }}>{t.division}</label>
-                    <select
-                      value={formData.division}
-                      onChange={(e) => setFormData({ ...formData, division: e.target.value })}
-                      style={{ width: "100%", padding: "10px 14px", borderRadius: "var(--radius-md)", border: "1px solid var(--border-medium)", background: "var(--bg-surface)", outline: "none" }}
-                    >
-                      <option value="Dhaka">ঢাকা (Dhaka)</option>
-                      <option value="Chattogram">চট্টগ্রাম (Chattogram)</option>
-                      <option value="Sylhet">সিলেট (Sylhet)</option>
-                      <option value="Rajshahi">রাজশাহী (Rajshahi)</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label style={{ fontSize: "0.82rem", fontWeight: 700, display: "block", marginBottom: "6px" }}>{t.area}</label>
-                    <input
-                      type="text"
-                      required
-                      value={formData.area}
-                      onChange={(e) => setFormData({ ...formData, area: e.target.value })}
-                      style={{ width: "100%", padding: "10px 14px", borderRadius: "var(--radius-md)", border: "1px solid var(--border-medium)", outline: "none" }}
-                    />
-                  </div>
-                </div>
-
-                <div style={{ marginBottom: "16px" }}>
-                  <label style={{ fontSize: "0.82rem", fontWeight: 700, display: "block", marginBottom: "6px" }}>{t.fullAddress} *</label>
-                  <textarea
-                    rows={2}
-                    required
-                    value={formData.address}
-                    onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                    style={{ width: "100%", padding: "10px 14px", borderRadius: "var(--radius-md)", border: "1px solid var(--border-medium)", outline: "none" }}
-                  />
-                </div>
-
-                <div>
-                  <label style={{ fontSize: "0.82rem", fontWeight: 700, display: "block", marginBottom: "6px" }}>ল্যান্ডমার্ক বা ডেলিভারি নির্দেশনা (ঐচ্ছিক)</label>
-                  <input
-                    type="text"
-                    value={formData.landmark}
-                    onChange={(e) => setFormData({ ...formData, landmark: e.target.value })}
-                    placeholder="যেমন: মসজিদের বিপরীতে, ৪তলা বাড়ি"
-                    style={{ width: "100%", padding: "10px 14px", borderRadius: "var(--radius-md)", border: "1px solid var(--border-medium)", outline: "none" }}
-                  />
-                </div>
-              </div>
-
-              {/* Step 2: Time-Slotted Delivery */}
-              <div
-                style={{
-                  background: "var(--bg-surface)",
-                  borderRadius: "var(--radius-xl)",
-                  border: "1px solid var(--border-subtle)",
-                  padding: "24px",
-                  boxShadow: "var(--shadow-sm)",
-                }}
-              >
-                <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "18px" }}>
-                  <div style={{ padding: "8px", borderRadius: "8px", background: "var(--primary-light)", color: "var(--primary)" }}>
-                    <Clock size={20} />
-                  </div>
-                  <h2 style={{ fontSize: "1.15rem", fontWeight: 800 }}>{t.step2Title}</h2>
-                </div>
-
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "12px" }}>
-                  <label
-                    onClick={() => setDeliverySlot("morning")}
-                    style={{
-                      padding: "14px",
-                      borderRadius: "var(--radius-md)",
-                      border: deliverySlot === "morning" ? "2px solid var(--primary)" : "1.5px solid var(--border-subtle)",
-                      background: deliverySlot === "morning" ? "var(--primary-light)" : "var(--bg-surface)",
-                      cursor: "pointer",
-                      display: "flex",
-                      flexDirection: "column",
-                      gap: "4px",
-                    }}
-                  >
-                    <div style={{ fontWeight: 800, fontSize: "0.95rem", color: "var(--primary-dark)" }}>{t.slotMorning}</div>
-                    <div style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>ভোরের তাজা মাছ ও শাকসবজির জন্য সেরা</div>
-                  </label>
-
-                  <label
-                    onClick={() => setDeliverySlot("noon")}
-                    style={{
-                      padding: "14px",
-                      borderRadius: "var(--radius-md)",
-                      border: deliverySlot === "noon" ? "2px solid var(--primary)" : "1.5px solid var(--border-subtle)",
-                      background: deliverySlot === "noon" ? "var(--primary-light)" : "var(--bg-surface)",
-                      cursor: "pointer",
-                      display: "flex",
-                      flexDirection: "column",
-                      gap: "4px",
-                    }}
-                  >
-                    <div style={{ fontWeight: 800, fontSize: "0.95rem", color: "var(--primary-dark)" }}>{t.slotNoon}</div>
-                    <div style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>দুপুরের রান্নার দ্রুত ডেলিভারি</div>
-                  </label>
-
-                  <label
-                    onClick={() => setDeliverySlot("evening")}
-                    style={{
-                      padding: "14px",
-                      borderRadius: "var(--radius-md)",
-                      border: deliverySlot === "evening" ? "2px solid var(--primary)" : "1.5px solid var(--border-subtle)",
-                      background: deliverySlot === "evening" ? "var(--primary-light)" : "var(--bg-surface)",
-                      cursor: "pointer",
-                      display: "flex",
-                      flexDirection: "column",
-                      gap: "4px",
-                    }}
-                  >
-                    <div style={{ fontWeight: 800, fontSize: "0.95rem", color: "var(--primary-dark)" }}>{t.slotEvening}</div>
-                    <div style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>অফিস শেষে সন্ধ্যার আরামদায়ক ডেলিভারি</div>
-                  </label>
-                </div>
-              </div>
-
-              {/* Step 3: Payment Method Selection */}
-              <div
-                style={{
-                  background: "var(--bg-surface)",
-                  borderRadius: "var(--radius-xl)",
-                  border: "1px solid var(--border-subtle)",
-                  padding: "24px",
-                  boxShadow: "var(--shadow-sm)",
-                }}
-              >
-                <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "18px" }}>
-                  <div style={{ padding: "8px", borderRadius: "8px", background: "var(--primary-light)", color: "var(--primary)" }}>
-                    <CreditCard size={20} />
-                  </div>
-                  <h2 style={{ fontSize: "1.15rem", fontWeight: 800 }}>{t.step3Title}</h2>
-                </div>
-
-                <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-                  {/* bKash */}
-                  <label
-                    onClick={() => setPaymentMethod("BKASH")}
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                      padding: "14px 18px",
-                      borderRadius: "var(--radius-md)",
-                      border: paymentMethod === "BKASH" ? "2px solid #E2136E" : "1px solid var(--border-subtle)",
-                      background: paymentMethod === "BKASH" ? "#FDF2F8" : "var(--bg-surface)",
-                      cursor: "pointer",
-                    }}
-                  >
-                    <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                      <span style={{ background: "#E2136E", color: "#FFF", padding: "4px 8px", borderRadius: "4px", fontWeight: 800, fontSize: "0.75rem" }}>
-                        bKash
-                      </span>
-                      <div>
-                        <div style={{ fontWeight: 700, fontSize: "0.95rem" }}>{t.bkash}</div>
-                        <div style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>সহজ ও তাৎক্ষণিক বিকাশ পেমেন্ট গেটওয়ে</div>
-                      </div>
-                    </div>
-                    {paymentMethod === "BKASH" && <CheckCircle2 size={18} color="#E2136E" />}
-                  </label>
-
-                  {/* Nagad */}
-                  <label
-                    onClick={() => setPaymentMethod("NAGAD")}
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                      padding: "14px 18px",
-                      borderRadius: "var(--radius-md)",
-                      border: paymentMethod === "NAGAD" ? "2px solid #F7941D" : "1px solid var(--border-subtle)",
-                      background: paymentMethod === "NAGAD" ? "#FFF7ED" : "var(--bg-surface)",
-                      cursor: "pointer",
-                    }}
-                  >
-                    <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                      <span style={{ background: "#F7941D", color: "#FFF", padding: "4px 8px", borderRadius: "4px", fontWeight: 800, fontSize: "0.75rem" }}>
-                        Nagad
-                      </span>
-                      <div>
-                        <div style={{ fontWeight: 700, fontSize: "0.95rem" }}>{t.nagad}</div>
-                        <div style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>নগদ সরাসরি ওয়ালেট পে</div>
-                      </div>
-                    </div>
-                    {paymentMethod === "NAGAD" && <CheckCircle2 size={18} color="#F7941D" />}
-                  </label>
-
-                  {/* SSLCommerz Card */}
-                  <label
-                    onClick={() => setPaymentMethod("SSLCOMMERZ")}
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                      padding: "14px 18px",
-                      borderRadius: "var(--radius-md)",
-                      border: paymentMethod === "SSLCOMMERZ" ? "2px solid var(--primary)" : "1px solid var(--border-subtle)",
-                      background: paymentMethod === "SSLCOMMERZ" ? "var(--primary-light)" : "var(--bg-surface)",
-                      cursor: "pointer",
-                    }}
-                  >
-                    <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                      <span style={{ background: "#1A1F71", color: "#FFF", padding: "4px 8px", borderRadius: "4px", fontWeight: 800, fontSize: "0.75rem" }}>
-                        CARD
-                      </span>
-                      <div>
-                        <div style={{ fontWeight: 700, fontSize: "0.95rem" }}>{t.sslcommerz}</div>
-                        <div style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>ভিসা, মাস্টারকার্ড ও ইন্টারনেট ব্যাংকিং</div>
-                      </div>
-                    </div>
-                    {paymentMethod === "SSLCOMMERZ" && <CheckCircle2 size={18} color="var(--primary)" />}
-                  </label>
-
-                  {/* Cash on Delivery */}
-                  <label
-                    onClick={() => setPaymentMethod("COD")}
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                      padding: "14px 18px",
-                      borderRadius: "var(--radius-md)",
-                      border: paymentMethod === "COD" ? "2px solid var(--primary-dark)" : "1px solid var(--border-subtle)",
-                      background: paymentMethod === "COD" ? "var(--bg-subtle)" : "var(--bg-surface)",
-                      cursor: "pointer",
-                    }}
-                  >
-                    <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                      <span style={{ background: "var(--primary-dark)", color: "#FFF", padding: "4px 8px", borderRadius: "4px", fontWeight: 800, fontSize: "0.75rem" }}>
-                        COD
-                      </span>
-                      <div>
-                        <div style={{ fontWeight: 700, fontSize: "0.95rem" }}>{t.cod}</div>
-                        <div style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>পণ্য হাতে পেয়ে যাচাই করে মূল্য পরিশোধ করুন</div>
-                      </div>
-                    </div>
-                    {paymentMethod === "COD" && <CheckCircle2 size={18} color="var(--primary-dark)" />}
-                  </label>
-                </div>
-              </div>
-
-            </div>
-
-            {/* Right Order Summary & Confirm */}
-            <div
-              style={{
-                background: "var(--bg-surface)",
-                borderRadius: "var(--radius-xl)",
-                border: "1px solid var(--border-subtle)",
-                padding: "24px",
-                boxShadow: "var(--shadow-md)",
-                position: "sticky",
-                top: "140px",
-              }}
-            >
-              <h2 style={{ fontSize: "1.2rem", fontWeight: 800, marginBottom: "16px", borderBottom: "1px solid var(--border-subtle)", paddingBottom: "10px" }}>
-                {t.orderSummary}
-              </h2>
-
-              {/* Multi-Vendor Order Split Breakdown Badge */}
-              <div
-                style={{
-                  background: "var(--bg-subtle)",
-                  borderRadius: "var(--radius-md)",
-                  padding: "12px",
-                  marginBottom: "16px",
-                  fontSize: "0.8rem",
-                }}
-              >
-                <div style={{ fontWeight: 700, color: "var(--primary-dark)", marginBottom: "6px", display: "flex", alignItems: "center", gap: "6px" }}>
-                  <Store size={15} />
-                  <span>{vendorGroups.length} টি ভেন্ডর প্যাকেজ হিসেবে ডেলিভারি হবে:</span>
-                </div>
-                {vendorGroups.map((g) => (
-                  <div key={g.vendorId} style={{ display: "flex", justifyContent: "space-between", color: "var(--text-muted)", marginTop: "2px" }}>
-                    <span>• {locale === "bn" ? g.vendorNameBn : g.vendorNameEn}</span>
-                    <span>{g.items.length} {t.items}</span>
-                  </div>
-                ))}
-              </div>
-
-              {/* Price Calculations */}
-              <div style={{ display: "flex", flexDirection: "column", gap: "10px", fontSize: "0.9rem", marginBottom: "20px" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", color: "var(--text-muted)" }}>
-                  <span>{t.subtotal}</span>
-                  <span style={{ fontWeight: 600, color: "var(--text-main)" }}>{formatPrice(subtotal)}</span>
-                </div>
-                {discount > 0 && (
-                  <div style={{ display: "flex", justifyContent: "space-between", color: "var(--primary)" }}>
-                    <span>{t.discount}</span>
-                    <span style={{ fontWeight: 700 }}>-{formatPrice(discount)}</span>
-                  </div>
-                )}
-                <div style={{ display: "flex", justifyContent: "space-between", color: "var(--text-muted)" }}>
-                  <span>{t.deliveryFee}</span>
-                  <span style={{ fontWeight: 600, color: deliveryFee === 0 ? "var(--primary)" : "var(--text-main)" }}>
-                    {deliveryFee === 0 ? t.freeDelivery : formatPrice(deliveryFee)}
-                  </span>
-                </div>
-                <div
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <span style={{ color: "var(--text-muted)", fontSize: "0.82rem" }}>
+                  {locale === "bn" ? "অর্ডার আইডি" : "Order ID"}
+                </span>
+                <span
                   style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    fontSize: "1.25rem",
-                    fontWeight: 800,
-                    color: "var(--primary-dark)",
-                    paddingTop: "10px",
-                    borderTop: "1.5px dashed var(--border-medium)",
+                    fontFamily: "var(--font-heading)",
+                    fontWeight: 900,
+                    color: "var(--emerald)",
+                    fontSize: "1rem",
                   }}
                 >
-                  <span>{t.grandTotal}</span>
-                  <span>{formatPrice(grandTotal)}</span>
-                </div>
+                  {orderSuccess.orderNumber}
+                </span>
               </div>
 
-              {/* Place Order CTA Button */}
-              <button
-                type="submit"
-                disabled={isProcessing}
-                className="btn-primary"
-                style={{
-                  width: "100%",
-                  padding: "15px",
-                  fontSize: "1.05rem",
-                  borderRadius: "var(--radius-md)",
-                }}
-              >
-                {isProcessing ? (
-                  <span>অর্ডার প্রসেসিং হচ্ছে...</span>
-                ) : (
-                  <span>{t.placeOrder} ({formatPrice(grandTotal)})</span>
-                )}
-              </button>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <span style={{ color: "var(--text-muted)", fontSize: "0.82rem" }}>
+                  {locale === "bn" ? "ডেলিভারি স্লট" : "Delivery Slot"}
+                </span>
+                <span style={{ fontWeight: 700, color: "var(--text-main)", fontSize: "0.88rem" }}>
+                  {orderSuccess.slot}
+                </span>
+              </div>
 
-              <div style={{ marginTop: "16px", textAlign: "center", fontSize: "0.75rem", color: "var(--text-muted)" }}>
-                🔒 SSL ২৫৬-বিট এনক্রিপশন দ্বারা সুরক্ষিত চেকআউট
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <span style={{ color: "var(--text-muted)", fontSize: "0.82rem" }}>
+                  {locale === "bn" ? "মোট পরিশোধিত" : "Total Amount"}
+                </span>
+                <span
+                  style={{
+                    fontWeight: 900,
+                    fontSize: "1.1rem",
+                    color: "var(--text-main)",
+                  }}
+                >
+                  <span className="gradient-text-emerald">{formatPrice(orderSuccess.total)}</span>
+                </span>
               </div>
             </div>
 
+            {/* Action Buttons */}
+            <div style={{ display: "flex", gap: "12px", justifyContent: "center", flexWrap: "wrap" }}>
+              <Link
+                href={`/track?order=${orderSuccess.orderNumber}`}
+                className="btn-primary"
+                style={{ padding: "14px 28px", fontSize: "0.95rem", fontWeight: 800 }}
+              >
+                <Truck size={18} />
+                <span>{locale === "bn" ? "লাইভ অর্ডার ট্র্যাক করুন" : "Track Live Delivery"}</span>
+              </Link>
+              <Link
+                href="/"
+                className="btn-secondary"
+                style={{ padding: "14px 24px", fontSize: "0.95rem", fontWeight: 700 }}
+              >
+                <span>{locale === "bn" ? "হোমপেজে ফিরে যান" : "Back to Home"}</span>
+              </Link>
+            </div>
           </div>
-        </form>
-
+        </div>
       </div>
+    );
+  }
 
-      {/* Interactive bKash / Nagad PGW Sandbox Modal */}
-      {showPaymentModal && (
-        <div style={{
-          position: "fixed",
-          inset: 0,
-          background: "rgba(15, 23, 42, 0.75)",
-          backdropFilter: "blur(6px)",
-          zIndex: 10000,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          padding: "20px",
-        }}>
-          <div style={{
-            background: "#FFFFFF",
-            borderRadius: "20px",
-            width: "100%",
-            maxWidth: "420px",
-            overflow: "hidden",
-            boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
-            border: paymentMethod === "BKASH" ? "2px solid #E2136E" : "2px solid #F97316",
-            animation: "scaleIn 0.25s ease-out",
-          }}>
-            {/* Header */}
-            <div style={{
-              background: paymentMethod === "BKASH" ? "linear-gradient(135deg, #E2136E 0%, #C00456 100%)" : "linear-gradient(135deg, #EA580C 0%, #C2410C 100%)",
-              color: "#FFFFFF",
-              padding: "20px 24px",
+  // ── Main Checkout Form View ──
+  return (
+    <>
+      <div style={{ padding: "32px 0 80px" }}>
+        <div className="container">
+
+          {/* Header Strip */}
+          <div
+            style={{
               display: "flex",
               justifyContent: "space-between",
               alignItems: "center",
-            }}>
-              <div>
-                <div style={{ fontSize: "1.25rem", fontWeight: 800 }}>
-                  {paymentMethod === "BKASH" ? "bKash Payment" : "Nagad Payment"}
-                </div>
-                <div style={{ fontSize: "0.78rem", opacity: 0.9 }}>
-                  Merchant: Tatka Bazar Online
-                </div>
-              </div>
-              <div style={{ textAlign: "right" }}>
-                <div style={{ fontSize: "0.72rem", opacity: 0.85 }}>পরিমাণ (Amount)</div>
-                <div style={{ fontSize: "1.25rem", fontWeight: 800 }}>{formatPrice(grandTotal)}</div>
-              </div>
+              marginBottom: "32px",
+              flexWrap: "wrap",
+              gap: "16px",
+            }}
+          >
+            <div>
+              <Link
+                href="/cart"
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  fontSize: "0.82rem",
+                  color: "var(--emerald)",
+                  fontWeight: 700,
+                  marginBottom: "8px",
+                }}
+              >
+                <ArrowLeft size={14} />
+                <span>{locale === "bn" ? "কার্টে ফিরে যান" : "Return to Cart"}</span>
+              </Link>
+              <h1
+                style={{
+                  fontSize: "clamp(1.6rem, 3vw, 2.2rem)",
+                  fontWeight: 900,
+                  color: "var(--text-main)",
+                  letterSpacing: "-0.04em",
+                  fontFamily: "var(--font-heading)",
+                }}
+              >
+                {locale === "bn" ? "নিরাপদ চেকআউট" : "Express Secure Checkout"}
+              </h1>
             </div>
 
-            {/* Modal Body */}
-            <div style={{ padding: "24px" }}>
-              <div style={{ background: "#F8FAFC", padding: "8px 12px", borderRadius: "8px", fontSize: "0.78rem", color: "#64748B", marginBottom: "16px", display: "flex", justifyContent: "space-between" }}>
-                <span>ইনভয়েস: <strong>#{pendingOrderNo}</strong></span>
-                <span style={{ color: "#10B981", fontWeight: 700 }}>Sandbox Live ⚡</span>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+                padding: "8px 16px",
+                borderRadius: "var(--radius-full)",
+                background: "rgba(16, 216, 118, 0.08)",
+                border: "1px solid rgba(16, 216, 118, 0.2)",
+                color: "var(--emerald)",
+                fontSize: "0.8rem",
+                fontWeight: 700,
+              }}
+            >
+              <Lock size={14} />
+              <span>256-Bit SSL Encrypted Purchase</span>
+            </div>
+          </div>
+
+          {items.length === 0 ? (
+            <div
+              style={{
+                background: "rgba(14, 17, 23, 0.95)",
+                borderRadius: "var(--radius-2xl)",
+                padding: "60px 20px",
+                textAlign: "center",
+                border: "1px solid rgba(255, 255, 255, 0.08)",
+              }}
+            >
+              <ShoppingBag size={48} color="var(--emerald)" style={{ margin: "0 auto 16px" }} />
+              <h2 style={{ fontSize: "1.4rem", fontWeight: 800, color: "var(--text-main)", marginBottom: "8px" }}>
+                {t.emptyCart || (locale === "bn" ? "আপনার কার্ট খালি" : "Your cart is empty")}
+              </h2>
+              <p style={{ color: "var(--text-muted)", marginBottom: "24px", fontSize: "0.9rem" }}>
+                {locale === "bn" ? "চেকআউট করতে প্রথমে তাজা পণ্য কার্টে যোগ করুন।" : "Please add fresh items before proceeding to checkout."}
+              </p>
+              <Link href="/" className="btn-primary" style={{ padding: "12px 28px" }}>
+                {t.startShopping}
+              </Link>
+            </div>
+          ) : (
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
+                gap: "36px",
+                alignItems: "flex-start",
+              }}
+            >
+              {/* ── Left Column: Checkout Inputs ── */}
+              <form onSubmit={handlePlaceOrder} style={{ display: "flex", flexDirection: "column", gap: "28px" }}>
+
+                {/* Section 1: Shipping Address */}
+                <div
+                  style={{
+                    background: "rgba(14, 17, 23, 0.95)",
+                    borderRadius: "var(--radius-2xl)",
+                    padding: "28px",
+                    border: "1px solid rgba(255, 255, 255, 0.08)",
+                    boxShadow: "var(--shadow-lg)",
+                  }}
+                >
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "10px",
+                      marginBottom: "20px",
+                      paddingBottom: "14px",
+                      borderBottom: "1px solid rgba(255, 255, 255, 0.06)",
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: "36px",
+                        height: "36px",
+                        borderRadius: "10px",
+                        background: "rgba(16, 216, 118, 0.15)",
+                        color: "var(--emerald)",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
+                      <MapPin size={18} />
+                    </div>
+                    <div>
+                      <h2 style={{ fontSize: "1.1rem", fontWeight: 800, color: "var(--text-main)", fontFamily: "var(--font-heading)" }}>
+                        ১. {locale === "bn" ? "ডেলিভারি ঠিকানা ও তথ্য" : "Delivery Address & Contact"}
+                      </h2>
+                      <span style={{ fontSize: "0.74rem", color: "var(--text-muted)" }}>
+                        {locale === "bn" ? "রাইডারের জন্য সঠিক ঠিকানা দিন" : "Enter accurate delivery details"}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "16px" }}>
+                    <div>
+                      <label style={{ display: "block", fontSize: "0.8rem", fontWeight: 700, color: "var(--text-body)", marginBottom: "6px" }}>
+                        {locale === "bn" ? "পূর্ণ নাম *" : "Full Name *"}
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        className="input-premium"
+                        value={formData.fullName}
+                        onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+                      />
+                    </div>
+
+                    <div>
+                      <label style={{ display: "block", fontSize: "0.8rem", fontWeight: 700, color: "var(--text-body)", marginBottom: "6px" }}>
+                        {locale === "bn" ? "মোবাইল নম্বর *" : "Mobile Number *"}
+                      </label>
+                      <input
+                        type="tel"
+                        required
+                        className="input-premium"
+                        value={formData.phone}
+                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                      />
+                    </div>
+
+                    <div>
+                      <label style={{ display: "block", fontSize: "0.8rem", fontWeight: 700, color: "var(--text-body)", marginBottom: "6px" }}>
+                        {locale === "bn" ? "ডেলিভারি এলাকা *" : "Delivery Area *"}
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        className="input-premium"
+                        value={formData.area}
+                        onChange={(e) => setFormData({ ...formData, area: e.target.value })}
+                      />
+                    </div>
+
+                    <div>
+                      <label style={{ display: "block", fontSize: "0.8rem", fontWeight: 700, color: "var(--text-body)", marginBottom: "6px" }}>
+                        {locale === "bn" ? "নিকটবর্তী ল্যান্ডমার্ক" : "Nearby Landmark"}
+                      </label>
+                      <input
+                        type="text"
+                        className="input-premium"
+                        value={formData.landmark}
+                        placeholder={locale === "bn" ? "যেমন: মসজিদের পাশে" : "e.g. Near Mosque"}
+                        onChange={(e) => setFormData({ ...formData, landmark: e.target.value })}
+                      />
+                    </div>
+
+                    <div style={{ gridColumn: "1 / -1" }}>
+                      <label style={{ display: "block", fontSize: "0.8rem", fontWeight: 700, color: "var(--text-body)", marginBottom: "6px" }}>
+                        {locale === "bn" ? "বাসা ও সড়কের পূর্ণ বিবরণ *" : "Full Street Address *"}
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        className="input-premium"
+                        value={formData.address}
+                        onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                      />
+                    </div>
+
+                    <div style={{ gridColumn: "1 / -1" }}>
+                      <label style={{ display: "block", fontSize: "0.8rem", fontWeight: 700, color: "var(--text-body)", marginBottom: "6px" }}>
+                        {locale === "bn" ? "বিশেষ ডেলিভারি নির্দেশিকা / প্যাকেজিং নোট" : "Special Packaging / Rider Instructions"}
+                      </label>
+                      <input
+                        type="text"
+                        className="input-premium"
+                        value={formData.note}
+                        placeholder={locale === "bn" ? "মাছ যেন ড্রাম প্যাকেজিং করা থাকে..." : "Pack fish in insulated box..."}
+                        onChange={(e) => setFormData({ ...formData, note: e.target.value })}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Section 2: Delivery Slot Selection */}
+                <div
+                  style={{
+                    background: "rgba(14, 17, 23, 0.95)",
+                    borderRadius: "var(--radius-2xl)",
+                    padding: "28px",
+                    border: "1px solid rgba(255, 255, 255, 0.08)",
+                    boxShadow: "var(--shadow-lg)",
+                  }}
+                >
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "10px",
+                      marginBottom: "20px",
+                      paddingBottom: "14px",
+                      borderBottom: "1px solid rgba(255, 255, 255, 0.06)",
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: "36px",
+                        height: "36px",
+                        borderRadius: "10px",
+                        background: "rgba(245, 200, 66, 0.15)",
+                        color: "var(--gold)",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
+                      <Clock size={18} />
+                    </div>
+                    <div>
+                      <h2 style={{ fontSize: "1.1rem", fontWeight: 800, color: "var(--text-main)", fontFamily: "var(--font-heading)" }}>
+                        ২. {locale === "bn" ? "ডেলিভারির সময় ও স্লট" : "Freshness Express Delivery Slot"}
+                      </h2>
+                      <span style={{ fontSize: "0.74rem", color: "var(--text-muted)" }}>
+                        {locale === "bn" ? "আপনার সুবিধাজনক সময় নির্বাচন করুন" : "Select your preferred delivery time"}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "12px" }}>
+                    {[
+                      { id: "morning", icon: Sunrise, titleBn: "তাজা সকাল", titleEn: "Fresh Morning", time: "০৭:০০ - ০৯:০০", tagBn: "সর্বাধিক তাজা", tagEn: "Peak Fresh" },
+                      { id: "midday",  icon: Sun,     titleBn: "দুপুর এক্সপ্রেস", titleEn: "Midday Express", time: "১২:০০ - ১৪:০০", tagBn: "রান্নার আগে", tagEn: "Pre-Lunch" },
+                      { id: "evening", icon: Sunset,  titleBn: "সন্ধ্যা স্লট", titleEn: "Evening Slot", time: "১৮:০০ - ২০:৩০", tagBn: "অফিসের পর", tagEn: "After Work" },
+                    ].map((slot) => {
+                      const Icon = slot.icon;
+                      const isSelected = deliverySlot === slot.id;
+                      return (
+                        <button
+                          key={slot.id}
+                          type="button"
+                          onClick={() => setDeliverySlot(slot.id)}
+                          style={{
+                            display: "flex",
+                            flexDirection: "column",
+                            padding: "16px",
+                            borderRadius: "var(--radius-lg)",
+                            background: isSelected ? "rgba(16, 216, 118, 0.12)" : "rgba(255, 255, 255, 0.03)",
+                            border: isSelected ? "1.5px solid var(--emerald)" : "1px solid rgba(255, 255, 255, 0.08)",
+                            textAlign: "left",
+                            cursor: "pointer",
+                            transition: "all var(--t-fast)",
+                            boxShadow: isSelected ? "0 4px 20px rgba(16,216,118,0.25)" : "none",
+                            transform: isSelected ? "translateY(-2px)" : "translateY(0)",
+                          }}
+                        >
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+                            <Icon size={20} color={isSelected ? "var(--emerald)" : "var(--text-muted)"} />
+                            <span
+                              style={{
+                                fontSize: "0.65rem",
+                                fontWeight: 800,
+                                padding: "2px 7px",
+                                borderRadius: "999px",
+                                background: isSelected ? "rgba(16,216,118,0.2)" : "rgba(255,255,255,0.06)",
+                                color: isSelected ? "var(--emerald)" : "var(--text-muted)",
+                              }}
+                            >
+                              {locale === "bn" ? slot.tagBn : slot.tagEn}
+                            </span>
+                          </div>
+                          <div style={{ fontWeight: 800, color: "var(--text-main)", fontSize: "0.92rem", fontFamily: "var(--font-heading)" }}>
+                            {locale === "bn" ? slot.titleBn : slot.titleEn}
+                          </div>
+                          <div style={{ fontSize: "0.78rem", color: "var(--text-muted)", marginTop: "2px" }}>
+                            {slot.time}
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Section 3: Payment Method Selection */}
+                <div
+                  style={{
+                    background: "rgba(14, 17, 23, 0.95)",
+                    borderRadius: "var(--radius-2xl)",
+                    padding: "28px",
+                    border: "1px solid rgba(255, 255, 255, 0.08)",
+                    boxShadow: "var(--shadow-lg)",
+                  }}
+                >
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "10px",
+                      marginBottom: "20px",
+                      paddingBottom: "14px",
+                      borderBottom: "1px solid rgba(255, 255, 255, 0.06)",
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: "36px",
+                        height: "36px",
+                        borderRadius: "10px",
+                        background: "rgba(79, 158, 255, 0.15)",
+                        color: "var(--sapphire)",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
+                      <CreditCard size={18} />
+                    </div>
+                    <div>
+                      <h2 style={{ fontSize: "1.1rem", fontWeight: 800, color: "var(--text-main)", fontFamily: "var(--font-heading)" }}>
+                        ৩. {locale === "bn" ? "পেমেন্ট মাধ্যম নির্বাচন" : "Payment Method"}
+                      </h2>
+                      <span style={{ fontSize: "0.74rem", color: "var(--text-muted)" }}>
+                        {locale === "bn" ? "১০০% নিরাপদ ও ইনস্ট্যান্ট গেটওয়ে" : "Instant verification & cash on delivery"}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "12px" }}>
+                    {[
+                      { id: "BKASH", name: "bKash", color: "#E2136E", subBn: "ইনস্ট্যান্ট ওটিপি গেটওয়ে", subEn: "Instant OTP sandbox" },
+                      { id: "NAGAD", name: "Nagad", color: "#F7941D", subBn: "ডাক বিভাগ ডিজিটাল ওয়ালেট", subEn: "Postal wallet checkout" },
+                      { id: "SSLCOMMERZ", name: "Cards / NetBanking", color: "#1A1F71", subBn: "VISA, Mastercard, Amex", subEn: "VISA, Mastercard, Amex" },
+                      { id: "COD", name: "Cash on Delivery", color: "#10D876", subBn: "পণ্য হাতে পেয়ে টাকা দিন", subEn: "Pay upon receiving basket" },
+                    ].map((m) => {
+                      const isSelected = paymentMethod === m.id;
+                      return (
+                        <button
+                          key={m.id}
+                          type="button"
+                          onClick={() => setPaymentMethod(m.id as any)}
+                          style={{
+                            display: "flex",
+                            flexDirection: "column",
+                            padding: "16px",
+                            borderRadius: "var(--radius-lg)",
+                            background: isSelected ? "rgba(16, 216, 118, 0.1)" : "rgba(255, 255, 255, 0.03)",
+                            border: isSelected ? "1.5px solid var(--emerald)" : "1px solid rgba(255, 255, 255, 0.08)",
+                            textAlign: "left",
+                            cursor: "pointer",
+                            transition: "all var(--t-fast)",
+                            boxShadow: isSelected ? "0 4px 20px rgba(16,216,118,0.25)" : "none",
+                            transform: isSelected ? "translateY(-2px)" : "translateY(0)",
+                          }}
+                        >
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+                            <span
+                              style={{
+                                padding: "4px 10px",
+                                borderRadius: "6px",
+                                background: m.color,
+                                color: "#FFF",
+                                fontSize: "0.75rem",
+                                fontWeight: 900,
+                              }}
+                            >
+                              {m.name}
+                            </span>
+                            {isSelected && <CheckCircle2 size={16} color="var(--emerald)" />}
+                          </div>
+                          <div style={{ fontSize: "0.74rem", color: "var(--text-muted)", marginTop: "4px" }}>
+                            {locale === "bn" ? m.subBn : m.subEn}
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Submit Action Button for Mobile / Inline */}
+                <button
+                  type="submit"
+                  disabled={isProcessing}
+                  className="btn-primary"
+                  style={{
+                    padding: "18px 28px",
+                    fontSize: "1.05rem",
+                    fontWeight: 900,
+                    boxShadow: "0 8px 32px rgba(16,216,118,0.5)",
+                  }}
+                >
+                  {isProcessing ? (
+                    <>
+                      <RefreshCw size={20} className="animate-spin" />
+                      <span>{locale === "bn" ? "অর্ডার প্রসেসিং হচ্ছে..." : "Processing Order..."}</span>
+                    </>
+                  ) : (
+                    <>
+                      <Lock size={18} />
+                      <span>{locale === "bn" ? "অর্ডার কনফার্ম করুন" : "Confirm & Place Order"} • {formatPrice(grandTotal)}</span>
+                      <ArrowRight size={18} />
+                    </>
+                  )}
+                </button>
+              </form>
+
+              {/* ── Right Column: Sticky Order Summary & Vendor Breakdown ── */}
+              <div
+                style={{
+                  position: "sticky",
+                  top: "100px",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "20px",
+                }}
+              >
+                <div
+                  style={{
+                    background: "rgba(14, 17, 23, 0.95)",
+                    backdropFilter: "blur(24px)",
+                    WebkitBackdropFilter: "blur(24px)",
+                    borderRadius: "var(--radius-2xl)",
+                    padding: "28px",
+                    border: "1px solid rgba(255, 255, 255, 0.08)",
+                    boxShadow: "var(--shadow-xl)",
+                  }}
+                >
+                  <h3
+                    style={{
+                      fontSize: "1.15rem",
+                      fontWeight: 800,
+                      color: "var(--text-main)",
+                      marginBottom: "16px",
+                      paddingBottom: "12px",
+                      borderBottom: "1px solid rgba(255, 255, 255, 0.06)",
+                      fontFamily: "var(--font-heading)",
+                    }}
+                  >
+                    {locale === "bn" ? "অর্ডার সামারি" : "Order Basket Summary"}
+                  </h3>
+
+                  {/* Items List Preview */}
+                  <div
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: "12px",
+                      maxHeight: "260px",
+                      overflowY: "auto",
+                      paddingRight: "4px",
+                      marginBottom: "20px",
+                    }}
+                  >
+                    {items.map((item) => (
+                      <div
+                        key={item.id}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "12px",
+                          background: "rgba(255, 255, 255, 0.02)",
+                          padding: "10px 12px",
+                          borderRadius: "var(--radius-md)",
+                          border: "1px solid rgba(255, 255, 255, 0.04)",
+                        }}
+                      >
+                        <img
+                          src={item.product.images[0]}
+                          alt=""
+                          style={{ width: "44px", height: "44px", borderRadius: "6px", objectFit: "cover" }}
+                        />
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div
+                            style={{
+                              fontSize: "0.84rem",
+                              fontWeight: 700,
+                              color: "var(--text-main)",
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
+                              whiteSpace: "nowrap",
+                            }}
+                          >
+                            {locale === "bn" ? item.product.nameBn : item.product.nameEn}
+                          </div>
+                          <div style={{ fontSize: "0.72rem", color: "var(--text-muted)", marginTop: "2px" }}>
+                            {item.selectedWeight} {item.selectedUnit} × {item.quantity}
+                          </div>
+                        </div>
+                        <div style={{ fontSize: "0.88rem", fontWeight: 800, color: "var(--emerald)" }}>
+                          {formatPrice(item.totalPrice)}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Calculations */}
+                  <div
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: "8px",
+                      fontSize: "0.85rem",
+                      paddingTop: "14px",
+                      borderTop: "1px solid rgba(255, 255, 255, 0.06)",
+                    }}
+                  >
+                    <div style={{ display: "flex", justifyContent: "space-between", color: "var(--text-muted)" }}>
+                      <span>{t.subtotal}</span>
+                      <span style={{ fontWeight: 600, color: "var(--text-body)" }}>{formatPrice(subtotal)}</span>
+                    </div>
+
+                    {discount > 0 && (
+                      <div style={{ display: "flex", justifyContent: "space-between", color: "var(--emerald)" }}>
+                        <span>{t.discount}</span>
+                        <span style={{ fontWeight: 700 }}>-{formatPrice(discount)}</span>
+                      </div>
+                    )}
+
+                    <div style={{ display: "flex", justifyContent: "space-between", color: "var(--text-muted)" }}>
+                      <span>{t.deliveryFee}</span>
+                      <span style={{ fontWeight: 600, color: deliveryFee === 0 ? "var(--emerald)" : "var(--text-body)" }}>
+                        {deliveryFee === 0 ? t.freeDelivery : formatPrice(deliveryFee)}
+                      </span>
+                    </div>
+
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        fontSize: "1.2rem",
+                        fontWeight: 900,
+                        color: "var(--text-main)",
+                        paddingTop: "10px",
+                        marginTop: "4px",
+                        borderTop: "1px dashed rgba(255, 255, 255, 0.1)",
+                        fontFamily: "var(--font-heading)",
+                      }}
+                    >
+                      <span>{t.grandTotal}</span>
+                      <span className="gradient-text-emerald">{formatPrice(grandTotal)}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Trust Guarantee Card */}
+                <div
+                  style={{
+                    background: "rgba(16, 216, 118, 0.05)",
+                    borderRadius: "var(--radius-xl)",
+                    padding: "16px 20px",
+                    border: "1px solid rgba(16, 216, 118, 0.15)",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "12px",
+                  }}
+                >
+                  <ShieldCheck size={28} color="var(--emerald)" style={{ flexShrink: 0 }} />
+                  <div style={{ fontSize: "0.78rem", color: "var(--text-body)", lineHeight: 1.5 }}>
+                    <strong>১০০% তাজা পণ্য নিশ্চয়তা:</strong> ডেলিভারির সময় পণ্য দেখে পছন্দ না হলে তাৎক্ষণিক রিটার্ন ও রিফান্ড সুবিধা।
+                  </div>
+                </div>
               </div>
+            </div>
+          )}
 
-              {modalStep === "PHONE" && (
-                <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
-                  <label style={{ fontSize: "0.88rem", fontWeight: 700, color: "#1E293B" }}>
-                    আপনার {paymentMethod === "BKASH" ? "বিকাশ" : "নগদ"} একাউন্ট নম্বর দিন
-                  </label>
-                  <input
-                    type="tel"
-                    value={walletPhone}
-                    onChange={(e) => setWalletPhone(e.target.value)}
-                    placeholder="01XXXXXXXXX"
-                    style={{
-                      width: "100%",
-                      padding: "12px 14px",
-                      borderRadius: "10px",
-                      border: "1.5px solid #CBD5E1",
-                      fontSize: "1rem",
-                      fontWeight: 700,
-                      outline: "none",
-                    }}
-                  />
-                  <div style={{ fontSize: "0.72rem", color: "#64748B" }}>
-                    * টেস্ট মোডে যেকোনো ১১ ডিজিটের নম্বর দিন।
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setModalStep("OTP")}
-                    style={{
-                      width: "100%",
-                      padding: "12px",
-                      borderRadius: "10px",
-                      background: paymentMethod === "BKASH" ? "#E2136E" : "#EA580C",
-                      color: "#FFFFFF",
-                      fontWeight: 800,
-                      fontSize: "0.95rem",
-                      marginTop: "6px",
-                      cursor: "pointer",
-                      border: "none",
-                    }}
-                  >
-                    পরবর্তী (Next) →
-                  </button>
-                </div>
-              )}
+        </div>
+      </div>
 
-              {modalStep === "OTP" && (
-                <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
-                  <label style={{ fontSize: "0.88rem", fontWeight: 700, color: "#1E293B" }}>
-                    ভেরিফিকেশন কোড (OTP) প্রবেশ করুন
-                  </label>
-                  <input
-                    type="text"
-                    value={walletOtp}
-                    onChange={(e) => setWalletOtp(e.target.value)}
-                    placeholder="123456"
-                    maxLength={6}
-                    style={{
-                      width: "100%",
-                      padding: "12px 14px",
-                      borderRadius: "10px",
-                      border: "1.5px solid #CBD5E1",
-                      fontSize: "1.2rem",
-                      fontWeight: 800,
-                      textAlign: "center",
-                      letterSpacing: "0.3em",
-                      outline: "none",
-                    }}
-                  />
-                  <div style={{ fontSize: "0.72rem", color: "#10B981", fontWeight: 700 }}>
-                    ✓ টেস্ট ভেরিফিকেশন কোড: <strong>123456</strong>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setModalStep("PIN")}
-                    style={{
-                      width: "100%",
-                      padding: "12px",
-                      borderRadius: "10px",
-                      background: paymentMethod === "BKASH" ? "#E2136E" : "#EA580C",
-                      color: "#FFFFFF",
-                      fontWeight: 800,
-                      fontSize: "0.95rem",
-                      cursor: "pointer",
-                      border: "none",
-                    }}
-                  >
-                    OTP নিশ্চিত করুন →
-                  </button>
-                </div>
-              )}
+      {/* Traffic Queue Gate */}
+      <TrafficQueueGate isOpen={showQueueGate} onAdmit={executeOrderPlacement} />
 
-              {modalStep === "PIN" && (
-                <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
-                  <label style={{ fontSize: "0.88rem", fontWeight: 700, color: "#1E293B" }}>
-                    আপনার {paymentMethod === "BKASH" ? "বিকাশ" : "নগদ"} পিন (PIN) দিন
-                  </label>
-                  <input
-                    type="password"
-                    value={walletPin}
-                    onChange={(e) => setWalletPin(e.target.value)}
-                    placeholder="•••••"
-                    maxLength={5}
-                    style={{
-                      width: "100%",
-                      padding: "12px 14px",
-                      borderRadius: "10px",
-                      border: "1.5px solid #CBD5E1",
-                      fontSize: "1.3rem",
-                      fontWeight: 800,
-                      textAlign: "center",
-                      letterSpacing: "0.3em",
-                      outline: "none",
-                    }}
-                  />
-                  <div style={{ fontSize: "0.72rem", color: "#10B981", fontWeight: 700 }}>
-                    ✓ স্যান্ডবক্স টেস্ট পিন: <strong>12121</strong>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={handleExecutePayment}
-                    disabled={isProcessing}
-                    style={{
-                      width: "100%",
-                      padding: "13px",
-                      borderRadius: "10px",
-                      background: paymentMethod === "BKASH" ? "#E2136E" : "#EA580C",
-                      color: "#FFFFFF",
-                      fontWeight: 800,
-                      fontSize: "1rem",
-                      cursor: "pointer",
-                      border: "none",
-                      boxShadow: "0 4px 12px rgba(226, 19, 110, 0.3)",
-                    }}
-                  >
-                    {isProcessing ? "পেমেন্ট প্রসেসিং হচ্ছে..." : `পেমেন্ট সম্পন্ন করুন (${formatPrice(grandTotal)})`}
-                  </button>
-                </div>
-              )}
+      {/* ── bKash / Nagad Interactive Sandbox Modal ── */}
+      {showPaymentModal && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 10000,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "20px",
+          }}
+        >
+          <div
+            onClick={() => setShowPaymentModal(false)}
+            style={{
+              position: "absolute",
+              inset: 0,
+              background: "rgba(0, 0, 0, 0.8)",
+              backdropFilter: "blur(12px)",
+            }}
+          />
+
+          <div
+            style={{
+              position: "relative",
+              width: "100%",
+              maxWidth: "420px",
+              background: "#0F131A",
+              borderRadius: "var(--radius-2xl)",
+              padding: "32px",
+              boxShadow: "var(--shadow-2xl), 0 0 60px rgba(226, 19, 110, 0.2)",
+              border: `1.5px solid ${paymentMethod === "BKASH" ? "#E2136E" : "#F7941D"}`,
+              animation: "scaleIn 0.3s var(--ease-out)",
+              zIndex: 10001,
+            }}
+          >
+            {/* Modal Header */}
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
+              <div
+                style={{
+                  padding: "4px 12px",
+                  borderRadius: "6px",
+                  background: paymentMethod === "BKASH" ? "#E2136E" : "#F7941D",
+                  color: "#FFF",
+                  fontWeight: 900,
+                  fontSize: "0.85rem",
+                }}
+              >
+                {paymentMethod === "BKASH" ? "bKash Checkout" : "Nagad Payment"}
+              </div>
 
               <button
                 type="button"
                 onClick={() => setShowPaymentModal(false)}
                 style={{
-                  width: "100%",
-                  padding: "8px",
-                  marginTop: "12px",
-                  color: "#64748B",
-                  fontSize: "0.8rem",
-                  cursor: "pointer",
-                  background: "transparent",
+                  color: "var(--text-muted)",
+                  background: "none",
                   border: "none",
+                  cursor: "pointer",
                 }}
               >
-                পেমেন্ট বাতিল করুন (Cancel)
+                <X size={20} />
               </button>
             </div>
+
+            <div style={{ textAlign: "center", marginBottom: "24px" }}>
+              <div style={{ fontSize: "0.78rem", color: "var(--text-muted)", textTransform: "uppercase" }}>
+                {locale === "bn" ? "পরিশোধের মোট পরিমাণ" : "Payable Amount"}
+              </div>
+              <div style={{ fontSize: "1.8rem", fontWeight: 900, color: "var(--text-main)", marginTop: "4px" }}>
+                {formatPrice(grandTotal)}
+              </div>
+            </div>
+
+            {/* Step 1: Wallet Phone */}
+            {modalStep === "PHONE" && (
+              <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                <div>
+                  <label style={{ display: "block", fontSize: "0.8rem", fontWeight: 700, color: "var(--text-body)", marginBottom: "6px" }}>
+                    {paymentMethod === "BKASH" ? "bKash Account Number" : "Nagad Wallet Number"}
+                  </label>
+                  <input
+                    type="tel"
+                    className="input-premium"
+                    value={walletPhone}
+                    onChange={(e) => setWalletPhone(e.target.value)}
+                    placeholder="01XXXXXXXXX"
+                  />
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setModalStep("OTP")}
+                  style={{
+                    padding: "12px",
+                    borderRadius: "var(--radius-md)",
+                    background: paymentMethod === "BKASH" ? "#E2136E" : "#F7941D",
+                    color: "#FFF",
+                    fontWeight: 800,
+                    fontSize: "0.92rem",
+                    border: "none",
+                    cursor: "pointer",
+                  }}
+                >
+                  Send OTP Code
+                </button>
+              </div>
+            )}
+
+            {/* Step 2: OTP */}
+            {modalStep === "OTP" && (
+              <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                <div>
+                  <label style={{ display: "block", fontSize: "0.8rem", fontWeight: 700, color: "var(--text-body)", marginBottom: "6px" }}>
+                    Verification Code (OTP) Sent to {walletPhone}
+                  </label>
+                  <input
+                    type="text"
+                    className="input-premium"
+                    value={walletOtp}
+                    onChange={(e) => setWalletOtp(e.target.value)}
+                    placeholder="123456"
+                    style={{ textAlign: "center", fontSize: "1.2rem", letterSpacing: "0.2em", fontWeight: 900 }}
+                  />
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setModalStep("PIN")}
+                  style={{
+                    padding: "12px",
+                    borderRadius: "var(--radius-md)",
+                    background: paymentMethod === "BKASH" ? "#E2136E" : "#F7941D",
+                    color: "#FFF",
+                    fontWeight: 800,
+                    fontSize: "0.92rem",
+                    border: "none",
+                    cursor: "pointer",
+                  }}
+                >
+                  Verify Code
+                </button>
+              </div>
+            )}
+
+            {/* Step 3: PIN */}
+            {modalStep === "PIN" && (
+              <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                <div>
+                  <label style={{ display: "block", fontSize: "0.8rem", fontWeight: 700, color: "var(--text-body)", marginBottom: "6px" }}>
+                    Enter Wallet PIN
+                  </label>
+                  <input
+                    type="password"
+                    maxLength={5}
+                    className="input-premium"
+                    value={walletPin}
+                    onChange={(e) => setWalletPin(e.target.value)}
+                    placeholder="•••••"
+                    style={{ textAlign: "center", fontSize: "1.4rem", letterSpacing: "0.3em", fontWeight: 900 }}
+                  />
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleExecutePayment}
+                  disabled={isProcessing}
+                  style={{
+                    padding: "14px",
+                    borderRadius: "var(--radius-md)",
+                    background: paymentMethod === "BKASH" ? "#E2136E" : "#F7941D",
+                    color: "#FFF",
+                    fontWeight: 800,
+                    fontSize: "1rem",
+                    border: "none",
+                    cursor: "pointer",
+                  }}
+                >
+                  {isProcessing ? "Processing..." : `Confirm Payment • ${formatPrice(grandTotal)}`}
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}
-
-      {/* High-Traffic Virtual Queue Gate */}
-      <TrafficQueueGate
-        isOpen={showQueueGate}
-        onAdmit={executeOrderPlacement}
-        campaignTitle="তাতকা বাজার মেগা ক্যাম্পেইন ও ফ্ল্যাশ অফার"
-        estimatedSeconds={3}
-      />
-
-    </div>
+    </>
   );
 }

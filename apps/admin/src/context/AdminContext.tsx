@@ -121,7 +121,7 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
           // Detect brand new incoming orders
           setKnownOrderIds((prevKnown) => {
             const newlyArrived = freshOrders.filter((o: any) => !prevKnown.has(o.id));
-            if (newlyArrived.length > 0) {
+            if (newlyArrived.length > 0 && newlyArrived[0]) {
               const latest = newlyArrived[0];
               // 🔔 Trigger sweet Ting-Tong Audio Chime!
               audioAlert.playOrderAssignedSound();

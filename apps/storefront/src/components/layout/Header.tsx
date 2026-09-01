@@ -5,8 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   Search, ShoppingCart, Heart, MapPin, Globe, User,
-  ChevronDown, Store, CheckCircle2, X, PhoneCall, Menu,
-  Zap, Bell, TrendingUp, Sparkles,
+  ChevronDown, CheckCircle2, X, Menu, Zap, Sparkles,
 } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 import { useCartStore } from "@/lib/cart-store";
@@ -18,13 +17,13 @@ export function Header() {
   const { locale, t, toggleLocale, formatPrice } = useLanguage();
   const { getItemCount, getGrandTotal, openCart, wishlistIds, selectedHub, setSelectedHub } = useCartStore();
 
-  const [searchQuery, setSearchQuery]         = useState("");
-  const debouncedSearchQuery                  = useDebounce(searchQuery, 250);
-  const [isSearchOpen, setIsSearchOpen]       = useState(false);
+  const [searchQuery, setSearchQuery]             = useState("");
+  const debouncedSearchQuery                      = useDebounce(searchQuery, 250);
+  const [isSearchOpen, setIsSearchOpen]           = useState(false);
   const [isHubDropdownOpen, setIsHubDropdownOpen] = useState(false);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [mounted, setMounted]                 = useState(false);
-  const [cartPulse, setCartPulse]             = useState(false);
+  const [mounted, setMounted]                     = useState(false);
+  const [cartPulse, setCartPulse]                 = useState(false);
+  const [scrolled, setScrolled]                   = useState(false);
 
   const searchRef = useRef<HTMLDivElement>(null);
   const hubRef    = useRef<HTMLDivElement>(null);
@@ -35,11 +34,15 @@ export function Header() {
       if (searchRef.current && !searchRef.current.contains(event.target as Node)) setIsSearchOpen(false);
       if (hubRef.current    && !hubRef.current.contains(event.target as Node))    setIsHubDropdownOpen(false);
     };
+    const handleScroll = () => setScrolled(window.scrollY > 10);
     document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      window.removeEventListener("scroll", handleScroll);
+    };
   }, []);
 
-  // Pulse animation when cart changes
   const prevCount = useRef(0);
   useEffect(() => {
     if (!mounted) return;
@@ -87,16 +90,15 @@ export function Header() {
       {/* 1 ── Announcement Marquee */}
       <div
         style={{
-          background: "linear-gradient(90deg, #071A0A 0%, #0E3D1C 40%, #0F4A20 60%, #071A0A 100%)",
-          color: "#fff",
+          background: "linear-gradient(90deg, #030507 0%, #060E12 40%, #050A0E 60%, #030507 100%)",
+          borderBottom: "1px solid rgba(16,216,118,0.12)",
           padding: "7px 0",
           overflow: "hidden",
           position: "relative",
         }}
       >
-        {/* Edge fade masks */}
-        <div style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: "80px", background: "linear-gradient(90deg, #071A0A, transparent)", zIndex: 2, pointerEvents: "none" }} />
-        <div style={{ position: "absolute", right: 0, top: 0, bottom: 0, width: "80px", background: "linear-gradient(270deg, #071A0A, transparent)", zIndex: 2, pointerEvents: "none" }} />
+        <div style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: "100px", background: "linear-gradient(90deg, #030507, transparent)", zIndex: 2, pointerEvents: "none" }} />
+        <div style={{ position: "absolute", right: 0, top: 0, bottom: 0, width: "100px", background: "linear-gradient(270deg, #030507, transparent)", zIndex: 2, pointerEvents: "none" }} />
 
         <div className="marquee-track" style={{ gap: "0px" }}>
           {[...announcementItems, ...announcementItems].map((item, i) => (
@@ -105,11 +107,11 @@ export function Header() {
               style={{
                 display: "inline-flex",
                 alignItems: "center",
-                fontSize: "0.8rem",
-                fontWeight: 600,
+                fontSize: "0.78rem",
+                fontWeight: 500,
                 whiteSpace: "nowrap",
-                padding: "0 36px",
-                color: i % 2 === 0 ? "rgba(255,255,255,0.92)" : "#86EFAC",
+                padding: "0 40px",
+                color: i % 2 === 0 ? "rgba(240,242,247,0.75)" : "var(--emerald)",
                 letterSpacing: "0.01em",
               }}
             >
@@ -122,7 +124,13 @@ export function Header() {
       {/* 2 ── Main Nav */}
       <div
         className="glass-header"
-        style={{ padding: "10px 0", boxShadow: "0 1px 24px rgba(0,0,0,0.06)" }}
+        style={{
+          padding: "10px 0",
+          boxShadow: scrolled
+            ? "0 4px 40px rgba(0,0,0,0.7), 0 1px 0 rgba(16,216,118,0.08)"
+            : "0 1px 0 rgba(255,255,255,0.04)",
+          transition: "box-shadow 0.3s ease",
+        }}
       >
         <div
           className="container"
@@ -130,59 +138,57 @@ export function Header() {
         >
 
           {/* Logo */}
-          <Link href="/" style={{ display: "flex", alignItems: "center", gap: "10px", flexShrink: 0 }}>
+          <Link href="/" style={{ display: "flex", alignItems: "center", gap: "11px", flexShrink: 0 }}>
             <div
               style={{
-                width: "44px", height: "44px",
-                borderRadius: "14px",
-                background: "linear-gradient(135deg, #22C55E 0%, #15803D 100%)",
+                width: "42px", height: "42px",
+                borderRadius: "12px",
+                background: "linear-gradient(135deg, #10D876 0%, #047A43 100%)",
                 display: "flex", alignItems: "center", justifyContent: "center",
                 color: "#fff",
-                boxShadow: "0 6px 20px rgba(34, 197, 94, 0.4), inset 0 1px 0 rgba(255,255,255,0.25)",
+                boxShadow: "0 6px 24px rgba(16,216,118,0.4), inset 0 1px 0 rgba(255,255,255,0.25)",
                 position: "relative",
                 flexShrink: 0,
               }}
             >
-              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
               </svg>
             </div>
             <div className="hidden-mobile">
               <div
                 style={{
-                  fontSize: "1.3rem",
-                  fontWeight: 900,
-                  letterSpacing: "-0.03em",
+                  fontSize: "1.22rem",
+                  fontWeight: 800,
+                  letterSpacing: "-0.04em",
                   lineHeight: 1.1,
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "5px",
-                  background: "linear-gradient(135deg, #0F4A20 0%, #22C55E 100%)",
-                  WebkitBackgroundClip: "text",
-                  WebkitTextFillColor: "transparent",
-                  backgroundClip: "text",
+                  fontFamily: "var(--font-heading)",
                 }}
               >
-                <span>{locale === "bn" ? "তাতকা বাজার" : "Tatka Bazar"}</span>
+                <span style={{ color: "var(--text-main)" }}>
+                  {locale === "bn" ? "তাতকা" : "Tatka"}
+                </span>
+                <span style={{ color: "var(--emerald)", marginLeft: "4px" }}>
+                  {locale === "bn" ? " বাজার" : " Bazar"}
+                </span>
                 <span
                   style={{
-                    fontSize: "0.6rem",
+                    fontSize: "0.58rem",
                     padding: "2px 6px",
-                    background: "linear-gradient(135deg, #F59E0B, #D97706)",
-                    WebkitBackgroundClip: "unset",
-                    WebkitTextFillColor: "#fff",
-                    backgroundClip: "unset",
-                    color: "#fff",
-                    borderRadius: "6px",
+                    background: "linear-gradient(135deg, #F5C842, #D4A017)",
+                    color: "#000",
+                    borderRadius: "5px",
                     fontWeight: 800,
-                    letterSpacing: "0.02em",
-                    boxShadow: "0 2px 8px rgba(245, 158, 11, 0.4)",
+                    letterSpacing: "0.03em",
+                    marginLeft: "5px",
+                    verticalAlign: "middle",
+                    boxShadow: "0 2px 8px rgba(245,200,66,0.4)",
                   }}
                 >
                   2.0
                 </span>
               </div>
-              <p style={{ fontSize: "0.7rem", color: "var(--text-muted)", fontWeight: 500, letterSpacing: "0.01em" }}>
+              <p style={{ fontSize: "0.68rem", color: "var(--text-muted)", fontWeight: 500, letterSpacing: "0.01em" }}>
                 {t.tagline}
               </p>
             </div>
@@ -195,19 +201,19 @@ export function Header() {
               style={{
                 display: "flex", alignItems: "center", gap: "8px",
                 padding: "8px 14px",
-                background: "rgba(34, 197, 94, 0.08)",
+                background: "rgba(16, 216, 118, 0.06)",
                 borderRadius: "var(--radius-full)",
-                border: "1.5px solid rgba(34, 197, 94, 0.2)",
-                fontSize: "0.8rem", color: "var(--primary-dark)", fontWeight: 700,
+                border: "1.5px solid rgba(16, 216, 118, 0.18)",
+                fontSize: "0.8rem", color: "var(--emerald)", fontWeight: 600,
                 transition: "all var(--t-fast)",
                 cursor: "pointer",
               }}
-              onMouseEnter={e => { e.currentTarget.style.background = "rgba(34, 197, 94, 0.14)"; e.currentTarget.style.borderColor = "rgba(34, 197, 94, 0.4)"; }}
-              onMouseLeave={e => { e.currentTarget.style.background = "rgba(34, 197, 94, 0.08)"; e.currentTarget.style.borderColor = "rgba(34, 197, 94, 0.2)"; }}
+              onMouseEnter={e => { e.currentTarget.style.background = "rgba(16,216,118,0.12)"; e.currentTarget.style.borderColor = "rgba(16,216,118,0.35)"; }}
+              onMouseLeave={e => { e.currentTarget.style.background = "rgba(16,216,118,0.06)"; e.currentTarget.style.borderColor = "rgba(16,216,118,0.18)"; }}
             >
-              <MapPin size={14} color="var(--primary)" />
+              <MapPin size={14} color="var(--emerald)" />
               <div style={{ textAlign: "left" }}>
-                <div style={{ fontSize: "0.62rem", color: "var(--text-muted)", lineHeight: 1, marginBottom: "1px" }}>{t.deliverTo}:</div>
+                <div style={{ fontSize: "0.6rem", color: "var(--text-muted)", lineHeight: 1, marginBottom: "1px" }}>{t.deliverTo}:</div>
                 <div>{locale === "bn" ? selectedBranch.areaBn : selectedBranch.areaEn}</div>
               </div>
               <ChevronDown
@@ -215,6 +221,7 @@ export function Header() {
                 style={{
                   transition: "transform var(--t-fast)",
                   transform: isHubDropdownOpen ? "rotate(180deg)" : "rotate(0deg)",
+                  color: "var(--text-muted)",
                 }}
               />
             </button>
@@ -222,18 +229,18 @@ export function Header() {
             {isHubDropdownOpen && (
               <div
                 style={{
-                  position: "absolute", top: "calc(100% + 10px)", left: 0,
-                  width: "290px",
-                  background: "var(--bg-surface)",
+                  position: "absolute", top: "calc(100% + 12px)", left: 0,
+                  width: "295px",
+                  background: "var(--bg-card)",
                   borderRadius: "var(--radius-lg)",
-                  boxShadow: "var(--shadow-xl), 0 0 0 1px rgba(34,197,94,0.1)",
-                  border: "1px solid rgba(34,197,94,0.12)",
+                  boxShadow: "var(--shadow-xl), 0 0 0 1px rgba(16,216,118,0.1)",
+                  border: "1px solid rgba(16,216,118,0.12)",
                   padding: "10px",
                   zIndex: 250,
                   animation: "fadeDown 0.2s var(--ease-out)",
                 }}
               >
-                <div style={{ padding: "6px 10px 10px", fontSize: "0.7rem", fontWeight: 800, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.08em" }}>
+                <div style={{ padding: "6px 10px 10px", fontSize: "0.68rem", fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.1em" }}>
                   {t.selectArea}
                 </div>
                 {BRANCHES.map(b => (
@@ -245,10 +252,10 @@ export function Header() {
                       padding: "10px 12px",
                       borderRadius: "var(--radius-md)",
                       display: "flex", alignItems: "center", justifyContent: "space-between",
-                      background: selectedHub === b.id ? "rgba(34,197,94,0.08)" : "transparent",
-                      color: selectedHub === b.id ? "var(--primary-dark)" : "var(--text-main)",
+                      background: selectedHub === b.id ? "rgba(16,216,118,0.08)" : "transparent",
+                      color: selectedHub === b.id ? "var(--emerald)" : "var(--text-body)",
                       fontSize: "0.85rem",
-                      fontWeight: selectedHub === b.id ? 700 : 500,
+                      fontWeight: selectedHub === b.id ? 700 : 400,
                       transition: "background var(--t-fast)",
                       cursor: "pointer",
                       border: "none",
@@ -262,7 +269,7 @@ export function Header() {
                         {locale === "bn" ? b.deliveryTimeBn : b.deliveryTimeEn}
                       </div>
                     </div>
-                    {selectedHub === b.id && <CheckCircle2 size={16} color="var(--primary)" />}
+                    {selectedHub === b.id && <CheckCircle2 size={16} color="var(--emerald)" />}
                   </button>
                 ))}
               </div>
@@ -270,24 +277,24 @@ export function Header() {
           </div>
 
           {/* Search Bar */}
-          <div ref={searchRef} style={{ position: "relative", flex: 1, maxWidth: "540px" }}>
+          <div ref={searchRef} style={{ position: "relative", flex: 1, maxWidth: "560px" }}>
             <form onSubmit={handleSearchSubmit}>
               <div
                 style={{
                   display: "flex", alignItems: "center",
-                  background: isSearchOpen ? "var(--bg-surface)" : "var(--bg-subtle)",
+                  background: isSearchOpen ? "var(--bg-card)" : "var(--bg-subtle)",
                   borderRadius: "var(--radius-full)",
-                  padding: "4px 5px 4px 16px",
+                  padding: "4px 5px 4px 18px",
                   border: isSearchOpen
-                    ? "1.5px solid var(--primary)"
-                    : "1.5px solid var(--border-subtle)",
+                    ? "1.5px solid var(--emerald)"
+                    : "1.5px solid var(--border-medium)",
                   boxShadow: isSearchOpen
-                    ? "0 0 0 4px rgba(34,197,94,0.12), var(--shadow-sm)"
+                    ? "0 0 0 4px rgba(16,216,118,0.1), var(--shadow-sm)"
                     : "none",
                   transition: "all var(--t-smooth)",
                 }}
               >
-                <Search size={17} color={isSearchOpen ? "var(--primary)" : "var(--text-muted)"} style={{ flexShrink: 0, transition: "color var(--t-fast)" }} />
+                <Search size={16} color={isSearchOpen ? "var(--emerald)" : "var(--text-muted)"} style={{ flexShrink: 0, transition: "color var(--t-fast)" }} />
                 <input
                   type="text"
                   value={searchQuery}
@@ -297,7 +304,7 @@ export function Header() {
                   style={{
                     width: "100%", background: "transparent",
                     border: "none", outline: "none",
-                    padding: "8px 10px",
+                    padding: "9px 10px",
                     color: "var(--text-main)",
                     fontSize: "var(--text-sm)",
                   }}
@@ -308,20 +315,20 @@ export function Header() {
                     onClick={() => { setSearchQuery(""); setIsSearchOpen(false); }}
                     style={{ padding: "4px", color: "var(--text-muted)", display: "flex", alignItems: "center" }}
                   >
-                    <X size={15} />
+                    <X size={14} />
                   </button>
                 )}
                 <button
                   type="submit"
                   style={{
-                    background: "linear-gradient(135deg, #22C55E, #15803D)",
-                    color: "#fff",
-                    padding: "8px 16px",
+                    background: "linear-gradient(135deg, #10D876, #059E57)",
+                    color: "var(--bg-page)",
+                    padding: "8px 18px",
                     borderRadius: "var(--radius-full)",
                     fontWeight: 700,
                     fontSize: "0.82rem",
                     display: "flex", alignItems: "center", gap: "5px",
-                    boxShadow: "0 2px 10px rgba(34,197,94,0.35)",
+                    boxShadow: "0 2px 12px rgba(16,216,118,0.4)",
                     transition: "all var(--t-fast)",
                     border: "none",
                     cursor: "pointer",
@@ -336,15 +343,14 @@ export function Header() {
               </div>
             </form>
 
-            {/* Instant Search Dropdown */}
             {isSearchOpen && searchResults.length > 0 && (
               <div
                 style={{
                   position: "absolute", top: "calc(100% + 10px)", left: 0, right: 0,
-                  background: "var(--bg-surface)",
+                  background: "var(--bg-card)",
                   borderRadius: "var(--radius-lg)",
-                  boxShadow: "var(--shadow-xl), 0 0 0 1px rgba(34,197,94,0.1)",
-                  border: "1px solid rgba(34,197,94,0.12)",
+                  boxShadow: "var(--shadow-xl), 0 0 0 1px rgba(16,216,118,0.1)",
+                  border: "1px solid rgba(16,216,118,0.12)",
                   overflow: "hidden",
                   zIndex: 250,
                   animation: "fadeDown 0.2s var(--ease-out)",
@@ -353,13 +359,14 @@ export function Header() {
                 <div
                   style={{
                     padding: "8px 16px",
-                    fontSize: "0.7rem", fontWeight: 800, color: "var(--text-muted)",
+                    fontSize: "0.68rem", fontWeight: 700, color: "var(--text-muted)",
                     background: "var(--bg-subtle)",
-                    textTransform: "uppercase", letterSpacing: "0.08em",
+                    textTransform: "uppercase", letterSpacing: "0.1em",
                     display: "flex", alignItems: "center", gap: "6px",
+                    borderBottom: "1px solid var(--border-subtle)",
                   }}
                 >
-                  <Sparkles size={11} color="var(--primary)" />
+                  <Sparkles size={11} color="var(--emerald)" />
                   {locale === "bn" ? "তাজা পণ্যের সাজেশন" : "Fresh Matches"}
                 </div>
                 {searchResults.map(prod => (
@@ -373,16 +380,16 @@ export function Header() {
                       borderBottom: "1px solid var(--border-subtle)",
                       transition: "background var(--t-fast)",
                     }}
-                    onMouseEnter={e => (e.currentTarget.style.background = "rgba(34,197,94,0.05)")}
+                    onMouseEnter={e => (e.currentTarget.style.background = "var(--bg-subtle)")}
                     onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
                   >
                     <img
                       src={prod.images[0]}
                       alt={locale === "bn" ? prod.nameBn : prod.nameEn}
-                      style={{ width: "42px", height: "42px", objectFit: "cover", borderRadius: "var(--radius-sm)" }}
+                      style={{ width: "42px", height: "42px", objectFit: "cover", borderRadius: "var(--radius-sm)", border: "1px solid var(--border-subtle)" }}
                     />
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: "0.88rem", fontWeight: 700, color: "var(--text-main)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      <div style={{ fontSize: "0.88rem", fontWeight: 600, color: "var(--text-main)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                         {locale === "bn" ? prod.nameBn : prod.nameEn}
                       </div>
                       <div style={{ fontSize: "0.72rem", color: "var(--text-muted)", marginTop: "2px" }}>
@@ -392,11 +399,12 @@ export function Header() {
                     <div
                       style={{
                         fontWeight: 800, fontSize: "0.9rem",
-                        color: "var(--primary-dark)",
-                        background: "rgba(34,197,94,0.1)",
-                        padding: "3px 9px",
+                        color: "var(--emerald)",
+                        background: "rgba(16,216,118,0.08)",
+                        padding: "3px 10px",
                         borderRadius: "var(--radius-full)",
                         whiteSpace: "nowrap",
+                        border: "1px solid rgba(16,216,118,0.15)",
                       }}
                     >
                       {formatPrice(prod.basePrice)}
@@ -416,19 +424,19 @@ export function Header() {
               title="Switch Language"
               style={{
                 display: "flex", alignItems: "center", gap: "5px",
-                padding: "7px 12px",
+                padding: "7px 13px",
                 borderRadius: "var(--radius-full)",
                 border: "1.5px solid var(--border-medium)",
-                background: "var(--bg-surface)",
+                background: "var(--bg-card)",
                 color: "var(--text-main)",
-                fontWeight: 800, fontSize: "0.8rem",
+                fontWeight: 700, fontSize: "0.8rem",
                 transition: "all var(--t-fast)",
                 cursor: "pointer",
               }}
-              onMouseEnter={e => { e.currentTarget.style.borderColor = "var(--primary)"; e.currentTarget.style.background = "rgba(34,197,94,0.06)"; }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = "var(--border-medium)"; e.currentTarget.style.background = "var(--bg-surface)"; }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = "var(--emerald)"; e.currentTarget.style.background = "rgba(16,216,118,0.06)"; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = "var(--border-medium)"; e.currentTarget.style.background = "var(--bg-card)"; }}
             >
-              <Globe size={14} color="var(--primary)" />
+              <Globe size={14} color="var(--emerald)" />
               <span>{locale === "bn" ? "EN" : "বাং"}</span>
             </button>
 
@@ -438,27 +446,27 @@ export function Header() {
               style={{
                 position: "relative", padding: "9px",
                 borderRadius: "50%",
-                background: "var(--bg-subtle)",
+                background: "var(--bg-card)",
                 color: "var(--text-main)",
                 display: "flex", alignItems: "center", justifyContent: "center",
                 transition: "all var(--t-fast)",
-                border: "1.5px solid var(--border-subtle)",
+                border: "1.5px solid var(--border-medium)",
               }}
               title={t.wishlist}
-              onMouseEnter={e => { e.currentTarget.style.background = "var(--crimson-light)"; e.currentTarget.style.borderColor = "rgba(239,68,68,0.25)"; }}
-              onMouseLeave={e => { e.currentTarget.style.background = "var(--bg-subtle)"; e.currentTarget.style.borderColor = "var(--border-subtle)"; }}
+              onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,77,109,0.08)"; e.currentTarget.style.borderColor = "rgba(255,77,109,0.25)"; }}
+              onMouseLeave={e => { e.currentTarget.style.background = "var(--bg-card)"; e.currentTarget.style.borderColor = "var(--border-medium)"; }}
             >
-              <Heart size={18} color={mounted && wishlistIds.length > 0 ? "var(--crimson)" : "var(--text-muted)"} fill={mounted && wishlistIds.length > 0 ? "var(--crimson)" : "none"} />
+              <Heart size={17} color={mounted && wishlistIds.length > 0 ? "var(--rose)" : "var(--text-muted)"} fill={mounted && wishlistIds.length > 0 ? "var(--rose)" : "none"} />
               {mounted && wishlistIds.length > 0 && (
                 <span
                   style={{
                     position: "absolute", top: "-4px", right: "-4px",
                     width: "18px", height: "18px",
                     borderRadius: "50%",
-                    background: "var(--crimson)",
+                    background: "var(--rose)",
                     color: "#fff", fontSize: "0.65rem", fontWeight: 800,
                     display: "flex", alignItems: "center", justifyContent: "center",
-                    border: "2px solid var(--bg-surface)",
+                    border: "2px solid var(--bg-page)",
                     animation: "badgePop 0.3s ease",
                   }}
                 >
@@ -467,25 +475,25 @@ export function Header() {
               )}
             </Link>
 
-            {/* Live Track Order */}
+            {/* Track Order */}
             <Link
               href="/track"
+              className="hidden-mobile"
               style={{
                 display: "flex", alignItems: "center", gap: "5px",
-                padding: "8px 12px",
+                padding: "8px 13px",
                 borderRadius: "var(--radius-full)",
-                background: "rgba(5, 150, 105, 0.08)",
-                color: "var(--primary-dark)",
-                fontWeight: 700, fontSize: "0.8rem",
-                border: "1.5px solid rgba(5, 150, 105, 0.2)",
+                background: "rgba(16, 216, 118, 0.06)",
+                color: "var(--emerald)",
+                fontWeight: 600, fontSize: "0.8rem",
+                border: "1.5px solid rgba(16, 216, 118, 0.18)",
                 transition: "all var(--t-fast)",
               }}
-              title="অর্ডার ট্র্যাক করুন"
-              onMouseEnter={e => { e.currentTarget.style.background = "rgba(5, 150, 105, 0.15)"; }}
-              onMouseLeave={e => { e.currentTarget.style.background = "rgba(5, 150, 105, 0.08)"; }}
+              onMouseEnter={e => { e.currentTarget.style.background = "rgba(16,216,118,0.12)"; }}
+              onMouseLeave={e => { e.currentTarget.style.background = "rgba(16,216,118,0.06)"; }}
             >
-              <Zap size={14} color="var(--primary)" />
-              <span>{locale === "bn" ? "ট্র্যাকিং" : "Track"}</span>
+              <Zap size={14} color="var(--emerald)" />
+              <span>{locale === "bn" ? "ট্র্যাক" : "Track"}</span>
             </Link>
 
             {/* Account */}
@@ -496,16 +504,16 @@ export function Header() {
                 display: "flex", alignItems: "center", gap: "6px",
                 padding: "8px 14px",
                 borderRadius: "var(--radius-full)",
-                background: "var(--bg-subtle)",
-                color: "var(--text-main)",
-                fontWeight: 700, fontSize: "0.83rem",
-                border: "1.5px solid var(--border-subtle)",
+                background: "var(--bg-card)",
+                color: "var(--text-body)",
+                fontWeight: 600, fontSize: "0.82rem",
+                border: "1.5px solid var(--border-medium)",
                 transition: "all var(--t-fast)",
               }}
-              onMouseEnter={e => { e.currentTarget.style.background = "var(--bg-muted)"; e.currentTarget.style.borderColor = "var(--border-medium)"; }}
-              onMouseLeave={e => { e.currentTarget.style.background = "var(--bg-subtle)"; e.currentTarget.style.borderColor = "var(--border-subtle)"; }}
+              onMouseEnter={e => { e.currentTarget.style.background = "var(--bg-subtle)"; e.currentTarget.style.borderColor = "var(--border-strong)"; }}
+              onMouseLeave={e => { e.currentTarget.style.background = "var(--bg-card)"; e.currentTarget.style.borderColor = "var(--border-medium)"; }}
             >
-              <User size={16} />
+              <User size={15} />
               <span>{t.login}</span>
             </Link>
 
@@ -516,23 +524,23 @@ export function Header() {
                 display: "flex", alignItems: "center", gap: "10px",
                 padding: "9px 18px",
                 borderRadius: "var(--radius-full)",
-                background: "linear-gradient(135deg, #22C55E 0%, #15803D 100%)",
-                color: "#fff",
+                background: "linear-gradient(135deg, #10D876 0%, #059E57 100%)",
+                color: "var(--bg-page)",
                 fontWeight: 800,
                 boxShadow: cartPulse
-                  ? "0 0 0 8px rgba(34,197,94,0), 0 4px 20px rgba(34,197,94,0.5)"
-                  : "0 4px 16px rgba(34,197,94,0.35)",
+                  ? "0 0 0 8px rgba(16,216,118,0), 0 4px 24px rgba(16,216,118,0.55)"
+                  : "0 4px 20px rgba(16,216,118,0.4)",
                 position: "relative",
                 transition: "all var(--t-smooth)",
                 animation: cartPulse ? "glowRing 0.6s ease" : "none",
                 border: "none",
                 cursor: "pointer",
               }}
-              onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 8px 28px rgba(34,197,94,0.45)"; }}
-              onMouseLeave={e => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "0 4px 16px rgba(34,197,94,0.35)"; }}
+              onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-2px) scale(1.02)"; e.currentTarget.style.boxShadow = "0 10px 32px rgba(16,216,118,0.55)"; }}
+              onMouseLeave={e => { e.currentTarget.style.transform = "translateY(0) scale(1)"; e.currentTarget.style.boxShadow = "0 4px 20px rgba(16,216,118,0.4)"; }}
             >
               <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
-                <ShoppingCart size={19} />
+                <ShoppingCart size={18} />
                 {mounted && getItemCount() > 0 && (
                   <span
                     style={{
@@ -541,12 +549,12 @@ export function Header() {
                       color: "#000",
                       borderRadius: "50%",
                       minWidth: "19px", height: "19px",
-                      fontSize: "0.68rem", fontWeight: 900,
+                      fontSize: "0.65rem", fontWeight: 900,
                       display: "flex", alignItems: "center", justifyContent: "center",
                       padding: "2px",
-                      boxShadow: "0 2px 8px rgba(0,0,0,0.25)",
+                      boxShadow: "0 2px 8px rgba(0,0,0,0.5)",
                       animation: "countPop 0.4s var(--ease-bounce)",
-                      border: "2px solid rgba(34,197,94,0.3)",
+                      border: "2px solid rgba(0,0,0,0.2)",
                     }}
                   >
                     {getItemCount()}
@@ -565,9 +573,9 @@ export function Header() {
       {/* 3 ── Category Nav Strip */}
       <div
         style={{
-          background: "rgba(247, 246, 242, 0.98)",
-          backdropFilter: "blur(12px)",
-          borderBottom: "1px solid var(--border-subtle)",
+          background: "rgba(8, 9, 11, 0.95)",
+          backdropFilter: "blur(16px)",
+          borderBottom: "1px solid rgba(255,255,255,0.06)",
           padding: "0",
           overflowX: "auto",
           scrollbarWidth: "none",
@@ -587,17 +595,17 @@ export function Header() {
             href="/category/all"
             style={{
               display: "flex", alignItems: "center", gap: "6px",
-              color: "var(--primary-dark)",
-              background: "rgba(34,197,94,0.1)",
-              padding: "8px 14px",
+              color: "var(--emerald)",
+              background: "rgba(16,216,118,0.07)",
+              padding: "9px 16px",
               borderRadius: "0",
-              fontSize: "0.83rem", fontWeight: 800,
-              borderBottom: "2.5px solid var(--primary)",
+              fontSize: "0.82rem", fontWeight: 700,
+              borderBottom: "2px solid var(--emerald)",
               transition: "all var(--t-fast)",
               flexShrink: 0,
             }}
           >
-            <Zap size={13} fill="var(--primary)" color="var(--primary)" />
+            <Zap size={13} fill="var(--emerald)" color="var(--emerald)" />
             <span>{locale === "bn" ? "সব অফার" : "All Deals"}</span>
           </Link>
 
@@ -607,21 +615,21 @@ export function Header() {
               href={`/category/${cat.slug}`}
               style={{
                 display: "flex", alignItems: "center", gap: "5px",
-                color: "var(--text-body)",
-                padding: "8px 12px",
-                fontSize: "0.82rem", fontWeight: 600,
-                borderBottom: "2.5px solid transparent",
+                color: "var(--text-muted)",
+                padding: "9px 13px",
+                fontSize: "0.82rem", fontWeight: 500,
+                borderBottom: "2px solid transparent",
                 transition: "all var(--t-fast)",
                 flexShrink: 0,
                 whiteSpace: "nowrap",
               }}
               onMouseEnter={e => {
-                e.currentTarget.style.color = "var(--primary-dark)";
-                e.currentTarget.style.borderBottomColor = "var(--primary)";
-                e.currentTarget.style.background = "rgba(34,197,94,0.05)";
+                e.currentTarget.style.color = "var(--emerald)";
+                e.currentTarget.style.borderBottomColor = "var(--emerald)";
+                e.currentTarget.style.background = "rgba(16,216,118,0.05)";
               }}
               onMouseLeave={e => {
-                e.currentTarget.style.color = "var(--text-body)";
+                e.currentTarget.style.color = "var(--text-muted)";
                 e.currentTarget.style.borderBottomColor = "transparent";
                 e.currentTarget.style.background = "transparent";
               }}

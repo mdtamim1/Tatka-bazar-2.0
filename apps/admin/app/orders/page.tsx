@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import {
   ShoppingBag, Search, Plus, X, Save, Bike,
@@ -417,8 +417,8 @@ function CreateOrderModal({ onClose, onCreate }: {
   );
 }
 
-/* ── Main Page ─────────────────────────────────────────────── */
-export default function AdminOrdersPage() {
+/* ── Main Page Content ─────────────────────────────────────── */
+function AdminOrdersContent() {
   const searchParams = useSearchParams();
   const { orders, updateOrder, createOrder, riders, newOrderAlert, dismissAlert, playTestSound } = useAdmin();
 
@@ -704,5 +704,13 @@ export default function AdminOrdersPage() {
         />
       )}
     </div>
+  );
+}
+
+export default function AdminOrdersPage() {
+  return (
+    <Suspense fallback={<div style={{ padding: "32px", textAlign: "center", color: "var(--text-3)" }}>অর্ডার লোড হচ্ছে...</div>}>
+      <AdminOrdersContent />
+    </Suspense>
   );
 }

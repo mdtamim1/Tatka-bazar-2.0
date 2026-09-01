@@ -53,6 +53,7 @@ export interface VendorProduct {
 }
 
 export type FulfillmentStatus =
+  | "PENDING_ACCEPTANCE"
   | "PREPARING"
   | "READY_FOR_PICKUP"
   | "PICKED_UP_BY_RIDER"

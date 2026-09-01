@@ -309,7 +309,7 @@ export function VendorProvider({ children }: { children: React.ReactNode }) {
           if (freshSubOrders.length > 0) {
             setKnownOrderIds((prevKnown) => {
               const newlyArrived = freshSubOrders.filter(so => !prevKnown.has(so.id));
-              if (newlyArrived.length > 0) {
+              if (newlyArrived.length > 0 && newlyArrived[0]) {
                 const latest = newlyArrived[0];
                 // 🔔 Trigger sweet Ting-Tong sound!
                 audioAlert.playOrderAssignedSound();

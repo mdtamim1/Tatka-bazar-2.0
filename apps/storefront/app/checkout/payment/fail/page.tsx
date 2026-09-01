@@ -1,12 +1,12 @@
 "use client";
 
-import React from "react";
+import React, { Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { AlertCircle, RotateCcw, ShoppingBag } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 
-export default function PaymentFailPage() {
+function PaymentFailContent() {
   const searchParams = useSearchParams();
   const orderNumber = searchParams.get("order") || "";
   const { t, locale } = useLanguage();
@@ -16,12 +16,12 @@ export default function PaymentFailPage() {
       <div className="container" style={{ maxWidth: "540px" }}>
         <div
           style={{
-            background: "var(--bg-surface)",
-            borderRadius: "var(--radius-xl)",
+            background: "rgba(14, 17, 23, 0.95)",
+            borderRadius: "var(--radius-2xl)",
             padding: "40px 30px",
             textAlign: "center",
-            border: "2px solid #EF4444",
-            boxShadow: "var(--shadow-xl)",
+            border: "1px solid rgba(255, 77, 109, 0.3)",
+            boxShadow: "var(--shadow-xl), 0 0 60px rgba(255, 77, 109, 0.15)",
           }}
         >
           <div
@@ -29,8 +29,8 @@ export default function PaymentFailPage() {
               width: "72px",
               height: "72px",
               borderRadius: "50%",
-              background: "#FEE2E2",
-              color: "#DC2626",
+              background: "rgba(255, 77, 109, 0.15)",
+              color: "var(--rose)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -40,12 +40,14 @@ export default function PaymentFailPage() {
             <AlertCircle size={42} />
           </div>
 
-          <h2 style={{ fontSize: "1.5rem", fontWeight: 800, color: "var(--text-main)", marginBottom: "8px" }}>
+          <h2 style={{ fontSize: "1.5rem", fontWeight: 800, color: "var(--text-main)", marginBottom: "8px", fontFamily: "var(--font-heading)" }}>
             {locale === "bn" ? "পেমেন্ট ব্যর্থ হয়েছে!" : "Payment Failed or Cancelled"}
           </h2>
 
-          <p style={{ color: "var(--text-muted)", fontSize: "0.9rem", marginBottom: "24px" }}>
-            আপনার একাউন্ট থেকে কোনো অর্থ কাটা হয়নি। আপনি পুনরায় চেষ্টা করতে পারেন অথবা ক্যাশ অন ডেলিভারি (COD) বেছে নিতে পারেন।
+          <p style={{ color: "var(--text-muted)", fontSize: "0.9rem", marginBottom: "24px", lineHeight: 1.6 }}>
+            {locale === "bn"
+              ? "আপনার একাউন্ট থেকে কোনো অর্থ কাটা হয়নি। আপনি পুনরায় চেষ্টা করতে পারেন অথবা ক্যাশ অন ডেলিভারি (COD) বেছে নিতে পারেন।"
+              : "No funds were deducted. You can retry the payment or choose Cash on Delivery (COD)."}
           </p>
 
           <div style={{ display: "flex", gap: "12px", justifyContent: "center" }}>
@@ -56,16 +58,25 @@ export default function PaymentFailPage() {
                 display: "inline-flex",
                 alignItems: "center",
                 gap: "8px",
-                padding: "12px 20px",
-                borderRadius: "var(--radius-md)",
+                padding: "12px 24px",
+                borderRadius: "var(--radius-full)",
+                fontWeight: 800,
               }}
             >
               <RotateCcw size={18} />
-              <span>পুনরায় চেষ্টা করুন (Retry)</span>
+              <span>{locale === "bn" ? "পুনরায় চেষ্টা করুন (Retry)" : "Retry Checkout"}</span>
             </Link>
           </div>
         </div>
       </div>
     </div>
+  );
+}
+
+export default function PaymentFailPage() {
+  return (
+    <Suspense fallback={<div style={{ minHeight: "80vh", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text-muted)" }}>Loading...</div>}>
+      <PaymentFailContent />
+    </Suspense>
   );
 }
