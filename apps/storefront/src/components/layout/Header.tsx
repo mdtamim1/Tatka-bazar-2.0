@@ -4,12 +4,15 @@ import React, { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
-  Search, ShoppingCart, Heart, Globe, User,
-  ChevronDown, X, Zap, Sparkles,
+  Search, ShoppingBag, User, Globe, ChevronDown, X,
+  MoreVertical, Heart, HelpCircle, CreditCard,
+  History, Settings, LogOut, Bookmark, Bell, Eye,
+  Sparkles, Zap, MessageSquare, PhoneCall, ShieldCheck,
+  Store, Flame
 } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 import { useCartStore } from "@/lib/cart-store";
-import { PRODUCTS } from "@/lib/catalog";
+import { PRODUCTS, CATEGORIES } from "@/lib/catalog";
 import { useDebounce } from "@/hooks/useDebounce";
 
 export function Header() {
@@ -17,14 +20,17 @@ export function Header() {
   const { locale, t, toggleLocale, formatPrice } = useLanguage();
   const { getItemCount, getGrandTotal, openCart, wishlistIds } = useCartStore();
 
+  // Navigation State
   const [searchQuery, setSearchQuery]           = useState("");
   const debouncedSearchQuery                    = useDebounce(searchQuery, 250);
   const [isSearchOpen, setIsSearchOpen]         = useState(false);
+  const [isDrawerOpen, setIsDrawerOpen]         = useState(false);
+  const [activeDropdown, setActiveDropdown]     = useState<string | null>(null);
   const [mounted, setMounted]                   = useState(false);
-  const [cartPulse, setCartPulse]               = useState(false);
   const [scrolled, setScrolled]                 = useState(false);
 
   const searchRef = useRef<HTMLDivElement>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -33,7 +39,7 @@ export function Header() {
         setIsSearchOpen(false);
       }
     };
-    const handleScroll = () => setScrolled(window.scrollY > 10);
+    const handleScroll = () => setScrolled(window.scrollY > 8);
     document.addEventListener("mousedown", handleClickOutside);
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => {
@@ -42,16 +48,11 @@ export function Header() {
     };
   }, []);
 
-  const prevCount = useRef(0);
   useEffect(() => {
-    if (!mounted) return;
-    const count = getItemCount();
-    if (count !== prevCount.current) {
-      setCartPulse(true);
-      setTimeout(() => setCartPulse(false), 600);
-      prevCount.current = count;
+    if (isSearchOpen && searchInputRef.current) {
+      searchInputRef.current.focus();
     }
-  });
+  }, [isSearchOpen]);
 
   const searchResults = debouncedSearchQuery.trim()
     ? PRODUCTS.filter(p => {
@@ -62,7 +63,7 @@ export function Header() {
           p.categoryNameBn.toLowerCase().includes(q) ||
           p.categoryNameEn.toLowerCase().includes(q)
         );
-      }).slice(0, 6)
+      }).slice(0, 5)
     : [];
 
   const handleSearchSubmit = (e: React.FormEvent) => {
@@ -73,457 +74,732 @@ export function Header() {
     }
   };
 
-  const announcementItems = [
-    locale === "bn" ? "⚡ আজ অর্ডার করুন, ৪ ঘন্টায় পান" : "⚡ Order today, get in 4 hours",
-    locale === "bn" ? "🌿 ১০০% জৈব সবজি — রাসায়নিকমুক্ত" : "🌿 100% organic vegetables — pesticide-free",
-    locale === "bn" ? "🐟 আজ ধরা তাজা ইলিশ উপলব্ধ" : "🐟 Fresh Hilsa caught today — limited stock",
-    locale === "bn" ? "🏪 B2B পাইকারি অ্যাকাউন্ট — বিশেষ ছাড়" : "🏪 B2B wholesale accounts — special rates",
-    locale === "bn" ? "📱 অ্যাপে প্রথম অর্ডারে ৳১০০ ক্যাশব্যাক" : "📱 ৳100 cashback on first app order",
-  ];
+  const handleLogout = () => {
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("tatka_token");
+    }
+    setIsDrawerOpen(false);
+    router.push("/login");
+  };
 
   return (
-    <header style={{ position: "sticky", top: 0, zIndex: 200, width: "100%" }}>
-
-      {/* 1 ── Announcement Marquee Bar */}
-      <div
+    <>
+      <header
         style={{
-          background: "linear-gradient(90deg, #030507 0%, #060E12 40%, #050A0E 60%, #030507 100%)",
-          borderBottom: "1px solid rgba(16,216,118,0.12)",
-          padding: "6px 0",
-          overflow: "hidden",
-          position: "relative",
+          position: "sticky",
+          top: 0,
+          zIndex: 200,
+          width: "100%",
+          background: "#ffffff",
+          borderBottom: "1px solid #e2e8f0",
+          boxShadow: scrolled ? "0 4px 20px rgba(0, 0, 0, 0.05)" : "none",
+          transition: "box-shadow 0.25s ease",
+          fontFamily: "var(--font-body, system-ui, -apple-system, sans-serif)",
         }}
       >
-        <div style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: "60px", background: "linear-gradient(90deg, #030507, transparent)", zIndex: 2, pointerEvents: "none" }} />
-        <div style={{ position: "absolute", right: 0, top: 0, bottom: 0, width: "60px", background: "linear-gradient(270deg, #030507, transparent)", zIndex: 2, pointerEvents: "none" }} />
-
-        <div className="marquee-track" style={{ gap: "0px" }}>
-          {[...announcementItems, ...announcementItems].map((item, i) => (
-            <span
-              key={i}
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                fontSize: "0.75rem",
-                fontWeight: 500,
-                whiteSpace: "nowrap",
-                padding: "0 30px",
-                color: i % 2 === 0 ? "rgba(240,242,247,0.75)" : "var(--emerald)",
-                letterSpacing: "0.01em",
-              }}
-            >
-              {item}
-            </span>
-          ))}
-        </div>
-      </div>
-
-      {/* 2 ── Main Nav */}
-      <div
-        className="glass-header"
-        style={{
-          padding: "10px 0",
-          background: "rgba(10, 14, 20, 0.94)",
-          backdropFilter: "blur(18px)",
-          borderBottom: "1px solid rgba(255,255,255,0.06)",
-          boxShadow: scrolled
-            ? "0 4px 30px rgba(0,0,0,0.7), 0 1px 0 rgba(16,216,118,0.1)"
-            : "0 1px 0 rgba(255,255,255,0.04)",
-          transition: "all 0.3s ease",
-        }}
-      >
-        <div className="container">
-          {/* Main Flex Row */}
+        <div style={{ maxWidth: "1280px", margin: "0 auto", padding: "0 24px" }}>
           <div
             style={{
               display: "flex",
               alignItems: "center",
               justifyContent: "space-between",
-              gap: "12px",
+              height: "72px",
+              gap: "20px",
             }}
           >
-            {/* Logo */}
-            <Link href="/" style={{ display: "flex", alignItems: "center", gap: "10px", flexShrink: 0, textDecoration: "none" }}>
-              <div
-                style={{
-                  width: "38px", height: "38px",
-                  borderRadius: "10px",
-                  background: "linear-gradient(135deg, #10D876 0%, #047A43 100%)",
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  color: "#fff",
-                  boxShadow: "0 4px 18px rgba(16,216,118,0.35)",
-                  flexShrink: 0,
-                }}
-              >
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
-                </svg>
-              </div>
-              <div>
-                <div
-                  style={{
-                    fontSize: "1.18rem",
-                    fontWeight: 800,
-                    letterSpacing: "-0.03em",
-                    lineHeight: 1.1,
-                    fontFamily: "var(--font-heading)",
-                  }}
-                >
-                  <span style={{ color: "var(--text-main)" }}>
-                    {locale === "bn" ? "তাতকা" : "Tatka"}
-                  </span>
-                  <span style={{ color: "var(--emerald)", marginLeft: "3px" }}>
-                    {locale === "bn" ? " বাজার" : " Bazar"}
-                  </span>
-                  <span
-                    style={{
-                      fontSize: "0.55rem",
-                      padding: "2px 5px",
-                      background: "linear-gradient(135deg, #F5C842, #D4A017)",
-                      color: "#000",
-                      borderRadius: "4px",
-                      fontWeight: 800,
-                      letterSpacing: "0.02em",
-                      marginLeft: "5px",
-                      verticalAlign: "middle",
-                    }}
-                  >
-                    2.0
-                  </span>
-                </div>
-                <p className="hidden-mobile" style={{ fontSize: "0.66rem", color: "var(--text-muted)", fontWeight: 500, margin: "2px 0 0 0" }}>
-                  {t.tagline}
-                </p>
-              </div>
-            </Link>
-
-            {/* Desktop Search Bar (Hidden on Mobile) */}
-            <div ref={searchRef} className="hidden-mobile" style={{ position: "relative", flex: 1, maxWidth: "520px", margin: "0 10px" }}>
-              <form onSubmit={handleSearchSubmit}>
-                <div
-                  style={{
-                    display: "flex", alignItems: "center",
-                    background: isSearchOpen ? "#131b26" : "rgba(255, 255, 255, 0.05)",
-                    borderRadius: "var(--radius-full)",
-                    padding: "3px 4px 3px 16px",
-                    border: isSearchOpen
-                      ? "1.5px solid var(--emerald)"
-                      : "1.5px solid rgba(255, 255, 255, 0.1)",
-                    boxShadow: isSearchOpen
-                      ? "0 0 0 3px rgba(16,216,118,0.15)"
-                      : "none",
-                    transition: "all 0.2s ease",
-                  }}
-                >
-                  <Search size={16} color={isSearchOpen ? "var(--emerald)" : "var(--text-muted)"} style={{ flexShrink: 0 }} />
-                  <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={e => { setSearchQuery(e.target.value); setIsSearchOpen(true); }}
-                    onFocus={() => setIsSearchOpen(true)}
-                    placeholder={t.searchPlaceholder}
-                    style={{
-                      width: "100%", background: "transparent",
-                      border: "none", outline: "none",
-                      padding: "8px 10px",
-                      color: "#ffffff",
-                      fontSize: "0.85rem",
-                    }}
-                  />
-                  {searchQuery && (
-                    <button
-                      type="button"
-                      onClick={() => { setSearchQuery(""); setIsSearchOpen(false); }}
-                      style={{ padding: "4px", color: "var(--text-muted)", display: "flex", alignItems: "center", background: "none", border: "none", cursor: "pointer" }}
-                    >
-                      <X size={14} />
-                    </button>
-                  )}
-                  <button
-                    type="submit"
-                    style={{
-                      background: "linear-gradient(135deg, #10D876, #059E57)",
-                      color: "#03140a",
-                      padding: "7px 16px",
-                      borderRadius: "var(--radius-full)",
-                      fontWeight: 700,
-                      fontSize: "0.8rem",
-                      display: "flex", alignItems: "center", gap: "4px",
-                      border: "none",
-                      cursor: "pointer",
-                      flexShrink: 0,
-                    }}
-                  >
-                    <Search size={13} />
-                    <span>{locale === "bn" ? "খুঁজুন" : "Search"}</span>
-                  </button>
-                </div>
-              </form>
-
-              {/* Desktop Suggestions Dropdown */}
-              {isSearchOpen && searchResults.length > 0 && (
-                <div
-                  style={{
-                    position: "absolute", top: "calc(100% + 8px)", left: 0, right: 0,
-                    background: "#141b26",
-                    borderRadius: "14px",
-                    boxShadow: "0 16px 40px rgba(0,0,0,0.7), 0 0 0 1px rgba(16,216,118,0.15)",
-                    border: "1px solid rgba(16,216,118,0.18)",
-                    overflow: "hidden",
-                    zIndex: 250,
-                  }}
-                >
-                  <div
-                    style={{
-                      padding: "8px 14px",
-                      fontSize: "0.68rem", fontWeight: 700, color: "var(--text-muted)",
-                      background: "rgba(255,255,255,0.03)",
-                      textTransform: "uppercase", letterSpacing: "0.08em",
-                      display: "flex", alignItems: "center", gap: "6px",
-                      borderBottom: "1px solid rgba(255,255,255,0.06)",
-                    }}
-                  >
-                    <Sparkles size={11} color="var(--emerald)" />
-                    {locale === "bn" ? "তাজা পণ্যের সাজেশন" : "Fresh Matches"}
-                  </div>
-                  {searchResults.map(prod => (
-                    <Link
-                      key={prod.id}
-                      href={`/product/${prod.slug}`}
-                      onClick={() => setIsSearchOpen(false)}
-                      style={{
-                        display: "flex", alignItems: "center", gap: "12px",
-                        padding: "9px 14px",
-                        borderBottom: "1px solid rgba(255,255,255,0.04)",
-                        textDecoration: "none",
-                        color: "inherit",
-                        transition: "background 0.15s ease",
-                      }}
-                      onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,255,255,0.05)")}
-                      onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
-                    >
-                      <img
-                        src={prod.images[0]}
-                        alt={locale === "bn" ? prod.nameBn : prod.nameEn}
-                        style={{ width: "38px", height: "38px", objectFit: "cover", borderRadius: "8px" }}
-                      />
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: "0.85rem", fontWeight: 600, color: "#ffffff", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                          {locale === "bn" ? prod.nameBn : prod.nameEn}
-                        </div>
-                        <div style={{ fontSize: "0.7rem", color: "var(--text-muted)" }}>
-                          {locale === "bn" ? prod.categoryNameBn : prod.categoryNameEn}
-                        </div>
-                      </div>
-                      <div
-                        style={{
-                          fontWeight: 800, fontSize: "0.86rem",
-                          color: "var(--emerald)",
-                        }}
-                      >
-                        {formatPrice(prod.basePrice)}
-                      </div>
-                    </Link>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Right Action Controls */}
-            <div style={{ display: "flex", alignItems: "center", gap: "8px", flexShrink: 0 }}>
-
-              {/* Language Switcher */}
+            {/* ── Left Side: 3-Dot Menu + Logo + Main Nav Links ── */}
+            <div style={{ display: "flex", alignItems: "center", gap: "28px" }}>
+              
+              {/* 3-Dot Drawer Trigger (Image 2 style) */}
               <button
-                onClick={toggleLocale}
-                title="Switch Language"
+                type="button"
+                onClick={() => setIsDrawerOpen(true)}
+                aria-label="Open Navigation Drawer"
                 style={{
-                  display: "flex", alignItems: "center", gap: "4px",
-                  padding: "6px 10px",
-                  borderRadius: "var(--radius-full)",
-                  border: "1px solid rgba(255,255,255,0.12)",
-                  background: "rgba(255,255,255,0.05)",
-                  color: "#ffffff",
-                  fontWeight: 700, fontSize: "0.76rem",
+                  width: "38px",
+                  height: "38px",
+                  borderRadius: "8px",
+                  border: "1px solid #e2e8f0",
+                  background: "#f8fafc",
+                  color: "#0f172a",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
                   cursor: "pointer",
-                  transition: "all 0.2s ease",
+                  transition: "all 0.15s ease",
                 }}
+                onMouseEnter={e => { e.currentTarget.style.background = "#f1f5f9"; e.currentTarget.style.borderColor = "#cbd5e1"; }}
+                onMouseLeave={e => { e.currentTarget.style.background = "#f8fafc"; e.currentTarget.style.borderColor = "#e2e8f0"; }}
               >
-                <Globe size={13} color="var(--emerald)" />
-                <span>{locale === "bn" ? "EN" : "বাং"}</span>
+                <MoreVertical size={18} />
               </button>
 
-              {/* Wishlist */}
+              {/* Logo (Image 1 style) */}
               <Link
-                href="/account"
+                href="/"
                 style={{
-                  position: "relative",
-                  padding: "8px",
-                  borderRadius: "50%",
-                  background: "rgba(255,255,255,0.05)",
-                  color: "#ffffff",
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  border: "1px solid rgba(255,255,255,0.1)",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "10px",
                   textDecoration: "none",
-                }}
-                title={t.wishlist}
-              >
-                <Heart size={16} color={mounted && wishlistIds.length > 0 ? "var(--rose)" : "var(--text-muted)"} fill={mounted && wishlistIds.length > 0 ? "var(--rose)" : "none"} />
-                {mounted && wishlistIds.length > 0 && (
-                  <span
-                    style={{
-                      position: "absolute", top: "-3px", right: "-3px",
-                      width: "16px", height: "16px",
-                      borderRadius: "50%",
-                      background: "var(--rose)",
-                      color: "#fff", fontSize: "0.62rem", fontWeight: 800,
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                      border: "2px solid #080c11",
-                    }}
-                  >
-                    {wishlistIds.length}
-                  </span>
-                )}
-              </Link>
-
-              {/* Track Order (Desktop) */}
-              <Link
-                href="/track"
-                className="hidden-mobile"
-                style={{
-                  display: "flex", alignItems: "center", gap: "5px",
-                  padding: "7px 12px",
-                  borderRadius: "var(--radius-full)",
-                  background: "rgba(16, 216, 118, 0.08)",
-                  color: "var(--emerald)",
-                  fontWeight: 600, fontSize: "0.78rem",
-                  border: "1px solid rgba(16, 216, 118, 0.2)",
-                  textDecoration: "none",
-                }}
-              >
-                <Zap size={13} color="var(--emerald)" />
-                <span>{locale === "bn" ? "ট্র্যাক" : "Track"}</span>
-              </Link>
-
-              {/* Account Link */}
-              <Link
-                href="/account"
-                style={{
-                  display: "flex", alignItems: "center", gap: "6px",
-                  padding: "7px 12px",
-                  borderRadius: "var(--radius-full)",
-                  background: "rgba(255,255,255,0.05)",
-                  color: "#ffffff",
-                  fontWeight: 600, fontSize: "0.8rem",
-                  border: "1px solid rgba(255,255,255,0.12)",
-                  textDecoration: "none",
-                }}
-              >
-                <User size={14} color="var(--emerald)" />
-                <span className="hidden-mobile">{locale === "bn" ? "অ্যাকাউন্ট" : "Account"}</span>
-              </Link>
-
-              {/* Cart Button */}
-              <button
-                onClick={openCart}
-                style={{
-                  display: "flex", alignItems: "center", gap: "8px",
-                  padding: "7px 14px",
-                  borderRadius: "var(--radius-full)",
-                  background: "linear-gradient(135deg, #10D876 0%, #059E57 100%)",
-                  color: "#03140a",
-                  fontWeight: 800,
-                  boxShadow: "0 4px 16px rgba(16,216,118,0.4)",
-                  border: "none",
-                  cursor: "pointer",
                   flexShrink: 0,
                 }}
               >
-                <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
-                  <ShoppingCart size={16} />
-                  {mounted && getItemCount() > 0 && (
-                    <span
+                {/* Stylized Modern Geometry Logo Icon */}
+                <div
+                  style={{
+                    width: "32px",
+                    height: "32px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    color: "#0f172a",
+                  }}
+                >
+                  <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                    <polygon points="12 2 2 7 12 12 22 7 12 2" />
+                    <polyline points="2 17 12 22 22 17" />
+                    <polyline points="2 12 12 17 22 12" />
+                  </svg>
+                </div>
+                <span
+                  style={{
+                    fontSize: "1.25rem",
+                    fontWeight: 900,
+                    color: "#0f172a",
+                    letterSpacing: "-0.03em",
+                  }}
+                >
+                  TatkaBazar<span style={{ color: "#10D876" }}>.com</span>
+                </span>
+              </Link>
+
+              {/* Desktop Nav Links (STORE ⌵, COLLECTIONS ⌵, SALE, BLOG) */}
+              <nav
+                className="hidden-mobile"
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "24px",
+                  marginLeft: "8px",
+                }}
+              >
+                {/* STORE ⌵ */}
+                <div
+                  style={{ position: "relative" }}
+                  onMouseEnter={() => setActiveDropdown("store")}
+                  onMouseLeave={() => setActiveDropdown(null)}
+                >
+                  <button
+                    type="button"
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "4px",
+                      background: "none",
+                      border: "none",
+                      fontSize: "0.86rem",
+                      fontWeight: 700,
+                      color: activeDropdown === "store" ? "#007A48" : "#0f172a",
+                      textTransform: "uppercase",
+                      letterSpacing: "0.04em",
+                      cursor: "pointer",
+                      padding: "8px 0",
+                    }}
+                  >
+                    <span>{locale === "bn" ? "স্টোর" : "STORE"}</span>
+                    <ChevronDown size={14} />
+                  </button>
+
+                  {/* Dropdown Menu */}
+                  {activeDropdown === "store" && (
+                    <div
                       style={{
-                        position: "absolute", top: "-8px", right: "-10px",
-                        background: "#000",
-                        color: "#fff",
-                        borderRadius: "50%",
-                        minWidth: "17px", height: "17px",
-                        fontSize: "0.62rem", fontWeight: 900,
-                        display: "flex", alignItems: "center", justifyContent: "center",
-                        padding: "2px",
-                        border: "1px solid #10D876",
+                        position: "absolute",
+                        top: "100%",
+                        left: 0,
+                        width: "240px",
+                        background: "#ffffff",
+                        border: "1px solid #e2e8f0",
+                        borderRadius: "12px",
+                        padding: "10px",
+                        boxShadow: "0 12px 32px rgba(0, 0, 0, 0.08)",
+                        zIndex: 250,
                       }}
                     >
-                      {getItemCount()}
-                    </span>
+                      {CATEGORIES.map(cat => (
+                        <Link
+                          key={cat.id}
+                          href={`/category/${cat.slug}`}
+                          onClick={() => setActiveDropdown(null)}
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "10px",
+                            padding: "9px 12px",
+                            borderRadius: "8px",
+                            color: "#334155",
+                            textDecoration: "none",
+                            fontSize: "0.85rem",
+                            fontWeight: 600,
+                            transition: "all 0.15s ease",
+                          }}
+                          onMouseEnter={e => { e.currentTarget.style.background = "#f8fafc"; e.currentTarget.style.color = "#007A48"; }}
+                          onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "#334155"; }}
+                        >
+                          <span style={{ fontSize: "1.1rem" }}>{cat.icon}</span>
+                          <span>{locale === "bn" ? cat.nameBn : cat.nameEn}</span>
+                        </Link>
+                      ))}
+                    </div>
                   )}
                 </div>
-                <span className="hidden-mobile" style={{ fontSize: "0.82rem" }}>
-                  {mounted && getItemCount() > 0 ? formatPrice(getGrandTotal()) : t.cart}
+
+                {/* COLLECTIONS ⌵ */}
+                <div
+                  style={{ position: "relative" }}
+                  onMouseEnter={() => setActiveDropdown("collections")}
+                  onMouseLeave={() => setActiveDropdown(null)}
+                >
+                  <button
+                    type="button"
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "4px",
+                      background: "none",
+                      border: "none",
+                      fontSize: "0.86rem",
+                      fontWeight: 700,
+                      color: activeDropdown === "collections" ? "#007A48" : "#0f172a",
+                      textTransform: "uppercase",
+                      letterSpacing: "0.04em",
+                      cursor: "pointer",
+                      padding: "8px 0",
+                    }}
+                  >
+                    <span>{locale === "bn" ? "কালেকশন" : "COLLECTIONS"}</span>
+                    <ChevronDown size={14} />
+                  </button>
+
+                  {/* Dropdown Menu */}
+                  {activeDropdown === "collections" && (
+                    <div
+                      style={{
+                        position: "absolute",
+                        top: "100%",
+                        left: 0,
+                        width: "230px",
+                        background: "#ffffff",
+                        border: "1px solid #e2e8f0",
+                        borderRadius: "12px",
+                        padding: "10px",
+                        boxShadow: "0 12px 32px rgba(0, 0, 0, 0.08)",
+                        zIndex: 250,
+                      }}
+                    >
+                      <Link
+                        href="/category/vegetables"
+                        onClick={() => setActiveDropdown(null)}
+                        style={{ display: "block", padding: "8px 12px", borderRadius: "6px", color: "#334155", textDecoration: "none", fontSize: "0.85rem", fontWeight: 600 }}
+                        onMouseEnter={e => (e.currentTarget.style.background = "#f8fafc")}
+                        onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+                      >
+                        🌿 Organic Farm Produce
+                      </Link>
+                      <Link
+                        href="/category/fish-and-meat"
+                        onClick={() => setActiveDropdown(null)}
+                        style={{ display: "block", padding: "8px 12px", borderRadius: "6px", color: "#334155", textDecoration: "none", fontSize: "0.85rem", fontWeight: 600 }}
+                        onMouseEnter={e => (e.currentTarget.style.background = "#f8fafc")}
+                        onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+                      >
+                        🐟 River-Caught Fresh Fish
+                      </Link>
+                      <Link
+                        href="/b2b"
+                        onClick={() => setActiveDropdown(null)}
+                        style={{ display: "block", padding: "8px 12px", borderRadius: "6px", color: "#334155", textDecoration: "none", fontSize: "0.85rem", fontWeight: 600 }}
+                        onMouseEnter={e => (e.currentTarget.style.background = "#f8fafc")}
+                        onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+                      >
+                        🏢 B2B Wholesale Bulk Deals
+                      </Link>
+                      <Link
+                        href="/bundles"
+                        onClick={() => setActiveDropdown(null)}
+                        style={{ display: "block", padding: "8px 12px", borderRadius: "6px", color: "#334155", textDecoration: "none", fontSize: "0.85rem", fontWeight: 600 }}
+                        onMouseEnter={e => (e.currentTarget.style.background = "#f8fafc")}
+                        onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+                      >
+                        📦 Weekly Grocery Bundles
+                      </Link>
+                    </div>
+                  )}
+                </div>
+
+                {/* SALE (Highlighted in Pink/Red) */}
+                <Link
+                  href="/category/all"
+                  style={{
+                    fontSize: "0.86rem",
+                    fontWeight: 800,
+                    color: "#e11d48",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.04em",
+                    textDecoration: "none",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "4px",
+                  }}
+                >
+                  <span>SALE</span>
+                </Link>
+
+                {/* BLOG / RECIPES */}
+                <Link
+                  href="/recipes"
+                  style={{
+                    fontSize: "0.86rem",
+                    fontWeight: 700,
+                    color: "#0f172a",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.04em",
+                    textDecoration: "none",
+                  }}
+                >
+                  <span>BLOG</span>
+                </Link>
+              </nav>
+
+            </div>
+
+            {/* ── Right Side: Language + Account + Cart + Search Icon ── */}
+            <div style={{ display: "flex", alignItems: "center", gap: "18px" }}>
+              
+              {/* Language Switcher */}
+              <button
+                type="button"
+                onClick={toggleLocale}
+                title="Change Language"
+                style={{
+                  background: "none",
+                  border: "none",
+                  color: "#64748b",
+                  fontWeight: 700,
+                  fontSize: "0.8rem",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "4px",
+                  padding: "4px",
+                }}
+              >
+                <Globe size={15} />
+                <span>{locale === "bn" ? "বাং" : "EN"}</span>
+              </button>
+
+              {/* Account Icon (Image 1 style) */}
+              <Link
+                href="/account"
+                aria-label="My Account"
+                style={{
+                  color: "#0f172a",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  textDecoration: "none",
+                  padding: "4px",
+                }}
+              >
+                <User size={20} strokeWidth={2} />
+              </Link>
+
+              {/* Shopping Bag / Cart Icon with Black Badge (Image 1 style) */}
+              <button
+                type="button"
+                onClick={openCart}
+                aria-label="Open Shopping Bag"
+                style={{
+                  position: "relative",
+                  background: "none",
+                  border: "none",
+                  color: "#0f172a",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  cursor: "pointer",
+                  padding: "4px",
+                }}
+              >
+                <ShoppingBag size={20} strokeWidth={2} />
+                <span
+                  style={{
+                    position: "absolute",
+                    top: "-4px",
+                    right: "-6px",
+                    width: "18px",
+                    height: "18px",
+                    borderRadius: "50%",
+                    background: "#000000",
+                    color: "#ffffff",
+                    fontSize: "0.65rem",
+                    fontWeight: 900,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  {mounted ? getItemCount() : 0}
                 </span>
               </button>
 
-            </div>
-          </div>
-
-          {/* Mobile Search Bar Row (Show on Mobile only) */}
-          <div className="show-mobile" style={{ marginTop: "10px" }}>
-            <form onSubmit={handleSearchSubmit}>
-              <div
-                style={{
-                  display: "flex", alignItems: "center",
-                  background: "rgba(255, 255, 255, 0.06)",
-                  borderRadius: "var(--radius-full)",
-                  padding: "2px 4px 2px 14px",
-                  border: "1px solid rgba(255, 255, 255, 0.12)",
-                }}
-              >
-                <Search size={15} color="var(--text-muted)" style={{ flexShrink: 0 }} />
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={e => setSearchQuery(e.target.value)}
-                  placeholder={locale === "bn" ? "মাছ, মাংস, সবজি বা ফল খুঁজুন..." : "Search fish, meat, veggies..."}
-                  style={{
-                    width: "100%", background: "transparent",
-                    border: "none", outline: "none",
-                    padding: "8px 10px",
-                    color: "#ffffff",
-                    fontSize: "0.82rem",
-                  }}
-                />
-                {searchQuery && (
-                  <button
-                    type="button"
-                    onClick={() => setSearchQuery("")}
-                    style={{ padding: "4px", color: "var(--text-muted)", display: "flex", alignItems: "center", background: "none", border: "none" }}
-                  >
-                    <X size={14} />
-                  </button>
-                )}
+              {/* Search Icon (Image 1 style) */}
+              <div ref={searchRef} style={{ position: "relative" }}>
                 <button
-                  type="submit"
+                  type="button"
+                  onClick={() => setIsSearchOpen(!isSearchOpen)}
+                  aria-label="Search"
                   style={{
-                    background: "linear-gradient(135deg, #10D876, #059E57)",
-                    color: "#03140a",
-                    padding: "6px 14px",
-                    borderRadius: "var(--radius-full)",
-                    fontWeight: 700,
-                    fontSize: "0.78rem",
+                    background: "none",
                     border: "none",
+                    color: "#0f172a",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
                     cursor: "pointer",
-                    flexShrink: 0,
+                    padding: "4px",
                   }}
                 >
-                  <Search size={12} />
+                  <Search size={20} strokeWidth={2} />
                 </button>
+
+                {/* Expandable Search Input Bar */}
+                {isSearchOpen && (
+                  <div
+                    style={{
+                      position: "absolute",
+                      right: 0,
+                      top: "calc(100% + 14px)",
+                      width: "320px",
+                      background: "#ffffff",
+                      border: "1px solid #e2e8f0",
+                      borderRadius: "14px",
+                      boxShadow: "0 16px 36px rgba(0, 0, 0, 0.12)",
+                      padding: "10px",
+                      zIndex: 300,
+                      animation: "fadeIn 0.2s ease",
+                    }}
+                  >
+                    <form onSubmit={handleSearchSubmit}>
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          background: "#f8fafc",
+                          borderRadius: "10px",
+                          padding: "6px 12px",
+                          border: "1px solid #cbd5e1",
+                        }}
+                      >
+                        <Search size={15} color="#64748b" style={{ flexShrink: 0 }} />
+                        <input
+                          ref={searchInputRef}
+                          type="text"
+                          value={searchQuery}
+                          onChange={e => setSearchQuery(e.target.value)}
+                          placeholder="Search fish, vegetables, fruits..."
+                          style={{
+                            width: "100%",
+                            background: "transparent",
+                            border: "none",
+                            outline: "none",
+                            padding: "6px 8px",
+                            fontSize: "0.85rem",
+                            color: "#0f172a",
+                          }}
+                        />
+                        {searchQuery && (
+                          <button
+                            type="button"
+                            onClick={() => setSearchQuery("")}
+                            style={{ background: "none", border: "none", color: "#64748b", cursor: "pointer", display: "flex", alignItems: "center" }}
+                          >
+                            <X size={14} />
+                          </button>
+                        )}
+                      </div>
+                    </form>
+
+                    {/* Instant Suggestions */}
+                    {searchResults.length > 0 && (
+                      <div style={{ marginTop: "8px", paddingTop: "8px", borderTop: "1px solid #f1f5f9" }}>
+                        {searchResults.map(p => (
+                          <Link
+                            key={p.id}
+                            href={`/product/${p.slug}`}
+                            onClick={() => setIsSearchOpen(false)}
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "space-between",
+                              padding: "8px 10px",
+                              borderRadius: "6px",
+                              color: "#0f172a",
+                              textDecoration: "none",
+                              fontSize: "0.82rem",
+                              fontWeight: 600,
+                            }}
+                            onMouseEnter={e => (e.currentTarget.style.background = "#f1f5f9")}
+                            onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+                          >
+                            <span>{locale === "bn" ? p.nameBn : p.nameEn}</span>
+                            <span style={{ color: "#007A48", fontWeight: 700 }}>{formatPrice(p.basePrice)}</span>
+                          </Link>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
-            </form>
+
+            </div>
           </div>
-
         </div>
-      </div>
+      </header>
 
-    </header>
+      {/* ── Slide-Out Drawer Store Navbar (Matching Image 2 Layered Dropdown) ── */}
+      {isDrawerOpen && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 9999,
+            display: "flex",
+          }}
+        >
+          {/* Backdrop */}
+          <div
+            onClick={() => setIsDrawerOpen(false)}
+            style={{
+              position: "absolute",
+              inset: 0,
+              background: "rgba(0, 0, 0, 0.5)",
+              backdropFilter: "blur(4px)",
+            }}
+          />
+
+          {/* Left Drawer Shell */}
+          <div
+            style={{
+              position: "relative",
+              width: "320px",
+              height: "100%",
+              background: "#ffffff",
+              boxShadow: "8px 0 32px rgba(0, 0, 0, 0.15)",
+              display: "flex",
+              flexDirection: "column",
+              zIndex: 10000,
+              animation: "slideInLeft 0.25s cubic-bezier(0.16, 1, 0.3, 1)",
+              overflowY: "auto",
+              fontFamily: "var(--font-body, system-ui, -apple-system, sans-serif)",
+            }}
+          >
+            {/* Drawer Header (Logo + Close X) */}
+            <div
+              style={{
+                padding: "20px 24px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                borderBottom: "1px solid #f1f5f9",
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0f172a" strokeWidth="2.4">
+                  <polygon points="12 2 2 7 12 12 22 7 12 2" />
+                  <polyline points="2 17 12 22 22 17" />
+                  <polyline points="2 12 12 17 22 12" />
+                </svg>
+                <span style={{ fontSize: "1.1rem", fontWeight: 900, color: "#0f172a" }}>
+                  TatkaBazar
+                </span>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setIsDrawerOpen(false)}
+                aria-label="Close"
+                style={{
+                  background: "none",
+                  border: "none",
+                  color: "#64748b",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  padding: "4px",
+                }}
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Section 1: Account Group (Image 2) */}
+            <div style={{ padding: "16px 20px", borderBottom: "1px solid #f1f5f9" }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                
+                <Link
+                  href="/account"
+                  onClick={() => setIsDrawerOpen(false)}
+                  style={{ display: "flex", alignItems: "center", gap: "12px", padding: "10px 12px", borderRadius: "8px", color: "#0f172a", textDecoration: "none", fontSize: "0.9rem", fontWeight: 600 }}
+                  onMouseEnter={e => (e.currentTarget.style.background = "#f8fafc")}
+                  onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+                >
+                  <User size={17} color="#64748b" />
+                  <span>Account</span>
+                </Link>
+
+                <Link
+                  href="/account"
+                  onClick={() => setIsDrawerOpen(false)}
+                  style={{ display: "flex", alignItems: "center", gap: "12px", padding: "10px 12px", borderRadius: "8px", color: "#0f172a", textDecoration: "none", fontSize: "0.9rem", fontWeight: 600 }}
+                  onMouseEnter={e => (e.currentTarget.style.background = "#f8fafc")}
+                  onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+                >
+                  <History size={17} color="#64748b" />
+                  <span>Purchase History</span>
+                </Link>
+
+                <Link
+                  href="/account"
+                  onClick={() => setIsDrawerOpen(false)}
+                  style={{ display: "flex", alignItems: "center", gap: "12px", padding: "10px 12px", borderRadius: "8px", color: "#0f172a", textDecoration: "none", fontSize: "0.9rem", fontWeight: 600 }}
+                  onMouseEnter={e => (e.currentTarget.style.background = "#f8fafc")}
+                  onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+                >
+                  <CreditCard size={17} color="#64748b" />
+                  <span>Payment Methods</span>
+                </Link>
+
+                <Link
+                  href="/account"
+                  onClick={() => setIsDrawerOpen(false)}
+                  style={{ display: "flex", alignItems: "center", gap: "12px", padding: "10px 12px", borderRadius: "8px", color: "#0f172a", textDecoration: "none", fontSize: "0.9rem", fontWeight: 600 }}
+                  onMouseEnter={e => (e.currentTarget.style.background = "#f8fafc")}
+                  onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+                >
+                  <Settings size={17} color="#64748b" />
+                  <span>Account Settings</span>
+                </Link>
+
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  style={{ display: "flex", alignItems: "center", gap: "12px", padding: "10px 12px", borderRadius: "8px", color: "#ef4444", background: "none", border: "none", fontSize: "0.9rem", fontWeight: 600, cursor: "pointer", width: "100%", textAlign: "left" }}
+                  onMouseEnter={e => (e.currentTarget.style.background = "#fef2f2")}
+                  onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+                >
+                  <LogOut size={17} />
+                  <span>Sign Out</span>
+                </button>
+
+              </div>
+            </div>
+
+            {/* Section 2: Help Group (Image 2) */}
+            <div style={{ padding: "16px 20px", borderBottom: "1px solid #f1f5f9" }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                
+                <Link
+                  href="/account"
+                  onClick={() => setIsDrawerOpen(false)}
+                  style={{ display: "flex", alignItems: "center", gap: "12px", padding: "10px 12px", borderRadius: "8px", color: "#0f172a", textDecoration: "none", fontSize: "0.9rem", fontWeight: 600 }}
+                  onMouseEnter={e => (e.currentTarget.style.background = "#f8fafc")}
+                  onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+                >
+                  <HelpCircle size={17} color="#64748b" />
+                  <span>Help Center</span>
+                </Link>
+
+                <Link
+                  href="/account"
+                  onClick={() => setIsDrawerOpen(false)}
+                  style={{ display: "flex", alignItems: "center", gap: "12px", padding: "10px 12px", borderRadius: "8px", color: "#0f172a", textDecoration: "none", fontSize: "0.9rem", fontWeight: 600 }}
+                  onMouseEnter={e => (e.currentTarget.style.background = "#f8fafc")}
+                  onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+                >
+                  <MessageSquare size={17} color="#64748b" />
+                  <span>FAQs</span>
+                </Link>
+
+                <Link
+                  href="/account"
+                  onClick={() => setIsDrawerOpen(false)}
+                  style={{ display: "flex", alignItems: "center", gap: "12px", padding: "10px 12px", borderRadius: "8px", color: "#0f172a", textDecoration: "none", fontSize: "0.9rem", fontWeight: 600 }}
+                  onMouseEnter={e => (e.currentTarget.style.background = "#f8fafc")}
+                  onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+                >
+                  <PhoneCall size={17} color="#64748b" />
+                  <span>Support Tickets</span>
+                </Link>
+
+              </div>
+            </div>
+
+            {/* Section 3: Wishlist & Discovery Group (Image 2) */}
+            <div style={{ padding: "16px 20px" }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                
+                <Link
+                  href="/account"
+                  onClick={() => setIsDrawerOpen(false)}
+                  style={{ display: "flex", alignItems: "center", gap: "12px", padding: "10px 12px", borderRadius: "8px", color: "#0f172a", textDecoration: "none", fontSize: "0.9rem", fontWeight: 600 }}
+                  onMouseEnter={e => (e.currentTarget.style.background = "#f8fafc")}
+                  onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+                >
+                  <Heart size={17} color="#64748b" />
+                  <span>Wishlist</span>
+                </Link>
+
+                <Link
+                  href="/account"
+                  onClick={() => setIsDrawerOpen(false)}
+                  style={{ display: "flex", alignItems: "center", gap: "12px", padding: "10px 12px", borderRadius: "8px", color: "#0f172a", textDecoration: "none", fontSize: "0.9rem", fontWeight: 600 }}
+                  onMouseEnter={e => (e.currentTarget.style.background = "#f8fafc")}
+                  onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+                >
+                  <Bookmark size={17} color="#64748b" />
+                  <span>Saved Items</span>
+                </Link>
+
+                <Link
+                  href="/account"
+                  onClick={() => setIsDrawerOpen(false)}
+                  style={{ display: "flex", alignItems: "center", gap: "12px", padding: "10px 12px", borderRadius: "8px", color: "#0f172a", textDecoration: "none", fontSize: "0.9rem", fontWeight: 600 }}
+                  onMouseEnter={e => (e.currentTarget.style.background = "#f8fafc")}
+                  onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+                >
+                  <Bell size={17} color="#64748b" />
+                  <span>Back in Stock Alerts</span>
+                </Link>
+
+                <Link
+                  href="/account"
+                  onClick={() => setIsDrawerOpen(false)}
+                  style={{ display: "flex", alignItems: "center", gap: "12px", padding: "10px 12px", borderRadius: "8px", color: "#0f172a", textDecoration: "none", fontSize: "0.9rem", fontWeight: 600 }}
+                  onMouseEnter={e => (e.currentTarget.style.background = "#f8fafc")}
+                  onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+                >
+                  <Eye size={17} color="#64748b" />
+                  <span>Recently Viewed</span>
+                </Link>
+
+              </div>
+            </div>
+
+          </div>
+        </div>
+      )}
+    </>
   );
 }
