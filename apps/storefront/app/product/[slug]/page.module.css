@@ -1,0 +1,502 @@
+/* Product Details Page — Clean Luxury Styling */
+.pageWrapper {
+  min-height: 100vh;
+  background: #080c12;
+  color: #f8fafc;
+  padding: 24px 0 80px 0;
+  font-family: var(--font-body, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif);
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+/* Breadcrumb */
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.82rem;
+  color: #94a3b8;
+  margin-bottom: 24px;
+}
+
+.breadcrumb a {
+  color: #10D876;
+  text-decoration: none;
+  font-weight: 600;
+  transition: opacity 0.2s ease;
+}
+
+.breadcrumb a:hover {
+  opacity: 0.8;
+}
+
+.breadcrumbCurrent {
+  color: #ffffff;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 300px;
+}
+
+/* ── 2-Column Product Hero Section ── */
+.productGrid {
+  display: grid;
+  grid-template-columns: 1.15fr 1.25fr;
+  gap: 48px;
+  background: #0f1520;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 24px;
+  padding: clamp(24px, 4vw, 40px);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.4);
+}
+
+@media (max-width: 900px) {
+  .productGrid {
+    grid-template-columns: 1fr;
+    gap: 32px;
+    padding: 20px;
+  }
+}
+
+/* ── Left: Image Gallery ── */
+.galleryColumn {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.mainImageCard {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  max-height: 480px;
+  border-radius: 18px;
+  overflow: hidden;
+  background: #141b26;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justifyContent: center;
+}
+
+.mainImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.4s ease;
+}
+
+.mainImage:hover {
+  transform: scale(1.03);
+}
+
+.organicBadge {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  background: rgba(10, 14, 20, 0.85);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(16, 216, 118, 0.4);
+  color: #10D876;
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-size: 0.76rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+}
+
+.wishlistBtn {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: rgba(10, 14, 20, 0.85);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justifyContent: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.wishlistBtn:hover {
+  transform: scale(1.08);
+}
+
+.thumbnailRow {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.thumbnailBtn {
+  width: 68px;
+  height: 68px;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  background: #141b26;
+  cursor: pointer;
+  padding: 0;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+}
+
+.thumbnailBtnActive {
+  border-color: #10D876;
+  box-shadow: 0 0 12px rgba(16, 216, 118, 0.3);
+}
+
+.thumbnailImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* ── Right: Product Purchase Details ── */
+.detailsColumn {
+  display: flex;
+  flex-direction: column;
+}
+
+.categoryTagRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.categoryTag {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #10D876;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.ratingTag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: #F5C842;
+  background: rgba(245, 200, 66, 0.1);
+  padding: 2px 8px;
+  border-radius: 6px;
+  border: 1px solid rgba(245, 200, 66, 0.2);
+}
+
+.productTitle {
+  font-size: clamp(1.5rem, 2.5vw, 2.1rem);
+  font-weight: 800;
+  color: #ffffff;
+  line-height: 1.25;
+  margin: 0 0 14px 0;
+  letter-spacing: -0.02em;
+}
+
+.shortDesc {
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: #94a3b8;
+  margin: 0 0 20px 0;
+}
+
+/* ── Price Block ── */
+.priceBox {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 14px;
+  padding: 16px 20px;
+  margin-bottom: 24px;
+  display: flex;
+  align-items: baseline;
+  justifyContent: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.priceLeft {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.currentPrice {
+  font-size: 1.9rem;
+  font-weight: 900;
+  color: #10D876;
+  letter-spacing: -0.02em;
+}
+
+.unitLabel {
+  font-size: 0.85rem;
+  color: #94a3b8;
+  font-weight: 600;
+}
+
+.comparePrice {
+  font-size: 1rem;
+  color: #64748b;
+  text-decoration: line-through;
+}
+
+.discountBadge {
+  background: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  font-size: 0.75rem;
+  font-weight: 800;
+  padding: 3px 8px;
+  border-radius: 6px;
+}
+
+/* ── Weight / Pack Selector ── */
+.selectorSection {
+  margin-bottom: 22px;
+}
+
+.sectionLabel {
+  font-size: 0.84rem;
+  font-weight: 700;
+  color: #e2e8f0;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  justifyContent: space-between;
+}
+
+.weightChipsGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.weightChip {
+  padding: 10px 18px;
+  border-radius: 12px;
+  border: 1.5px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.04);
+  color: #ffffff;
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.weightChip:hover {
+  border-color: rgba(16, 216, 118, 0.5);
+  background: rgba(16, 216, 118, 0.06);
+}
+
+.weightChipActive {
+  border-color: #10D876;
+  background: rgba(16, 216, 118, 0.15);
+  color: #10D876;
+  box-shadow: 0 0 16px rgba(16, 216, 118, 0.2);
+}
+
+/* ── Quantity & Action Controls ── */
+.actionRow {
+  display: flex;
+  gap: 14px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+
+.quantityBox {
+  display: flex;
+  align-items: center;
+  border: 1.5px solid rgba(255, 255, 255, 0.15);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.04);
+  padding: 4px 10px;
+  gap: 12px;
+  height: 50px;
+}
+
+.qtyBtn {
+  background: none;
+  border: none;
+  color: #ffffff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justifyContent: center;
+  padding: 4px;
+  transition: color 0.15s ease;
+}
+
+.qtyBtn:hover {
+  color: #10D876;
+}
+
+.qtyDisplay {
+  font-size: 1rem;
+  font-weight: 800;
+  color: #ffffff;
+  min-width: 24px;
+  text-align: center;
+}
+
+.buyNowBtn {
+  flex: 1.2;
+  min-width: 140px;
+  height: 50px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #10D876 0%, #059E57 100%);
+  color: #03140a;
+  font-size: 0.95rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justifyContent: center;
+  gap: 8px;
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+  box-shadow: 0 4px 18px rgba(16, 216, 118, 0.4);
+  transition: all 0.2s ease;
+}
+
+.buyNowBtn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 24px rgba(16, 216, 118, 0.55);
+}
+
+.addToCartBtn {
+  flex: 1;
+  min-width: 140px;
+  height: 50px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1.5px solid rgba(255, 255, 255, 0.15);
+  color: #ffffff;
+  font-size: 0.92rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justifyContent: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.addToCartBtn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+/* ── Freshness Assurance Badges ── */
+.guaranteeRow {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  padding-top: 18px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+@media (max-width: 640px) {
+  .guaranteeRow {
+    grid-template-columns: 1fr;
+  }
+}
+
+.guaranteeCard {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+
+.guaranteeIcon {
+  color: #10D876;
+  flex-shrink: 0;
+}
+
+.guaranteeText {
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: #cbd5e1;
+  line-height: 1.3;
+}
+
+/* ── Tab Content Section (Description & Nutrition) ── */
+.tabsContainer {
+  margin-top: 48px;
+  background: #0f1520;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  padding: 32px;
+}
+
+.tabHeaderRow {
+  display: flex;
+  gap: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding-bottom: 16px;
+  margin-bottom: 24px;
+  overflow-x: auto;
+}
+
+.tabBtn {
+  background: none;
+  border: none;
+  color: #94a3b8;
+  font-size: 0.95rem;
+  font-weight: 700;
+  padding: 6px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.tabBtnActive {
+  color: #10D876;
+  background: rgba(16, 216, 118, 0.1);
+}
+
+.tabContentBody {
+  font-size: 0.92rem;
+  line-height: 1.7;
+  color: #cbd5e1;
+}
+
+/* Related Products Grid */
+.relatedSection {
+  margin-top: 56px;
+}
+
+.relatedTitle {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: #ffffff;
+  margin: 0 0 20px 0;
+}
+
+.relatedGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 20px;
+}
