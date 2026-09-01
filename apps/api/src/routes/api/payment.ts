@@ -27,7 +27,7 @@ export async function paymentRoutes(fastify: FastifyInstance) {
       const result = await createBkashPayment({
         amount: body.amount,
         orderNumber: body.orderNumber,
-        payerReference: body.payerPhone,
+        payerReference: body.payerPhone || undefined,
       });
 
       idempotencyGuard.complete(idempotencyKey, result);
@@ -75,7 +75,7 @@ export async function paymentRoutes(fastify: FastifyInstance) {
         }
 
         // Amount verification: prevent price tampering
-        if (result.amount && Number(result.amount) < Number(order.totalAmount)) {
+        if (result.amount && Number(result.amount) < Number(order.total)) {
           idempotencyGuard.release(idempotencyKey);
           return reply.status(400).send({
             success: false,
@@ -147,7 +147,7 @@ export async function paymentRoutes(fastify: FastifyInstance) {
         });
 
         // Server-to-server amount check
-        if (order && body.amount && Number(body.amount) >= Number(order.totalAmount)) {
+        if (order && body.amount && Number(body.amount) >= Number(order.total)) {
           await prisma.order.update({
             where: { id: order.id },
             data: { paymentStatus: "PAID", paidAt: new Date(), status: "CONFIRMED" },

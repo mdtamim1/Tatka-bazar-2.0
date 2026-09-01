@@ -50,13 +50,13 @@ export async function vendorRoutes(fastify: FastifyInstance) {
       };
 
       const passwordHash = await bcrypt.hash("Vendor@tatka2024!", 12);
-      const vendor = await prisma.vendor.create({
+      const vendor = await (prisma.vendor.create as any)({
         data: {
           businessName: body.businessName,
           slug: body.businessName.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
           phone: body.phone,
           email: body.email,
-          description: body.description,
+          description: body.description || null,
           status: "PENDING",
           passwordHash,
         },

@@ -63,7 +63,7 @@ export async function initSSLCommerzPayment(params: {
       body: formData.toString(),
     });
 
-    const data = await res.json();
+    const data = (await res.json()) as any;
     if (data.status === "SUCCESS" && data.GatewayPageURL) {
       return {
         success: true,

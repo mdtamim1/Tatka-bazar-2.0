@@ -117,7 +117,7 @@ export async function productRoutes(fastify: FastifyInstance) {
       const body = request.body as any;
       const { name, slug, description, price, comparePrice, sku, stock, categoryId, vendorId, isFeatured, images } = body;
 
-      const product = await prisma.product.create({
+      const product = await (prisma.product.create as any)({
         data: {
           name,
           slug: slug || name.toLowerCase().replace(/[^a-z0-9]+/g, "-"),

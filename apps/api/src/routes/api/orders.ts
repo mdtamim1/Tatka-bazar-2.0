@@ -274,7 +274,7 @@ export async function orderRoutes(fastify: FastifyInstance) {
         }
 
         // Create Order and line items
-        return tx.order.create({
+        const newOrder = await (tx.order.create as any)({
           data: {
             orderNumber,
             userId: user.id,
@@ -297,6 +297,8 @@ export async function orderRoutes(fastify: FastifyInstance) {
             items: true,
           },
         });
+
+        return newOrder;
       });
 
       // Invalidate catalog cache so updated stocks reflect immediately
@@ -309,8 +311,8 @@ export async function orderRoutes(fastify: FastifyInstance) {
           orderNumber: order.orderNumber,
           totalAmount: Number(order.total),
           status: order.status,
-          customerName: order.user.name,
-          customerPhone: order.user.phone,
+          customerName: (order as any).user?.name || user.name,
+          customerPhone: (order as any).user?.phone || user.phone,
         },
       });
     } catch (err: any) {

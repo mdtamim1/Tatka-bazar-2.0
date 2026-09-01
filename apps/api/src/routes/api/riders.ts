@@ -51,12 +51,12 @@ export async function riderRoutes(fastify: FastifyInstance) {
       };
 
       const passwordHash = await bcrypt.hash("Rider@tatka2024!", 12);
-      const rider = await prisma.deliveryRider.create({
+      const rider = await (prisma.deliveryRider.create as any)({
         data: {
           name: body.name,
           phone: body.phone,
           email: body.email || `rider_${body.phone.replace(/[^0-9]/g, "")}@tatkabazar.com`,
-          nidNumber: body.nid,
+          nidNumber: body.nid || null,
           vehicleType: body.vehicleType || "MOTORCYCLE",
           status: "AVAILABLE",
           passwordHash,

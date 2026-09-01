@@ -79,7 +79,7 @@ async function bootstrap() {
     maxHeapUsedBytes: 1024 * 1024 * 1024, // 1GB heap limit
     maxRssBytes: 1536 * 1024 * 1024, // 1.5GB RSS limit
     maxEventLoopUtilization: 0.98,
-    pressureHandler: (req: any, rep: any, type: string, value: number) => {
+    pressureHandler: (_req: any, rep: any, type: string, value: number | undefined) => {
       app.log.warn({ type, value }, "Tatka Bazar API under extreme pressure, shedding load gracefully!");
       rep.status(503).send({
         success: false,
@@ -88,13 +88,7 @@ async function bootstrap() {
         message: "তাতকা বাজার সার্ভার অতিরিক্ত ট্রাফিকের চাপে ব্যস্ত। অনুগ্রহ করে কয়েক সেকেন্ড পর আবার চেষ্টা করুন।",
       });
     },
-    exposeStatusRoute: {
-      routeOpts: {
-        logLevel: "silent",
-      },
-      routeUrl: "/health/pressure",
-      routeResponseSchema: false,
-    },
+    exposeStatusRoute: "/health/pressure",
   });
 
   await app.register(cors, {

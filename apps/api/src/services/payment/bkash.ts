@@ -44,7 +44,7 @@ export async function getBkashIdToken(): Promise<string> {
       }),
     });
 
-    const data = await res.json();
+    const data = (await res.json()) as any;
     if (data.id_token) {
       cachedIdToken = data.id_token;
       tokenExpiresAt = Date.now() + (Number(data.expires_in) || 3600) * 1000 - 60000;
@@ -63,8 +63,8 @@ export async function getBkashIdToken(): Promise<string> {
 export async function createBkashPayment(params: {
   amount: number;
   orderNumber: string;
-  callbackUrl?: string;
-  payerReference?: string;
+  callbackUrl?: string | undefined;
+  payerReference?: string | undefined;
 }) {
   const idToken = await getBkashIdToken();
 
@@ -87,7 +87,7 @@ export async function createBkashPayment(params: {
       }),
     });
 
-    const data = await res.json();
+    const data = (await res.json()) as any;
     if (data.paymentID) {
       return {
         success: true,
@@ -128,7 +128,7 @@ export async function executeBkashPayment(paymentID: string) {
       body: JSON.stringify({ paymentID }),
     });
 
-    const data = await res.json();
+    const data = (await res.json()) as any;
     if (data.statusCode === "0000" || data.trxID) {
       return {
         success: true,
