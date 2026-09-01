@@ -2,81 +2,94 @@
 
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
-import { ArrowRight, ChevronLeft, ChevronRight, Star, Sparkles } from "lucide-react";
+import { ChevronLeft, ChevronRight, Heart, Star, ShoppingBag, ArrowRight } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
+import { useCartStore } from "@/lib/cart-store";
+import { PRODUCTS } from "@/lib/catalog";
 
 export function HeroBanner() {
-  const { locale } = useLanguage();
-  const [currentSlide, setCurrentSlide]         = useState(0);
-  const [progress, setProgress]                 = useState(0);
-  const [isTransitioning, setIsTransitioning]   = useState(false);
-  const [animKey, setAnimKey]                   = useState(0);
-  const bannerRef                               = useRef<HTMLDivElement>(null);
+  const { locale, formatPrice } = useLanguage();
+  const { toggleWishlist, isInWishlist, addItem, openCart } = useCartStore();
+
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const [animKey, setAnimKey] = useState(0);
 
   const slides = [
     {
-      badge:      locale === "bn" ? "আজকের সেরা অফার" : "Today's Best Deal",
-      title:      locale === "bn" ? "তাজা সবজি ও নদী মাছ" : "Farm-Fresh & River-Caught Produce",
-      titleAccent:locale === "bn" ? "সরাসরি আপনার দরজায়" : "Delivered Daily",
-      subtitle:   locale === "bn" ? "রাসায়নিকমুক্ত শাকসবজি ও নদীর টাটকা মাছ সকালে সংগ্রহ করে দ্রুত পৌঁছে দিচ্ছি।" : "Chemical-free organic vegetables & authentic river fish delivered fresh.",
-      ctaText:    locale === "bn" ? "বাজার করুন" : "Shop Fresh Now",
-      ctaLink:    "/category/vegetables",
-      promoTag:   locale === "bn" ? "৳৫০ ছাড়" : "৳50 OFF",
-      accentColor:"#10D876",
-      accentGlow: "rgba(16, 216, 118, 0.45)",
-      gradientBg: "linear-gradient(135deg, #020A04 0%, #041508 35%, #071E0C 65%, #0A2810 100%)",
-      image:      "https://images.unsplash.com/photo-1540420773420-3366772f4999?w=1600&auto=format&fit=crop&q=90",
-      floats: [
-        { icon: "⚡", label: locale === "bn" ? "আজ ডেলিভারি" : "Same Day", value: locale === "bn" ? "৪ ঘণ্টায়" : "In 4 hrs" },
-        { icon: "🌿", label: locale === "bn" ? "তাজা গ্যারান্টি" : "Freshness", value: locale === "bn" ? "১০০%" : "100%" },
-        { icon: "🌾", label: locale === "bn" ? "জৈব পণ্য" : "Organic", value: locale === "bn" ? "১৮০+" : "180+ Items" },
-      ],
+      id: "slide-1",
+      title: locale === "bn" ? "আপনার প্রতিদিনের তাজা বাজার" : "Your Complete Fresh Routine",
+      subtitle: locale === "bn"
+        ? "রাসায়নিকমুক্ত শাকসবজি ও পদ্মার তাজা মাছ প্রতিদিন ভোরে সরাসরি সংগ্রহ করে আপনার দরজায় পৌঁছে দিচ্ছি।"
+        : "A curated farm-fresh collection designed to nourish, energize, and provide chemical-free freshness daily.",
+      ctaText: locale === "bn" ? "বাজার করুন" : "Shop Now",
+      ctaLink: "/category/vegetables",
+      bgImage: "https://images.unsplash.com/photo-1540420773420-3366772f4999?w=1920&auto=format&fit=crop&q=90",
+      featuredProduct: {
+        id: PRODUCTS[0]?.id || "p1",
+        category: locale === "bn" ? "নদীর তাজা মাছ" : "RIVER FRESH FISH",
+        title: locale === "bn" ? "পদ্মার রূপালি ইলিশ সেট" : "Padma River Hilsa Set",
+        price: 1450,
+        comparePrice: 1750,
+        rating: "5.8K REVIEWS",
+        badge1: "BEST SELLER",
+        badge2: "FRESH",
+        image: PRODUCTS[0]?.images[0] || "https://images.unsplash.com/photo-1544943910-4c1dc44a0b27?w=600&auto=format&fit=crop&q=80",
+        productRef: PRODUCTS[0],
+      },
     },
     {
-      badge:      locale === "bn" ? "সীমিত সময়ের অফার" : "Limited Time Offer",
-      title:      locale === "bn" ? "পদ্মা ও মেঘনার তাজা মাছ" : "River-Fresh Fish Caught Today",
-      titleAccent:locale === "bn" ? "ভোরে ধরা" : "Morning Catch",
-      subtitle:   locale === "bn" ? "ইলিশ, রুই, কাতলা — বরফ ছাড়া তাজা মাছ পাচ্ছেন দ্রুততম হোম ডেলিভারিতে।" : "Padma Hilsa, Rui & Katla — direct from verified river fishermen.",
-      ctaText:    locale === "bn" ? "মাছ কিনুন" : "Shop Fresh Fish",
-      ctaLink:    "/category/fish-and-meat",
-      promoTag:   locale === "bn" ? "১৫% ছাড়" : "15% OFF",
-      accentColor:"#4F9EFF",
-      accentGlow: "rgba(79, 158, 255, 0.45)",
-      gradientBg: "linear-gradient(135deg, #010609 0%, #030D1E 35%, #061535 65%, #081A40 100%)",
-      image:      "https://images.unsplash.com/photo-1534422298391-e4f8c172dddb?w=1600&auto=format&fit=crop&q=90",
-      floats: [
-        { icon: "🎣", label: locale === "bn" ? "আজ ধরা" : "Caught Today", value: locale === "bn" ? "সকালে" : "Morning" },
-        { icon: "❄️", label: locale === "bn" ? "সর্বোচ্চ তাজা" : "Ultra Fresh", value: locale === "bn" ? "বরফমুক্ত" : "Iced Fresh" },
-        { icon: "🐟", label: locale === "bn" ? "মাছের প্রজাতি" : "Fish Species", value: locale === "bn" ? "৫০+" : "50+" },
-      ],
+      id: "slide-2",
+      title: locale === "bn" ? "১০০% খাঁটি ও অর্গানিক সবজি" : "Pure Organic Farm Produce",
+      subtitle: locale === "bn"
+        ? "কীটনাশকমুক্ত তাজা টমেটো, ফুলকপি ও শাকসবজি সরাসরি প্রত্যয়িত কৃষক থেকে আপনার রান্নাঘরে।"
+        : "Freshly harvested organic vegetables and greens directly sourced from certified farmers across Bangladesh.",
+      ctaText: locale === "bn" ? "সবজি কিনুন" : "Shop Vegetables",
+      ctaLink: "/category/vegetables",
+      bgImage: "https://images.unsplash.com/photo-1566385101042-1a0aa0c1268c?w=1920&auto=format&fit=crop&q=90",
+      featuredProduct: {
+        id: PRODUCTS[2]?.id || "p3",
+        category: locale === "bn" ? "অর্গানিক সবজি" : "ORGANIC VEGGIES",
+        title: locale === "bn" ? "ফার্ম ফ্রেশ টমেটো প্যাক" : "Farm Fresh Tomato Set",
+        price: 130,
+        comparePrice: 160,
+        rating: "4.9K REVIEWS",
+        badge1: "ORGANIC",
+        badge2: "NEW",
+        image: PRODUCTS[2]?.images[0] || "https://images.unsplash.com/photo-1540420773420-3366772f4999?w=600&auto=format&fit=crop&q=80",
+        productRef: PRODUCTS[2],
+      },
     },
     {
-      badge:      locale === "bn" ? "হোলসেল মূল্যে" : "Wholesale Rates",
-      title:      locale === "bn" ? "চাল, ডাল ও খাঁটি মশলা" : "Rice, Lentils & Spices",
-      titleAccent:locale === "bn" ? "পাইকারি দামে" : "Bulk Rates",
-      subtitle:   locale === "bn" ? "ব্যবসায়িক অ্যাকাউন্ট ও পারিবারিক বড় বাজারে সর্বোচ্চ সাশ্রয়ী অফার।" : "Unlock tiered wholesale pricing and special deals on pantry staples.",
-      ctaText:    locale === "bn" ? "স্টেপল কিনুন" : "Shop Staples",
-      ctaLink:    "/category/rice-and-staples",
-      promoTag:   locale === "bn" ? "বাল্ক ছাড়" : "Bulk Deals",
-      accentColor:"#F5C842",
-      accentGlow: "rgba(245, 200, 66, 0.45)",
-      gradientBg: "linear-gradient(135deg, #090401 0%, #180802 35%, #220C02 65%, #2E1005 100%)",
-      image:      "https://images.unsplash.com/photo-1586201375761-83865001e31c?w=1600&auto=format&fit=crop&q=90",
-      floats: [
-        { icon: "📦", label: locale === "bn" ? "পাইকারি মূল্য" : "Wholesale", value: locale === "bn" ? "৩০% ছাড়" : "30% OFF" },
-        { icon: "🏢", label: locale === "bn" ? "B2B অ্যাকাউন্ট" : "B2B Account", value: locale === "bn" ? "ফ্রি" : "Free" },
-        { icon: "🌾", label: locale === "bn" ? "বাল্ক অর্ডার" : "Bulk Orders", value: locale === "bn" ? "২৫ কেজি+" : "25kg+" },
-      ],
+      id: "slide-3",
+      title: locale === "bn" ? "পাইকারি দামে পরিবারের বাজার" : "Family Grocery Essentials",
+      subtitle: locale === "bn"
+        ? "চাল, ডাল, তেল ও খাঁটি মশলার সেরা হোলসেল ডিল। বড় অর্ডারে সর্বোচ্চ সাশ্রয় নিশ্চিত।"
+        : "Premium rice, lentils, pure mustard oil and authentic spices at unbeatable wholesale rates.",
+      ctaText: locale === "bn" ? "হোলসেল ডিল" : "Shop Essentials",
+      ctaLink: "/category/rice-and-staples",
+      bgImage: "https://images.unsplash.com/photo-1586201375761-83865001e31c?w=1920&auto=format&fit=crop&q=90",
+      featuredProduct: {
+        id: PRODUCTS[1]?.id || "p2",
+        category: locale === "bn" ? "দেশি তাজা মাছ" : "FRESH RUI FISH",
+        title: locale === "bn" ? "দেশি রুই মাছ (কেটে পরিষ্কার)" : "Cleaned Local Rui Pack",
+        price: 485,
+        comparePrice: 560,
+        rating: "6.2K REVIEWS",
+        badge1: "HOT DEAL",
+        badge2: "CLEANED",
+        image: PRODUCTS[1]?.images[0] || "https://images.unsplash.com/photo-1534939561126-855b8675edd7?w=600&auto=format&fit=crop&q=80",
+        productRef: PRODUCTS[1],
+      },
     },
   ];
 
-  const SLIDE_DURATION = 6000;
+  const SLIDE_DURATION = 6500;
 
   const goToSlide = useCallback((idx: number) => {
     if (isTransitioning) return;
     setIsTransitioning(true);
     setCurrentSlide(idx);
-    setProgress(0);
     setAnimKey(k => k + 1);
     setTimeout(() => setIsTransitioning(false), 500);
   }, [isTransitioning]);
@@ -85,244 +98,379 @@ export function HeroBanner() {
   const prevSlide = useCallback(() => goToSlide((currentSlide - 1 + slides.length) % slides.length), [currentSlide, goToSlide, slides.length]);
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      setProgress(p => {
-        if (p >= 100) { nextSlide(); return 0; }
-        return p + (100 / (SLIDE_DURATION / 100));
-      });
-    }, 100);
-    return () => clearInterval(interval);
+    const timer = setInterval(() => {
+      nextSlide();
+    }, SLIDE_DURATION);
+    return () => clearInterval(timer);
   }, [nextSlide]);
 
   const slide = slides[currentSlide]!;
+  const feat = slide.featuredProduct;
+  const isFav = isInWishlist(feat.id);
+
+  const handleQuickAdd = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (feat.productRef) {
+      addItem(feat.productRef, 1, (feat.productRef.baseUnit || "kg") as any, feat.price, 1);
+      openCart();
+    }
+  };
 
   return (
-    <div style={{ padding: "14px 0 0" }}>
-      <div className="container">
+    <div style={{ position: "relative", width: "100%", overflow: "hidden" }}>
+      
+      {/* ── Main Hero Container (Full Bleed) ── */}
+      <div
+        style={{
+          position: "relative",
+          width: "100%",
+          minHeight: "clamp(460px, 48vw, 640px)",
+          display: "flex",
+          alignItems: "center",
+          color: "#ffffff",
+          background: "#0a0e14",
+        }}
+      >
+        {/* Background Image with Cinematic Dark Gradient */}
+        <div style={{ position: "absolute", inset: 0, zIndex: 0 }}>
+          <img
+            key={`bg-${currentSlide}`}
+            src={slide.bgImage}
+            alt=""
+            aria-hidden="true"
+            style={{
+              width: "100%",
+              height: "100%",
+              objectFit: "cover",
+              objectPosition: "center",
+              animation: "fadeIn 0.7s ease",
+            }}
+          />
+          {/* Subtle Dark Vignette & Gradient Overlays */}
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              background: "linear-gradient(90deg, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.55) 45%, rgba(0,0,0,0.2) 75%, rgba(0,0,0,0.4) 100%)",
+            }}
+          />
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              background: "radial-gradient(ellipse at center, transparent 30%, rgba(0,0,0,0.6) 100%)",
+            }}
+          />
+        </div>
+
+        {/* Content Max-Width Container */}
         <div
-          ref={bannerRef}
           style={{
             position: "relative",
-            borderRadius: "18px",
-            overflow: "hidden",
-            background: slide.gradientBg,
-            color: "#FFFFFF",
-            minHeight: "clamp(220px, 32vw, 340px)",
+            zIndex: 10,
+            maxWidth: "1280px",
+            width: "100%",
+            margin: "0 auto",
+            padding: "0 32px",
             display: "flex",
             alignItems: "center",
-            boxShadow: `0 12px 36px -8px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.06), 0 0 80px ${slide.accentGlow.replace("0.45", "0.08")}`,
-            transition: "background 0.6s ease",
+            justifyContent: "space-between",
+            gap: "36px",
+            flexWrap: "wrap",
           }}
         >
-          {/* Background Image */}
-          <div style={{ position: "absolute", inset: 0, zIndex: 0 }}>
-            <img
-              key={`img-${currentSlide}`}
-              src={slide.image}
-              alt=""
-              aria-hidden="true"
-              style={{
-                position: "absolute", inset: 0,
-                width: "100%", height: "100%",
-                objectFit: "cover", objectPosition: "center right",
-                opacity: 0.28,
-                animation: "fadeIn 0.6s ease forwards",
-              }}
-            />
-          </div>
-
-          {/* Gradients */}
-          <div style={{ position: "absolute", inset: 0, background: "linear-gradient(95deg, rgba(0,0,0,0.94) 0%, rgba(0,0,0,0.75) 45%, rgba(0,0,0,0.2) 75%, transparent 100%)", zIndex: 1 }} />
-          <div style={{ position: "absolute", inset: 0, background: `radial-gradient(ellipse 60% 80% at -10% 50%, ${slide.accentGlow.replace("0.45", "0.12")} 0%, transparent 65%)`, zIndex: 1 }} />
-
-          {/* Content */}
+          {/* ── Left Content (Headline, Subtitle, Shop Now Pill) ── */}
           <div
-            key={`content-${animKey}`}
+            key={`text-${animKey}`}
             style={{
-              position: "relative", zIndex: 10,
-              padding: "clamp(20px, 3.5vw, 40px)",
-              maxWidth: "580px", width: "100%",
+              flex: "1 1 480px",
+              maxWidth: "620px",
+              animation: "slideInLeft 0.5s cubic-bezier(0.16, 1, 0.3, 1)",
             }}
           >
-            {/* Badge & Promo Row */}
-            <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "10px", flexWrap: "wrap" }}>
-              <div
-                style={{
-                  display: "inline-flex", alignItems: "center", gap: "5px",
-                  padding: "4px 10px",
-                  borderRadius: "var(--radius-full)",
-                  background: "rgba(255,255,255,0.08)",
-                  backdropFilter: "blur(12px)",
-                  fontSize: "0.72rem",
-                  fontWeight: 700,
-                  letterSpacing: "0.04em",
-                  border: `1px solid rgba(255,255,255,0.12)`,
-                  color: slide.accentColor,
-                }}
-              >
-                <Sparkles size={11} />
-                <span>{slide.badge}</span>
-              </div>
-              <span
-                style={{
-                  background: "linear-gradient(135deg, #FF4D6D, #E83055)",
-                  color: "#fff",
-                  padding: "3px 10px",
-                  borderRadius: "var(--radius-full)",
-                  fontSize: "0.7rem",
-                  fontWeight: 900,
-                  boxShadow: "0 2px 10px rgba(255,77,109,0.4)",
-                }}
-              >
-                {slide.promoTag}
-              </span>
-            </div>
-
-            {/* Heading */}
             <h1
               style={{
-                fontFamily: "var(--font-heading)",
-                fontSize: "clamp(1.2rem, 3.2vw, 2.1rem)",
-                fontWeight: 800,
+                fontFamily: "var(--font-heading, serif, Georgia, 'Times New Roman')",
+                fontSize: "clamp(2.1rem, 4vw, 3.4rem)",
+                fontWeight: 700,
                 lineHeight: 1.15,
-                letterSpacing: "-0.03em",
-                margin: "0 0 8px 0",
+                color: "#ffffff",
+                letterSpacing: "-0.02em",
+                margin: "0 0 16px 0",
+                textShadow: "0 2px 14px rgba(0,0,0,0.5)",
               }}
             >
-              {slide.title}{" "}
-              <span style={{ color: slide.accentColor }}>
-                {slide.titleAccent}
-              </span>
+              {slide.title}
             </h1>
 
-            {/* Subtitle */}
             <p
               style={{
-                fontSize: "clamp(0.75rem, 1.6vw, 0.88rem)",
-                lineHeight: 1.5,
-                color: "rgba(240,242,247,0.72)",
-                margin: "0 0 16px 0",
-                maxWidth: "45ch",
+                fontSize: "clamp(0.88rem, 1.4vw, 1.05rem)",
+                lineHeight: 1.6,
+                color: "rgba(255, 255, 255, 0.88)",
+                margin: "0 0 28px 0",
+                maxWidth: "480px",
+                textShadow: "0 1px 8px rgba(0,0,0,0.5)",
               }}
             >
               {slide.subtitle}
             </p>
 
-            {/* CTA Button */}
-            <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
-              <Link
-                href={slide.ctaLink}
-                style={{
-                  display: "inline-flex", alignItems: "center", gap: "7px",
-                  padding: "9px 20px",
-                  borderRadius: "var(--radius-full)",
-                  background: slide.accentColor,
-                  color: "#03140a",
-                  fontWeight: 800,
-                  fontSize: "0.84rem",
-                  boxShadow: `0 4px 18px ${slide.accentGlow}`,
-                  textDecoration: "none",
-                  transition: "all 0.2s ease",
-                }}
-              >
-                <span>{slide.ctaText}</span>
-                <ArrowRight size={15} />
-              </Link>
-            </div>
+            <Link
+              href={slide.ctaLink}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "8px",
+                padding: "11px 28px",
+                borderRadius: "999px",
+                background: "#ffffff",
+                color: "#000000",
+                fontSize: "0.92rem",
+                fontWeight: 800,
+                textDecoration: "none",
+                boxShadow: "0 6px 20px rgba(0, 0, 0, 0.35)",
+                transition: "all 0.2s ease",
+              }}
+              onMouseEnter={e => { e.currentTarget.style.transform = "scale(1.04)"; }}
+              onMouseLeave={e => { e.currentTarget.style.transform = "scale(1)"; }}
+            >
+              <span>{slide.ctaText}</span>
+            </Link>
           </div>
 
-          {/* Floating Stat Badges (Desktop Only) */}
+          {/* ── Right Floating Product Card (Shadcnblocks Exact Component) ── */}
           <div
-            key={`stats-${animKey}`}
+            key={`card-${animKey}`}
             style={{
-              position: "absolute", right: "28px",
-              top: "50%", transform: "translateY(-50%)",
-              display: "flex", flexDirection: "column", gap: "10px",
-              zIndex: 15,
-              pointerEvents: "none",
+              flex: "0 0 auto",
+              width: "100%",
+              maxWidth: "310px",
+              background: "#ffffff",
+              borderRadius: "16px",
+              overflow: "hidden",
+              boxShadow: "0 16px 40px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.1)",
+              animation: "slideInRight 0.5s cubic-bezier(0.16, 1, 0.3, 1)",
+              color: "#0f172a",
             }}
-            className="hidden-mobile"
           >
-            {slide.floats.slice(0, 2).map((s, i) => (
-              <div
-                key={i}
-                className="floating-card"
-                style={{
-                  padding: "10px 16px",
-                  display: "flex", alignItems: "center", gap: "10px",
-                  minWidth: "160px",
-                  background: "rgba(12, 16, 23, 0.88)",
-                  backdropFilter: "blur(16px)",
-                  border: "1px solid rgba(255,255,255,0.08)",
-                  borderRadius: "12px",
-                }}
-              >
-                <div
+            {/* Card Product Image */}
+            <div style={{ position: "relative", width: "100%", height: "220px", background: "#f8fafc" }}>
+              <img
+                src={feat.image}
+                alt={feat.title}
+                style={{ width: "100%", height: "100%", objectFit: "cover" }}
+              />
+
+              {/* Badges (BEST SELLER / NEW) */}
+              <div style={{ position: "absolute", top: "12px", left: "12px", display: "flex", flexDirection: "column", gap: "4px" }}>
+                <span
                   style={{
-                    width: "32px", height: "32px",
-                    borderRadius: "8px",
-                    background: `${slide.accentGlow.replace("0.45", "0.15")}`,
-                    border: `1px solid ${slide.accentGlow.replace("0.45", "0.3")}`,
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    fontSize: "1.1rem",
-                    flexShrink: 0,
+                    background: "#000000",
+                    color: "#ffffff",
+                    fontSize: "0.62rem",
+                    fontWeight: 800,
+                    padding: "3px 8px",
+                    borderRadius: "4px",
+                    letterSpacing: "0.05em",
                   }}
                 >
-                  {s.icon}
-                </div>
-                <div>
-                  <div style={{ fontSize: "0.62rem", color: "var(--text-muted)", fontWeight: 600, textTransform: "uppercase" }}>{s.label}</div>
-                  <div style={{ fontSize: "0.82rem", fontWeight: 800, color: "#ffffff" }}>{s.value}</div>
+                  {feat.badge1}
+                </span>
+                <span
+                  style={{
+                    background: "#ffffff",
+                    color: "#000000",
+                    fontSize: "0.62rem",
+                    fontWeight: 800,
+                    padding: "3px 8px",
+                    borderRadius: "4px",
+                    letterSpacing: "0.05em",
+                    border: "1px solid #e2e8f0",
+                  }}
+                >
+                  {feat.badge2}
+                </span>
+              </div>
+
+              {/* Wishlist Heart Icon (Top-Right) */}
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  toggleWishlist(feat.id);
+                }}
+                aria-label="Wishlist"
+                style={{
+                  position: "absolute",
+                  top: "12px",
+                  right: "12px",
+                  width: "32px",
+                  height: "32px",
+                  borderRadius: "50%",
+                  background: "rgba(255, 255, 255, 0.9)",
+                  border: "none",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  cursor: "pointer",
+                  color: isFav ? "#ef4444" : "#64748b",
+                  boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
+                }}
+              >
+                <Heart size={15} fill={isFav ? "#ef4444" : "none"} />
+              </button>
+            </div>
+
+            {/* Card Product Info */}
+            <div style={{ padding: "16px" }}>
+              <div
+                style={{
+                  fontSize: "0.68rem",
+                  fontWeight: 700,
+                  color: "#64748b",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.06em",
+                  marginBottom: "4px",
+                }}
+              >
+                {feat.category}
+              </div>
+
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "baseline",
+                  justifyContent: "space-between",
+                  gap: "10px",
+                  marginBottom: "8px",
+                }}
+              >
+                <h4
+                  style={{
+                    fontSize: "0.95rem",
+                    fontWeight: 800,
+                    color: "#0f172a",
+                    margin: 0,
+                    whiteSpace: "nowrap",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                  }}
+                >
+                  {feat.title}
+                </h4>
+
+                <div style={{ display: "flex", alignItems: "baseline", gap: "6px", flexShrink: 0 }}>
+                  <span style={{ fontSize: "0.95rem", fontWeight: 800, color: "#0f172a" }}>
+                    {formatPrice(feat.price)}
+                  </span>
+                  {feat.comparePrice && (
+                    <span style={{ fontSize: "0.75rem", color: "#94a3b8", textDecoration: "line-through" }}>
+                      {formatPrice(feat.comparePrice)}
+                    </span>
+                  )}
                 </div>
               </div>
-            ))}
-          </div>
 
-          {/* Progress bar */}
-          <div
-            style={{
-              position: "absolute", bottom: 0, left: 0, right: 0,
-              height: "2px",
-              background: "rgba(255,255,255,0.08)",
-              zIndex: 20,
-            }}
-          >
-            <div
-              style={{
-                height: "100%", width: `${progress}%`,
-                background: slide.accentColor,
-                transition: "width 0.1s linear",
-              }}
-            />
-          </div>
+              {/* Rating & Quick Buy */}
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingTop: "8px", borderTop: "1px solid #f1f5f9" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                  <div style={{ display: "flex", gap: "1px" }}>
+                    {[...Array(5)].map((_, i) => (
+                      <Star key={i} size={11} fill="#0f172a" color="#0f172a" />
+                    ))}
+                  </div>
+                  <span style={{ fontSize: "0.65rem", fontWeight: 700, color: "#64748b" }}>
+                    {feat.rating}
+                  </span>
+                </div>
 
-          {/* Arrow buttons */}
-          {[
-            { onClick: prevSlide, style: { left: "10px" }, Icon: ChevronLeft },
-            { onClick: nextSlide, style: { right: "10px" }, Icon: ChevronRight },
-          ].map(({ onClick, style: s, Icon }, i) => (
-            <button
-              key={i}
-              onClick={onClick}
-              aria-label={i === 0 ? "Previous Slide" : "Next Slide"}
-              style={{
-                position: "absolute", top: "50%", transform: "translateY(-50%)",
-                width: "30px", height: "30px",
-                borderRadius: "50%",
-                background: "rgba(0,0,0,0.5)",
-                border: "1px solid rgba(255,255,255,0.12)",
-                color: "#ffffff",
-                display: "flex", alignItems: "center", justifyContent: "center",
-                cursor: "pointer",
-                zIndex: 25,
-                transition: "all 0.2s ease",
-                ...s,
-              }}
-            >
-              <Icon size={16} />
-            </button>
-          ))}
+                <button
+                  type="button"
+                  onClick={handleQuickAdd}
+                  style={{
+                    padding: "4px 10px",
+                    borderRadius: "6px",
+                    background: "#0f172a",
+                    color: "#ffffff",
+                    border: "none",
+                    fontSize: "0.72rem",
+                    fontWeight: 700,
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "4px",
+                  }}
+                >
+                  <ShoppingBag size={11} />
+                  <span>{locale === "bn" ? "কিনুন" : "Buy"}</span>
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
+
+        {/* ── Left & Right Minimal Chevron Arrows (Image 1 Style) ── */}
+        <button
+          type="button"
+          onClick={prevSlide}
+          aria-label="Previous Slide"
+          style={{
+            position: "absolute",
+            left: "18px",
+            top: "50%",
+            transform: "translateY(-50%)",
+            width: "42px",
+            height: "42px",
+            borderRadius: "50%",
+            background: "rgba(0, 0, 0, 0.35)",
+            backdropFilter: "blur(4px)",
+            border: "1px solid rgba(255, 255, 255, 0.2)",
+            color: "#ffffff",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            cursor: "pointer",
+            zIndex: 20,
+            transition: "all 0.2s ease",
+          }}
+          onMouseEnter={e => { e.currentTarget.style.background = "rgba(0,0,0,0.6)"; }}
+          onMouseLeave={e => { e.currentTarget.style.background = "rgba(0,0,0,0.35)"; }}
+        >
+          <ChevronLeft size={20} />
+        </button>
+
+        <button
+          type="button"
+          onClick={nextSlide}
+          aria-label="Next Slide"
+          style={{
+            position: "absolute",
+            right: "18px",
+            top: "50%",
+            transform: "translateY(-50%)",
+            width: "42px",
+            height: "42px",
+            borderRadius: "50%",
+            background: "rgba(0, 0, 0, 0.35)",
+            backdropFilter: "blur(4px)",
+            border: "1px solid rgba(255, 255, 255, 0.2)",
+            color: "#ffffff",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            cursor: "pointer",
+            zIndex: 20,
+            transition: "all 0.2s ease",
+          }}
+          onMouseEnter={e => { e.currentTarget.style.background = "rgba(0,0,0,0.6)"; }}
+          onMouseLeave={e => { e.currentTarget.style.background = "rgba(0,0,0,0.35)"; }}
+        >
+          <ChevronRight size={20} />
+        </button>
+
       </div>
     </div>
   );
