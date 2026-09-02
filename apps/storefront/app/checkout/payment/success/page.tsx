@@ -10,7 +10,7 @@ import { useLanguage } from "@/context/LanguageContext";
 function PaymentSuccessContent() {
   const searchParams = useSearchParams();
   const orderNumber = searchParams.get("order") || "TB-LIVE";
-  const { t, locale } = useLanguage();
+  const { t } = useLanguage();
 
   useEffect(() => {
     try {
@@ -69,17 +69,15 @@ function PaymentSuccessContent() {
               border: "1px solid rgba(16, 216, 118, 0.3)",
             }}
           >
-            ✓ {locale === "bn" ? "পেমেন্ট সফল ও যাচাইকৃত (Verified)" : "Payment Verified (SSLCommerz / Wallet)"}
+            ✓ Payment Verified (Online Gateway)
           </span>
 
           <h2 style={{ fontSize: "1.7rem", fontWeight: 900, color: "var(--text-main)", marginBottom: "8px", fontFamily: "var(--font-heading)" }}>
-            {locale === "bn" ? "অর্ডার ও পেমেন্ট সফল হয়েছে!" : "Payment & Order Confirmed!"}
+            Payment & Order Confirmed!
           </h2>
 
           <p style={{ color: "var(--text-muted)", fontSize: "0.92rem", marginBottom: "28px", lineHeight: 1.6 }}>
-            {locale === "bn"
-              ? "আপনার পেমেন্ট সফলভাবে প্রাপ্ত হয়েছে। আমাদের এক্সপ্রেস টিম দ্রুত খাঁটি পণ্য সংগ্রহ ও প্যাকেজিং শুরু করেছে।"
-              : "Payment received. Our express fresh dispatch team has initiated thermal insulated packaging."}
+            Payment received. Our express fresh dispatch team has initiated thermal insulated packaging.
           </p>
 
           <div
@@ -97,24 +95,24 @@ function PaymentSuccessContent() {
             }}
           >
             <div style={{ display: "flex", justifyContent: "space-between" }}>
-              <span style={{ color: "var(--text-muted)" }}>{locale === "bn" ? "অর্ডার নম্বর:" : "Order Number:"}</span>
+              <span style={{ color: "var(--text-muted)" }}>Order Number:</span>
               <span style={{ fontWeight: 800, color: "var(--emerald)", fontFamily: "var(--font-heading)" }}>
                 #{orderNumber}
               </span>
             </div>
             <div style={{ display: "flex", justifyContent: "space-between" }}>
-              <span style={{ color: "var(--text-muted)" }}>{locale === "bn" ? "পেমেন্ট স্ট্যাটাস:" : "Payment Status:"}</span>
-              <span style={{ color: "var(--emerald)", fontWeight: 800 }}>✓ PAID ({locale === "bn" ? "পরিশোধিত" : "Verified"})</span>
+              <span style={{ color: "var(--text-muted)" }}>Payment Status:</span>
+              <span style={{ color: "var(--emerald)", fontWeight: 800 }}>✓ PAID (Verified)</span>
             </div>
             <div style={{ display: "flex", justifyContent: "space-between" }}>
-              <span style={{ color: "var(--text-muted)" }}>{locale === "bn" ? "পেমেন্ট গেটওয়ে:" : "Payment Gateway:"}</span>
-              <span style={{ fontWeight: 600, color: "var(--text-body)" }}>SSLCommerz / Tatka Gateway</span>
+              <span style={{ color: "var(--text-muted)" }}>Payment Gateway:</span>
+              <span style={{ fontWeight: 600, color: "var(--text-body)" }}>Online Payment / Tatka Gateway</span>
             </div>
           </div>
 
           <div style={{ display: "flex", gap: "12px", justifyContent: "center", flexWrap: "wrap" }}>
             <Link
-              href={`/track?order=${orderNumber}`}
+              href={`/track/${orderNumber}`}
               className="btn-primary"
               style={{
                 display: "inline-flex",
@@ -126,7 +124,7 @@ function PaymentSuccessContent() {
               }}
             >
               <Truck size={18} />
-              <span>{locale === "bn" ? "লাইভ ট্র্যাক করুন" : "Track Order"}</span>
+              <span>Track Order</span>
             </Link>
             <Link
               href="/"
@@ -141,7 +139,7 @@ function PaymentSuccessContent() {
               }}
             >
               <ShoppingBag size={18} />
-              <span>{t.startShopping || (locale === "bn" ? "আরও কেনাকাটা করুন" : "Continue Shopping")}</span>
+              <span>Continue Shopping</span>
             </Link>
           </div>
         </div>

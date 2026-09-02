@@ -44,13 +44,13 @@ export class SafeErrorBoundary extends Component<Props, State> {
       return (
         <div className="p-4 rounded-xl border border-dashed border-emerald-500/20 bg-emerald-950/10 text-center my-2">
           <p className="text-xs text-slate-400 font-medium">
-            উইজেটটি প্রদর্শনে সাময়িক সমস্যা হচ্ছে।
+            Temporary issue loading this widget.
           </p>
           <button
             onClick={() => this.setState({ hasError: false })}
             className="mt-2 text-xs font-semibold text-emerald-400 hover:text-emerald-300 underline"
           >
-            পুনরায় লোড করুন
+            Retry / Reload
           </button>
         </div>
       );

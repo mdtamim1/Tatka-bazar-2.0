@@ -21,10 +21,10 @@ export default function AdminB2BPage() {
     <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
       <div>
         <h1 style={{ fontSize: "1.4rem", fontWeight: 800, color: "var(--text-main)" }}>
-          B2B প্রাতিষ্ঠানিক অ্যাকাউন্ট ও কোটেশন কন্ট্রোল
+          B2B Institutional Accounts & Wholesale Quotations
         </h1>
         <p style={{ fontSize: "0.82rem", color: "var(--text-muted)", marginTop: "2px" }}>
-          রেস্তোরাঁ ও করপোরেট ক্লায়েন্টদের ট্রেড লাইসেন্স যাচাই, ক্রেডিট লিমিট নির্ধারণ ও বাল্ক কোটেশন
+          Verify corporate client trade licenses, set credit limits, and approve wholesale purchasing access
         </p>
       </div>
 
@@ -32,13 +32,13 @@ export default function AdminB2BPage() {
         <table className="admin-table">
           <thead>
             <tr>
-              <th>প্রতিষ্ঠানের নাম</th>
-              <th>যোগাযোগকারী ও মোবাইল</th>
-              <th>ট্রেড লাইসেন্স</th>
-              <th>প্রয়োজনীয় ক্যাটাগরি ও চাহিদা</th>
-              <th>ক্রেডিট লিমিট</th>
-              <th>স্ট্যাটাস</th>
-              <th>অ্যাকশন</th>
+              <th>Company Name</th>
+              <th>Contact Person & Phone</th>
+              <th>Trade License</th>
+              <th>Required Category & Volume</th>
+              <th>Credit Limit</th>
+              <th>Status</th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -46,7 +46,7 @@ export default function AdminB2BPage() {
               <tr key={acc.id}>
                 <td>
                   <div style={{ fontWeight: 800 }}>{acc.companyName}</div>
-                  <div style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}>আবেদন: {acc.appliedDate}</div>
+                  <div style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}>Applied: {acc.appliedDate}</div>
                 </td>
                 <td>
                   <div style={{ fontWeight: 600 }}>{acc.contactPerson}</div>
@@ -59,15 +59,15 @@ export default function AdminB2BPage() {
                 </td>
                 <td>
                   <div style={{ fontSize: "0.8rem", fontWeight: 600 }}>{acc.categoryNeeded}</div>
-                  <div style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}>মাসিক চাহিদা: {acc.monthlyVolume}</div>
+                  <div style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}>Monthly Volume: {acc.monthlyVolume}</div>
                 </td>
                 <td>
                   <span style={{ fontWeight: 800, color: acc.creditLimit > 0 ? "var(--primary-dark)" : "var(--text-muted)" }}>
-                    {acc.creditLimit > 0 ? `৳${acc.creditLimit.toLocaleString()}` : "প্রযোজ্য নয়"}
+                    {acc.creditLimit > 0 ? `৳${acc.creditLimit.toLocaleString()}` : "N/A"}
                   </span>
                 </td>
                 <td>
-                  <span className={`status-badge ${acc.status === "APPROVED" ? "success" : acc.status === "PENDING" ? "warning" : "danger"}`}>
+                  <span className={`status-badge ${acc.status === "APPROVED" ? "success" : "warning"}`}>
                     {acc.status}
                   </span>
                 </td>
@@ -84,19 +84,19 @@ export default function AdminB2BPage() {
                           style={{ padding: "5px 10px", fontSize: "0.75rem" }}
                         >
                           <CheckCircle size={14} />
-                          <span>অনুমোদন ও ক্রেডিট</span>
+                          <span>Approve & Credit</span>
                         </button>
                         <button
                           onClick={() => rejectB2BAccount(acc.id)}
                           style={{ padding: "5px 8px", borderRadius: "6px", background: "#FEE2E2", color: "var(--danger)", fontSize: "0.75rem" }}
                         >
-                          বাতিল
+                          Reject
                         </button>
                       </>
                     )}
                     {acc.status === "APPROVED" && (
                       <span style={{ fontSize: "0.75rem", color: "var(--primary)", fontWeight: 700 }}>
-                        ✓ পাইকারি আনলকড
+                        ✓ Wholesale Unlocked
                       </span>
                     )}
                   </div>
@@ -112,16 +112,16 @@ export default function AdminB2BPage() {
         <div className="modal-overlay" onClick={() => setSelectedB2B(null)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: "440px" }}>
             <h2 style={{ fontSize: "1.15rem", fontWeight: 800, marginBottom: "8px" }}>
-              🏢 B2B অ্যাকাউন্ট অনুমোদন ও ক্রেডিট লিমিট
+              🏢 Approve B2B Account & Credit Limit
             </h2>
             <p style={{ fontSize: "0.82rem", color: "var(--text-muted)", marginBottom: "16px" }}>
-              {selectedB2B.companyName} কে অনুমোদনের সাথে সাথে স্টোরফ্রন্টে পাইকারি রেট আনলক হবে।
+              Approving {selectedB2B.companyName} unlocks wholesale tiered pricing and credit billing terms.
             </p>
 
             <form onSubmit={handleApprove} style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
               <div>
                 <label style={{ fontSize: "0.8rem", fontWeight: 700, display: "block", marginBottom: "4px" }}>
-                  ক্রেডিট লিমিট সীমা (৳) *
+                  Credit Limit Threshold (৳) *
                 </label>
                 <input
                   type="number"
@@ -133,8 +133,8 @@ export default function AdminB2BPage() {
               </div>
 
               <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px", marginTop: "6px" }}>
-                <button type="button" onClick={() => setSelectedB2B(null)} className="admin-btn admin-btn-secondary">বাতিল</button>
-                <button type="submit" className="admin-btn admin-btn-primary">অনুমোদন নিশ্চিত করুন</button>
+                <button type="button" onClick={() => setSelectedB2B(null)} className="admin-btn admin-btn-secondary">Cancel</button>
+                <button type="submit" className="admin-btn admin-btn-primary">Confirm Approval</button>
               </div>
             </form>
           </div>

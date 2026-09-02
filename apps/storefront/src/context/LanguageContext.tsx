@@ -6,7 +6,7 @@ import { translations, getTranslation } from "@/lib/i18n";
 
 interface LanguageContextType {
   locale: Locale;
-  t: typeof translations.bn;
+  t: typeof translations.en;
   setLocale: (locale: Locale) => void;
   toggleLocale: () => void;
   formatNumber: (num: number) => string;
@@ -15,56 +15,41 @@ interface LanguageContextType {
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
-// Bangla digits converter
-const bnDigits = ["০", "১", "২", "৩", "৪", "৫", "৬", "৭", "৮", "৯"];
 export function toBnDigits(num: number | string): string {
-  return String(num).replace(/\d/g, (d) => bnDigits[Number(d)] ?? d);
+  return String(num);
 }
 
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
-  const [locale, setLocaleState] = useState<Locale>("bn");
-  const [mounted, setMounted] = useState(false);
+  const [locale] = useState<Locale>("en");
 
   useEffect(() => {
-    setMounted(true);
-    const saved = localStorage.getItem("tatka_locale") as Locale;
-    if (saved === "bn" || saved === "en") {
-      setLocaleState(saved);
-      document.documentElement.lang = saved;
-    }
+    localStorage.setItem("tatka_locale", "en");
+    document.cookie = `tatka_locale=en; path=/; max-age=31536000`;
+    document.documentElement.lang = "en";
   }, []);
 
-  const setLocale = (newLocale: Locale) => {
-    setLocaleState(newLocale);
-    localStorage.setItem("tatka_locale", newLocale);
-    document.cookie = `tatka_locale=${newLocale}; path=/; max-age=31536000`;
-    document.documentElement.lang = newLocale;
+  const setLocale = (_newLocale: Locale) => {
+    // English only
   };
 
   const toggleLocale = () => {
-    setLocale(locale === "bn" ? "en" : "bn");
+    // English only
   };
 
   const formatNumber = (num: number): string => {
-    if (locale === "bn") {
-      return toBnDigits(num);
-    }
     return String(num);
   };
 
   const formatPrice = (price: number): string => {
-    if (locale === "bn") {
-      return `৳${toBnDigits(price)}`;
-    }
     return `৳${price}`;
   };
 
-  const t = getTranslation(locale);
+  const t = getTranslation("en");
 
   return (
     <LanguageContext.Provider
       value={{
-        locale,
+        locale: "en",
         t,
         setLocale,
         toggleLocale,

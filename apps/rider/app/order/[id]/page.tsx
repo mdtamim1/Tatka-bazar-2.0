@@ -26,15 +26,15 @@ export default function RiderOrderDetailPage() {
   const orderId = params.id as string;
   const order = deliveries.find((d) => d.id === orderId);
 
-  const [failureReason, setFailureReason] = useState("গ্রাহক ফোনে অপ্রাপ্য");
+  const [failureReason, setFailureReason] = useState("Customer Unreachable");
   const [showFailureModal, setShowFailureModal] = useState(false);
 
   if (!order) {
     return (
       <div className="rider-card" style={{ textAlign: "center", padding: "40px 16px" }}>
-        <h3>অর্ডার পাওয়া যায়নি</h3>
+        <h3>Order Not Found</h3>
         <Link href="/" className="rider-btn rider-btn-secondary" style={{ marginTop: "14px" }}>
-          ডেলিভারি তালিকায় ফিরুন
+          Return to Deliveries
         </Link>
       </div>
     );
@@ -71,8 +71,8 @@ export default function RiderOrderDetailPage() {
           <ArrowLeft size={18} />
         </Link>
         <div>
-          <h1 style={{ fontSize: "1.15rem", fontWeight: 800 }}>ডেলিভারি রান-শীট</h1>
-          <div style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>অর্ডার #{order.orderNumber}</div>
+          <h1 style={{ fontSize: "1.15rem", fontWeight: 800 }}>Delivery Run-Sheet</h1>
+          <div style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>Order #{order.orderNumber}</div>
         </div>
       </div>
 
@@ -100,7 +100,7 @@ export default function RiderOrderDetailPage() {
 
         {order.notes && (
           <div style={{ fontSize: "0.78rem", background: "#FEF3C7", color: "#92400E", padding: "8px 12px", borderRadius: "var(--radius-sm)" }}>
-            💬 <strong>গ্রাহক নোট:</strong> {order.notes}
+            💬 <strong>Customer Note:</strong> {order.notes}
           </div>
         )}
 
@@ -112,7 +112,7 @@ export default function RiderOrderDetailPage() {
             style={{ padding: "10px" }}
           >
             <Phone size={18} color="var(--primary)" />
-            <span>সরাসরি কল দিন</span>
+            <span>Call Customer</span>
           </a>
 
           <a
@@ -123,7 +123,7 @@ export default function RiderOrderDetailPage() {
             style={{ padding: "10px" }}
           >
             <Navigation size={18} color="#2563EB" />
-            <span>জিপিএস ম্যাপ</span>
+            <span>Google Maps</span>
           </a>
         </div>
       </div>
@@ -131,13 +131,13 @@ export default function RiderOrderDetailPage() {
       {/* Package Items Card */}
       <div className="rider-card" style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
         <h3 style={{ fontSize: "0.95rem", fontWeight: 800, borderBottom: "1px solid var(--border-subtle)", paddingBottom: "8px" }}>
-          প্যাকেজের পণ্য তালিকা ({order.items.length}টি)
+          Package Manifest ({order.items.length} items)
         </h3>
 
         <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
           {order.items.map((item, i) => (
             <div key={i} style={{ display: "flex", justifyContent: "space-between", fontSize: "0.85rem", padding: "4px 0", borderBottom: "1px dashed var(--border-subtle)" }}>
-              <span>{item.nameBn}</span>
+              <span>{item.nameEn || item.nameBn}</span>
               <span style={{ fontWeight: 700, color: "var(--primary-dark)" }}>{item.weight} × {item.quantity}</span>
             </div>
           ))}
@@ -147,15 +147,15 @@ export default function RiderOrderDetailPage() {
       {/* Payment & Cash Collection Card */}
       <div className="rider-card" style={{ display: "flex", flexDirection: "column", gap: "10px", background: order.isCod ? "#FFFDF5" : "#F8FAFC", border: order.isCod ? "1px solid #FDE68A" : "1px solid var(--border-subtle)" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <span style={{ fontSize: "0.85rem", fontWeight: 700 }}>পেমেন্ট ধরন:</span>
+          <span style={{ fontSize: "0.85rem", fontWeight: 700 }}>Payment Method:</span>
           <span style={{ fontWeight: 800, color: order.isCod ? "var(--primary-dark)" : "#2563EB" }}>
-            {order.isCod ? "ক্যাশ অন ডেলিভারি (COD)" : "অনলাইন পেমেন্ট (bKash/SSL)"}
+            {order.isCod ? "Cash on Delivery (COD)" : "Prepaid Online (bKash/SSL)"}
           </span>
         </div>
 
         {order.isCod && (
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderTop: "1px dashed #FCD34D", paddingTop: "8px" }}>
-            <span style={{ fontSize: "1rem", fontWeight: 800 }}>গ্রাহক থেকে প্রদেয় ক্যাশ:</span>
+            <span style={{ fontSize: "1rem", fontWeight: 800 }}>Cash to Collect:</span>
             <span style={{ fontSize: "1.3rem", fontWeight: 800, color: "var(--primary-dark)" }}>
               ৳{order.codAmountToCollect.toLocaleString()}
             </span>
@@ -172,7 +172,7 @@ export default function RiderOrderDetailPage() {
             style={{ fontSize: "1rem" }}
           >
             <Package size={20} />
-            <span>১. ওয়্যারহাউস থেকে পিকআপ সম্পন্ন</span>
+            <span>1. Pick up from Hub</span>
           </button>
         )}
 
@@ -183,7 +183,7 @@ export default function RiderOrderDetailPage() {
             style={{ background: "var(--accent)", color: "#FFF", fontSize: "1rem" }}
           >
             <Bike size={20} />
-            <span>২. গ্রাহকের ঠিকানায় যাত্রা শুরু</span>
+            <span>2. Start Delivery Route</span>
           </button>
         )}
 
@@ -197,8 +197,8 @@ export default function RiderOrderDetailPage() {
               <CheckCircle2 size={20} />
               <span>
                 {order.isCod
-                  ? `✓ ৳${order.codAmountToCollect} ক্যাশ গ্রহণ ও ডেলিভারি সম্পূর্ণ`
-                  : "✓ ডেলিভারি হস্তান্তর সম্পন্ন"}
+                  ? `✓ Collect ৳${order.codAmountToCollect} Cash & Complete`
+                  : "✓ Handover & Complete Delivery"}
               </span>
             </button>
 
@@ -207,14 +207,14 @@ export default function RiderOrderDetailPage() {
               className="rider-btn rider-btn-secondary"
               style={{ color: "var(--danger)" }}
             >
-              ডেলিভারি ব্যর্থ হয়েছে (রিপোর্ট করুন)
+              Report Failed Delivery
             </button>
           </>
         )}
 
         {order.status === "DELIVERED" && (
           <div style={{ background: "var(--primary-light)", padding: "14px", borderRadius: "var(--radius-md)", textAlign: "center", color: "var(--primary-hover)", fontWeight: 800 }}>
-            ✓ এই অর্ডারটি সফলভাবে হস্তান্তর ও ক্যাশ সংরক্ষিত হয়েছে!
+            ✓ This delivery has been successfully completed!
           </div>
         )}
       </div>
@@ -224,7 +224,7 @@ export default function RiderOrderDetailPage() {
         <div className="modal-overlay" onClick={() => setShowFailureModal(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: "420px" }}>
             <h2 style={{ fontSize: "1.1rem", fontWeight: 800, marginBottom: "10px" }}>
-              ডেলিভারি ব্যর্থতার কারণ নির্বাচন করুন
+              Select Failure Reason
             </h2>
 
             <form onSubmit={handleFailSubmit} style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
@@ -234,19 +234,19 @@ export default function RiderOrderDetailPage() {
                   onChange={(e) => setFailureReason(e.target.value)}
                   style={{ width: "100%", padding: "10px", borderRadius: "var(--radius-md)", border: "1px solid var(--border-medium)", background: "#FFF" }}
                 >
-                  <option value="গ্রাহক ফোনে অপ্রাপ্য">গ্রাহক ফোনে অপ্রাপ্য (Customer Unreachable)</option>
-                  <option value="গ্রাহক বাড়িতে অনুপস্থিত">গ্রাহক বাড়িতে অনুপস্থিত (Customer Not at Home)</option>
-                  <option value="ঠিকানা খুঁজে পাওয়া যায়নি">ঠিকানা খুঁজে পাওয়া যায়নি (Address Not Found)</option>
-                  <option value="গ্রাহক ডেলিভারি গ্রহণ বাতিল করেছেন">গ্রাহক ডেলিভারি গ্রহণ বাতিল করেছেন (Customer Refused)</option>
+                  <option value="Customer Unreachable">Customer Unreachable</option>
+                  <option value="Customer Not at Home">Customer Not at Home</option>
+                  <option value="Address Not Found">Address Not Found</option>
+                  <option value="Customer Refused Package">Customer Refused Package</option>
                 </select>
               </div>
 
               <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px", marginTop: "10px" }}>
                 <button type="button" onClick={() => setShowFailureModal(false)} className="rider-btn rider-btn-secondary" style={{ width: "auto" }}>
-                  বাতিল
+                  Cancel
                 </button>
                 <button type="submit" className="rider-btn rider-btn-danger" style={{ width: "auto" }}>
-                  ব্যর্থতা সাবমিট করুন
+                  Submit Failure
                 </button>
               </div>
             </form>

@@ -31,15 +31,15 @@ export default function AdminMarketingPage() {
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <div>
           <h1 style={{ fontSize: "1.4rem", fontWeight: 800, color: "var(--text-main)" }}>
-            মার্কেটিং টুলস, কুপন ও প্রমোশন ইঞ্জিন
+            Marketing Campaigns, Coupons & Promotions
           </h1>
           <p style={{ fontSize: "0.82rem", color: "var(--text-muted)", marginTop: "2px" }}>
-            ডিসকাউন্ট কুপন তৈরি, ব্যবহারের সীমা নির্ধারণ ও হিরো ব্যানার শিডিউলিং
+            Create discount coupons, set usage thresholds, and manage promotional offers
           </p>
         </div>
         <button onClick={() => setIsModalOpen(true)} className="admin-btn admin-btn-primary">
           <Plus size={16} />
-          <span>+ নতুন কুপন তৈরি করুন</span>
+          <span>+ Create New Coupon</span>
         </button>
       </div>
 
@@ -47,12 +47,12 @@ export default function AdminMarketingPage() {
         <table className="admin-table">
           <thead>
             <tr>
-              <th>কুপন কোড</th>
-              <th>ডিসকাউন্ট টাইপ ও পরিমাণ</th>
-              <th>সর্বনিম্ন অর্ডার</th>
-              <th>ব্যবহারের সীমা ও মোট ব্যবহার</th>
-              <th>মেয়াদ শেষ</th>
-              <th>স্ট্যাটাস</th>
+              <th>Coupon Code</th>
+              <th>Discount Type & Value</th>
+              <th>Min Order Amount</th>
+              <th>Usage Count / Limit</th>
+              <th>Expiry Date</th>
+              <th>Status</th>
             </tr>
           </thead>
           <tbody>
@@ -65,7 +65,7 @@ export default function AdminMarketingPage() {
                 </td>
                 <td>
                   <span style={{ fontWeight: 700 }}>
-                    {c.type === "PERCENTAGE" ? `${c.value}% মূল্যছাড়` : `৳${c.value} ফ্ল্যাট ছাড়`}
+                    {c.type === "PERCENTAGE" ? `${c.value}% Discount` : `৳${c.value} Flat Discount`}
                   </span>
                 </td>
                 <td>
@@ -73,7 +73,7 @@ export default function AdminMarketingPage() {
                 </td>
                 <td>
                   <div style={{ fontSize: "0.82rem" }}>
-                    <strong>{c.usedCount}</strong> / {c.usageLimit} বার ব্যবহৃত
+                    <strong>{c.usedCount}</strong> / {c.usageLimit} redeemed
                   </div>
                   <div style={{ width: "120px", height: "5px", background: "#F1F5F9", borderRadius: "999px", marginTop: "4px", overflow: "hidden" }}>
                     <div style={{ width: `${(c.usedCount / c.usageLimit) * 100}%`, height: "100%", background: "var(--primary)" }} />
@@ -84,7 +84,7 @@ export default function AdminMarketingPage() {
                 </td>
                 <td>
                   <span className={`status-badge ${c.isActive ? "success" : "neutral"}`}>
-                    {c.isActive ? "সক্রিয়" : "নিষ্ক্রিয়"}
+                    {c.isActive ? "Active" : "Inactive"}
                   </span>
                 </td>
               </tr>
@@ -97,10 +97,10 @@ export default function AdminMarketingPage() {
       {isModalOpen && (
         <div className="modal-overlay" onClick={() => setIsModalOpen(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: "460px" }}>
-            <h2 style={{ fontSize: "1.2rem", fontWeight: 800, marginBottom: "16px" }}>নতুন প্রোমোকোড কুপন তৈরি</h2>
+            <h2 style={{ fontSize: "1.2rem", fontWeight: 800, marginBottom: "16px" }}>Create New Promo Code</h2>
             <form onSubmit={handleAddCoupon} style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
               <div>
-                <label style={{ fontSize: "0.8rem", fontWeight: 700, display: "block", marginBottom: "4px" }}>কুপন কোড (যেমন: WELCOME10) *</label>
+                <label style={{ fontSize: "0.8rem", fontWeight: 700, display: "block", marginBottom: "4px" }}>Coupon Code (e.g. WELCOME10) *</label>
                 <input
                   type="text"
                   required
@@ -111,18 +111,18 @@ export default function AdminMarketingPage() {
               </div>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
                 <div>
-                  <label style={{ fontSize: "0.8rem", fontWeight: 700, display: "block", marginBottom: "4px" }}>ডিসকাউন্ট ধরন</label>
+                  <label style={{ fontSize: "0.8rem", fontWeight: 700, display: "block", marginBottom: "4px" }}>Discount Type</label>
                   <select
                     value={couponForm.type}
                     onChange={(e) => setCouponForm({ ...couponForm, type: e.target.value as any })}
                     style={{ width: "100%", padding: "8px 12px", borderRadius: "var(--radius-md)", border: "1px solid var(--border-medium)", background: "#FFF" }}
                   >
-                    <option value="PERCENTAGE">শতকরা (%) ছাড়</option>
-                    <option value="FLAT">ফ্ল্যাট টাকা (৳) ছাড়</option>
+                    <option value="PERCENTAGE">Percentage (%)</option>
+                    <option value="FLAT">Flat Amount (৳)</option>
                   </select>
                 </div>
                 <div>
-                  <label style={{ fontSize: "0.8rem", fontWeight: 700, display: "block", marginBottom: "4px" }}>ছাড়ের পরিমাণ *</label>
+                  <label style={{ fontSize: "0.8rem", fontWeight: 700, display: "block", marginBottom: "4px" }}>Discount Value *</label>
                   <input
                     type="number"
                     required
@@ -134,7 +134,7 @@ export default function AdminMarketingPage() {
               </div>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
                 <div>
-                  <label style={{ fontSize: "0.8rem", fontWeight: 700, display: "block", marginBottom: "4px" }}>সর্বনিম্ন অর্ডার (৳)</label>
+                  <label style={{ fontSize: "0.8rem", fontWeight: 700, display: "block", marginBottom: "4px" }}>Min Order Amount (৳)</label>
                   <input
                     type="number"
                     value={couponForm.minOrderAmount}
@@ -143,7 +143,7 @@ export default function AdminMarketingPage() {
                   />
                 </div>
                 <div>
-                  <label style={{ fontSize: "0.8rem", fontWeight: 700, display: "block", marginBottom: "4px" }}>ব্যবহারের সীমা (বার)</label>
+                  <label style={{ fontSize: "0.8rem", fontWeight: 700, display: "block", marginBottom: "4px" }}>Max Redemptions Limit</label>
                   <input
                     type="number"
                     value={couponForm.usageLimit}
@@ -153,8 +153,8 @@ export default function AdminMarketingPage() {
                 </div>
               </div>
               <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px", marginTop: "10px" }}>
-                <button type="button" onClick={() => setIsModalOpen(false)} className="admin-btn admin-btn-secondary">বাতিল</button>
-                <button type="submit" className="admin-btn admin-btn-primary">কুপন প্রকাশ করুন</button>
+                <button type="button" onClick={() => setIsModalOpen(false)} className="admin-btn admin-btn-secondary">Cancel</button>
+                <button type="submit" className="admin-btn admin-btn-primary">Publish Coupon</button>
               </div>
             </form>
           </div>

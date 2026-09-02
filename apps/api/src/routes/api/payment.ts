@@ -80,7 +80,7 @@ export async function paymentRoutes(fastify: FastifyInstance) {
           return reply.status(400).send({
             success: false,
             error: "Payment Amount Mismatch (Security Tamper Alert)",
-            message: "পরিশোধিত টাকার পরিমাণ অর্ডারের মূল্যের সাথে মেলেনি।",
+            message: "Payment amount does not match order total.",
           });
         }
 

@@ -18,7 +18,7 @@ export const metadata: Metadata = {
   keywords: ["online grocery", "Bangladeshi bazar", "Padma Ilish", "organic vegetables", "Tatka Bazar", "Dhaka delivery", "Recipe to Cart"],
   openGraph: {
     siteName: "Tatka Bazar",
-    locale: "bn_BD",
+    locale: "en_US",
     type: "website",
   },
 };
@@ -29,7 +29,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="bn">
+    <html lang="en">
       <head>
         <OrganizationJsonLd />
       </head>

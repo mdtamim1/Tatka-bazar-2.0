@@ -2,10 +2,7 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import {
-  Leaf, ArrowRight,
-  Truck, ShieldCheck, RefreshCw, Clock, Download,
-} from "lucide-react";
+import { ArrowRight, Download } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 import { HeroBanner }        from "@/components/home/HeroBanner";
 import { CategoryQuickNav }  from "@/components/home/CategoryQuickNav";
@@ -32,11 +29,42 @@ function useReveal(threshold = 0.1) {
 
 /* ── Section Header component ── */
 function SectionHeader({
-  eyebrow, eyebrowClass = "section-eyebrow--green", heading, sub, viewAllHref, viewAllLabel,
+  eyebrow, eyebrowClass = "section-eyebrow--green", heading, sub, viewAllHref, viewAllLabel, centered = false,
 }: {
   eyebrow: string; eyebrowClass?: string; heading: string; sub?: string;
-  viewAllHref?: string; viewAllLabel?: string;
+  viewAllHref?: string; viewAllLabel?: string; centered?: boolean;
 }) {
+  if (centered) {
+    return (
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", marginBottom: "28px", position: "relative", width: "100%" }}>
+        <div className={`section-eyebrow ${eyebrowClass}`} style={{ marginBottom: "10px", display: "inline-flex", alignItems: "center" }}>
+          {eyebrow}
+        </div>
+        <h2 className="section-heading" style={{ fontSize: "clamp(1.75rem, 3.2vw, 2.35rem)", fontWeight: 800, letterSpacing: "-0.03em", margin: "0 0 8px" }}>
+          {heading}
+        </h2>
+        {sub && <p className="section-subheading" style={{ maxWidth: "560px", margin: "0 auto", fontSize: "var(--text-sm)", color: "var(--text-muted)", lineHeight: 1.6 }}>{sub}</p>}
+        {viewAllHref && (
+          <div style={{ marginTop: "14px" }}>
+            <Link
+              href={viewAllHref}
+              className="view-all-link"
+              style={{
+                display: "inline-flex", alignItems: "center", gap: "6px",
+                padding: "6px 16px", borderRadius: "999px",
+                background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)",
+                fontSize: "0.78rem", transition: "all 0.2s ease",
+              }}
+            >
+              <span>{viewAllLabel}</span>
+              <ArrowRight size={13} />
+            </Link>
+          </div>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: "22px", gap: "12px", flexWrap: "wrap" }}>
       <div style={{ minWidth: 0, flex: "1 1 auto" }}>
@@ -63,43 +91,9 @@ export default function StorefrontHomePage() {
   const featuredProducts = PRODUCTS.filter(p => p.isFeatured);
   const organicProducts  = PRODUCTS.filter(p => p.isOrganic);
 
-  const { ref: trustRef, vis: trustVis }     = useReveal();
   const { ref: bestRef,  vis: bestVis }      = useReveal();
   const { ref: organicRef, vis: organicVis } = useReveal();
   const { ref: appRef, vis: appVis }         = useReveal();
-
-  const trustItems = [
-    {
-      Icon: Truck, emoji: "🚚",
-      color: "#10D876", bg: "rgba(16,216,118,0.08)", border: "rgba(16,216,118,0.2)",
-      label: locale === "bn" ? "দ্রুত ডেলিভারি"  : "Same-Day Delivery",
-      sub:   locale === "bn" ? "ঢাকায় ২-৪ ঘন্টা" : "2-4 hrs in Dhaka",
-    },
-    {
-      Icon: ShieldCheck, emoji: "🔐",
-      color: "#4F9EFF", bg: "rgba(79,158,255,0.08)", border: "rgba(79,158,255,0.2)",
-      label: locale === "bn" ? "নিরাপদ পেমেন্ট"    : "Secure Payment",
-      sub:   locale === "bn" ? "bKash, Nagad, COD" : "bKash, Nagad, COD",
-    },
-    {
-      Icon: Leaf, emoji: "🌿",
-      color: "#10D876", bg: "rgba(16,216,118,0.08)", border: "rgba(16,216,118,0.2)",
-      label: locale === "bn" ? "তাজা গ্যারান্টি"    : "Freshness Guarantee",
-      sub:   locale === "bn" ? "সতেজ না হলে ফেরত" : "Fresh or full refund",
-    },
-    {
-      Icon: RefreshCw, emoji: "🔄",
-      color: "#FB923C", bg: "rgba(251,146,60,0.08)", border: "rgba(251,146,60,0.2)",
-      label: locale === "bn" ? "সহজ রিটার্ন"      : "Easy Returns",
-      sub:   locale === "bn" ? "২৪ ঘন্টায় রিফান্ড" : "24-hour refund",
-    },
-    {
-      Icon: Clock, emoji: "📍",
-      color: "#A855F7", bg: "rgba(168,85,247,0.08)", border: "rgba(168,85,247,0.2)",
-      label: locale === "bn" ? "লাইভ ট্র্যাকিং"     : "Live Order Tracking",
-      sub:   locale === "bn" ? "রিয়েল-টাইম আপডেট" : "Real-time updates",
-    },
-  ];
 
   return (
     <main style={{ minHeight: "100vh" }}>
@@ -108,82 +102,7 @@ export default function StorefrontHomePage() {
       {/* 1. Hero Banner */}
       <HeroBanner />
 
-      {/* 2. Trust Strip */}
-      <section
-        ref={trustRef as React.RefObject<HTMLElement>}
-        style={{ padding: "10px 0 18px" }}
-      >
-        <div className="container" style={{ overflow: "hidden" }}>
-          <div
-            style={{
-              display: "flex", gap: "8px",
-              overflowX: "auto", scrollbarWidth: "none",
-              paddingBottom: "2px",
-              width: "100%", maxWidth: "100%",
-              boxSizing: "border-box",
-            }}
-          >
-            {trustItems.map(({ Icon, color, bg, border, label, sub }, i) => (
-              <div
-                key={i}
-                style={{
-                  display: "flex", alignItems: "center", gap: "9px",
-                  padding: "8px 12px",
-                  background: "var(--bg-card)",
-                  borderRadius: "12px",
-                  border: `1px solid var(--border-subtle)`,
-                  boxShadow: "0 2px 6px rgba(0,0,0,0.02)",
-                  flexShrink: 0, flex: "1 1 0", minWidth: "135px",
-                  transition: "all var(--t-smooth)",
-                  cursor: "default",
-                  position: "relative",
-                  overflow: "hidden",
-                  opacity: trustVis ? 1 : 0,
-                  transform: trustVis ? "translateY(0)" : "translateY(14px)",
-                  transitionDelay: trustVis ? `${i * 0.05}s` : "0s",
-                }}
-                onMouseEnter={e => {
-                  e.currentTarget.style.transform = "translateY(-3px)";
-                  e.currentTarget.style.borderColor = border;
-                  e.currentTarget.style.boxShadow = `0 6px 16px rgba(0,0,0,0.06), 0 0 16px ${bg}`;
-                  e.currentTarget.style.background = bg;
-                }}
-                onMouseLeave={e => {
-                  e.currentTarget.style.transform = "translateY(0)";
-                  e.currentTarget.style.borderColor = "var(--border-subtle)";
-                  e.currentTarget.style.boxShadow = "0 2px 6px rgba(0,0,0,0.02)";
-                  e.currentTarget.style.background = "var(--bg-card)";
-                }}
-              >
-                {/* Top accent line */}
-                <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: "1.5px", background: `linear-gradient(90deg, transparent, ${color}, transparent)`, opacity: 0.7 }} />
-                <div
-                  style={{
-                    width: "28px", height: "28px",
-                    borderRadius: "8px",
-                    background: bg,
-                    border: `1px solid ${border}`,
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    flexShrink: 0,
-                  }}
-                >
-                  <Icon size={14} color={color} />
-                </div>
-                <div style={{ minWidth: 0 }}>
-                  <div style={{ fontSize: "0.74rem", fontWeight: 700, color: "var(--text-main)", lineHeight: 1.15, fontFamily: "var(--font-heading)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                    {label}
-                  </div>
-                  <div style={{ fontSize: "0.62rem", color: "var(--text-muted)", marginTop: "2px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                    {sub}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* 3. Category Quick Nav */}
+      {/* 2. Category Quick Nav */}
       <CategoryQuickNav />
 
       {/* Divider */}
@@ -192,7 +111,7 @@ export default function StorefrontHomePage() {
       {/* 4. Flash Deals */}
       <FlashDeals />
 
-      {/* 5. Best Sellers */}
+      {/* 5. Most Selling */}
       <section
         ref={bestRef as React.RefObject<HTMLElement>}
         style={{ padding: "36px 0" }}
@@ -206,13 +125,15 @@ export default function StorefrontHomePage() {
             }}
           >
             <SectionHeader
-              eyebrow={`✨ ${t.bestSellers || (locale === "bn" ? "সেরা বিক্রয়" : "Best Sellers")}`}
-              heading={t.popularProducts || (locale === "bn" ? "সবচেয়ে জনপ্রিয় পণ্য" : "Most Popular Products")}
-              sub={locale === "bn" ? "গ্রাহকরা বারবার কিনছেন এমন পণ্য" : "Products customers keep coming back for"}
+              centered={true}
+              eyebrow={`✨ ${t.bestSellers || "Customer Favorites"}`}
+              heading={t.popularProducts || "Most Selling"}
+              sub="Products customers keep coming back for"
               viewAllHref="/category/all"
-              viewAllLabel={t.viewAll || (locale === "bn" ? "সব দেখুন" : "View All")}
+              viewAllLabel={t.viewAll || "View All"}
             />
           </div>
+
           <div className="product-grid">
             {featuredProducts.map((prod, i) => (
               <div
@@ -259,12 +180,13 @@ export default function StorefrontHomePage() {
             }}
           >
             <SectionHeader
-              eyebrow={`🌿 ${locale === "bn" ? "১০০% রাসায়নিকমুক্ত" : "100% Pesticide-Free"}`}
+              centered={true}
+              eyebrow="🌿 100% Pesticide-Free"
               eyebrowClass="section-eyebrow--green"
-              heading={t.organicPicks || (locale === "bn" ? "জৈব ও প্রাকৃতিক পণ্য" : "Organic & Natural Picks")}
-              sub={locale === "bn" ? "স্থানীয় জৈব খামার থেকে সরাসরি সংগ্রহ করা পণ্য" : "Harvested directly from certified local sustainable eco-farms"}
+              heading={t.organicPicks || "Nature's Best Harvest"}
+              sub="Harvested directly from certified local sustainable eco-farms"
               viewAllHref="/category/vegetables"
-              viewAllLabel={t.viewAll || (locale === "bn" ? "সব দেখুন" : "View All")}
+              viewAllLabel={t.viewAll || "View All"}
             />
           </div>
           <div className="product-grid">
@@ -341,7 +263,7 @@ export default function StorefrontHomePage() {
                   fontFamily: "var(--font-heading)",
                 }}
               >
-                📱 {locale === "bn" ? "মোবাইল অ্যাপ ও ক্যাশব্যাক" : "Mobile App & Cashback"}
+                📱 Mobile App & Cashback
               </span>
               <h2
                 style={{
@@ -351,26 +273,18 @@ export default function StorefrontHomePage() {
                   marginBottom: "16px", letterSpacing: "-0.04em",
                 }}
               >
-                {locale === "bn"
-                  ? "প্রথম অর্ডারে পান "
-                  : "Get "}
-                <span style={{ color: "var(--emerald)" }}>
-                  {locale === "bn" ? "৳১০০ ক্যাশব্যাক!" : "৳100 Cashback"}
-                </span>
-                {locale !== "bn" && " on Your First Order!"}
+                Get <span style={{ color: "var(--emerald)" }}>৳100 Cashback</span> on Your First Order!
               </h2>
               <p style={{ color: "rgba(240,242,247,0.7)", fontSize: "var(--text-base)", lineHeight: 1.7, maxWidth: "50ch" }}>
-                {locale === "bn"
-                  ? "লাইভ রাইডার ট্র্যাকিং, লয়্যালটি পয়েন্ট এবং ১-ক্লিক রিঅর্ডার — শুধুমাত্র আমাদের অ্যাপে।"
-                  : "Live GPS rider tracking, loyalty Tatka Coins, and seamless 1-click reordering — exclusively on our app."}
+                Live GPS rider tracking, loyalty Tatka Coins, and seamless 1-click reordering — exclusively on our app.
               </p>
 
               {/* Feature pills */}
               <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", marginTop: "22px" }}>
                 {[
-                  { icon: "📍", text: locale === "bn" ? "লাইভ ট্র্যাকিং" : "Live Tracking" },
-                  { icon: "🪙", text: locale === "bn" ? "লয়্যালটি কয়েন" : "Loyalty Coins" },
-                  { icon: "⚡", text: locale === "bn" ? "১-ক্লিক রিঅর্ডার" : "1-Click Reorder" },
+                  { icon: "📍", text: "Live Tracking" },
+                  { icon: "🪙", text: "Loyalty Coins" },
+                  { icon: "⚡", text: "1-Click Reorder" },
                 ].map((f, i) => (
                   <div
                     key={i}
@@ -438,8 +352,9 @@ export default function StorefrontHomePage() {
         </div>
       </section>
 
-      {/* 10. Testimonials */}
+      {/* 10. Testimonials — Ultra-Premium Customer Stories & Social Proof */}
       <Testimonials />
+
 
     </main>
   );

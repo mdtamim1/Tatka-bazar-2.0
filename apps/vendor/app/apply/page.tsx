@@ -14,9 +14,9 @@ export default function PublicVendorApplyPage() {
     email: "",
     nid: "",
     tradeLicense: "",
-    location: "ঢাকা",
+    location: "Dhaka",
     address: "",
-    categories: "তাজা শাকসবজি ও ফলমূল",
+    categories: "Organic Vegetables & Fruits",
     tagline: "",
   });
 
@@ -29,7 +29,7 @@ export default function PublicVendorApplyPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          businessName: formData.shopNameBn || formData.shopNameEn,
+          businessName: formData.shopNameEn || formData.shopNameBn,
           phone: formData.phone,
           email: formData.email || `vendor_${formData.phone}@tatkabazar.com`,
           description: `${formData.tagline} | Location: ${formData.location}, ${formData.address} | Owner: ${formData.ownerName}`,
@@ -72,10 +72,10 @@ export default function PublicVendorApplyPage() {
           TATKA BAZAR PARTNER NETWORK
         </span>
         <h1 style={{ fontSize: "1.8rem", fontWeight: 800, marginBottom: "8px" }}>
-          তাতকা বাজার ভেন্ডর পার্টনার আবেদন
+          Vendor Partner Application
         </h1>
         <p style={{ color: "rgba(255, 255, 255, 0.9)", fontSize: "0.92rem", maxWidth: "560px", margin: "0 auto" }}>
-          আপনার তাজা মাছ, শাকসবজি ও খাঁটি পণ্যের দোকান তাতকা বাজারে যুক্ত করুন এবং প্রতিদিনের হাজারো গ্রাহকের কাছে পৌঁছে দিন।
+          List your fresh river fish, organic vegetables, and farm staples on Tatka Bazar to reach thousands of daily shoppers.
         </p>
       </div>
 
@@ -100,17 +100,17 @@ export default function PublicVendorApplyPage() {
             <CheckCircle2 size={36} />
           </div>
           <h2 style={{ fontSize: "1.4rem", fontWeight: 800, color: "var(--primary-dark)", marginBottom: "8px" }}>
-            আপনার ভেন্ডর আবেদনটি সফলভাবে জমা হয়েছে!
+            Your Vendor Application Has Been Submitted!
           </h2>
           <p style={{ color: "var(--text-muted)", fontSize: "0.95rem", marginBottom: "20px", maxWidth: "500px", margin: "0 auto 24px" }}>
-            আমাদের ভেন্ডর রিলেশন টিম আপনার ট্রেড লাইসেন্স ও NID তথ্য যাচাই করে আগামী ২৪ ঘণ্টার মধ্যে অনুমোদন প্রদান করবে। অনুমোদন সম্পন্ন হলে আপনি ড্যাশবোর্ডে লগইন করতে পারবেন।
+            Our vendor relations team will verify your trade license and NID credentials within 24 hours. Once verified, you will receive dashboard credentials.
           </p>
           <div style={{ display: "flex", gap: "12px", justifyContent: "center" }}>
             <Link href="/" className="vendor-btn vendor-btn-primary" style={{ padding: "10px 20px" }}>
-              ড্যাশবোর্ডে যান (Review Demo)
+              Go to Dashboard (Demo)
             </Link>
             <a href="http://localhost:3000" className="vendor-btn vendor-btn-secondary" style={{ padding: "10px 20px" }}>
-              স্টোরফ্রন্টে ফিরে যান
+              Back to Storefront
             </a>
           </div>
         </div>
@@ -118,66 +118,53 @@ export default function PublicVendorApplyPage() {
         <div className="vendor-card" style={{ padding: "30px" }}>
           <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "18px" }}>
             <h2 style={{ fontSize: "1.15rem", fontWeight: 800, borderBottom: "1px solid var(--border-subtle)", paddingBottom: "10px" }}>
-              ১. দোকানের প্রাথমিক তথ্য (Shop Details)
+              1. Shop Details
             </h2>
 
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
-              <div>
-                <label style={{ fontSize: "0.8rem", fontWeight: 700, display: "block", marginBottom: "4px" }}>দোকানের নাম (বাংলা) *</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="যেমন: পদ্মা ফিশ হাউজ"
-                  value={formData.shopNameBn}
-                  onChange={(e) => setFormData({ ...formData, shopNameBn: e.target.value })}
-                  style={{ width: "100%", padding: "9px 12px", borderRadius: "var(--radius-md)", border: "1px solid var(--border-medium)" }}
-                />
-              </div>
-              <div>
-                <label style={{ fontSize: "0.8rem", fontWeight: 700, display: "block", marginBottom: "4px" }}>Shop Name (English) *</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="e.g. Padma Fish House"
-                  value={formData.shopNameEn}
-                  onChange={(e) => setFormData({ ...formData, shopNameEn: e.target.value })}
-                  style={{ width: "100%", padding: "9px 12px", borderRadius: "var(--radius-md)", border: "1px solid var(--border-medium)" }}
-                />
-              </div>
+            <div>
+              <label style={{ fontSize: "0.8rem", fontWeight: 700, display: "block", marginBottom: "4px" }}>Shop Name *</label>
+              <input
+                type="text"
+                required
+                placeholder="e.g. Padma River Fish House"
+                value={formData.shopNameEn}
+                onChange={(e) => setFormData({ ...formData, shopNameEn: e.target.value, shopNameBn: e.target.value })}
+                style={{ width: "100%", padding: "9px 12px", borderRadius: "var(--radius-md)", border: "1px solid var(--border-medium)" }}
+              />
             </div>
 
             <div>
-              <label style={{ fontSize: "0.8rem", fontWeight: 700, display: "block", marginBottom: "4px" }}>পণ্যের প্রধান ক্যাটাগরি *</label>
+              <label style={{ fontSize: "0.8rem", fontWeight: 700, display: "block", marginBottom: "4px" }}>Primary Product Category *</label>
               <select
                 value={formData.categories}
                 onChange={(e) => setFormData({ ...formData, categories: e.target.value })}
                 style={{ width: "100%", padding: "9px 12px", borderRadius: "var(--radius-md)", border: "1px solid var(--border-medium)", background: "#FFF" }}
               >
-                <option value="তাজা মাছ ও মাংস">তাজা মাছ ও মাংস (River Fish & Meat)</option>
-                <option value="তাজা শাকসবজি ও ফলমূল">তাজা শাকসবজি ও ফলমূল (Organic Vegetables & Fruits)</option>
-                <option value="খাঁটি তেল, ঘি ও দুগ্ধজাত">খাঁটি তেল, ঘি ও দুগ্ধজাত (Ghee & Dairy)</option>
-                <option value="চাল ও খাদ্যশস্য">চাল ও খাদ্যশস্য (Rice & Grains)</option>
+                <option value="River Fish & Meat">River Fish & Meat</option>
+                <option value="Organic Vegetables & Fruits">Organic Vegetables & Fruits</option>
+                <option value="Pure Oil, Ghee & Dairy">Pure Oil, Ghee & Dairy</option>
+                <option value="Rice & Grains">Rice & Grains</option>
               </select>
             </div>
 
             <h2 style={{ fontSize: "1.15rem", fontWeight: 800, borderBottom: "1px solid var(--border-subtle)", paddingBottom: "10px", marginTop: "10px" }}>
-              ২. মালিকের পরিচিতি ও ভেরিফিকেশন (Owner & Legal)
+              2. Owner & Legal Credentials
             </h2>
 
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
               <div>
-                <label style={{ fontSize: "0.8rem", fontWeight: 700, display: "block", marginBottom: "4px" }}>মালিকের নাম *</label>
+                <label style={{ fontSize: "0.8rem", fontWeight: 700, display: "block", marginBottom: "4px" }}>Owner Full Name *</label>
                 <input
                   type="text"
                   required
-                  placeholder="পূর্ণ নাম"
+                  placeholder="Full Name"
                   value={formData.ownerName}
                   onChange={(e) => setFormData({ ...formData, ownerName: e.target.value })}
                   style={{ width: "100%", padding: "9px 12px", borderRadius: "var(--radius-md)", border: "1px solid var(--border-medium)" }}
                 />
               </div>
               <div>
-                <label style={{ fontSize: "0.8rem", fontWeight: 700, display: "block", marginBottom: "4px" }}>মোবাইল নম্বর *</label>
+                <label style={{ fontSize: "0.8rem", fontWeight: 700, display: "block", marginBottom: "4px" }}>Mobile Number *</label>
                 <input
                   type="tel"
                   required
@@ -191,18 +178,18 @@ export default function PublicVendorApplyPage() {
 
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
               <div>
-                <label style={{ fontSize: "0.8rem", fontWeight: 700, display: "block", marginBottom: "4px" }}>জাতীয় পরিচয়পত্র (NID) নম্বর *</label>
+                <label style={{ fontSize: "0.8rem", fontWeight: 700, display: "block", marginBottom: "4px" }}>National ID (NID) Number *</label>
                 <input
                   type="text"
                   required
-                  placeholder="NID নম্বর"
+                  placeholder="NID Number"
                   value={formData.nid}
                   onChange={(e) => setFormData({ ...formData, nid: e.target.value })}
                   style={{ width: "100%", padding: "9px 12px", borderRadius: "var(--radius-md)", border: "1px solid var(--border-medium)" }}
                 />
               </div>
               <div>
-                <label style={{ fontSize: "0.8rem", fontWeight: 700, display: "block", marginBottom: "4px" }}>ট্রেড লাইসেন্স নম্বর *</label>
+                <label style={{ fontSize: "0.8rem", fontWeight: 700, display: "block", marginBottom: "4px" }}>Trade License Number *</label>
                 <input
                   type="text"
                   required
@@ -215,11 +202,11 @@ export default function PublicVendorApplyPage() {
             </div>
 
             <div>
-              <label style={{ fontSize: "0.8rem", fontWeight: 700, display: "block", marginBottom: "4px" }}>দোকানের সম্পূর্ণ ঠিকানা *</label>
+              <label style={{ fontSize: "0.8rem", fontWeight: 700, display: "block", marginBottom: "4px" }}>Complete Shop Address *</label>
               <textarea
                 rows={2}
                 required
-                placeholder="বাজারের নাম, রোড নম্বর ও জেলা..."
+                placeholder="Market name, road number, and district..."
                 value={formData.address}
                 onChange={(e) => setFormData({ ...formData, address: e.target.value })}
                 style={{ width: "100%", padding: "9px 12px", borderRadius: "var(--radius-md)", border: "1px solid var(--border-medium)" }}
@@ -227,7 +214,7 @@ export default function PublicVendorApplyPage() {
             </div>
 
             <button type="submit" className="vendor-btn vendor-btn-primary" style={{ width: "100%", padding: "14px", fontSize: "1rem", marginTop: "10px" }}>
-              <span>ভেন্ডর আবেদন জমা দিন</span>
+              <span>Submit Vendor Application</span>
               <ArrowRight size={18} />
             </button>
           </form>

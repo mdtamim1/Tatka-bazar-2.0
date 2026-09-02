@@ -24,13 +24,13 @@ export function VendorSidebar() {
   const lowStockCount = products.filter((p) => p.stock <= p.lowStockAlert).length;
 
   const navItems = [
-    { label: "ড্যাশবোর্ড (Dashboard)", href: "/dashboard", icon: LayoutDashboard },
-    { label: "আমার পণ্যসমূহ (Products)", href: "/products", icon: Package },
-    { label: "স্টক ও ইনভেন্টরি (Stock)", href: "/inventory", icon: Warehouse, badge: lowStockCount > 0 ? `${lowStockCount} Low` : undefined, badgeColor: "var(--danger)" },
-    { label: "অর্ডার ফুলফিলমেন্ট (Orders)", href: "/orders", icon: ShoppingBag, badge: pendingOrdersCount > 0 ? `${pendingOrdersCount}` : undefined, badgeColor: "var(--accent)" },
-    { label: "পে-আউট ও আয় (Payouts)", href: "/payouts", icon: DollarSign },
-    { label: "শপ প্রোফাইল কাস্টমাইজার", href: "/shop-profile", icon: Palette },
-    { label: "গ্রাহক রিভিউ ও রেটিং", href: "/reviews", icon: Star },
+    { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+    { label: "Products", href: "/products", icon: Package },
+    { label: "Stock & Inventory", href: "/inventory", icon: Warehouse, badge: lowStockCount > 0 ? `${lowStockCount} Low` : undefined, badgeColor: "var(--danger)" },
+    { label: "Order Fulfillment", href: "/orders", icon: ShoppingBag, badge: pendingOrdersCount > 0 ? `${pendingOrdersCount}` : undefined, badgeColor: "var(--accent)" },
+    { label: "Payouts & Revenue", href: "/payouts", icon: DollarSign },
+    { label: "Shop Profile Customizer", href: "/shop-profile", icon: Palette },
+    { label: "Reviews & Ratings", href: "/reviews", icon: Star },
   ];
 
   return (
@@ -75,7 +75,7 @@ export function VendorSidebar() {
         </div>
         <div>
           <div style={{ fontWeight: 800, fontSize: "1rem", color: "#FFF", lineHeight: 1.1 }}>
-            {currentVendor.nameBn}
+            {currentVendor.nameEn || currentVendor.nameBn}
           </div>
           <div style={{ fontSize: "0.7rem", color: "#A7F3D0", textTransform: "uppercase", letterSpacing: "0.05em" }}>
             VENDOR PORTAL
@@ -159,7 +159,7 @@ export function VendorSidebar() {
             fontWeight: 700,
           }}
         >
-          <span>পাবলিক শপ প্রিভিউ</span>
+          <span>Public Shop Preview</span>
           <ExternalLink size={14} />
         </a>
       </div>

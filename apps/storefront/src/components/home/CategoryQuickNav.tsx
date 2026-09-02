@@ -49,14 +49,14 @@ export function CategoryQuickNav() {
         >
           <div>
             <div className="section-eyebrow section-eyebrow--green" style={{ marginBottom: "10px" }}>
-              🛒 {locale === "bn" ? "বিভাগ অনুযায়ী কিনুন" : "Shop by Category"}
+              🛒 Shop by Category
             </div>
             <h2 className="section-heading">
-              {t.shopByCategory || (locale === "bn" ? "কী দরকার আজ?" : "What do you need today?")}
+              {t.shopByCategory || "What do you need today?"}
             </h2>
           </div>
           <Link href="/category/all" className="view-all-link">
-            <span>{t.viewAll || (locale === "bn" ? "সব দেখুন" : "View All")}</span>
+            <span>{t.viewAll || "View All"}</span>
             <ArrowRight size={15} />
           </Link>
         </div>
@@ -164,7 +164,7 @@ export function CategoryQuickNav() {
                       fontFamily: "var(--font-heading)",
                     }}
                   >
-                    {locale === "bn" ? cat.nameBn : cat.nameEn}
+                    {cat.nameEn || cat.nameBn}
                   </h3>
                   <p
                     style={{
@@ -174,7 +174,7 @@ export function CategoryQuickNav() {
                       transition: "color var(--t-fast)",
                     }}
                   >
-                    {cat.itemCount} {locale === "bn" ? "পণ্য" : "items"}
+                    {cat.itemCount} items
                   </p>
                 </div>
               </Link>

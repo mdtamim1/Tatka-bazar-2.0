@@ -85,7 +85,7 @@ async function bootstrap() {
         success: false,
         statusCode: 503,
         error: "ServiceOverloaded",
-        message: "তাতকা বাজার সার্ভার অতিরিক্ত ট্রাফিকের চাপে ব্যস্ত। অনুগ্রহ করে কয়েক সেকেন্ড পর আবার চেষ্টা করুন।",
+        message: "Tatka Bazar servers are experiencing heavy load. Please retry in a few seconds.",
       });
     },
     exposeStatusRoute: "/health/pressure",
@@ -116,7 +116,7 @@ async function bootstrap() {
       success: false,
       statusCode: 429,
       error: "Too Many Requests",
-      message: "অতিরিক্ত রিকোয়েস্ট পাঠানো হয়েছে। অনুগ্রহ করে কিছুক্ষণ অপেক্ষা করুন। (Rate limit exceeded. Please wait a moment.)",
+      message: "Rate limit exceeded. Please wait a moment before sending more requests.",
       retryAfter: context.after,
     }),
   });
@@ -155,8 +155,8 @@ async function bootstrap() {
       statusCode,
       error: error.name || (statusCode === 500 ? "InternalServerError" : "BadRequest"),
       message: statusCode === 500
-        ? "সার্ভারে সাময়িক সমস্যা হয়েছে। অনুগ্রহ করে কিছুক্ষণ পর চেষ্টা করুন। (Internal server error)"
-        : error.message || "অনুরোধটি সম্পন্ন করা যায়নি।",
+        ? "Internal server error. Please try again shortly."
+        : error.message || "Request could not be completed.",
       details: error.validation || error.issues || undefined,
     });
   });
@@ -167,7 +167,7 @@ async function bootstrap() {
       success: false,
       statusCode: 404,
       error: "NotFound",
-      message: `অনুরোধকৃত এন্ডপয়েন্টটি (${request.method} ${request.url}) পাওয়া যায়নি।`,
+      message: `Requested endpoint (${request.method} ${request.url}) was not found.`,
     });
   });
 

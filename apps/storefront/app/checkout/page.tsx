@@ -3,23 +3,29 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import confetti from "canvas-confetti";
 import {
-  Check, ChevronRight, ShieldCheck, Lock, ArrowRight,
-  Truck, Clock, Sparkles, MapPin, Phone, User, Mail,
-  CreditCard, Smartphone, DollarSign, CheckCircle2,
-  AlertTriangle, RefreshCw, X
+  Check,
+  ChevronRight,
+  ShieldCheck,
+  Lock,
+  RefreshCw,
+  ShoppingBag,
+  CreditCard,
+  Truck,
+  ArrowRight,
+  X,
+  CheckCircle2,
 } from "lucide-react";
-import { useLanguage } from "@/context/LanguageContext";
+import confetti from "canvas-confetti";
 import { useCartStore } from "@/lib/cart-store";
-import { submitOrder } from "@/lib/api-client";
+import { useLanguage } from "@/context/LanguageContext";
 import styles from "./page.module.css";
 
 type CheckoutStep = "details" | "payment" | "complete";
 
 export default function CheckoutPage() {
   const router = useRouter();
-  const { locale, formatPrice } = useLanguage();
+  const { formatPrice } = useLanguage();
   const {
     items,
     getSubtotal,
@@ -27,6 +33,7 @@ export default function CheckoutPage() {
     getDeliveryFee,
     getGrandTotal,
     clearCart,
+    submitOrder,
     applyCoupon,
   } = useCartStore();
 
@@ -38,16 +45,16 @@ export default function CheckoutPage() {
 
   // Form State (Step 1)
   const [formData, setFormData] = useState({
-    fullName: "রাফিক আহমেদ",
+    fullName: "Rafiq Ahmed",
     phone: "01712-345678",
     altPhone: "01819-876543",
     email: "rafiq.ahmed@example.com",
     city: "Dhaka",
-    area: "ধানমন্ডি (Dhanmondi)",
-    address: "বাড়ি ৪২, রোড ৭/এ, ফ্ল্যাট ৩বি, ধানমন্ডি আ/এ",
-    landmark: "ইবনে সিনা হাসপাতালের বিপরীতে",
+    area: "Dhanmondi",
+    address: "House 42, Road 7/A, Flat 3B, Dhanmondi R/A",
+    landmark: "Opposite Ibn Sina Hospital",
     deliverySlot: "morning", // morning | afternoon | evening
-    specialNote: "মাছ ও শাকসবজি যেন আলাদা থার্মাল ব্যাগে প্যাকেজিং করা থাকে।",
+    specialNote: "Please pack fish and vegetables in separate insulated boxes.",
   });
 
   // Payment State (Step 2)
@@ -88,7 +95,7 @@ export default function CheckoutPage() {
   const handleDetailsSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.fullName || !formData.phone || !formData.address) {
-      alert("অনুগ্রহ করে আপনার নাম, ফোন নম্বর এবং সম্পূর্ণ ঠিকানা পূরণ করুন।");
+      alert("Please enter your name, phone number, and delivery address.");
       return;
     }
     setCurrentStep("payment");
@@ -105,12 +112,12 @@ export default function CheckoutPage() {
     e.preventDefault();
 
     if (!isSlideUnlocked && !securityVerified) {
-      setSecurityError("অর্ডার নিশ্চিত করতে স্লাইড করুন অথবা নিরাপত্তা প্রশ্নের সঠিক উত্তর দিন।");
+      setSecurityError("Please slide to unlock or answer the verification question.");
       return;
     }
 
     if (!agreeTerms) {
-      alert("অনুগ্রহ করে টার্মস ও কন্ডিশনস সম্মতি দিন।");
+      alert("Please agree to the terms and conditions.");
       return;
     }
 
@@ -124,14 +131,14 @@ export default function CheckoutPage() {
         customerAddress: `${formData.address}${formData.landmark ? ` (${formData.landmark})` : ""}`,
         deliveryArea: formData.area,
         deliverySlot: formData.deliverySlot === "morning"
-          ? "সকাল (০৭:০০ - ০৯:৩০)"
+          ? "Morning (07:00 - 09:30 AM)"
           : formData.deliverySlot === "afternoon"
-          ? "দুপুর (০১:০০ - ০৩:৩০)"
-          : "সন্ধ্যা (০৬:৩০ - ০৯:০০)",
+          ? "Midday (01:00 - 03:30 PM)"
+          : "Evening (06:30 - 09:00 PM)",
         paymentMethod,
         items: items.map(it => ({
           productId: it.product.id,
-          name: it.product.nameBn || it.product.nameEn,
+          name: it.product.nameEn || it.product.nameBn,
           price: it.totalPrice,
           quantity: it.quantity,
           unit: it.selectedUnit,
@@ -150,7 +157,7 @@ export default function CheckoutPage() {
         total: grandTotal,
         paymentMethod,
         deliverySlot: orderPayload.deliverySlot,
-        date: new Date().toLocaleDateString("bn-BD"),
+        date: new Date().toLocaleDateString("en-US"),
       });
 
       clearCart();
@@ -167,7 +174,7 @@ export default function CheckoutPage() {
         // ignore
       }
     } catch (err) {
-      alert("অর্ডার সম্পন্ন করতে সমস্যা হয়েছে। অনুগ্রহ করে আবার চেষ্টা করুন।");
+      alert("There was an issue processing your order. Please try again.");
     } finally {
       setIsProcessing(false);
     }
@@ -185,13 +192,13 @@ export default function CheckoutPage() {
                 <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
               </svg>
             </div>
-            <span>তাতকা বাজার 2.0</span>
+            <span>Tatka Bazar</span>
           </Link>
 
           {currentStep !== "complete" && (
             <Link href="/cart" className={styles.cancelLink}>
               <X size={15} />
-              <span>কার্টে ফিরে যান (Cancel)</span>
+              <span>Cancel & Return to Cart</span>
             </Link>
           )}
         </div>
@@ -239,9 +246,9 @@ export default function CheckoutPage() {
               {currentStep === "details" && (
                 <div className={styles.mainCard}>
                   <div className={styles.sectionHeader}>
-                    <h2 className={styles.sectionTitle}>ব্যক্তিগত তথ্য ও ডেলিভারি ঠিকানা</h2>
+                    <h2 className={styles.sectionTitle}>Personal Details & Delivery Address</h2>
                     <p className={styles.sectionSubtitle}>
-                      আপনার তাজা বাজার নিরাপদে পৌঁছাতে নিচের তথ্যগুলো যাচাই করুন।
+                      Verify your delivery location for accurate doorstep dispatch.
                     </p>
                   </div>
 
@@ -251,7 +258,7 @@ export default function CheckoutPage() {
                       {/* Full Name */}
                       <div className={styles.inputGroup}>
                         <label className={styles.inputLabel}>
-                          <span>গ্রাহকের পুরো নাম (Full Name) *</span>
+                          <span>Customer Full Name *</span>
                         </label>
                         <input
                           type="text"
@@ -265,8 +272,8 @@ export default function CheckoutPage() {
                       {/* Primary Phone */}
                       <div className={styles.inputGroup}>
                         <label className={styles.inputLabel}>
-                          <span>প্রাইমারি মোবাইল নম্বর *</span>
-                          <span style={{ fontSize: "0.7rem", color: "#10b981", fontWeight: 700 }}>ভেরিফাইড</span>
+                          <span>Primary Mobile Number *</span>
+                          <span style={{ fontSize: "0.7rem", color: "#10b981", fontWeight: 700 }}>Verified</span>
                         </label>
                         <input
                           type="tel"
@@ -280,7 +287,7 @@ export default function CheckoutPage() {
                       {/* Alternate Phone */}
                       <div className={styles.inputGroup}>
                         <label className={styles.inputLabel}>
-                          <span>বিকল্প ফোন নম্বর (ঐচ্ছিক)</span>
+                          <span>Alternate Phone (Optional)</span>
                         </label>
                         <input
                           type="tel"
@@ -294,7 +301,7 @@ export default function CheckoutPage() {
                       {/* Email */}
                       <div className={styles.inputGroup}>
                         <label className={styles.inputLabel}>
-                          <span>ইমেইল এড্রেস</span>
+                          <span>Email Address</span>
                         </label>
                         <input
                           type="email"
@@ -307,26 +314,26 @@ export default function CheckoutPage() {
                       {/* Delivery Area */}
                       <div className={styles.inputGroup}>
                         <label className={styles.inputLabel}>
-                          <span>শহর / এরিয়া *</span>
+                          <span>City / Area *</span>
                         </label>
                         <select
                           value={formData.area}
                           onChange={e => setFormData({ ...formData, area: e.target.value })}
                           className={styles.inputControl}
                         >
-                          <option value="ধানমন্ডি (Dhanmondi)">ধানমন্ডি (Dhanmondi, Dhaka)</option>
-                          <option value="গুলশান (Gulshan)">গুলশান (Gulshan-1 & 2)</option>
-                          <option value="বনানী (Banani)">বনানী (Banani, Dhaka)</option>
-                          <option value="উত্তরা (Uttara)">উত্তরা (Uttara Sector 1-14)</option>
-                          <option value="মিরপুর (Mirpur)">মিরপুর (Mirpur, Dhaka)</option>
-                          <option value="মোহাম্মদপুর (Mohammadpur)">মোহাম্মদপুর (Mohammadpur)</option>
+                          <option value="Dhanmondi">Dhanmondi, Dhaka</option>
+                          <option value="Gulshan">Gulshan-1 & 2</option>
+                          <option value="Banani">Banani, Dhaka</option>
+                          <option value="Uttara">Uttara Sector 1-14</option>
+                          <option value="Mirpur">Mirpur, Dhaka</option>
+                          <option value="Mohammadpur">Mohammadpur</option>
                         </select>
                       </div>
 
                       {/* Full Address */}
                       <div className={`${styles.inputGroup} ${styles.fullWidth}`}>
                         <label className={styles.inputLabel}>
-                          <span>সম্পূর্ণ ডেলিভারি ঠিকানা (বাড়ি, রোড ও ফ্ল্যাট নম্বর) *</span>
+                          <span>Full Delivery Address (House, Road, Apartment) *</span>
                         </label>
                         <input
                           type="text"
@@ -341,31 +348,31 @@ export default function CheckoutPage() {
                       {/* Delivery Slot */}
                       <div className={`${styles.inputGroup} ${styles.fullWidth}`}>
                         <label className={styles.inputLabel}>
-                          <span>পছন্দের ডেলিভারি সময় নির্বাচন করুন *</span>
+                          <span>Preferred Delivery Slot *</span>
                         </label>
                         <div className={styles.slotGrid}>
                           <div
                             className={`${styles.slotCard} ${formData.deliverySlot === "morning" ? styles.slotCardActive : ""}`}
                             onClick={() => setFormData({ ...formData, deliverySlot: "morning" })}
                           >
-                            <span className={styles.slotTitle}>🌅 তাজা সকাল (Morning)</span>
-                            <span className={styles.slotTime}>সকাল ০৭:০০ - ০৯:৩০</span>
+                            <span className={styles.slotTitle}>🌅 Morning Slot</span>
+                            <span className={styles.slotTime}>07:00 AM - 09:30 AM</span>
                           </div>
 
                           <div
                             className={`${styles.slotCard} ${formData.deliverySlot === "afternoon" ? styles.slotCardActive : ""}`}
                             onClick={() => setFormData({ ...formData, deliverySlot: "afternoon" })}
                           >
-                            <span className={styles.slotTitle}>☀️ দুপুর এক্সপ্রেস</span>
-                            <span className={styles.slotTime}>দুপুর ০১:০০ - ০৩:৩০</span>
+                            <span className={styles.slotTitle}>☀️ Midday Express</span>
+                            <span className={styles.slotTime}>01:00 PM - 03:30 PM</span>
                           </div>
 
                           <div
                             className={`${styles.slotCard} ${formData.deliverySlot === "evening" ? styles.slotCardActive : ""}`}
                             onClick={() => setFormData({ ...formData, deliverySlot: "evening" })}
                           >
-                            <span className={styles.slotTitle}>🌙 সন্ধ্যা বাজার</span>
-                            <span className={styles.slotTime}>সন্ধ্যা ০৬:৩০ - ০৯:০০</span>
+                            <span className={styles.slotTitle}>🌙 Evening Slot</span>
+                            <span className={styles.slotTime}>06:30 PM - 09:00 PM</span>
                           </div>
                         </div>
                       </div>
@@ -373,13 +380,13 @@ export default function CheckoutPage() {
                       {/* Special Packaging Note */}
                       <div className={`${styles.inputGroup} ${styles.fullWidth}`}>
                         <label className={styles.inputLabel}>
-                          <span>বিশেষ ডেলিভারি নির্দেশিকা / প্যাকেজিং নোট</span>
+                          <span>Special Delivery / Packaging Instructions</span>
                         </label>
                         <textarea
                           rows={2}
                           value={formData.specialNote}
                           onChange={e => setFormData({ ...formData, specialNote: e.target.value })}
-                          placeholder="যেমন: গেটের গার্ডের কাছে রেখে যাবেন..."
+                          placeholder="e.g. Leave package with the security guard..."
                           className={styles.inputControl}
                           style={{ height: "auto" }}
                         />
@@ -389,7 +396,7 @@ export default function CheckoutPage() {
 
                     <div style={{ marginTop: "24px" }}>
                       <button type="submit" className={styles.continueBtn}>
-                        <span>পরবর্তী ধাপ: পেমেন্ট অপশন নির্বাচন (Payment)</span>
+                        <span>Continue to Payment</span>
                         <ChevronRight size={17} />
                       </button>
                     </div>
@@ -420,8 +427,8 @@ export default function CheckoutPage() {
                             {paymentMethod === "BKASH" && <div className={styles.radioDot} />}
                           </div>
                           <div>
-                            <div className={styles.paymentLabel}>bKash (বিকাশ অনলাইন পেমেন্ট)</div>
-                            <div className={styles.paymentDesc}>ইনস্ট্যান্ট পেমেন্ট ও ১০% ক্যাশব্যাক ক্যাম্পেইন</div>
+                            <div className={styles.paymentLabel}>bKash Online Payment</div>
+                            <div className={styles.paymentDesc}>Instant payment with 10% cashback campaign</div>
                           </div>
                         </div>
                         <span style={{ fontWeight: 900, color: "#e11d48", fontSize: "0.95rem" }}>bKash</span>
@@ -437,8 +444,8 @@ export default function CheckoutPage() {
                             {paymentMethod === "NAGAD" && <div className={styles.radioDot} />}
                           </div>
                           <div>
-                            <div className={styles.paymentLabel}>Nagad (নগদ পেমেন্ট)</div>
-                            <div className={styles.paymentDesc}>ডাক বিভাগের ডিজিটাল লেনদেন</div>
+                            <div className={styles.paymentLabel}>Nagad Digital Payment</div>
+                            <div className={styles.paymentDesc}>Post office digital mobile wallet</div>
                           </div>
                         </div>
                         <span style={{ fontWeight: 900, color: "#ea580c", fontSize: "0.95rem" }}>Nagad</span>
@@ -455,7 +462,7 @@ export default function CheckoutPage() {
                           </div>
                           <div>
                             <div className={styles.paymentLabel}>Credit / Debit Card & Net Banking</div>
-                            <div className={styles.paymentDesc}>Visa, MasterCard, Amex & SSLCommerz Gateway</div>
+                            <div className={styles.paymentDesc}>Visa, MasterCard, Amex & Online Banking</div>
                           </div>
                         </div>
                         <div style={{ display: "flex", gap: "6px" }}>
@@ -474,8 +481,8 @@ export default function CheckoutPage() {
                             {paymentMethod === "COD" && <div className={styles.radioDot} />}
                           </div>
                           <div>
-                            <div className={styles.paymentLabel}>Cash on delivery (ক্যাশ অন ডেলিভারি)</div>
-                            <div className={styles.paymentDesc}>পণ্য হাতে পেয়ে দেখে টাকা পরিশোধ করুন</div>
+                            <div className={styles.paymentLabel}>Cash on Delivery (COD)</div>
+                            <div className={styles.paymentDesc}>Inspect produce first, then pay in cash to the rider</div>
                           </div>
                         </div>
                         <span style={{ fontSize: "1.2rem" }}>💵</span>
@@ -487,10 +494,10 @@ export default function CheckoutPage() {
                     <div className={styles.securityShieldBox}>
                       <div className={styles.shieldHeader}>
                         <ShieldCheck size={18} color="#16a34a" />
-                        <span>অর্ডার নিরাপত্তা ও ভেরিফিকেশন গার্ড (Anti-Bot & Child Shield)</span>
+                        <span>Order Verification Shield (Anti-Bot & Child Protection)</span>
                       </div>
                       <p className={styles.shieldSub}>
-                        অবাঞ্ছিত ক্লিক, ভুল অর্ডার ও হ্যাকিং বট প্রতিরোধে অর্ডার নিশ্চিত করতে নিচের স্লাইডারটি অন করুন।
+                        To prevent accidental orders, please slide the toggle or solve the verification problem below.
                       </p>
 
                       {/* Slide-To-Confirm */}
@@ -502,14 +509,14 @@ export default function CheckoutPage() {
                           {isSlideUnlocked ? <Check size={18} /> : <Lock size={16} />}
                         </div>
                         <span className={styles.slideLabel}>
-                          {isSlideUnlocked ? "✓ অর্ডার ভেরিফিকেশন সফল!" : "👉 স্লাইড করে অর্ডার কনফার্ম করুন (Slide to Confirm)"}
+                          {isSlideUnlocked ? "✓ Order verification complete!" : "👉 Slide to confirm order"}
                         </span>
                       </div>
 
                       {/* Optional Math Verification */}
                       <div className={styles.mathChallengeBox}>
                         <span className={styles.mathQuestion}>
-                          নিরাপত্তা প্রশ্ন: {mathProblem.num1} + {mathProblem.num2} =
+                          Security Question: {mathProblem.num1} + {mathProblem.num2} =
                         </span>
                         <input
                           type="text"
@@ -521,7 +528,7 @@ export default function CheckoutPage() {
                         />
                         {securityVerified && (
                           <span style={{ fontSize: "0.78rem", color: "#16a34a", fontWeight: 700 }}>
-                            ✓ হিউম্যান ভেরিফাইড
+                            ✓ Human Verified
                           </span>
                         )}
                       </div>
@@ -542,7 +549,7 @@ export default function CheckoutPage() {
                       {isProcessing ? (
                         <>
                           <RefreshCw size={18} className="spin" />
-                          <span>অর্ডার প্রসেস হচ্ছে...</span>
+                          <span>Processing Order...</span>
                         </>
                       ) : (
                         <>
@@ -560,7 +567,7 @@ export default function CheckoutPage() {
                         onChange={e => setAgreeTerms(e.target.checked)}
                       />
                       <label htmlFor="terms">
-                        By clicking this, I agree to Tatka Bazar <strong>Terms & Conditions</strong> and <strong>Privacy Policy</strong>
+                        By placing this order, I agree to Tatka Bazar <strong>Terms & Conditions</strong> and <strong>Privacy Policy</strong>
                       </label>
                     </div>
 
@@ -570,7 +577,7 @@ export default function CheckoutPage() {
                         onClick={() => setCurrentStep("details")}
                         style={{ background: "none", border: "none", color: "#64748b", fontSize: "0.82rem", cursor: "pointer", textDecoration: "underline" }}
                       >
-                        ← ব্যক্তিগত তথ্যে ফিরে যান (Edit Details)
+                        ← Edit Personal Details
                       </button>
                     </div>
                   </form>
@@ -582,7 +589,7 @@ export default function CheckoutPage() {
             <div className={styles.sidebarCard}>
               <div className={styles.sidebarTitle}>
                 <span>Your cart ({items.length})</span>
-                <Link href="/cart" style={{ fontSize: "0.78rem", color: "#6366f1", textDecoration: "none" }}>এডিট</Link>
+                <Link href="/cart" style={{ fontSize: "0.78rem", color: "#6366f1", textDecoration: "none" }}>Edit</Link>
               </div>
 
               {/* Items List */}
@@ -592,12 +599,12 @@ export default function CheckoutPage() {
                     <div key={item.id} className={styles.cartItemRow}>
                       <img
                         src={item.product?.images?.[0] || "https://images.unsplash.com/photo-1540420773420-3366772f4999?w=300&auto=format&fit=crop&q=80"}
-                        alt={locale === "bn" ? item.product?.nameBn : item.product?.nameEn}
+                        alt={item.product?.nameEn || item.product?.nameBn}
                         className={styles.itemImg}
                       />
                       <div className={styles.itemMeta}>
-                        <h4 className={styles.itemTitle}>{locale === "bn" ? item.product?.nameBn : item.product?.nameEn}</h4>
-                        <div className={styles.itemQty}>{item.selectedWeight} {item.selectedUnit} × {item.quantity} টি</div>
+                        <h4 className={styles.itemTitle}>{item.product?.nameEn || item.product?.nameBn}</h4>
+                        <div className={styles.itemQty}>{item.selectedWeight} {item.selectedUnit} × {item.quantity} units</div>
                       </div>
                       <div className={styles.itemPrice}>
                         {formatPrice(item.unitPrice * item.quantity)}
@@ -605,7 +612,7 @@ export default function CheckoutPage() {
                     </div>
                   ))
                 ) : (
-                  <div style={{ color: "#94a3b8", fontSize: "0.82rem" }}>কার্ট খালি রয়েছে।</div>
+                  <div style={{ color: "#94a3b8", fontSize: "0.82rem" }}>Your cart is empty.</div>
                 )}
               </div>
 
@@ -647,8 +654,8 @@ export default function CheckoutPage() {
                   </div>
                 )}
                 <div className={styles.summaryRow}>
-                  <span>Tax (ভ্যাট)</span>
-                  <span>৳০.০০</span>
+                  <span>VAT / Tax</span>
+                  <span>৳0.00</span>
                 </div>
                 <div className={styles.summaryRowTotal}>
                   <span>Total</span>
@@ -665,30 +672,30 @@ export default function CheckoutPage() {
               <CheckCircle2 size={40} />
             </div>
 
-            <h1 className={styles.completeTitle}>অর্ডার সফলভাবে গৃহীত হয়েছে! 🎉</h1>
+            <h1 className={styles.completeTitle}>Order Placed Successfully! 🎉</h1>
             <p className={styles.completeSub}>
-              ধন্যবাদ <strong>{formData.fullName}</strong>! আপনার তাজা বাজার প্রস্তুতি শুরু হয়েছে।
+              Thank you <strong>{formData.fullName}</strong>! We have started preparing your fresh items.
             </p>
 
             <div className={styles.orderReceiptBox}>
               <div className={styles.receiptRow}>
-                <span>অর্ডার আইডি (Order ID):</span>
-                <strong>{placedOrder?.orderNumber}</strong>
+                <span>Order ID:</span>
+                <strong>#{placedOrder?.orderNumber}</strong>
               </div>
               <div className={styles.receiptRow}>
-                <span>মোট পরিশোধযোগ্য:</span>
+                <span>Total Amount:</span>
                 <strong>{formatPrice(placedOrder?.total)}</strong>
               </div>
               <div className={styles.receiptRow}>
-                <span>পেমেন্ট মেথড:</span>
+                <span>Payment Method:</span>
                 <strong>{placedOrder?.paymentMethod}</strong>
               </div>
               <div className={styles.receiptRow}>
-                <span>ডেলিভারি স্লট:</span>
+                <span>Delivery Slot:</span>
                 <strong>{placedOrder?.deliverySlot}</strong>
               </div>
               <div className={styles.receiptRow}>
-                <span>ডেলিভারি ঠিকানা:</span>
+                <span>Delivery Address:</span>
                 <span>{formData.address}, {formData.area}</span>
               </div>
             </div>
@@ -699,14 +706,14 @@ export default function CheckoutPage() {
                 className={styles.payBtn}
                 style={{ width: "auto", padding: "12px 28px", textDecoration: "none" }}
               >
-                <span>অর্ডার লাইভ ট্র্যাক করুন ↗</span>
+                <span>Track Order Live ↗</span>
               </Link>
               <Link
                 href="/"
                 className={styles.couponBtn}
                 style={{ padding: "12px 24px", fontSize: "0.92rem", textDecoration: "none", display: "inline-flex", alignItems: "center" }}
               >
-                হোমপেজে ফিরে যান
+                Back to Home
               </Link>
             </div>
           </div>
@@ -717,7 +724,7 @@ export default function CheckoutPage() {
           <div>
             <h4 className={styles.policyTitle}>Cancellation & Freshness Policy</h4>
             <p className={styles.policyText}>
-              তাতকা বাজারে প্রতিটি পণ্য সরাসরি সংগ্রহের পর ১০০% কোয়ালিটি চেক করা হয়। ডেলিভারির সময় পণ্যের মান পছন্দ না হলে ইনস্ট্যান্ট কোনো বাড়তি ফি ছাড়াই ডোরস্টেপে ফেরত দিতে পারবেন।
+              Every item on Tatka Bazar undergoes quality inspection upon harvest. If you are unsatisfied with freshness upon delivery, you can instantly return the item with zero extra fees at your doorstep.
             </p>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>

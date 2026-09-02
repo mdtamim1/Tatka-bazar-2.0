@@ -29,16 +29,16 @@ export default function VendorPayoutsPage() {
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "12px" }}>
         <div>
           <h1 style={{ fontSize: "1.4rem", fontWeight: 800, color: "var(--text-main)" }}>
-            পে-আউট লেজার ও ফাইন্যান্সিয়াল সেটেলমেন্ট
+            Payout Ledger & Financial Settlement
           </h1>
           <p style={{ fontSize: "0.82rem", color: "var(--text-muted)", marginTop: "2px" }}>
-            রানিং ব্যালেন্স, প্ল্যাটফর্ম কমিশন কর্তন ও ব্যাংক/বিকাশ উইথড্রয়াল হিস্ট্রি
+            Running balance, commission deductions, and bank/bKash disbursement history
           </p>
         </div>
 
         <button onClick={() => setIsModalOpen(true)} className="vendor-btn vendor-btn-primary">
           <DollarSign size={16} />
-          <span>উইথড্রয়াল রিকোয়েস্ট পাঠান</span>
+          <span>Request Payout Withdrawal</span>
         </button>
       </div>
 
@@ -46,32 +46,32 @@ export default function VendorPayoutsPage() {
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "16px" }}>
         
         <div className="vendor-card" style={{ padding: "20px" }}>
-          <div style={{ fontSize: "0.8rem", color: "var(--text-muted)", fontWeight: 700 }}>উত্তোলনযোগ্য ব্যালেন্স</div>
+          <div style={{ fontSize: "0.8rem", color: "var(--text-muted)", fontWeight: 700 }}>Withdrawable Balance</div>
           <div style={{ fontSize: "1.6rem", fontWeight: 800, color: "var(--primary-dark)", marginTop: "4px" }}>
             ৳{availableBalance.toLocaleString()}
           </div>
           <div style={{ fontSize: "0.75rem", color: "var(--primary)", fontWeight: 700, marginTop: "4px" }}>
-            ✓ রেডি ফর সেটেলমেন্ট
+            ✓ Ready for Settlement
           </div>
         </div>
 
         <div className="vendor-card" style={{ padding: "20px" }}>
-          <div style={{ fontSize: "0.8rem", color: "var(--text-muted)", fontWeight: 700 }}>মোট প্ল্যাটফর্ম কমিশন (-{currentVendor.commissionRate}%)</div>
+          <div style={{ fontSize: "0.8rem", color: "var(--text-muted)", fontWeight: 700 }}>Total Platform Commission (-{currentVendor.commissionRate}%)</div>
           <div style={{ fontSize: "1.6rem", fontWeight: 800, color: "var(--accent)", marginTop: "4px" }}>
             ৳{totalCommission.toLocaleString()}
           </div>
           <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", marginTop: "4px" }}>
-            স্বচ্ছ ও স্বয়ংক্রিয় কর্তন
+            Transparent & automated deduction
           </div>
         </div>
 
         <div className="vendor-card" style={{ padding: "20px" }}>
-          <div style={{ fontSize: "0.8rem", color: "var(--text-muted)", fontWeight: 700 }}>পরবর্তী অটো-পেআউট শিডিউল</div>
+          <div style={{ fontSize: "0.8rem", color: "var(--text-muted)", fontWeight: 700 }}>Next Auto-Payout Cycle</div>
           <div style={{ fontSize: "1.6rem", fontWeight: 800, color: "var(--text-main)", marginTop: "4px" }}>
-            ২৫ আগস্ট ২০২৬
+            25 August 2026
           </div>
           <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", marginTop: "4px" }}>
-            সাপ্তাহিক নিয়মিত পরিশোধ চক্র
+            Weekly scheduled disbursement
           </div>
         </div>
 
@@ -80,15 +80,15 @@ export default function VendorPayoutsPage() {
       {/* Payout History Table */}
       <div className="vendor-card">
         <div style={{ padding: "16px 20px", borderBottom: "1px solid var(--border-subtle)", fontWeight: 800 }}>
-          বিগত পে-আউট লেনদেনের বিবরণ
+          Disbursement Transaction History
         </div>
         <table className="vendor-table">
           <thead>
             <tr>
-              <th>তারিখ ও রেফারেন্স</th>
-              <th>পরিশোধের মাধ্যম ও অ্যাকাউন্ট</th>
-              <th>পরিশোধিত পরিমাণ</th>
-              <th>স্ট্যাটাস</th>
+              <th>Date & Reference</th>
+              <th>Payout Method & Account</th>
+              <th>Disbursed Amount</th>
+              <th>Status</th>
             </tr>
           </thead>
           <tbody>
@@ -111,7 +111,7 @@ export default function VendorPayoutsPage() {
                 </td>
                 <td>
                   <span className={`status-badge ${pay.status === "COMPLETED" ? "success" : "warning"}`}>
-                    {pay.status === "COMPLETED" ? "✓ সফলভাবে পরিশোধিত" : "প্রক্রিয়াধীন"}
+                    {pay.status === "COMPLETED" ? "✓ Successfully Paid" : "Processing"}
                   </span>
                 </td>
               </tr>
@@ -125,30 +125,30 @@ export default function VendorPayoutsPage() {
         <div className="modal-overlay" onClick={() => setIsModalOpen(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: "440px" }}>
             <h2 style={{ fontSize: "1.2rem", fontWeight: 800, marginBottom: "8px" }}>
-              💵 পে-আউট উইথড্রয়াল রিকোয়েস্ট
+              💵 Request Payout Withdrawal
             </h2>
             <p style={{ fontSize: "0.82rem", color: "var(--text-muted)", marginBottom: "16px" }}>
-              বর্তমান ব্যালেন্স: ৳{availableBalance.toLocaleString()} (কমিশন কর্তন পরবর্তী নেট আয়)
+              Available Balance: ৳{availableBalance.toLocaleString()} (Net earnings after commission)
             </p>
 
             <form onSubmit={handleWithdraw} style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
               <div>
                 <label style={{ fontSize: "0.8rem", fontWeight: 700, display: "block", marginBottom: "4px" }}>
-                  উত্তোলনের মাধ্যম
+                  Disbursement Method
                 </label>
                 <select
                   value={withdrawMethod}
                   onChange={(e) => setWithdrawMethod(e.target.value as any)}
                   style={{ width: "100%", padding: "10px", borderRadius: "var(--radius-md)", border: "1px solid var(--border-medium)", background: "#FFF" }}
                 >
-                  <option value="bKash">বিকাশ মার্চেন্ট ওয়ালেট (bKash)</option>
-                  <option value="Bank Transfer">ব্যাংক অ্যাকাউন্ট ট্রান্সফার (BEFTN/NPSB)</option>
+                  <option value="bKash">bKash Merchant Wallet</option>
+                  <option value="Bank Transfer">Bank Account Transfer (BEFTN/NPSB)</option>
                 </select>
               </div>
 
               <div>
                 <label style={{ fontSize: "0.8rem", fontWeight: 700, display: "block", marginBottom: "4px" }}>
-                  উত্তোলনের পরিমাণ (৳) *
+                  Withdrawal Amount (৳) *
                 </label>
                 <input
                   type="number"
@@ -162,10 +162,10 @@ export default function VendorPayoutsPage() {
 
               <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px", marginTop: "8px" }}>
                 <button type="button" onClick={() => setIsModalOpen(false)} className="vendor-btn vendor-btn-secondary">
-                  বাতিল
+                  Cancel
                 </button>
                 <button type="submit" className="vendor-btn vendor-btn-primary">
-                  রিকোয়েস্ট নিশ্চিত করুন
+                  Confirm Request
                 </button>
               </div>
             </form>

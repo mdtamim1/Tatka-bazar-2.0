@@ -9,7 +9,7 @@ import { useLanguage } from "@/context/LanguageContext";
 function PaymentFailContent() {
   const searchParams = useSearchParams();
   const orderNumber = searchParams.get("order") || "";
-  const { t, locale } = useLanguage();
+  const { t } = useLanguage();
 
   return (
     <div style={{ padding: "80px 0", minHeight: "80vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -41,13 +41,11 @@ function PaymentFailContent() {
           </div>
 
           <h2 style={{ fontSize: "1.5rem", fontWeight: 800, color: "var(--text-main)", marginBottom: "8px", fontFamily: "var(--font-heading)" }}>
-            {locale === "bn" ? "পেমেন্ট ব্যর্থ হয়েছে!" : "Payment Failed or Cancelled"}
+            Payment Failed or Cancelled
           </h2>
 
           <p style={{ color: "var(--text-muted)", fontSize: "0.9rem", marginBottom: "24px", lineHeight: 1.6 }}>
-            {locale === "bn"
-              ? "আপনার একাউন্ট থেকে কোনো অর্থ কাটা হয়নি। আপনি পুনরায় চেষ্টা করতে পারেন অথবা ক্যাশ অন ডেলিভারি (COD) বেছে নিতে পারেন।"
-              : "No funds were deducted. You can retry the payment or choose Cash on Delivery (COD)."}
+            No funds were deducted. You can retry the payment or choose Cash on Delivery (COD).
           </p>
 
           <div style={{ display: "flex", gap: "12px", justifyContent: "center" }}>
@@ -64,7 +62,7 @@ function PaymentFailContent() {
               }}
             >
               <RotateCcw size={18} />
-              <span>{locale === "bn" ? "পুনরায় চেষ্টা করুন (Retry)" : "Retry Checkout"}</span>
+              <span>Retry Checkout</span>
             </Link>
           </div>
         </div>

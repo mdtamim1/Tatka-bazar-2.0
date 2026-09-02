@@ -10,19 +10,19 @@ export default function VendorReviewsPage() {
   const reviews = [
     {
       id: "rev-1",
-      userName: "তানভীর হাসান",
+      userName: "Tanvir Hasan",
       rating: 5,
-      date: "২০ আগস্ট ২০২৬",
-      productName: "পাকা লাল দেশি টমেটো (১০০% অর্গানিক)",
-      comment: "টমেটোগুলো একদম টাটকা ছিল। প্যাকেজিং খুব ভালো হয়েছে। পরবর্তী অর্ডারেও নেব।",
+      date: "20 Aug 2026",
+      productName: "Organic Red Farm Tomatoes",
+      comment: "The tomatoes were very fresh and flavorful. Packaging was intact and clean.",
     },
     {
       id: "rev-2",
-      userName: "ফারজানা হক",
+      userName: "Farzana Haque",
       rating: 5,
-      date: "১৯ আগস্ট ২০২৬",
-      productName: "তাজা কচি দেশি লাল শাক",
-      comment: "সকালে অর্ডার দিয়ে ৮টার মধ্যে পেয়েছি। শাক অত্যন্ত সতেজ ছিল।",
+      date: "19 Aug 2026",
+      productName: "Fresh Desi Red Spinach (Lal Shak)",
+      comment: "Ordered early morning and delivered by 8:00 AM. Greens were crisp and spotless.",
     },
   ];
 
@@ -30,10 +30,10 @@ export default function VendorReviewsPage() {
     <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
       <div>
         <h1 style={{ fontSize: "1.4rem", fontWeight: 800, color: "var(--text-main)" }}>
-          গ্রাহক রিভিউ ও শপ রেটিং
+          Customer Reviews & Shop Ratings
         </h1>
         <p style={{ fontSize: "0.82rem", color: "var(--text-muted)", marginTop: "2px" }}>
-          আপনার দোকানের পণ্য ক্রয়কারী গ্রাহকদের প্রতিক্রিয়া ও সন্তুষ্টি স্কোর
+          Feedback and satisfaction scores from verified customers who bought your products.
         </p>
       </div>
 
@@ -49,16 +49,16 @@ export default function VendorReviewsPage() {
             ))}
           </div>
           <div style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>
-            {currentVendor.reviewsCount} টি রিভিউ
+            {currentVendor.reviewsCount} Reviews
           </div>
         </div>
 
         <div style={{ flex: 1 }}>
           <h3 style={{ fontSize: "0.95rem", fontWeight: 700, marginBottom: "4px" }}>
-            গ্রাহক সন্তুষ্টি সূচক (Customer Trust)
+            Customer Satisfaction & Trust Index
           </h3>
           <p style={{ fontSize: "0.82rem", color: "var(--text-muted)" }}>
-            আপনার দোকানের ৯৮% গ্রাহক ৫-স্টার রিভিউ দিয়েছেন। উচ্চমানের তাজা পণ্য ও সঠিক ওজন বজায় রাখুন।
+            Over 98% of customers gave your store a 5-star rating. Keep providing farm-fresh quality and accurate weight.
           </p>
         </div>
       </div>
@@ -68,10 +68,10 @@ export default function VendorReviewsPage() {
         <table className="vendor-table">
           <thead>
             <tr>
-              <th>গ্রাহক ও তারিখ</th>
-              <th>ক্রয়কৃত পণ্য</th>
-              <th>রেটিং</th>
-              <th>মন্তব্য</th>
+              <th>Customer & Date</th>
+              <th>Purchased Product</th>
+              <th>Rating</th>
+              <th>Comment</th>
             </tr>
           </thead>
           <tbody>

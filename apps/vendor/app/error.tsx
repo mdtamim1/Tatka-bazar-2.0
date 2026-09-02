@@ -21,9 +21,9 @@ export default function VendorErrorPage({
         <div className="w-12 h-12 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center mx-auto mb-4">
           <AlertCircle className="w-6 h-6" />
         </div>
-        <h2 className="text-xl font-bold text-slate-100">ভেন্ডর পোর্টালে ত্রুটি</h2>
+        <h2 className="text-xl font-bold text-slate-100">Vendor Portal Error</h2>
         <p className="text-xs text-slate-400 mt-2 mb-6">
-          দোকানের তথ্য লোড হতে সাময়িক বিলম্ব হচ্ছে। অনুগ্রহ করে পুনরায় চেষ্টা করুন।
+          There was an issue loading vendor data. Please refresh and try again.
         </p>
         <div className="flex gap-3 justify-center">
           <button
@@ -31,14 +31,14 @@ export default function VendorErrorPage({
             className="py-2.5 px-5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-semibold text-xs rounded-xl flex items-center gap-2"
           >
             <RefreshCw className="w-4 h-4" />
-            রিফ্রেশ করুন
+            Refresh
           </button>
           <Link
             href="/"
             className="py-2.5 px-5 bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold text-xs rounded-xl flex items-center gap-2"
           >
             <Store className="w-4 h-4" />
-            দোকান প্যানেল
+            Shop Dashboard
           </Link>
         </div>
       </div>

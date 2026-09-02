@@ -12,10 +12,10 @@ export default function VendorInventoryPage() {
     <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
       <div>
         <h1 style={{ fontSize: "1.4rem", fontWeight: 800, color: "var(--text-main)" }}>
-          ইনভেন্টরি ও স্টক নিয়ন্ত্রণ
+          Inventory & Stock Management
         </h1>
         <p style={{ fontSize: "0.82rem", color: "var(--text-muted)", marginTop: "2px" }}>
-          আপনার দোকানের নিজস্ব পণ্যের মজুদ সংখ্যা দ্রুত আপডেট ও লো-স্টক সতর্কতা
+          Manage your shop's inventory units, quick stock modifications, and low stock thresholds
         </p>
       </div>
 
@@ -23,12 +23,12 @@ export default function VendorInventoryPage() {
         <table className="vendor-table">
           <thead>
             <tr>
-              <th>পণ্য ও SKU</th>
-              <th>ক্যাটাগরি</th>
-              <th>বর্তমান মজুদ (Stock)</th>
-              <th>অ্যালার্ট সীমা</th>
-              <th>স্ট্যাটাস</th>
-              <th>দ্রুত স্টক পরিবর্তন</th>
+              <th>Product & SKU</th>
+              <th>Category</th>
+              <th>Current Stock</th>
+              <th>Alert Level</th>
+              <th>Status</th>
+              <th>Quick Stock Adjustment</th>
             </tr>
           </thead>
           <tbody>
@@ -40,7 +40,7 @@ export default function VendorInventoryPage() {
                     <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
                       <img src={p.images[0]} alt="Img" style={{ width: "40px", height: "40px", borderRadius: "6px", objectFit: "cover" }} />
                       <div>
-                        <div style={{ fontWeight: 700 }}>{p.nameBn}</div>
+                        <div style={{ fontWeight: 700 }}>{p.nameEn || p.nameBn}</div>
                         <div style={{ fontSize: "0.72rem", color: "var(--text-muted)", fontFamily: "var(--font-mono)" }}>{p.sku}</div>
                       </div>
                     </div>
@@ -56,7 +56,7 @@ export default function VendorInventoryPage() {
                   </td>
                   <td>
                     <span className={`status-badge ${isLow ? "danger" : "success"}`}>
-                      {isLow ? "⚠️ লো স্টক" : "পর্যাপ্ত"}
+                      {isLow ? "⚠️ Low Stock" : "Sufficient"}
                     </span>
                   </td>
                   <td>
@@ -65,19 +65,19 @@ export default function VendorInventoryPage() {
                         onClick={() => updateProductStock(p.id, Math.max(0, p.stock - 5))}
                         style={{ padding: "6px 10px", borderRadius: "6px", background: "#F1F5F9", fontWeight: 800 }}
                       >
-                        -৫
+                        -5
                       </button>
                       <button
                         onClick={() => updateProductStock(p.id, p.stock + 10)}
                         style={{ padding: "6px 10px", borderRadius: "6px", background: "var(--primary-light)", color: "var(--primary-dark)", fontWeight: 800 }}
                       >
-                        +১০
+                        +10
                       </button>
                       <button
                         onClick={() => updateProductStock(p.id, p.stock + 50)}
                         style={{ padding: "6px 10px", borderRadius: "6px", background: "#EFF6FF", color: "#1D4ED8", fontWeight: 800 }}
                       >
-                        +৫০
+                        +50
                       </button>
                     </div>
                   </td>

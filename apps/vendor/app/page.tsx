@@ -32,17 +32,17 @@ export default function VendorDashboardPage() {
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "12px" }}>
         <div>
           <h1 style={{ fontSize: "1.45rem", fontWeight: 800, color: "var(--text-main)", lineHeight: 1.2 }}>
-            স্বাগতম, {currentVendor.nameBn}
+            Welcome, {currentVendor.nameEn || currentVendor.nameBn}
           </h1>
           <p style={{ color: "var(--text-muted)", fontSize: "0.85rem", marginTop: "2px" }}>
-            আপনার দোকানের আজকের সেলস, প্যাকেজিং ও পে-আউট ওভারভিউ
+            Today's sales, fulfillment orders, and payout summary for your shop
           </p>
         </div>
 
         <div style={{ display: "flex", gap: "10px" }}>
           <Link href="/products" className="vendor-btn vendor-btn-primary">
             <Plus size={16} />
-            <span>+ নতুন পণ্য যুক্ত করুন</span>
+            <span>+ Add New Product</span>
           </Link>
           <a
             href={`http://localhost:3000/shop/${currentVendor.slug}`}
@@ -50,7 +50,7 @@ export default function VendorDashboardPage() {
             rel="noreferrer"
             className="vendor-btn vendor-btn-secondary"
           >
-            <span>পাবলিক শপ</span>
+            <span>Public Shop</span>
             <ExternalLink size={14} />
           </a>
         </div>
@@ -62,7 +62,7 @@ export default function VendorDashboardPage() {
         {/* Total Sales */}
         <div className="vendor-card" style={{ padding: "18px" }}>
           <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}>
-            <span style={{ fontSize: "0.78rem", fontWeight: 700, color: "var(--text-muted)" }}>মোট বিক্রয় ভলিউম</span>
+            <span style={{ fontSize: "0.78rem", fontWeight: 700, color: "var(--text-muted)" }}>Total Sales Volume</span>
             <div style={{ padding: "6px", borderRadius: "6px", background: "var(--primary-light)", color: "var(--primary)" }}>
               <TrendingUp size={16} />
             </div>
@@ -71,14 +71,14 @@ export default function VendorDashboardPage() {
             ৳{totalSales.toLocaleString()}
           </div>
           <div style={{ fontSize: "0.72rem", color: "var(--primary)", fontWeight: 700, marginTop: "6px" }}>
-            কমিশন হার: {currentVendor.commissionRate}%
+            Commission Rate: {currentVendor.commissionRate}%
           </div>
         </div>
 
         {/* Net Earnings */}
         <div className="vendor-card" style={{ padding: "18px" }}>
           <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}>
-            <span style={{ fontSize: "0.78rem", fontWeight: 700, color: "var(--text-muted)" }}>নেট আয় (Net Payout)</span>
+            <span style={{ fontSize: "0.78rem", fontWeight: 700, color: "var(--text-muted)" }}>Net Earnings</span>
             <div style={{ padding: "6px", borderRadius: "6px", background: "#FEF3C7", color: "var(--accent)" }}>
               <DollarSign size={16} />
             </div>
@@ -87,30 +87,30 @@ export default function VendorDashboardPage() {
             ৳{netEarnings.toLocaleString()}
           </div>
           <div style={{ fontSize: "0.72rem", color: "var(--text-muted)", marginTop: "6px" }}>
-            পরবর্তী পে-আউট: আগামী মঙ্গলবার
+            Next Payout: Tuesday
           </div>
         </div>
 
         {/* Orders Count */}
         <div className="vendor-card" style={{ padding: "18px" }}>
           <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}>
-            <span style={{ fontSize: "0.78rem", fontWeight: 700, color: "var(--text-muted)" }}>আজকের অর্ডার স্লাইস</span>
+            <span style={{ fontSize: "0.78rem", fontWeight: 700, color: "var(--text-muted)" }}>Today's Orders</span>
             <div style={{ padding: "6px", borderRadius: "6px", background: "#EFF6FF", color: "#2563EB" }}>
               <ShoppingBag size={16} />
             </div>
           </div>
           <div style={{ fontSize: "1.5rem", fontWeight: 800, color: "var(--text-main)" }}>
-            {orders.length} টি
+            {orders.length}
           </div>
           <div style={{ fontSize: "0.72rem", color: pendingOrders.length > 0 ? "var(--accent)" : "var(--text-muted)", fontWeight: 700, marginTop: "6px" }}>
-            {pendingOrders.length > 0 ? `⚡ ${pendingOrders.length} টি প্যাকেজিং বাকি` : "সব অর্ডার প্রস্তুত"}
+            {pendingOrders.length > 0 ? `⚡ ${pendingOrders.length} pending packaging` : "All orders fulfilled"}
           </div>
         </div>
 
         {/* Rating Score */}
         <div className="vendor-card" style={{ padding: "18px" }}>
           <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}>
-            <span style={{ fontSize: "0.78rem", fontWeight: 700, color: "var(--text-muted)" }}>দোকানের গড় রেটিং</span>
+            <span style={{ fontSize: "0.78rem", fontWeight: 700, color: "var(--text-muted)" }}>Shop Rating</span>
             <div style={{ padding: "6px", borderRadius: "6px", background: "#FEF9C3", color: "#CA8A04" }}>
               <Star size={16} />
             </div>
@@ -120,7 +120,7 @@ export default function VendorDashboardPage() {
             <span style={{ fontSize: "0.85rem", color: "var(--accent)" }}>★</span>
           </div>
           <div style={{ fontSize: "0.72rem", color: "var(--text-muted)", marginTop: "6px" }}>
-            {currentVendor.reviewsCount} টি কাস্টমার রিভিউ
+            {currentVendor.reviewsCount} Customer Reviews
           </div>
         </div>
 
@@ -132,12 +132,12 @@ export default function VendorDashboardPage() {
           <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
             <AlertCircle size={20} color="#B91C1C" />
             <div>
-              <div style={{ fontWeight: 800, fontSize: "0.9rem", color: "#991B1B" }}>ইনভেন্টরি সতর্কবার্তা ({lowStockProducts.length}টি)</div>
-              <div style={{ fontSize: "0.75rem", color: "#B91C1C" }}>{lowStockProducts[0]?.nameBn} এর স্টক দ্রুত শেষ হয়ে যাচ্ছে ({lowStockProducts[0]?.stock} {lowStockProducts[0]?.baseUnit})</div>
+              <div style={{ fontWeight: 800, fontSize: "0.9rem", color: "#991B1B" }}>Inventory Alert ({lowStockProducts.length})</div>
+              <div style={{ fontSize: "0.75rem", color: "#B91C1C" }}>{lowStockProducts[0]?.nameEn || lowStockProducts[0]?.nameBn} is running low on stock ({lowStockProducts[0]?.stock} {lowStockProducts[0]?.baseUnit})</div>
             </div>
           </div>
           <Link href="/inventory" className="vendor-btn" style={{ background: "#B91C1C", color: "#FFF", fontSize: "0.78rem", padding: "6px 12px" }}>
-            স্টক রিস্টক করুন →
+            Restock Now →
           </Link>
         </div>
       )}
@@ -149,10 +149,10 @@ export default function VendorDashboardPage() {
         <div className="vendor-card">
           <div style={{ padding: "16px 20px", borderBottom: "1px solid var(--border-subtle)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <h2 style={{ fontSize: "1.05rem", fontWeight: 800 }}>
-              আজকের ফুলফিলমেন্ট অর্ডার
+              Today's Fulfillment Orders
             </h2>
             <Link href="/orders" style={{ fontSize: "0.8rem", color: "var(--primary)", fontWeight: 700 }}>
-              সব অর্ডার দেখুন →
+              View All Orders →
             </Link>
           </div>
 
@@ -160,11 +160,11 @@ export default function VendorDashboardPage() {
             <table className="vendor-table">
               <thead>
                 <tr>
-                  <th>অর্ডার নং</th>
-                  <th>আইটেমস</th>
-                  <th>নেট আয়</th>
-                  <th>স্ট্যাটাস</th>
-                  <th>অ্যাকশন</th>
+                  <th>Order No</th>
+                  <th>Items</th>
+                  <th>Net Earnings</th>
+                  <th>Status</th>
+                  <th>Action</th>
                 </tr>
               </thead>
               <tbody>
@@ -176,12 +176,12 @@ export default function VendorDashboardPage() {
                     </td>
                     <td>
                       <div style={{ fontSize: "0.8rem", fontWeight: 600 }}>
-                        {ord.items.map((it) => `${it.nameBn} (${it.quantity * it.weight} ${it.unit})`).join(", ")}
+                        {ord.items.map((it) => `${it.nameEn || it.nameBn} (${it.quantity * it.weight} ${it.unit})`).join(", ")}
                       </div>
                     </td>
                     <td>
                       <div style={{ fontWeight: 800, color: "var(--primary-dark)" }}>৳{ord.netEarnings}</div>
-                      <div style={{ fontSize: "0.68rem", color: "var(--text-muted)" }}>কমিশন: -৳{ord.commissionDeducted}</div>
+                      <div style={{ fontSize: "0.68rem", color: "var(--text-muted)" }}>Commission: -৳{ord.commissionDeducted}</div>
                     </td>
                     <td>
                       <span className={`status-badge ${ord.status === "READY_FOR_PICKUP" ? "success" : "warning"}`}>
@@ -190,7 +190,7 @@ export default function VendorDashboardPage() {
                     </td>
                     <td>
                       <Link href="/orders" className="vendor-btn vendor-btn-secondary" style={{ padding: "4px 8px", fontSize: "0.72rem" }}>
-                        প্যাক করুন
+                        Pack
                       </Link>
                     </td>
                   </tr>
@@ -204,10 +204,10 @@ export default function VendorDashboardPage() {
         <div className="vendor-card">
           <div style={{ padding: "16px 20px", borderBottom: "1px solid var(--border-subtle)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <h2 style={{ fontSize: "1.05rem", fontWeight: 800 }}>
-              আমার শপের ক্যাটালগ
+              Shop Catalog
             </h2>
             <Link href="/products" style={{ fontSize: "0.8rem", color: "var(--primary)", fontWeight: 700 }}>
-              পণ্য পরিচালনা →
+              Manage Products →
             </Link>
           </div>
 
@@ -216,9 +216,9 @@ export default function VendorDashboardPage() {
               <div key={p.id} style={{ display: "flex", alignItems: "center", gap: "12px" }}>
                 <img src={p.images[0]} alt="Img" style={{ width: "42px", height: "42px", borderRadius: "8px", objectFit: "cover" }} />
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: "0.85rem", fontWeight: 700 }}>{p.nameBn}</div>
+                  <div style={{ fontSize: "0.85rem", fontWeight: 700 }}>{p.nameEn || p.nameBn}</div>
                   <div style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}>
-                    স্টক: {p.stock} {p.baseUnit} • {p.pricingType === "variableWeight" ? "ওজন-ভিত্তিক" : "ফিক্সড"}
+                    Stock: {p.stock} {p.baseUnit} • {p.pricingType === "variableWeight" ? "Variable Weight" : "Fixed"}
                   </div>
                 </div>
                 <div style={{ fontWeight: 800, fontSize: "0.9rem", color: "var(--primary-dark)" }}>

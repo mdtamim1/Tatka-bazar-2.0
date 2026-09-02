@@ -15,36 +15,36 @@ const NAV_SECTIONS = [
   {
     title: "CORE",
     items: [
-      { label: "Dashboard", labelBn: "ড্যাশবোর্ড", href: "/dashboard", icon: LayoutDashboard },
-      { label: "Orders", labelBn: "অর্ডারসমূহ", href: "/orders", icon: ShoppingBag, badgeKey: "pendingOrders" },
+      { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+      { label: "Orders", href: "/orders", icon: ShoppingBag, badgeKey: "pendingOrders" },
     ],
   },
   {
     title: "CATALOG",
     items: [
-      { label: "Products", labelBn: "পণ্য", href: "/products", icon: Package, badgeKey: "lowStock" },
-      { label: "Categories", labelBn: "ক্যাটাগরি", href: "/categories", icon: FolderTree },
-      { label: "Inventory", labelBn: "ইনভেন্টরি", href: "/inventory", icon: Warehouse, badgeKey: "lowStock" },
+      { label: "Products", href: "/products", icon: Package, badgeKey: "lowStock" },
+      { label: "Categories", href: "/categories", icon: FolderTree },
+      { label: "Inventory", href: "/inventory", icon: Warehouse, badgeKey: "lowStock" },
     ],
   },
   {
     title: "PEOPLE",
     items: [
-      { label: "Vendors", labelBn: "ভেন্ডর", href: "/vendors", icon: Store, badgeKey: "pendingVendors" },
-      { label: "B2B Accounts", labelBn: "B2B হোলসেল", href: "/b2b", icon: Building2, badgeKey: "pendingB2B" },
-      { label: "Riders", labelBn: "রাইডার টিম", href: "/riders", icon: Bike, badgeKey: "pendingRiders" },
-      { label: "Customers", labelBn: "গ্রাহকবৃন্দ", href: "/customers", icon: Users },
+      { label: "Vendors", href: "/vendors", icon: Store, badgeKey: "pendingVendors" },
+      { label: "B2B Accounts", href: "/b2b", icon: Building2, badgeKey: "pendingB2B" },
+      { label: "Riders", href: "/riders", icon: Bike, badgeKey: "pendingRiders" },
+      { label: "Customers", href: "/customers", icon: Users },
     ],
   },
   {
     title: "OPERATIONS",
     items: [
-      { label: "Branches", labelBn: "হাব ও ব্রাঞ্চ", href: "/branches", icon: MapPin },
-      { label: "Marketing", labelBn: "মার্কেটিং", href: "/marketing", icon: Tag },
-      { label: "Reviews", labelBn: "রিভিউ", href: "/reviews", icon: Star },
-      { label: "Reports", labelBn: "রিপোর্ট", href: "/reports", icon: BarChart3 },
-      { label: "Settings", labelBn: "সেটিংস", href: "/settings", icon: Settings },
-      { label: "Audit Log", labelBn: "অডিট লগ", href: "/audit", icon: History },
+      { label: "Branches", href: "/branches", icon: MapPin },
+      { label: "Marketing", href: "/marketing", icon: Tag },
+      { label: "Reviews", href: "/reviews", icon: Star },
+      { label: "Reports", href: "/reports", icon: BarChart3 },
+      { label: "Settings", href: "/settings", icon: Settings },
+      { label: "Audit Log", href: "/audit", icon: History },
     ],
   },
 ];
@@ -119,7 +119,7 @@ export function AdminSidebar() {
         </div>
         <div>
           <div style={{ fontWeight: 800, fontSize: "0.92rem", color: "var(--text-1)", lineHeight: 1.2 }}>
-            তাতকা বাজার
+            Tatka Bazar
           </div>
           <div style={{ fontSize: "0.65rem", color: "var(--green)", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase" }}>
             COMMAND CENTER
@@ -152,9 +152,8 @@ export function AdminSidebar() {
                     className={`sidebar-item ${isActive ? "active" : ""}`}
                   >
                     <Icon size={16} style={{ flexShrink: 0 }} />
-                    <span style={{ flex: 1, fontSize: "0.845rem" }}>
-                      <span style={{ display: "block" }}>{item.labelBn}</span>
-                      <span style={{ display: "block", fontSize: "0.67rem", opacity: 0.55 }}>{item.label}</span>
+                    <span style={{ flex: 1, fontSize: "0.845rem", fontWeight: 600 }}>
+                      {item.label}
                     </span>
                     {badgeCount > 0 && (
                       <span style={{
@@ -219,7 +218,7 @@ export function AdminSidebar() {
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: "5px", fontSize: "0.68rem", color: "var(--green)", marginTop: "2px" }}>
               <span className="live-dot" />
-              সার্ভার অনলাইন
+              Server Online
             </div>
           </div>
           <div style={{

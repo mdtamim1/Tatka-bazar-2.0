@@ -26,7 +26,7 @@ export async function sendSmsOtp(phone: string) {
 
   otpStore.set(cleanPhone, { phone: cleanPhone, otp, expiresAt });
 
-  const smsText = `তাতকা বাজার (Tatka Bazar): আপনার লগইন ভেরিফিকেশন কোড (OTP) হলো ${otp}। এটি ৫ মিনিট কার্যকর থাকবে। কাউকে বলবেন না।`;
+  const smsText = `Tatka Bazar: Your login verification code (OTP) is ${otp}. Valid for 5 minutes. Do not share this code.`;
 
   // Log in server console for instant developer verification
   console.log(`\n======================================================`);

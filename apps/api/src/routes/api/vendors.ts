@@ -22,7 +22,7 @@ export async function vendorRoutes(fastify: FastifyInstance) {
         phone: v.phone,
         email: v.email,
         tradeLicense: "TRAD/DNCC/092811",
-        location: "ঢাকা (Dhaka)",
+        location: "Dhaka",
         status: v.status,
         commissionRate: v.commissionRate,
         totalSales: 245000,

@@ -24,7 +24,7 @@ export default function RiderRootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="bn">
+    <html lang="en">
       <body>
         <RiderProvider>
           <RiderLayoutShell>

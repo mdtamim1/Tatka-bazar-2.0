@@ -9,7 +9,7 @@ import { PRODUCTS } from "@/lib/catalog";
 
 export default function RecipesPage() {
   const { addItem, openCart } = useCartStore();
-  const { locale } = useLanguage();
+  const { formatPrice } = useLanguage();
   const [selectedRecipe, setSelectedRecipe] = useState<Recipe>(POPULAR_RECIPES[0]!);
   const [addedSuccess, setAddedSuccess] = useState(false);
 
@@ -61,16 +61,16 @@ export default function RecipesPage() {
             <span>RECIPE-TO-CART INNOVATION</span>
           </div>
           <h1 style={{ fontSize: "2rem", fontWeight: 800, lineHeight: 1.2, marginBottom: "10px" }}>
-            ঐতিহ্যবাহী রেসিপি ও তাজা বাজার কম্বো
+            Traditional Recipes & Fresh Ingredient Bundles
           </h1>
           <p style={{ color: "rgba(255,255,255,0.9)", fontSize: "0.95rem" }}>
-            পছন্দের রান্না বেছে নিন এবং ১-ক্লিকে সঠিক ওজনের সব তাজা উপকরণ আপনার ব্যাগে যোগ করুন।
+            Select your favorite authentic dish and add all precisely weighed fresh ingredients into your cart with 1 click.
           </p>
         </div>
 
         <div style={{ textAlign: "right", background: "rgba(255,255,255,0.1)", padding: "16px 24px", borderRadius: "var(--radius-lg)", backdropFilter: "blur(4px)" }}>
-          <div style={{ fontSize: "0.8rem", color: "#A7F3D0", fontWeight: 700 }}>১০০% ফ্রেশনেস গ্যারান্টি</div>
-          <div style={{ fontSize: "1.4rem", fontWeight: 800 }}>সরাসরি রান্নায় প্রস্তুত</div>
+          <div style={{ fontSize: "0.8rem", color: "#A7F3D0", fontWeight: 700 }}>100% Freshness Guarantee</div>
+          <div style={{ fontSize: "1.4rem", fontWeight: 800 }}>Ready to Cook</div>
         </div>
       </div>
 
@@ -80,7 +80,7 @@ export default function RecipesPage() {
         {/* Left: Recipe Selector Cards */}
         <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
           <h2 style={{ fontSize: "1.2rem", fontWeight: 800, color: "var(--text-main)" }}>
-            জনপ্রিয় রেসিপিসমূহ
+            Popular Recipes
           </h2>
 
           {POPULAR_RECIPES.map((recipe) => {
@@ -103,12 +103,12 @@ export default function RecipesPage() {
               >
                 <img
                   src={recipe.coverImage}
-                  alt={recipe.titleBn}
+                  alt={recipe.titleEn}
                   style={{ width: "80px", height: "80px", borderRadius: "var(--radius-md)", objectFit: "cover" }}
                 />
                 <div style={{ flex: 1 }}>
                   <h3 style={{ fontSize: "1rem", fontWeight: 800, color: isSelected ? "var(--primary-dark)" : "var(--text-main)" }}>
-                    {locale === "bn" ? recipe.titleBn : recipe.titleEn}
+                    {recipe.titleEn || recipe.titleBn}
                   </h3>
                   <div style={{ display: "flex", gap: "12px", fontSize: "0.75rem", color: "var(--text-muted)", marginTop: "6px" }}>
                     <span style={{ display: "flex", alignItems: "center", gap: "4px" }}>
@@ -117,11 +117,11 @@ export default function RecipesPage() {
                     </span>
                     <span style={{ display: "flex", alignItems: "center", gap: "4px" }}>
                       <Users size={13} />
-                      {recipe.servings} জন
+                      {recipe.servings} serves
                     </span>
                   </div>
                   <div style={{ fontWeight: 800, color: "var(--primary-dark)", fontSize: "0.95rem", marginTop: "6px" }}>
-                    ৳{recipe.totalCost} (সকল উপাদান)
+                    ৳{recipe.totalCost} (All Ingredients)
                   </div>
                 </div>
               </div>
@@ -134,7 +134,7 @@ export default function RecipesPage() {
           <div style={{ position: "relative", height: "240px", borderRadius: "var(--radius-lg)", overflow: "hidden", marginBottom: "20px" }}>
             <img
               src={selectedRecipe.coverImage}
-              alt={selectedRecipe.titleBn}
+              alt={selectedRecipe.titleEn}
               style={{ width: "100%", height: "100%", objectFit: "cover" }}
             />
             <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 60%)" }} />
@@ -143,23 +143,23 @@ export default function RecipesPage() {
                 {selectedRecipe.difficulty}
               </span>
               <h2 style={{ fontSize: "1.4rem", fontWeight: 800, marginTop: "4px" }}>
-                {locale === "bn" ? selectedRecipe.titleBn : selectedRecipe.titleEn}
+                {selectedRecipe.titleEn || selectedRecipe.titleBn}
               </h2>
             </div>
           </div>
 
           <p style={{ fontSize: "0.92rem", color: "var(--text-muted)", lineHeight: 1.5, marginBottom: "20px" }}>
-            {locale === "bn" ? selectedRecipe.descriptionBn : selectedRecipe.descriptionEn}
+            {selectedRecipe.descriptionEn || selectedRecipe.descriptionBn}
           </p>
 
           {/* Ingredients List */}
           <div style={{ marginBottom: "24px" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px", borderBottom: "1px solid var(--border-subtle)", paddingBottom: "8px" }}>
               <h3 style={{ fontSize: "1.05rem", fontWeight: 800 }}>
-                প্রয়োজনীয় তাজা উপাদানসমূহ ({selectedRecipe.ingredients.length}টি)
+                Required Fresh Ingredients ({selectedRecipe.ingredients.length})
               </h3>
               <span style={{ fontSize: "0.85rem", fontWeight: 800, color: "var(--primary-dark)" }}>
-                মোট: ৳{selectedRecipe.totalCost}
+                Total: ৳{selectedRecipe.totalCost}
               </span>
             </div>
 
@@ -167,10 +167,10 @@ export default function RecipesPage() {
               {selectedRecipe.ingredients.map((ing) => (
                 <div key={ing.productId} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", background: "#F8FAFC", padding: "10px 14px", borderRadius: "var(--radius-md)" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                    <img src={ing.image} alt={ing.nameBn} style={{ width: "38px", height: "38px", borderRadius: "6px", objectFit: "cover" }} />
+                    <img src={ing.image} alt={ing.nameEn} style={{ width: "38px", height: "38px", borderRadius: "6px", objectFit: "cover" }} />
                     <div>
-                      <div style={{ fontWeight: 700, fontSize: "0.88rem" }}>{ing.nameBn}</div>
-                      <div style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>নির্ধারিত পরিমাণ: {ing.weight} {ing.unit}</div>
+                      <div style={{ fontWeight: 700, fontSize: "0.88rem" }}>{ing.nameEn || ing.nameBn}</div>
+                      <div style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>Quantity: {ing.weight} {ing.unit}</div>
                     </div>
                   </div>
                   <div style={{ fontWeight: 800, color: "var(--primary-dark)" }}>
@@ -203,12 +203,12 @@ export default function RecipesPage() {
             {addedSuccess ? (
               <>
                 <Check size={20} />
-                <span>সব উপাদান কার্টে যোগ হয়েছে!</span>
+                <span>All ingredients added to cart!</span>
               </>
             ) : (
               <>
                 <ShoppingBag size={20} />
-                <span>এক ক্লিকে সব উপাদান কার্টে নিন (৳{selectedRecipe.totalCost})</span>
+                <span>Add all ingredients to cart (৳{selectedRecipe.totalCost})</span>
               </>
             )}
           </button>
@@ -217,10 +217,10 @@ export default function RecipesPage() {
           <div style={{ marginTop: "24px", paddingTop: "20px", borderTop: "1px solid var(--border-subtle)" }}>
             <h3 style={{ fontSize: "1rem", fontWeight: 800, marginBottom: "12px", display: "flex", alignItems: "center", gap: "6px" }}>
               <ChefHat size={18} color="var(--primary)" />
-              <span>রান্নার প্রস্তুত প্রণালী:</span>
+              <span>Cooking Instructions:</span>
             </h3>
             <ol style={{ paddingLeft: "20px", display: "flex", flexDirection: "column", gap: "8px", fontSize: "0.88rem", color: "var(--text-muted)", lineHeight: 1.5 }}>
-              {selectedRecipe.instructionsBn.map((step, idx) => (
+              {(selectedRecipe.instructionsEn || selectedRecipe.instructionsBn || []).map((step: string, idx: number) => (
                 <li key={idx}>{step}</li>
               ))}
             </ol>

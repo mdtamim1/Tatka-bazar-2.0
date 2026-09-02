@@ -8,16 +8,16 @@ export function LiveSupportWidget() {
   const [messages, setMessages] = useState<{ sender: "bot" | "user"; text: string; time: string }[]>([
     {
       sender: "bot",
-      text: "👋 আসসালামু আলাইকুম! তাতকা বাজার লাইভ হেল্প ডেস্কে স্বাগতম। আপনাকে কীভাবে সাহায্য করতে পারি?",
-      time: "এখন",
+      text: "👋 Hello! Welcome to Tatka Bazar Live Helpdesk. How can we assist you today?",
+      time: "Now",
     },
   ]);
   const [inputText, setInputText] = useState("");
 
   const quickQuestions = [
-    "ডেলিভারি স্লট কখন পাওয়া যাবে?",
-    "মাছ বা মাংস কি কেটে পরিষ্কার করে দেওয়া হয়?",
-    "অর্ডার বাতিল বা পরিবর্তন করার নিয়ম কী?",
+    "When are delivery slots available?",
+    "Is fish & meat cleaned and dressed?",
+    "How can I cancel or modify my order?",
   ];
 
   const handleSend = (textToSend?: string) => {
@@ -31,13 +31,14 @@ export function LiveSupportWidget() {
 
     // Simulate smart automated response
     setTimeout(() => {
-      let botReply = "ধন্যবাদ আপনার বার্তার জন্য। আমাদের সাপোর্ট প্রতিনিধি শীঘ্রই আপনার সাথে যোগাযোগ করবেন। হটলাইন: ০৯৬১২-০০০০০০";
-      if (text.includes("স্লট") || text.includes("ডেলিভারি")) {
-        botReply = "⚡ তাতকা বাজারে প্রতিদিন ৩টি স্লট রয়েছে: তাজা সকাল (০৭:০০ - ০৯:০০), দুপুর (১১:০০ - ০১:০০), এবং সন্ধ্যা (০৫:০০ - ০৭:০০)।";
-      } else if (text.includes("মাছ") || text.includes("কেটে") || text.includes("পরিষ্কার")) {
-        botReply = "🐟 হ্যাঁ! আমাদের পদ্মার ইলিশ ও দেশি মাছ আপনার পছন্দ অনুযায়ী ফ্রি ড্রেসিং ও সাইজ করে বরফ ড্রামে ডেলিভারি করা হয়।";
-      } else if (text.includes("বাতিল") || text.includes("পরিবর্তন")) {
-        botReply = "⏱️ অর্ডার করার পর হাবে প্যাকিং শুরুর পূর্ব পর্যন্ত (প্রথম ১৫ মিনিট) সরাসরি কল বা অ্যাপ থেকে অর্ডার পরিবর্তন করা যায়।";
+      const lower = text.toLowerCase();
+      let botReply = "Thank you for reaching out! Our support team is here to help. Hotline: 09612-000000";
+      if (lower.includes("slot") || lower.includes("delivery") || lower.includes("when")) {
+        botReply = "⚡ We deliver across 3 convenient daily slots: Morning (07:00 - 09:00 AM), Midday (11:00 AM - 01:00 PM), and Evening (05:00 - 07:00 PM).";
+      } else if (lower.includes("fish") || lower.includes("meat") || lower.includes("clean") || lower.includes("dress")) {
+        botReply = "🐟 Yes! All Padma fish and poultry items are professionally cleaned, cut to your preferred portions, and packed in temperature-controlled boxes.";
+      } else if (lower.includes("cancel") || lower.includes("modify") || lower.includes("change")) {
+        botReply = "⏱️ You can modify or cancel your order within 15 minutes of placing it directly from the app or by calling our hotline.";
       }
 
       setMessages((prev) => [
@@ -124,9 +125,9 @@ export function LiveSupportWidget() {
                 <Bot size={20} />
               </div>
               <div>
-                <div style={{ fontWeight: 800, fontSize: "0.95rem" }}>তাতকা লাইভ সাপোর্ট</div>
+                <div style={{ fontWeight: 800, fontSize: "0.95rem" }}>Tatka Live Support</div>
                 <div style={{ fontSize: "0.72rem", color: "#4ADE80", display: "flex", alignItems: "center", gap: "4px" }}>
-                  <span>● অনলাইনে সক্রিয়</span>
+                  <span>● Online & Active</span>
                 </div>
               </div>
             </div>
@@ -207,7 +208,7 @@ export function LiveSupportWidget() {
           >
             <input
               type="text"
-              placeholder="একটি প্রশ্ন লিখুন..."
+              placeholder="Ask a question..."
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
               style={{

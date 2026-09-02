@@ -28,10 +28,10 @@ export function VendorHeader() {
         <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
           <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#10B981" }} />
           <span style={{ fontWeight: 800, fontSize: "0.95rem", color: "var(--text-main)" }}>
-            {currentVendor.nameBn}
+            {currentVendor.nameEn || currentVendor.nameBn}
           </span>
           <span className="status-badge success" style={{ fontSize: "0.7rem" }}>
-            ✓ অনুমোদিত ও সক্রিয়
+            ✓ Verified & Active
           </span>
         </div>
       </div>
@@ -39,10 +39,10 @@ export function VendorHeader() {
       {/* Right Controls: Vendor Switcher & Actions */}
       <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
         
-        {/* Switch Active Vendor Session (For testing multiple shops) */}
+        {/* Switch Active Vendor Session */}
         <div style={{ display: "flex", alignItems: "center", gap: "6px", background: "var(--primary-light)", padding: "4px 10px", borderRadius: "var(--radius-md)", border: "1px solid rgba(5, 150, 105, 0.2)" }}>
           <ArrowRightLeft size={14} color="var(--primary)" />
-          <span style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--primary-hover)" }}>দোকান সুইচ:</span>
+          <span style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--primary-hover)" }}>Switch Shop:</span>
           <select
             value={currentVendor.id}
             onChange={(e) => switchVendor(e.target.value)}
@@ -58,7 +58,7 @@ export function VendorHeader() {
           >
             {AVAILABLE_VENDORS.map((v) => (
               <option key={v.id} value={v.id}>
-                {v.nameBn}
+                {v.nameEn || v.nameBn}
               </option>
             ))}
           </select>
@@ -74,9 +74,10 @@ export function VendorHeader() {
             padding: "6px 10px",
             borderRadius: "var(--radius-md)",
             background: "#F1F5F9",
+            textDecoration: "none",
           }}
         >
-          নতুন শপ আবেদন ফর্ম
+          New Shop Application
         </Link>
 
         {/* Notifications */}
@@ -127,7 +128,7 @@ export function VendorHeader() {
           />
           <div>
             <div style={{ fontSize: "0.82rem", fontWeight: 700 }}>{currentVendor.contactName}</div>
-            <div style={{ fontSize: "0.68rem", color: "var(--text-muted)" }}>ভেন্ডর পার্টনার</div>
+            <div style={{ fontSize: "0.68rem", color: "var(--text-muted)" }}>Vendor Partner</div>
           </div>
         </div>
 

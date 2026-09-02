@@ -20,7 +20,7 @@ export default function RiderCashSummaryPage() {
       
       {/* Header */}
       <div>
-        <h1 style={{ fontSize: "1.3rem", fontWeight: 800 }}>দৈনিক ক্যাশ ও ইনকাম সামারি</h1>
+        <h1 style={{ fontSize: "1.3rem", fontWeight: 800 }}>Daily Cash & Earnings Summary</h1>
         <p style={{ fontSize: "0.8rem", color: "var(--text-muted)", marginTop: "2px" }}>
           {dailySummary.date} • {currentRider.assignedHubName}
         </p>
@@ -39,15 +39,15 @@ export default function RiderCashSummaryPage() {
         }}
       >
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <span style={{ fontSize: "0.82rem", color: "#94A3B8", fontWeight: 700 }}>হাতে থাকা মোট COD ক্যাশ</span>
+          <span style={{ fontSize: "0.82rem", color: "#94A3B8", fontWeight: 700 }}>Total In-Hand COD Cash</span>
           <span
             className="status-pill"
             style={{
-              background: dailySummary.hubCashDepositStatus === "DEPOSITED" ? "rgba(34, 197, 94, 0.2)" : "rgba(245, 158, 11, 0.2)",
-              color: dailySummary.hubCashDepositStatus === "DEPOSITED" ? "#4ADE80" : "#FBBF24",
+              background: dailySummary.cashInHandToDeposit === 0 ? "rgba(34, 197, 94, 0.2)" : "rgba(245, 158, 11, 0.2)",
+              color: dailySummary.cashInHandToDeposit === 0 ? "#4ADE80" : "#FBBF24",
             }}
           >
-            {dailySummary.hubCashDepositStatus === "DEPOSITED" ? "✓ হাবে জমা হয়েছে" : "হাতে জমা আছে"}
+            {depositedSuccess ? "✓ Deposited to Hub" : "Cash In-Hand"}
           </span>
         </div>
 
@@ -56,8 +56,8 @@ export default function RiderCashSummaryPage() {
         </div>
 
         <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.8rem", color: "#CBD5E1", borderTop: "1px solid rgba(255, 255, 255, 0.1)", paddingTop: "10px" }}>
-          <span>আজকের সম্পন্ন ডেলিভারি: <strong>{dailySummary.completedCount} টি</strong></span>
-          <span>ব্যর্থ: <strong>{dailySummary.failedCount} টি</strong></span>
+          <span>Today's Deliveries: <strong>{dailySummary.completedCount} orders</strong></span>
+          <span>Failed: <strong>{dailySummary.failedCount} orders</strong></span>
         </div>
       </div>
 
@@ -68,35 +68,35 @@ export default function RiderCashSummaryPage() {
             <Wallet size={22} />
           </div>
           <div>
-            <div style={{ fontSize: "0.78rem", color: "var(--text-muted)", fontWeight: 700 }}>আজকের অর্জিত ডেলিভারি ফি</div>
+            <div style={{ fontSize: "0.78rem", color: "var(--text-muted)", fontWeight: 700 }}>Today's Delivery Fee Earnings</div>
             <div style={{ fontSize: "1.3rem", fontWeight: 800, color: "var(--primary-dark)" }}>
-              ৳{dailySummary.riderEarnings.toLocaleString()}
+              ৳{dailySummary.totalEarnings.toLocaleString()}
             </div>
           </div>
         </div>
         <div style={{ fontSize: "0.72rem", color: "var(--text-muted)", textAlign: "right" }}>
-          (প্রতি সফল ড্রপ ৳৬০)
+          (৳60 per completed drop)
         </div>
       </div>
 
       {/* Orders Cash Breakdown */}
       <div className="rider-card">
         <h3 style={{ fontSize: "0.92rem", fontWeight: 800, borderBottom: "1px solid var(--border-subtle)", paddingBottom: "8px", marginBottom: "10px" }}>
-          অর্ডার ভিত্তিক ক্যাশ হিসাব
+          Order-by-Order Breakdown
         </h3>
 
         <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
           {completedOrders.map((ord) => (
             <div key={ord.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "0.82rem", padding: "6px 0", borderBottom: "1px dashed var(--border-subtle)" }}>
               <div>
-                <div style={{ fontWeight: 700 }}>{ord.orderNumber} ({ord.customerName.split(" ")[0]})</div>
+                <div style={{ fontWeight: 700 }}>{ord.orderNumber} ({ord.customerName})</div>
                 <div style={{ fontSize: "0.7rem", color: "var(--text-muted)" }}>{ord.deliveredAt} • {ord.deliveryArea}</div>
               </div>
               <div style={{ textAlign: "right" }}>
                 <div style={{ fontWeight: 800, color: ord.isCod ? "var(--primary-dark)" : "#2563EB" }}>
-                  {ord.isCod ? `+৳${ord.codAmountToCollect}` : "অনলাইন"}
+                  {ord.isCod ? `+৳${ord.codAmountToCollect}` : "Prepaid"}
                 </div>
-                <div style={{ fontSize: "0.68rem", color: "var(--primary)" }}>✓ সংগৃহীত</div>
+                <div style={{ fontSize: "0.68rem", color: "var(--primary)" }}>✓ Collected</div>
               </div>
             </div>
           ))}
@@ -104,20 +104,20 @@ export default function RiderCashSummaryPage() {
       </div>
 
       {/* Hub Deposit Action */}
-      {dailySummary.hubCashDepositStatus === "PENDING" && dailySummary.totalCodCollected > 0 && (
+      {!depositedSuccess && dailySummary.totalCodCollected > 0 && (
         <button
           onClick={handleDeposit}
           className="rider-btn rider-btn-primary"
           style={{ padding: "14px", fontSize: "1rem" }}
         >
           <Building size={18} />
-          <span>হাবে ক্যাশ ডিপোজিট নিশ্চিত করুন</span>
+          <span>Confirm Cash Deposit at Hub</span>
         </button>
       )}
 
-      {dailySummary.hubCashDepositStatus === "DEPOSITED" && (
+      {depositedSuccess && (
         <div style={{ background: "var(--primary-light)", padding: "12px", borderRadius: "var(--radius-md)", textAlign: "center", color: "var(--primary-hover)", fontWeight: 800, fontSize: "0.85rem" }}>
-          ✓ আজকের ক্যাশ ধানমন্ডি এক্সপ্রেস হাবে সফলভাবে জমা করা হয়েছে!
+          ✓ Today's cash has been successfully deposited at {currentRider.assignedHubName}!
         </div>
       )}
 

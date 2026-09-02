@@ -49,7 +49,7 @@ interface SavedAddress {
 
 export default function CustomerAccountPage() {
   const router = useRouter();
-  const { locale, formatPrice } = useLanguage();
+  const { formatPrice } = useLanguage();
   const {
     items,
     wishlistIds,
@@ -82,7 +82,7 @@ export default function CustomerAccountPage() {
     {
       id: "addr-1",
       type: "Home",
-      title: "Home (বাসার ঠিকানা)",
+      title: "Home",
       address: "House 42, Road 7/A, Dhanmondi R/A",
       thana: "Dhanmondi, Dhaka",
       phone: "+880 1712-345678",
@@ -91,7 +91,7 @@ export default function CustomerAccountPage() {
     {
       id: "addr-2",
       type: "Office",
-      title: "Work (অফিস)",
+      title: "Work (Office)",
       address: "Level 8, Tower 71, Gulshan-2",
       thana: "Gulshan, Dhaka",
       phone: "+880 1819-876543",
@@ -133,16 +133,16 @@ export default function CustomerAccountPage() {
       items: [
         {
           id: PRODUCTS[0]?.id || "p1",
-          name: PRODUCTS[0]?.nameBn || "পদ্মার তাজা রূপালি ইলিশ (১ কেজি)",
-          variant: "১ কেজি • তাজা প্রিমিয়াম সাইজ",
+          name: PRODUCTS[0]?.nameEn || "Padma River Fresh Hilsa Fish",
+          variant: "1 kg • Premium Fresh Catch",
           price: 1450,
           image: PRODUCTS[0]?.images[0] || "https://images.unsplash.com/photo-1544943910-4c1dc44a0b27?w=600&auto=format&fit=crop&q=80",
           productRef: PRODUCTS[0],
         },
         {
           id: PRODUCTS[1]?.id || "p2",
-          name: PRODUCTS[1]?.nameBn || "তাজা দেশি রুই মাছ (কেটে পরিষ্কার করা)",
-          variant: "১ কেজি • পিস করা",
+          name: PRODUCTS[1]?.nameEn || "Fresh Rui Fish (Cleaned & Dressed)",
+          variant: "1 kg • Sliced Cut",
           price: 485,
           image: PRODUCTS[1]?.images[0] || "https://images.unsplash.com/photo-1534939561126-855b8675edd7?w=600&auto=format&fit=crop&q=80",
           productRef: PRODUCTS[1],
@@ -161,8 +161,8 @@ export default function CustomerAccountPage() {
       items: [
         {
           id: PRODUCTS[2]?.id || "p3",
-          name: PRODUCTS[2]?.nameBn || "লাল পাকা দেশি গোল টমেটো (২ কেজি)",
-          variant: "২ কেজি • ফার্ম ফ্রেশ",
+          name: PRODUCTS[2]?.nameEn || "Farm Fresh Round Tomatoes",
+          variant: "2 kg • Direct Farm Harvest",
           price: 130,
           image: PRODUCTS[2]?.images[0] || "https://images.unsplash.com/photo-1540420773420-3366772f4999?w=600&auto=format&fit=crop&q=80",
           productRef: PRODUCTS[2],
@@ -173,9 +173,9 @@ export default function CustomerAccountPage() {
 
   // Coupons
   const vouchers = [
-    { code: "TATKA100", discount: "৳১০০ ছাড়", desc: "প্রথম ৩টি অর্ডারে ৳১০০ ফ্ল্যাট ছাড় (মিনিমাম ৳৭০০)" },
-    { code: "FREESHIP", discount: "ফ্রি ডেলিভারি", desc: "৳৫০০ বা তার বেশি অর্ডারে পুরো ঢাকা জুড়ে ফ্রি ডেলিভারি" },
-    { code: "VEGGIE20", discount: "২০% ছাড়", desc: "তাজা শাকসবজিতে সর্বোচ্চ ৳১৫০ পর্যন্ত ২০% ছাড়" },
+    { code: "TATKA100", discount: "৳100 OFF", desc: "৳100 flat discount on first 3 orders (Min. order ৳700)" },
+    { code: "FREESHIP", discount: "Free Delivery", desc: "Free express delivery across Dhaka on orders over ৳500" },
+    { code: "VEGGIE20", discount: "20% OFF", desc: "20% discount up to ৳150 on fresh organic vegetables" },
   ];
 
   // Wishlist Products
@@ -226,7 +226,7 @@ export default function CustomerAccountPage() {
   const handleReorder = (prod: any) => {
     if (prod) {
       addItem(prod, 1, (prod.baseUnit || "kg") as any, prod.basePrice, 1);
-      alert(`"${prod.nameBn || prod.nameEn}" added to cart!`);
+      alert(`"${prod.nameEn || prod.nameBn}" added to cart!`);
     }
   };
 
@@ -255,7 +255,7 @@ export default function CustomerAccountPage() {
   return (
     <div className={styles.pageWrapper}>
       
-      {/* ── Top Header Banner (Matching Dribbble Screenshot) ── */}
+      {/* ── Top Header Banner ── */}
       <div className={styles.topHeaderBanner}>
         <div className={styles.container}>
           <h1 className={styles.bannerTitle}>My Account</h1>
@@ -267,7 +267,7 @@ export default function CustomerAccountPage() {
         </div>
       </div>
 
-      {/* ── Main White Container Card ── */}
+      {/* ── Main Container Card ── */}
       <div className={styles.container}>
         <div className={styles.mainCard}>
           <div className={styles.accountLayout}>
@@ -289,7 +289,7 @@ export default function CustomerAccountPage() {
                 onClick={() => setActiveTab("orders")}
               >
                 <span>My Orders</span>
-                <span className={styles.navBadge}>১ টি লাইভ</span>
+                <span className={styles.navBadge}>1 Active</span>
               </button>
 
               <button
@@ -297,7 +297,7 @@ export default function CustomerAccountPage() {
                 className={`${styles.navButton} ${activeTab === "addresses" ? styles.navButtonActive : ""}`}
                 onClick={() => setActiveTab("addresses")}
               >
-                <span>Manage Address</span>
+                <span>Manage Addresses</span>
               </button>
 
               <button
@@ -327,7 +327,7 @@ export default function CustomerAccountPage() {
                 className={`${styles.navButton} ${activeTab === "payments" ? styles.navButtonActive : ""}`}
                 onClick={() => setActiveTab("payments")}
               >
-                <span>Payment Method</span>
+                <span>Payment Methods</span>
               </button>
 
               <button
@@ -343,7 +343,7 @@ export default function CustomerAccountPage() {
                 className={`${styles.navButton} ${activeTab === "support" ? styles.navButtonActive : ""}`}
                 onClick={() => setActiveTab("support")}
               >
-                <span>Live Support & Call</span>
+                <span>Live Support & Callback</span>
               </button>
 
               <button
@@ -351,7 +351,7 @@ export default function CustomerAccountPage() {
                 className={`${styles.navButton} ${activeTab === "password" ? styles.navButtonActive : ""}`}
                 onClick={() => setActiveTab("password")}
               >
-                <span>Password Manager</span>
+                <span>Password & Security</span>
               </button>
 
               <button
@@ -374,7 +374,7 @@ export default function CustomerAccountPage() {
                 </div>
               )}
 
-              {/* 1 ── PERSONAL INFORMATION TAB (Exact Dribbble layout) */}
+              {/* 1 ── PERSONAL INFORMATION TAB */}
               {activeTab === "personal" && (
                 <div>
                   {/* Avatar with Camera/Edit Badge */}
@@ -450,7 +450,7 @@ export default function CustomerAccountPage() {
                         />
                       </div>
 
-                      {/* Secondary Phone (Editable) */}
+                      {/* Secondary Phone */}
                       <div className={styles.inputGroup}>
                         <label className={styles.inputLabel}>
                           <span>Secondary Phone (Optional)</span>
@@ -578,8 +578,8 @@ export default function CustomerAccountPage() {
                 <div>
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "20px" }}>
                     <div>
-                      <h3 className={styles.sectionTitle}>Manage Address</h3>
-                      <p className={styles.sectionSubtitle}>Save home and office addresses for faster delivery</p>
+                      <h3 className={styles.sectionTitle}>Manage Addresses</h3>
+                      <p className={styles.sectionSubtitle}>Save home and office addresses for faster checkout</p>
                     </div>
                     <button
                       type="button"
@@ -659,7 +659,7 @@ export default function CustomerAccountPage() {
                 </div>
               )}
 
-              {/* 4 ── WISHLIST TAB (Added as requested) */}
+              {/* 4 ── WISHLIST TAB */}
               {activeTab === "wishlist" && (
                 <div>
                   <div className={styles.sectionHeader}>
@@ -673,7 +673,7 @@ export default function CustomerAccountPage() {
                         <div key={p.id} className={styles.wishlistCard}>
                           <img src={p.images[0]} alt={p.nameEn} className={styles.wishlistImg} />
                           <div>
-                            <h4 className={styles.wishlistTitle}>{locale === "bn" ? p.nameBn : p.nameEn}</h4>
+                            <h4 className={styles.wishlistTitle}>{p.nameEn || p.nameBn}</h4>
                             <div className={styles.wishlistPrice}>{formatPrice(p.basePrice)}</div>
                           </div>
                           <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
@@ -708,7 +708,7 @@ export default function CustomerAccountPage() {
                 </div>
               )}
 
-              {/* 5 ── MY CART TAB (Added as requested) */}
+              {/* 5 ── MY CART TAB */}
               {activeTab === "cart" && (
                 <div>
                   <div className={styles.sectionHeader}>
@@ -724,7 +724,7 @@ export default function CustomerAccountPage() {
                             <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
                               <img src={it.product?.images?.[0]} alt={it.product?.nameEn} className={styles.itemImg} />
                               <div>
-                                <h4 style={{ margin: "0 0 2px 0", fontSize: "0.9rem", fontWeight: 700, color: "#0f172a" }}>{locale === "bn" ? it.product?.nameBn : it.product?.nameEn}</h4>
+                                <h4 style={{ margin: "0 0 2px 0", fontSize: "0.9rem", fontWeight: 700, color: "#0f172a" }}>{it.product?.nameEn || it.product?.nameBn}</h4>
                                 <span style={{ fontSize: "0.78rem", color: "#64748b" }}>{it.selectedWeight} {it.selectedUnit} × {it.quantity}</span>
                               </div>
                             </div>
@@ -758,7 +758,7 @@ export default function CustomerAccountPage() {
               {activeTab === "payments" && (
                 <div>
                   <div className={styles.sectionHeader}>
-                    <h3 className={styles.sectionTitle}>Payment Method</h3>
+                    <h3 className={styles.sectionTitle}>Payment Methods</h3>
                     <p className={styles.sectionSubtitle}>Manage your connected wallets and payment options</p>
                   </div>
 

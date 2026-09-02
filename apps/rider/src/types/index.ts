@@ -40,8 +40,8 @@ export interface RiderDeliveryOrder {
   customerPhone: string;
   deliveryAddress: string;
   deliveryArea: string;
-  mapQuery: string; // e.g. "House 27, Road 8/A, Dhanmondi, Dhaka"
-  deliverySlot: string; // e.g. "তাজা সকাল (০৭:০০ - ০৯:০০)"
+  mapQuery: string;
+  deliverySlot: string; // e.g. "Morning (07:00 - 09:00 AM)"
   items: DeliveryItemSummary[];
   isCod: boolean;
   codAmountToCollect: number; // ৳
@@ -58,6 +58,6 @@ export interface DailySummary {
   completedCount: number;
   failedCount: number;
   totalCodCollected: number;
-  riderEarnings: number;
-  hubCashDepositStatus: "PENDING" | "DEPOSITED";
+  totalEarnings: number; // ৳ per delivery commission
+  cashInHandToDeposit: number;
 }

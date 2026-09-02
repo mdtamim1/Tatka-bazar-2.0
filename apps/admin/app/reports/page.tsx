@@ -28,48 +28,48 @@ export default function AdminReportsPage() {
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "12px" }}>
         <div>
           <h1 style={{ fontSize: "1.4rem", fontWeight: 800, color: "var(--text-main)" }}>
-            সেলস রিপোর্ট ও ফিন্যান্সিয়াল অ্যানালিটিক্স
+            Sales Reports & Financial Analytics
           </h1>
           <p style={{ fontSize: "0.82rem", color: "var(--text-muted)", marginTop: "2px" }}>
-            ক্যাটাগরি, ভেন্ডর ও সময়সীমা ভিত্তিক বিক্রয় রিপোর্ট এবং CSV এক্সপোর্ট
+            Sales performance by vendor, category, and time range with full CSV export
           </p>
         </div>
 
         <button onClick={handleExportCSV} className="admin-btn admin-btn-primary">
           <Download size={16} />
-          <span>{downloadSuccess ? "✓ ডাউনলোড সম্পন্ন!" : "CSV রিপোর্ট এক্সপোর্ট করুন"}</span>
+          <span>{downloadSuccess ? "✓ Downloaded!" : "Export CSV Report"}</span>
         </button>
       </div>
 
       {/* Analytics Summary */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "16px" }}>
         <div className="admin-card" style={{ padding: "20px" }}>
-          <div style={{ fontSize: "0.8rem", color: "var(--text-muted)", fontWeight: 700 }}>মোট সংগৃহীত রাজস্ব</div>
+          <div style={{ fontSize: "0.8rem", color: "var(--text-muted)", fontWeight: 700 }}>Total Collected Revenue</div>
           <div style={{ fontSize: "1.6rem", fontWeight: 800, color: "var(--primary-dark)", marginTop: "6px" }}>
             ৳{orders.reduce((sum, o) => sum + o.totalAmount, 0).toLocaleString()}
           </div>
           <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", marginTop: "4px" }}>
-            গড় অর্ডার ভ্যালু: ৳{Math.round(orders.reduce((sum, o) => sum + o.totalAmount, 0) / orders.length || 0)}
+            Average Order Value: ৳{Math.round(orders.reduce((sum, o) => sum + o.totalAmount, 0) / orders.length || 0)}
           </div>
         </div>
 
         <div className="admin-card" style={{ padding: "20px" }}>
-          <div style={{ fontSize: "0.8rem", color: "var(--text-muted)", fontWeight: 700 }}>ভেন্ডর কমিশন আয়</div>
+          <div style={{ fontSize: "0.8rem", color: "var(--text-muted)", fontWeight: 700 }}>Vendor Commission Earned</div>
           <div style={{ fontSize: "1.6rem", fontWeight: 800, color: "var(--accent)", marginTop: "6px" }}>
             ৳{(orders.reduce((sum, o) => sum + o.totalAmount, 0) * 0.09).toFixed(0)}
           </div>
           <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", marginTop: "4px" }}>
-            গড় প্লাটফর্ম কমিশন: ৯.০%
+            Average Commission Rate: 9.0%
           </div>
         </div>
 
         <div className="admin-card" style={{ padding: "20px" }}>
-          <div style={{ fontSize: "0.8rem", color: "var(--text-muted)", fontWeight: 700 }}>সফল ডেলিভারি অনুপাত</div>
+          <div style={{ fontSize: "0.8rem", color: "var(--text-muted)", fontWeight: 700 }}>Successful Delivery Ratio</div>
           <div style={{ fontSize: "1.6rem", fontWeight: 800, color: "var(--primary)", marginTop: "6px" }}>
-            ৯৮.৬%
+            98.6%
           </div>
           <div style={{ fontSize: "0.75rem", color: "var(--primary)", marginTop: "4px", fontWeight: 700 }}>
-            সর্বোচ্চ গ্রাহক সন্তুষ্টি
+            Top Customer Trust
           </div>
         </div>
       </div>
@@ -77,16 +77,16 @@ export default function AdminReportsPage() {
       {/* Breakdown Table */}
       <div className="admin-card">
         <div style={{ padding: "16px 20px", borderBottom: "1px solid var(--border-subtle)", fontWeight: 800 }}>
-          ভেন্ডর অনুযায়ী বিক্রয় ও রাজস্ব বিশ্লেষণ
+          Sales & Revenue Breakdown by Partner Vendor
         </div>
         <table className="admin-table">
           <thead>
             <tr>
-              <th>ভেন্ডর শপ</th>
-              <th>মোট বিক্রয় ভলিউম</th>
-              <th>প্রদেয় কমিশন</th>
-              <th>ভেন্ডর নেট পে-আউট</th>
-              <th>মার্কেট শেয়ার</th>
+              <th>Vendor Shop</th>
+              <th>Sales Volume</th>
+              <th>Platform Commission</th>
+              <th>Vendor Net Payout</th>
+              <th>Market Share</th>
             </tr>
           </thead>
           <tbody>
@@ -96,8 +96,7 @@ export default function AdminReportsPage() {
               return (
                 <tr key={v.id}>
                   <td>
-                    <div style={{ fontWeight: 800 }}>{v.nameBn}</div>
-                    <div style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}>{v.nameEn}</div>
+                    <div style={{ fontWeight: 800 }}>{v.nameEn || v.nameBn}</div>
                   </td>
                   <td>
                     <span style={{ fontWeight: 800 }}>৳{v.totalSales.toLocaleString()}</span>

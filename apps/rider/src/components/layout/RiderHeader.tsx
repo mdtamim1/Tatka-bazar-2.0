@@ -44,7 +44,7 @@ export function RiderHeader() {
           <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
             <span style={{ fontWeight: 800, fontSize: "0.95rem" }}>{currentRider.name}</span>
             <span style={{ fontSize: "0.68rem", color: currentRider.isOnline ? "#4ADE80" : "#94A3B8", fontWeight: 700 }}>
-              {currentRider.isOnline ? "● অনলাইন" : "○ অফলাইন"}
+              {currentRider.isOnline ? "● Online" : "○ Offline"}
             </span>
           </div>
           <div style={{ fontSize: "0.72rem", color: "#94A3B8", display: "flex", alignItems: "center", gap: "3px" }}>
@@ -95,7 +95,7 @@ export function RiderHeader() {
           }}
         >
           <Power size={13} />
-          <span>{currentRider.isOnline ? "ডিউটি অন" : "ডিউটি অফ"}</span>
+          <span>{currentRider.isOnline ? "Duty ON" : "Duty OFF"}</span>
         </button>
 
       </div>

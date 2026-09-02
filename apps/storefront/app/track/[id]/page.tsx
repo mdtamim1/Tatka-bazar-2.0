@@ -1,70 +1,62 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import {
-  ArrowLeft,
   Bike,
-  Package,
   CheckCircle2,
   Clock,
   MapPin,
   Phone,
   MessageSquare,
-  ShieldCheck,
+  ArrowLeft,
   Store,
-  Sparkles,
   RotateCcw,
-  Navigation,
-  FileText,
+  Sparkles,
   Printer,
 } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 
-export default function OrderLiveTrackDetailPage() {
+export default function TrackDetailPage() {
   const params = useParams();
-  const orderId = (params.id as string) || "";
-  const { locale, formatPrice } = useLanguage();
+  const router = useRouter();
+  const { formatPrice } = useLanguage();
+  const orderId = (params.id as string) || "TB-194080";
 
-  const [order, setOrder] = useState<any | null>(null);
+  const [order, setOrder] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [lastRefreshed, setLastRefreshed] = useState<Date>(new Date());
-  const [bikeProgress, setBikeProgress] = useState(35); // 0 to 100%
+  const [bikeProgress, setBikeProgress] = useState(45);
 
-  // Fetch live order from Fastify API
   const fetchOrder = async () => {
     try {
-      const res = await fetch(`http://localhost:4000/api/orders`);
-      const json = await res.json();
-      if (json.success && json.data) {
-        // Match by orderNumber or id or phone
-        const found = json.data.find(
-          (o: any) =>
-            o.orderNumber?.toUpperCase() === orderId.toUpperCase() ||
-            o.id === orderId ||
-            o.customerPhone === orderId
-        );
-        if (found) {
-          setOrder(found);
-          setLastRefreshed(new Date());
-        }
+      setLoading(true);
+      const res = await fetch(`/api/orders/${orderId}`);
+      if (res.ok) {
+        const data = await res.json();
+        setOrder(data);
       }
-    } catch (err) {
-      console.warn("Live order fetch fallback:", err);
+    } catch {
+      // Fallback handled gracefully
     } finally {
       setLoading(false);
+      setLastRefreshed(new Date());
     }
   };
 
   useEffect(() => {
     fetchOrder();
-    // Auto-poll every 6 seconds for real-time status transitions
-    const interval = setInterval(fetchOrder, 6000);
-    return () => clearInterval(interval);
+
+    // Auto-poll order status every 15s
+    const pollInterval = setInterval(() => {
+      fetchOrder();
+    }, 15000);
+
+    return () => clearInterval(pollInterval);
   }, [orderId]);
 
-  // Animate the bike moving across the map
+  // Simulate smooth live bike movement on map
   useEffect(() => {
     const bikeTimer = setInterval(() => {
       setBikeProgress((prev) => (prev >= 85 ? 20 : prev + 2));
@@ -76,22 +68,22 @@ export default function OrderLiveTrackDetailPage() {
   const displayOrder = order || {
     id: "demo-ord-1",
     orderNumber: orderId.startsWith("TB-") ? orderId : "TB-194080",
-    customerName: "রাফিক আহমেদ",
+    customerName: "Rafiq Ahmed",
     customerPhone: "01700000002",
-    customerAddress: "বাড়ি ২৭, রোড ৮/এ, ধানমন্ডি আ/এ, ঢাকা",
-    deliveryArea: "ধানমন্ডি (Dhanmondi)",
-    deliverySlot: "তাজা সকাল (০৭:০০ - ০৯:০০)",
+    customerAddress: "House 27, Road 8/A, Dhanmondi R/A, Dhaka",
+    deliveryArea: "Dhanmondi",
+    deliverySlot: "Morning Fresh (07:00 - 09:00 AM)",
     status: "OUT_FOR_DELIVERY",
     paymentStatus: "PAID",
     paymentMethod: "BKASH",
     totalAmount: 1550,
     items: [
-      { name: "পদ্মার তাজা রূপালি ইলিশ", quantity: 1, price: 1450 },
-      { name: "পাকা লাল দেশি টমেটো", quantity: 1, price: 65 },
-      { name: "তাজা কচি দেশি লাল শাক", quantity: 1, price: 35 },
+      { name: "Padma River Fresh Hilsa Fish", quantity: 1, price: 1450 },
+      { name: "Farm Fresh Ripe Tomatoes", quantity: 1, price: 65 },
+      { name: "Fresh Tender Red Spinach", quantity: 1, price: 35 },
     ],
     rider: {
-      name: "করিম মোল্লা",
+      name: "Karim Molla",
       phone: "01701998877",
       vehicle: "HONDA CB SHINE (DHAKA METRO HA-4491)",
       rating: 4.95,
@@ -119,10 +111,10 @@ export default function OrderLiveTrackDetailPage() {
   const currentStep = getStepIndex(displayOrder.status);
 
   const steps = [
-    { title: "অর্ডার গৃহীত হয়েছে", time: "০৭:০০ AM", desc: "সিস্টেমে সংরক্ষিত ও অনুমোদিত" },
-    { title: "তাজা সংগ্রহ ও প্যাকিং", time: "০৭:১৫ AM", desc: "পার্টনার ভেন্ডর ও হাব থেকে প্যাকেজিং সম্পন্ন" },
-    { title: "রাইডার ডেলিভারির পথে", time: "০৭:৩০ AM", desc: "আপনার ঠিকানায় এক্সপ্রেস ড্রপ চলছে" },
-    { title: "ডেলিভারি সম্পন্ন", time: "আনুমানিক ০৮:১৫ AM", desc: "পণ্য হাতে পেয়ে যাচাই করুন" },
+    { title: "Order Placed", time: "07:00 AM", desc: "Order verified and confirmed" },
+    { title: "Packing & Quality Check", time: "07:15 AM", desc: "Packed at local hub in insulated box" },
+    { title: "Out for Delivery", time: "07:30 AM", desc: "Rider on route to your location" },
+    { title: "Delivered", time: "Est. 08:15 AM", desc: "Doorstep delivery completed" },
   ];
 
   return (
@@ -138,12 +130,13 @@ export default function OrderLiveTrackDetailPage() {
               alignItems: "center",
               gap: "6px",
               color: "var(--text-muted)",
+              textDecoration: "none",
               fontSize: "0.9rem",
               fontWeight: 600,
             }}
           >
             <ArrowLeft size={18} />
-            <span>অন্য অর্ডার খুঁজুন</span>
+            <span>Track Another Order</span>
           </Link>
 
           <button
@@ -162,7 +155,7 @@ export default function OrderLiveTrackDetailPage() {
             }}
           >
             <RotateCcw size={14} />
-            <span>লাইভ সিঙ্ক: {lastRefreshed.toLocaleTimeString()}</span>
+            <span>Live Sync: {lastRefreshed.toLocaleTimeString()}</span>
           </button>
         </div>
 
@@ -210,12 +203,12 @@ export default function OrderLiveTrackDetailPage() {
                 </span>
               </div>
               <div style={{ fontSize: "0.82rem", opacity: 0.9 }}>
-                স্লট: <strong>{displayOrder.deliverySlot}</strong> • {displayOrder.deliveryArea}
+                Slot: <strong>{displayOrder.deliverySlot}</strong> • {displayOrder.deliveryArea}
               </div>
             </div>
 
             <div style={{ textAlign: "right" }}>
-              <div style={{ fontSize: "0.75rem", opacity: 0.85 }}>মোট বিল (পরিশোধিত)</div>
+              <div style={{ fontSize: "0.75rem", opacity: 0.85 }}>Total Bill (Paid)</div>
               <div style={{ fontSize: "1.4rem", fontWeight: 800, color: "#FEF08A" }}>
                 ৳{displayOrder.totalAmount?.toLocaleString()}
               </div>
@@ -292,15 +285,15 @@ export default function OrderLiveTrackDetailPage() {
                   <Store size={18} />
                 </div>
                 <div>
-                  <div style={{ fontSize: "0.72rem", color: "#94A3B8" }}>পিকআপ হাব</div>
-                  <div style={{ fontSize: "0.85rem", fontWeight: 700 }}>ধানমন্ডি এক্সপ্রেস হাব</div>
+                  <div style={{ fontSize: "0.72rem", color: "#94A3B8" }}>Pickup Hub</div>
+                  <div style={{ fontSize: "0.85rem", fontWeight: 700 }}>Dhanmondi Express Hub</div>
                 </div>
               </div>
 
               {/* Point B: Customer */}
               <div style={{ display: "flex", alignItems: "center", gap: "10px", color: "#FFFFFF", textAlign: "right" }}>
                 <div>
-                  <div style={{ fontSize: "0.72rem", color: "#94A3B8" }}>ডেলিভারি গন্তব্য</div>
+                  <div style={{ fontSize: "0.72rem", color: "#94A3B8" }}>Delivery Destination</div>
                   <div style={{ fontSize: "0.85rem", fontWeight: 700 }}>{displayOrder.customerAddress?.slice(0, 24)}...</div>
                 </div>
                 <div style={{ width: "36px", height: "36px", borderRadius: "10px", background: "rgba(239, 68, 68, 0.25)", border: "1.5px solid #EF4444", display: "flex", alignItems: "center", justifyContent: "center", color: "#F87171" }}>
@@ -346,7 +339,7 @@ export default function OrderLiveTrackDetailPage() {
             </div>
 
             <div style={{ textAlign: "center", color: "#CBD5E1", fontSize: "0.75rem", marginTop: "16px" }}>
-              ⚡ রাইডার গতিতে এগিয়ে আসছেন • আনুমানিক আর <strong>১৫ মিনিট</strong> বাকি
+              ⚡ Rider is speeding to your address • Approx. <strong>15 mins</strong> remaining
             </div>
           </div>
 
@@ -366,7 +359,7 @@ export default function OrderLiveTrackDetailPage() {
             }}
           >
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
-              <h3 style={{ fontSize: "1rem", fontWeight: 800 }}>আপনার ডেলিভারি রাইডার</h3>
+              <h3 style={{ fontSize: "1rem", fontWeight: 800 }}>Your Delivery Rider</h3>
               <span style={{ fontSize: "0.72rem", background: "var(--primary-light)", color: "var(--primary)", padding: "2px 8px", borderRadius: "999px", fontWeight: 700 }}>
                 ★ {displayOrder.rider?.rating || 4.9}
               </span>
@@ -387,14 +380,14 @@ export default function OrderLiveTrackDetailPage() {
                   fontWeight: 800,
                 }}
               >
-                {displayOrder.rider?.name?.[0] || "ক"}
+                {displayOrder.rider?.name?.[0] || "K"}
               </div>
               <div>
                 <div style={{ fontWeight: 800, fontSize: "0.95rem" }}>
-                  {displayOrder.rider?.name || "করিম মোল্লা (বাইক রাইডার)"}
+                  {displayOrder.rider?.name || "Karim Molla (Bike Rider)"}
                 </div>
                 <div style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>
-                  {displayOrder.rider?.vehicle || "HONDA CB SHINE (বাইক)"}
+                  {displayOrder.rider?.vehicle || "HONDA CB SHINE (BIKE)"}
                 </div>
               </div>
             </div>
@@ -418,7 +411,7 @@ export default function OrderLiveTrackDetailPage() {
                 }}
               >
                 <Phone size={15} />
-                <span>ফোন দিন</span>
+                <span>Call Rider</span>
               </a>
 
               <a
@@ -456,7 +449,7 @@ export default function OrderLiveTrackDetailPage() {
             }}
           >
             <h3 style={{ fontSize: "1rem", fontWeight: 800, marginBottom: "14px", borderBottom: "1px solid var(--border-subtle)", paddingBottom: "8px" }}>
-              অর্ডারের আইটেমসমূহ ({displayOrder.items?.length || 3} টি)
+              Order Items ({displayOrder.items?.length || 3})
             </h3>
 
             <div style={{ display: "flex", flexDirection: "column", gap: "10px", maxHeight: "150px", overflowY: "auto" }}>
@@ -469,9 +462,9 @@ export default function OrderLiveTrackDetailPage() {
             </div>
 
             <div style={{ marginTop: "14px", paddingTop: "12px", borderTop: "1.5px dashed var(--border-medium)", display: "flex", justifyContent: "space-between", fontSize: "0.9rem" }}>
-              <span style={{ color: "var(--text-muted)" }}>পেমেন্ট মোড:</span>
+              <span style={{ color: "var(--text-muted)" }}>Payment Method:</span>
               <span style={{ fontWeight: 800, color: displayOrder.paymentStatus === "PAID" ? "var(--primary)" : "var(--accent)" }}>
-                {displayOrder.paymentStatus === "PAID" ? "✓ পেইড (bKash/SSL)" : "ক্যাশ অন ডেলিভারি (COD)"}
+                {displayOrder.paymentStatus === "PAID" ? "✓ Paid (Online)" : "Cash on Delivery (COD)"}
               </span>
             </div>
 
@@ -496,7 +489,7 @@ export default function OrderLiveTrackDetailPage() {
               }}
             >
               <Printer size={16} />
-              <span>🧾 ক্যাশ মেমো / চালান প্রিন্ট (PDF)</span>
+              <span>Print Cash Memo / Invoice (PDF)</span>
             </Link>
           </div>
 

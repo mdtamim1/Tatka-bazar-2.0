@@ -28,7 +28,7 @@ export default function TrackSearchPage() {
     e.preventDefault();
     const query = searchInput.trim().toUpperCase();
     if (!query) {
-      setErrorMsg("অনুগ্রহ করে একটি অর্ডার নম্বর অথবা ফোন নম্বর দিন");
+      setErrorMsg("Please enter an order number or phone number");
       return;
     }
     setErrorMsg("");
@@ -37,8 +37,8 @@ export default function TrackSearchPage() {
   };
 
   const sampleOrders = [
-    { orderNo: "TB-194080", status: "CONFIRMED", area: "ধানমন্ডি (Dhanmondi)", time: "তাজা সকাল (০৭:০০ - ০৯:০০)" },
-    { orderNo: "TB-928410", status: "OUT_FOR_DELIVERY", area: "গুলশান-২ (Gulshan)", time: "দুপুর এক্সপ্রেস (১২:০০ - ১৪:০০)" },
+    { orderNo: "TB-194080", status: "CONFIRMED", area: "Dhanmondi", time: "Morning Slot (07:00 - 09:00 AM)" },
+    { orderNo: "TB-928410", status: "OUT_FOR_DELIVERY", area: "Gulshan-2", time: "Midday Express (12:00 - 02:00 PM)" },
   ];
 
   return (
@@ -104,12 +104,10 @@ export default function TrackSearchPage() {
           </span>
 
           <h1 style={{ fontSize: "1.8rem", fontWeight: 800, marginBottom: "8px" }}>
-            {locale === "bn" ? "লাইভ অর্ডার ট্র্যাকিং" : "Live Order Tracking"}
+            Live Order Tracking
           </h1>
           <p style={{ fontSize: "0.95rem", opacity: 0.9, maxWidth: "480px", margin: "0 auto" }}>
-            {locale === "bn"
-              ? "আপনার অর্ডার নম্বর দিয়ে রাইডারের গতিবিধি ও ডেলিভারি স্ট্যাটাস রিয়েল-টাইমে দেখুন।"
-              : "Track your fresh grocery delivery live from partner farms & river docks to your doorstep."}
+            Track your fresh grocery delivery live from partner farms & river docks to your doorstep.
           </p>
         </div>
 
@@ -126,7 +124,7 @@ export default function TrackSearchPage() {
         >
           <form onSubmit={handleSearch} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
             <label style={{ fontSize: "0.92rem", fontWeight: 700, color: "var(--text-main)" }}>
-              {locale === "bn" ? "অর্ডার নম্বর দিন (যেমন: TB-194080)" : "Enter Order Number (e.g. TB-194080)"}
+              Enter Order Number (e.g. TB-194080)
             </label>
 
             <div style={{ display: "flex", gap: "10px" }}>
@@ -145,7 +143,7 @@ export default function TrackSearchPage() {
                   type="text"
                   value={searchInput}
                   onChange={(e) => setSearchInput(e.target.value)}
-                  placeholder="TB-194080 বা আপনার ফোন নম্বর..."
+                  placeholder="TB-194080 or your phone number..."
                   style={{
                     width: "100%",
                     padding: "14px 14px 14px 42px",
@@ -174,7 +172,7 @@ export default function TrackSearchPage() {
                   cursor: "pointer",
                 }}
               >
-                <span>{isSearching ? "খোঁজা হচ্ছে..." : "ট্র্যাক করুন"}</span>
+                <span>{isSearching ? "Searching..." : "Track Order"}</span>
                 <ArrowRight size={16} />
               </button>
             </div>
@@ -191,7 +189,7 @@ export default function TrackSearchPage() {
         <div style={{ background: "var(--bg-surface)", borderRadius: "var(--radius-lg)", border: "1px solid var(--border-subtle)", padding: "20px" }}>
           <div style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--text-muted)", marginBottom: "14px", display: "flex", alignItems: "center", gap: "6px" }}>
             <Sparkles size={16} color="var(--primary)" />
-            <span>সরাসরি টেস্ট করতে যেকোনো একটি অর্ডারে ক্লিক করুন:</span>
+            <span>Click any demo order to view live tracking:</span>
           </div>
 
           <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
@@ -208,6 +206,7 @@ export default function TrackSearchPage() {
                   background: "var(--bg-subtle)",
                   border: "1px solid var(--border-subtle)",
                   transition: "all 0.15s ease",
+                  textDecoration: "none",
                 }}
               >
                 <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
@@ -215,7 +214,7 @@ export default function TrackSearchPage() {
                     <Package size={18} />
                   </div>
                   <div>
-                    <div style={{ fontWeight: 800, fontSize: "0.92rem", fontFamily: "var(--font-mono)" }}>
+                    <div style={{ fontWeight: 800, fontSize: "0.92rem", fontFamily: "var(--font-mono)", color: "var(--text-main)" }}>
                       #{ord.orderNo}
                     </div>
                     <div style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>
@@ -235,7 +234,7 @@ export default function TrackSearchPage() {
                       fontWeight: 800,
                     }}
                   >
-                    {ord.status === "OUT_FOR_DELIVERY" ? "পথে আছে 🛵" : "নিশ্চিত হয়েছে ✓"}
+                    {ord.status === "OUT_FOR_DELIVERY" ? "On the Way 🛵" : "Confirmed ✓"}
                   </span>
                   <ChevronRight size={16} color="var(--text-muted)" />
                 </div>

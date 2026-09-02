@@ -66,6 +66,32 @@ export interface Product {
   vendorSlug: string;
   isOfficialTatka: boolean;
   sku: string;
+  brandName?: string;
+  brandSlug?: string;
+  netContent?: string;
+  netWeight?: string;
+  shelfLife?: string;
+  madeIn?: string;
+  keyIngredients?: { name: string; desc: string; icon?: string }[];
+  howToUseSteps?: string[];
+  inciIngredients?: string;
+  skinConcerns?: string[];
+  suitableFor?: string[];
+  reviewsList?: {
+    id: string;
+    author: string;
+    rating: number;
+    date: string;
+    comment: string;
+  }[];
+  qaList?: {
+    id: string;
+    question: string;
+    askedBy: string;
+    date: string;
+    answer?: string;
+    answeredBy?: string;
+  }[];
 }
 
 export interface Category {
@@ -144,4 +170,12 @@ export interface Review {
   commentEn: string;
   verifiedPurchase: boolean;
   likes: number;
+  category?: "all" | "fish" | "veggies" | "village" | "express";
+  productNameBn?: string;
+  productNameEn?: string;
+  userRoleBn?: string;
+  userRoleEn?: string;
+  deliveryTimeBn?: string;
+  deliveryTimeEn?: string;
 }
+

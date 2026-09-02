@@ -21,9 +21,9 @@ export default function AdminErrorPage({
         <div className="w-12 h-12 rounded-xl bg-red-500/10 text-red-400 flex items-center justify-center mx-auto mb-4">
           <AlertCircle className="w-6 h-6" />
         </div>
-        <h2 className="text-xl font-bold text-slate-100">অ্যাডমিন প্যানেলে ত্রুটি</h2>
+        <h2 className="text-xl font-bold text-slate-100">Admin Portal Error</h2>
         <p className="text-xs text-slate-400 mt-2 mb-6">
-          ডেটা ফেচিং বা প্রসেসিংয়ে ত্রুটি ঘটেছে। দয়া করে পুনরায় চেষ্টা করুন।
+          An error occurred while fetching or processing administrative data. Please try again.
         </p>
         <div className="flex gap-3 justify-center">
           <button
@@ -31,14 +31,14 @@ export default function AdminErrorPage({
             className="py-2.5 px-5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-semibold text-xs rounded-xl flex items-center gap-2"
           >
             <RefreshCw className="w-4 h-4" />
-            রিফ্রেশ করুন
+            Retry
           </button>
           <Link
             href="/"
             className="py-2.5 px-5 bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold text-xs rounded-xl flex items-center gap-2"
           >
             <LayoutDashboard className="w-4 h-4" />
-            ড্যাশবোর্ড
+            Dashboard
           </Link>
         </div>
       </div>

@@ -33,8 +33,8 @@ export default function AdminDashboardPage() {
 
   const KPI = [
     {
-      label: "মোট রাজস্ব",
-      sublabel: "All-time revenue",
+      label: "Total Revenue",
+      sublabel: "All-time GMV",
       value: `৳${(totalRevenue / 1000).toFixed(1)}K`,
       icon: TrendingUp,
       accent: "var(--green)",
@@ -42,17 +42,17 @@ export default function AdminDashboardPage() {
       badgeColor: "var(--green)",
     },
     {
-      label: "আজকের অর্ডার",
+      label: "Today's Orders",
       sublabel: "Active orders",
       value: `${todayOrders.length}`,
       icon: ShoppingBag,
       accent: "var(--blue)",
-      badge: `${pendingOrders.length} অপেক্ষারত`,
+      badge: `${pendingOrders.length} pending`,
       badgeColor: "var(--amber)",
     },
     {
-      label: "অনুমোদিত ভেন্ডর",
-      sublabel: "Active vendor partners",
+      label: "Partner Vendors",
+      sublabel: "Active shops",
       value: `${vendors.filter(v => v.status === "APPROVED").length}`,
       icon: Store,
       accent: "var(--purple)",
@@ -60,7 +60,7 @@ export default function AdminDashboardPage() {
       badgeColor: pendingVendors.length > 0 ? "var(--amber)" : "var(--green)",
     },
     {
-      label: "ডেলিভারি ফ্লিট",
+      label: "Delivery Fleet",
       sublabel: "Active riders",
       value: `${activeRiders.length}`,
       icon: Bike,
@@ -77,20 +77,20 @@ export default function AdminDashboardPage() {
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "12px" }}>
         <div>
           <h1 style={{ fontSize: "1.35rem", fontWeight: 800, color: "var(--text-1)", lineHeight: 1.2 }}>
-            অপারেশনস ড্যাশবোর্ড
+            Operations Command Center
           </h1>
           <p style={{ fontSize: "0.80rem", color: "var(--text-3)", marginTop: "3px" }}>
-            তাতকা বাজার মার্কেটপ্লেস · রিয়েল-টাইম অপারেশন ওভারভিউ
+            Tatka Bazar Marketplace · Real-time Operational Overview
           </p>
         </div>
         <div style={{ display: "flex", gap: "10px" }}>
           <Link href="/products" className="admin-btn admin-btn-secondary" style={{ fontSize: "0.82rem" }}>
             <Package size={14} />
-            নতুন পণ্য যুক্ত করুন
+            Add New Product
           </Link>
           <Link href="/orders" className="admin-btn admin-btn-primary" style={{ fontSize: "0.82rem" }}>
             <ShoppingBag size={14} />
-            অর্ডার দেখুন ({orders.length})
+            View Orders ({orders.length})
           </Link>
         </div>
       </div>
@@ -146,7 +146,7 @@ export default function AdminDashboardPage() {
               <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                 <Store size={16} />
                 <span style={{ fontSize: "0.82rem", fontWeight: 700 }}>
-                  {pendingVendors.length} ভেন্ডর অনুমোদনের অপেক্ষায়
+                  {pendingVendors.length} vendor applications pending approval
                 </span>
               </div>
               <ChevronRight size={15} />
@@ -163,7 +163,7 @@ export default function AdminDashboardPage() {
               <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                 <Building2 size={16} />
                 <span style={{ fontSize: "0.82rem", fontWeight: 700 }}>
-                  {pendingB2B.length} B2B কোটেশন পেন্ডিং
+                  {pendingB2B.length} B2B quotations pending review
                 </span>
               </div>
               <ChevronRight size={15} />
@@ -180,7 +180,7 @@ export default function AdminDashboardPage() {
               <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                 <AlertTriangle size={16} />
                 <span style={{ fontSize: "0.82rem", fontWeight: 700 }}>
-                  {lowStockProducts.length} পণ্যের স্টক কম
+                  {lowStockProducts.length} items low on stock
                 </span>
               </div>
               <ChevronRight size={15} />
@@ -202,12 +202,12 @@ export default function AdminDashboardPage() {
             <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
               <Activity size={16} color="var(--green)" />
               <h2 style={{ fontSize: "0.95rem", fontWeight: 800, color: "var(--text-1)" }}>
-                সাম্প্রতিক অর্ডার
+                Recent Live Orders
               </h2>
               <span className="live-dot" />
             </div>
             <Link href="/orders" style={{ fontSize: "0.78rem", color: "var(--green)", fontWeight: 700, display: "flex", alignItems: "center", gap: "4px" }}>
-              সব দেখুন <ChevronRight size={13} />
+              View All <ChevronRight size={13} />
             </Link>
           </div>
           <div style={{ overflowX: "auto" }}>
@@ -215,10 +215,10 @@ export default function AdminDashboardPage() {
               <thead>
                 <tr>
                   <th>Order ID</th>
-                  <th>গ্রাহক</th>
-                  <th>পরিমাণ</th>
-                  <th>স্ট্যাটাস</th>
-                  <th>দ্রুত আপডেট</th>
+                  <th>Customer</th>
+                  <th>Total Amount</th>
+                  <th>Status</th>
+                  <th>Quick Action</th>
                 </tr>
               </thead>
               <tbody>
@@ -230,7 +230,7 @@ export default function AdminDashboardPage() {
                       </span>
                     </td>
                     <td>
-                      <div style={{ fontWeight: 600, fontSize: "0.83rem" }}>{ord.customerName.split("(")[0]?.trim() ?? ord.customerName}</div>
+                      <div style={{ fontWeight: 600, fontSize: "0.83rem" }}>{ord.customerName}</div>
                       <div style={{ fontSize: "0.70rem", color: "var(--text-3)" }}>{ord.deliveryArea}</div>
                     </td>
                     <td style={{ fontWeight: 800, fontFamily: "var(--font-mono)", fontSize: "0.88rem" }}>
@@ -274,9 +274,9 @@ export default function AdminDashboardPage() {
               borderBottom: "1px solid var(--border-1)",
               display: "flex", justifyContent: "space-between", alignItems: "center",
             }}>
-              <h2 style={{ fontSize: "0.92rem", fontWeight: 800, color: "var(--text-1)" }}>সেরা পণ্য</h2>
+              <h2 style={{ fontSize: "0.92rem", fontWeight: 800, color: "var(--text-1)" }}>Top Catalog Items</h2>
               <Link href="/products" style={{ fontSize: "0.75rem", color: "var(--green)", fontWeight: 700 }}>
-                সব →
+                All →
               </Link>
             </div>
             <div style={{ padding: "12px 16px", display: "flex", flexDirection: "column", gap: "10px" }}>
@@ -288,9 +288,9 @@ export default function AdminDashboardPage() {
                     style={{ width: "38px", height: "38px", borderRadius: "var(--r-sm)", objectFit: "cover", flexShrink: 0, border: "1px solid var(--border-1)" }}
                   />
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div className="truncate" style={{ fontWeight: 600, fontSize: "0.82rem", color: "var(--text-1)" }}>{p.nameBn}</div>
+                    <div className="truncate" style={{ fontWeight: 600, fontSize: "0.82rem", color: "var(--text-1)" }}>{p.nameEn || p.nameBn}</div>
                     <div style={{ fontSize: "0.70rem", color: "var(--text-3)" }}>
-                      স্টক: <span style={{ color: p.stock <= p.lowStockAlert ? "var(--red)" : "var(--green)", fontWeight: 700 }}>{p.stock} {p.baseUnit}</span>
+                      Stock: <span style={{ color: p.stock <= p.lowStockAlert ? "var(--red)" : "var(--green)", fontWeight: 700 }}>{p.stock} {p.baseUnit}</span>
                     </div>
                   </div>
                   <div style={{ fontWeight: 800, fontSize: "0.85rem", color: "var(--green)", fontFamily: "var(--font-mono)", flexShrink: 0 }}>
@@ -304,7 +304,7 @@ export default function AdminDashboardPage() {
           {/* Vendor Sales Breakdown */}
           <div className="admin-card">
             <div style={{ padding: "14px 16px", borderBottom: "1px solid var(--border-1)" }}>
-              <h2 style={{ fontSize: "0.92rem", fontWeight: 800, color: "var(--text-1)" }}>ভেন্ডর বিক্রয় বিতরণ</h2>
+              <h2 style={{ fontSize: "0.92rem", fontWeight: 800, color: "var(--text-1)" }}>Vendor Sales Distribution</h2>
             </div>
             <div style={{ padding: "14px 16px", display: "flex", flexDirection: "column", gap: "12px" }}>
               {vendors.slice(0, 4).map(v => {
@@ -312,7 +312,7 @@ export default function AdminDashboardPage() {
                 return (
                   <div key={v.id}>
                     <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "5px" }}>
-                      <span className="truncate" style={{ fontSize: "0.78rem", fontWeight: 600, color: "var(--text-2)", maxWidth: "65%" }}>{v.nameBn}</span>
+                      <span className="truncate" style={{ fontSize: "0.78rem", fontWeight: 600, color: "var(--text-2)", maxWidth: "65%" }}>{v.nameEn || v.nameBn}</span>
                       <span style={{ fontSize: "0.78rem", fontWeight: 800, color: "var(--green)", fontFamily: "var(--font-mono)" }}>
                         ৳{(v.totalSales / 1000).toFixed(1)}K
                       </span>
@@ -334,8 +334,8 @@ export default function AdminDashboardPage() {
           {/* Rider Quick Status */}
           <div className="admin-card">
             <div style={{ padding: "14px 16px", borderBottom: "1px solid var(--border-1)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <h2 style={{ fontSize: "0.92rem", fontWeight: 800, color: "var(--text-1)" }}>রাইডার স্ট্যাটাস</h2>
-              <Link href="/riders" style={{ fontSize: "0.75rem", color: "var(--green)", fontWeight: 700 }}>সব →</Link>
+              <h2 style={{ fontSize: "0.92rem", fontWeight: 800, color: "var(--text-1)" }}>Rider Fleet Status</h2>
+              <Link href="/riders" style={{ fontSize: "0.75rem", color: "var(--green)", fontWeight: 700 }}>All →</Link>
             </div>
             <div style={{ padding: "12px 16px", display: "flex", flexDirection: "column", gap: "8px" }}>
               {riders.slice(0, 4).map(r => (
@@ -353,12 +353,12 @@ export default function AdminDashboardPage() {
                       style={{ position: "absolute", bottom: "-1px", right: "-1px", width: "8px", height: "8px" }} />
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div className="truncate" style={{ fontWeight: 600, fontSize: "0.80rem", color: "var(--text-1)" }}>{r.name.split(" ")[0]}</div>
-                    <div style={{ fontSize: "0.68rem", color: "var(--text-3)" }}>{r.assignedHubName.split(" ")[0]}</div>
+                    <div className="truncate" style={{ fontWeight: 600, fontSize: "0.80rem", color: "var(--text-1)" }}>{r.name}</div>
+                    <div style={{ fontSize: "0.68rem", color: "var(--text-3)" }}>{r.assignedHubName}</div>
                   </div>
                   <div style={{ textAlign: "right", flexShrink: 0 }}>
                     <div style={{ fontSize: "0.78rem", fontWeight: 700, color: r.activeDeliveriesCount > 0 ? "var(--amber)" : "var(--text-4)" }}>
-                      {r.activeDeliveriesCount} অর্ডার
+                      {r.activeDeliveriesCount} orders
                     </div>
                   </div>
                 </div>

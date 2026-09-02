@@ -69,7 +69,7 @@ export async function customerAuthRoutes(fastify: FastifyInstance) {
       return reply.status(423).send({
         success: false,
         error: "Account Locked",
-        message: `অতিরিক্ত ভুল চেষ্টার কারণে একাউন্টটি সাময়িকভাবে লক করা হয়েছে। অনুগ্রহ করে ${lockStatus.remainingMinutes} মিনিট পর চেষ্টা করুন। (Account locked due to too many failed attempts. Retry in ${lockStatus.remainingMinutes}m)`,
+        message: `Account is temporarily locked due to too many failed attempts. Please retry in ${lockStatus.remainingMinutes} minutes.`,
         retryAfterMinutes: lockStatus.remainingMinutes,
       });
     }
@@ -82,8 +82,8 @@ export async function customerAuthRoutes(fastify: FastifyInstance) {
         success: false,
         error: "Invalid credentials",
         message: attempt.locked
-          ? "৫ বার ভুল তথ্য দেওয়ায় অ্যাকাউন্টটি ১০ মিনিটের জন্য লক করা হয়েছে।"
-          : `ইমেইল বা পাসওয়ার্ড ভুল। আর ${attempt.attemptsLeft} বার ভুল দিলে একাউন্ট সাময়িক লক হবে।`,
+          ? "Account locked for 10 minutes after 5 failed attempts."
+          : `Invalid email or password. ${attempt.attemptsLeft} attempts remaining before temporary lockout.`,
         attemptsLeft: attempt.attemptsLeft,
       });
     }
@@ -95,8 +95,8 @@ export async function customerAuthRoutes(fastify: FastifyInstance) {
         success: false,
         error: "Invalid credentials",
         message: attempt.locked
-          ? "৫ বার ভুল তথ্য দেওয়ায় অ্যাকাউন্টটি ১০ মিনিটের জন্য লক করা হয়েছে।"
-          : `ইমেইল বা পাসওয়ার্ড ভুল। আর ${attempt.attemptsLeft} বার ভুল দিলে একাউন্ট সাময়িক লক হবে।`,
+          ? "Account locked for 10 minutes after 5 failed attempts."
+          : `Invalid email or password. ${attempt.attemptsLeft} attempts remaining before temporary lockout.`,
         attemptsLeft: attempt.attemptsLeft,
       });
     }

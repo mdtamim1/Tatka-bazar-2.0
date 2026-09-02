@@ -9,7 +9,7 @@ import { PRODUCTS } from "@/lib/catalog";
 import styles from "./HeroBanner.module.css";
 
 export function HeroBanner() {
-  const { locale, formatPrice } = useLanguage();
+  const { formatPrice } = useLanguage();
   const { toggleWishlist, wishlistIds, addItem, openCart } = useCartStore();
 
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -24,18 +24,16 @@ export function HeroBanner() {
   const slides = [
     {
       id: "slide-1",
-      tag: locale === "bn" ? "🌿 ১০০% তাজা ও অর্গানিক | প্রতিদিন ভোরে সংগ্রহ" : "🌿 100% Organic & Chemical-Free",
-      title: locale === "bn" ? "আপনার প্রতিদিনের তাজা বাজার" : "Your Daily Farm-Fresh Routine",
-      subtitle: locale === "bn"
-        ? "রাসায়নিকমুক্ত শাকসবজি ও পদ্মার তাজা রূপালি ইলিশ প্রতিদিন ভোরে সরাসরি সংগ্রহ করে আপনার দরজায় পৌঁছে দিচ্ছি।"
-        : "A curated farm-fresh collection designed to nourish, energize, and provide chemical-free freshness daily.",
-      ctaText: locale === "bn" ? "বাজার করুন" : "Shop Now",
+      tag: "🌿 100% Organic & Chemical-Free",
+      title: "Your Daily Farm-Fresh Routine",
+      subtitle: "A curated farm-fresh collection designed to nourish, energize, and provide chemical-free freshness daily.",
+      ctaText: "Shop Now",
       ctaLink: "/category/vegetables",
       bgImage: "https://images.unsplash.com/photo-1540420773420-3366772f4999?w=1920&auto=format&fit=crop&q=90",
       featuredProduct: {
         id: PRODUCTS[0]?.id || "p1",
-        category: locale === "bn" ? "নদীর তাজা মাছ" : "RIVER FRESH FISH",
-        title: locale === "bn" ? "পদ্মার রূপালি ইলিশ সেট" : "Padma River Hilsa Set",
+        category: "RIVER FRESH FISH",
+        title: "Padma River Hilsa Set",
         price: 1450,
         comparePrice: 1750,
         rating: "5.8K REVIEWS",
@@ -47,18 +45,16 @@ export function HeroBanner() {
     },
     {
       id: "slide-2",
-      tag: locale === "bn" ? "🍅 বিষমুক্ত ও কীটনাশকমুক্ত খামারের ফসল" : "🍅 Direct Farm-to-Table Harvest",
-      title: locale === "bn" ? "১০০% খাঁটি ও অর্গানিক সবজি" : "Pure Organic Farm Produce",
-      subtitle: locale === "bn"
-        ? "কীটনাশকমুক্ত তাজা টমেটো, ফুলকপি ও শাকসবজি সরাসরি প্রত্যয়িত কৃষক থেকে আপনার রান্নাঘরে।"
-        : "Freshly harvested organic vegetables and greens directly sourced from certified farmers across Bangladesh.",
-      ctaText: locale === "bn" ? "সবজি কিনুন" : "Shop Vegetables",
+      tag: "🍅 Direct Farm-to-Table Harvest",
+      title: "Pure Organic Farm Produce",
+      subtitle: "Freshly harvested organic vegetables and greens directly sourced from certified farmers across Bangladesh.",
+      ctaText: "Shop Vegetables",
       ctaLink: "/category/vegetables",
       bgImage: "https://images.unsplash.com/photo-1566385101042-1a0aa0c1268c?w=1920&auto=format&fit=crop&q=90",
       featuredProduct: {
         id: PRODUCTS[1]?.id || "p2",
-        category: locale === "bn" ? "অর্গানিক সবজি" : "ORGANIC VEGGIES",
-        title: locale === "bn" ? "ফার্ম ফ্রেশ পাকা টমেটো" : "Farm Fresh Vine Tomatoes",
+        category: "ORGANIC VEGGIES",
+        title: "Farm Fresh Vine Tomatoes",
         price: 65,
         comparePrice: 80,
         rating: "4.9K REVIEWS",
@@ -70,18 +66,16 @@ export function HeroBanner() {
     },
     {
       id: "slide-3",
-      tag: locale === "bn" ? "🌾 পরিবারের জন্য সাশ্রয়ী পাইকারি বাজার" : "🌾 Wholesale Family Bundles",
-      title: locale === "bn" ? "পাইকারি দামে পরিবারের বাজার" : "Family Grocery Essentials",
-      subtitle: locale === "bn"
-        ? "দিনাজপুরের সুগন্ধি চাল, দেশি ডাল ও ঘানিভাঙা সরিষার তেলের সেরা হোলসেল ডিল। বড় অর্ডারে সর্বোচ্চ সাশ্রয়।"
-        : "Premium aromatic rice, organic lentils and cold-pressed mustard oil at unbeatable wholesale rates.",
-      ctaText: locale === "bn" ? "হোলসেল ডিল" : "Shop Deals",
+      tag: "🌾 Wholesale Family Bundles",
+      title: "Family Grocery Essentials",
+      subtitle: "Premium aromatic rice, organic lentils and cold-pressed mustard oil at unbeatable wholesale rates.",
+      ctaText: "Shop Deals",
       ctaLink: "/category/rice-and-staples",
       bgImage: "https://images.unsplash.com/photo-1586201375761-83865001e31c?w=1920&auto=format&fit=crop&q=90",
       featuredProduct: {
         id: PRODUCTS[2]?.id || "p3",
-        category: locale === "bn" ? "দেশি তাজা মাছ" : "FRESH RUI FISH",
-        title: locale === "bn" ? "দেশি রুই মাছ (কাটা ও ধোয়া)" : "Cleaned Local Rui Pack",
+        category: "FRESH RUI FISH",
+        title: "Cleaned Local Rui Pack",
         price: 485,
         comparePrice: 560,
         rating: "6.2K REVIEWS",
@@ -164,7 +158,7 @@ export function HeroBanner() {
               </Link>
 
               <Link href="/bundles" className={styles.dealsBtn}>
-                <span>{locale === "bn" ? "🔥 আজকের ডিল" : "Daily Deals"}</span>
+                <span>Daily Deals</span>
               </Link>
             </div>
           </div>
@@ -235,7 +229,7 @@ export function HeroBanner() {
                   className={styles.quickBuyBtn}
                 >
                   <ShoppingBag size={12} />
-                  <span>{locale === "bn" ? "কিনুন" : "Buy"}</span>
+                  <span>Buy</span>
                 </button>
               </div>
             </div>

@@ -15,7 +15,7 @@ export default function VendorProductsPage() {
     slug: "",
     sku: `VPROD-${Math.floor(1000 + Math.random() * 9000)}`,
     categorySlug: "vegetables",
-    categoryName: "শাকসবজি (Vegetables)",
+    categoryName: "Vegetables",
     basePrice: 80,
     comparePrice: 95,
     baseUnit: "kg" as "kg" | "g" | "piece" | "packet" | "liter",
@@ -30,7 +30,11 @@ export default function VendorProductsPage() {
   const filteredProducts = products.filter((p) => {
     if (search.trim()) {
       const q = search.toLowerCase();
-      return p.nameBn.toLowerCase().includes(q) || p.nameEn.toLowerCase().includes(q) || p.sku.toLowerCase().includes(q);
+      return (
+        (p.nameEn && p.nameEn.toLowerCase().includes(q)) ||
+        (p.nameBn && p.nameBn.toLowerCase().includes(q)) ||
+        p.sku.toLowerCase().includes(q)
+      );
     }
     return true;
   });
@@ -40,6 +44,7 @@ export default function VendorProductsPage() {
     const slug = formData.nameEn.toLowerCase().replace(/[^a-z0-9]+/g, "-");
     addProduct({
       ...formData,
+      nameBn: formData.nameEn,
       slug,
     });
     setIsModalOpen(false);
@@ -52,16 +57,16 @@ export default function VendorProductsPage() {
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "12px" }}>
         <div>
           <h1 style={{ fontSize: "1.4rem", fontWeight: 800, color: "var(--text-main)" }}>
-            আমার শপের পণ্য ক্যাটালগ
+            Shop Product Catalog
           </h1>
           <p style={{ fontSize: "0.82rem", color: "var(--text-muted)", marginTop: "2px" }}>
-            মোট {products.length} টি পণ্য • ওজন-ভিত্তিক প্রাইসিং ও টিয়ার্ড ডিসকাউন্ট কনফিগারেশন
+            Total {products.length} products • Variable weight pricing and tiered discounts
           </p>
         </div>
 
         <button onClick={() => setIsModalOpen(true)} className="vendor-btn vendor-btn-primary">
           <Plus size={16} />
-          <span>+ নতুন পণ্য জমা দিন</span>
+          <span>+ Add New Product</span>
         </button>
       </div>
 
@@ -73,7 +78,7 @@ export default function VendorProductsPage() {
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="পণ্য বা SKU দিয়ে খুঁজুন..."
+            placeholder="Search by product name or SKU..."
             style={{ width: "100%", padding: "7px 12px 7px 36px", borderRadius: "var(--radius-md)", border: "1px solid var(--border-medium)", outline: "none" }}
           />
         </div>
@@ -85,13 +90,13 @@ export default function VendorProductsPage() {
           <table className="vendor-table">
             <thead>
               <tr>
-                <th>ছবি ও SKU</th>
-                <th>পণ্যের নাম (বাংলা / EN)</th>
-                <th>ক্যাটাগরি</th>
-                <th>মূল্য ও একক</th>
-                <th>বর্তমান স্টক</th>
-                <th>অ্যাপ্রুভাল স্ট্যাটাস</th>
-                <th>অ্যাকশন</th>
+                <th>Image & SKU</th>
+                <th>Product Name</th>
+                <th>Category</th>
+                <th>Price & Unit</th>
+                <th>Current Stock</th>
+                <th>Status</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -106,11 +111,10 @@ export default function VendorProductsPage() {
                     </div>
                   </td>
                   <td>
-                    <div style={{ fontWeight: 700 }}>{p.nameBn}</div>
-                    <div style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>{p.nameEn}</div>
+                    <div style={{ fontWeight: 700 }}>{p.nameEn || p.nameBn}</div>
                     {p.isOrganic && (
                       <span style={{ fontSize: "0.68rem", color: "var(--primary)", fontWeight: 700 }}>
-                        🌱 ১০০% অর্গানিক
+                        🌱 100% Organic
                       </span>
                     )}
                   </td>
@@ -121,7 +125,7 @@ export default function VendorProductsPage() {
                     </div>
                     {p.pricingType === "variableWeight" && (
                       <span style={{ fontSize: "0.7rem", color: "var(--accent)", fontWeight: 700 }}>
-                        ⚖️ ওজন-ভিত্তিক
+                        ⚖️ Variable Weight
                       </span>
                     )}
                   </td>
@@ -132,7 +136,7 @@ export default function VendorProductsPage() {
                   </td>
                   <td>
                     <span className={`status-badge ${p.status === "APPROVED" ? "success" : "warning"}`}>
-                      {p.status === "APPROVED" ? "✓ অনুমোদিত" : "⏳ পর্যালোচনায়"}
+                      {p.status === "APPROVED" ? "✓ Approved" : "⏳ In Review"}
                     </span>
                   </td>
                   <td>
@@ -142,7 +146,7 @@ export default function VendorProductsPage() {
                       style={{ padding: "4px 8px", fontSize: "0.72rem" }}
                       title="Quick restock +10"
                     >
-                      +১০ রিস্টক
+                      +10 Restock
                     </button>
                   </td>
                 </tr>
@@ -158,7 +162,7 @@ export default function VendorProductsPage() {
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px", borderBottom: "1px solid var(--border-subtle)", paddingBottom: "12px" }}>
               <h2 style={{ fontSize: "1.2rem", fontWeight: 800 }}>
-                নতুন পণ্য যুক্ত করুন (অ্যাডমিন অনুমোদনের জন্য)
+                Add New Product (Subject to Admin Approval)
               </h2>
               <button onClick={() => setIsModalOpen(false)}>
                 <X size={20} />
@@ -167,34 +171,21 @@ export default function VendorProductsPage() {
 
             <form onSubmit={handleSaveProduct} style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
               
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
-                <div>
-                  <label style={{ fontSize: "0.8rem", fontWeight: 700, display: "block", marginBottom: "4px" }}>পণ্যের নাম (বাংলা) *</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="যেমন: খাঁটি গাওয়া ঘি"
-                    value={formData.nameBn}
-                    onChange={(e) => setFormData({ ...formData, nameBn: e.target.value })}
-                    style={{ width: "100%", padding: "8px 12px", borderRadius: "var(--radius-md)", border: "1px solid var(--border-medium)" }}
-                  />
-                </div>
-                <div>
-                  <label style={{ fontSize: "0.8rem", fontWeight: 700, display: "block", marginBottom: "4px" }}>Product Name (English) *</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="e.g. Pure Desi Cow Ghee"
-                    value={formData.nameEn}
-                    onChange={(e) => setFormData({ ...formData, nameEn: e.target.value })}
-                    style={{ width: "100%", padding: "8px 12px", borderRadius: "var(--radius-md)", border: "1px solid var(--border-medium)" }}
-                  />
-                </div>
+              <div>
+                <label style={{ fontSize: "0.8rem", fontWeight: 700, display: "block", marginBottom: "4px" }}>Product Name *</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Pure Desi Cow Ghee"
+                  value={formData.nameEn}
+                  onChange={(e) => setFormData({ ...formData, nameEn: e.target.value, nameBn: e.target.value })}
+                  style={{ width: "100%", padding: "8px 12px", borderRadius: "var(--radius-md)", border: "1px solid var(--border-medium)" }}
+                />
               </div>
 
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
                 <div>
-                  <label style={{ fontSize: "0.8rem", fontWeight: 700, display: "block", marginBottom: "4px" }}>ক্যাটাগরি</label>
+                  <label style={{ fontSize: "0.8rem", fontWeight: 700, display: "block", marginBottom: "4px" }}>Category</label>
                   <select
                     value={formData.categorySlug}
                     onChange={(e) => {
@@ -204,29 +195,29 @@ export default function VendorProductsPage() {
                     }}
                     style={{ width: "100%", padding: "8px 12px", borderRadius: "var(--radius-md)", border: "1px solid var(--border-medium)", background: "#FFF" }}
                   >
-                    <option value="vegetables">শাকসবজি (Vegetables)</option>
-                    <option value="fish-and-meat">মাছ ও মাংস (Fish & Meat)</option>
-                    <option value="rice-and-staples">চাল ও খাদ্যশস্য (Rice & Grains)</option>
-                    <option value="oil-and-ghee">তেল ও ঘি (Oil & Ghee)</option>
+                    <option value="vegetables">Vegetables</option>
+                    <option value="fish-and-meat">Fish & Meat</option>
+                    <option value="rice-and-staples">Rice & Grains</option>
+                    <option value="oil-and-ghee">Oil & Ghee</option>
                   </select>
                 </div>
                 <div>
-                  <label style={{ fontSize: "0.8rem", fontWeight: 700, display: "block", marginBottom: "4px" }}>প্রাইসিং টাইপ</label>
+                  <label style={{ fontSize: "0.8rem", fontWeight: 700, display: "block", marginBottom: "4px" }}>Pricing Type</label>
                   <select
                     value={formData.pricingType}
                     onChange={(e) => setFormData({ ...formData, pricingType: e.target.value as any })}
                     style={{ width: "100%", padding: "8px 12px", borderRadius: "var(--radius-md)", border: "1px solid var(--border-medium)", background: "#FFF" }}
                   >
-                    <option value="variableWeight">ওজন-ভিত্তিক ডাইনামিক (Variable Weight)</option>
-                    <option value="fixed">ফিক্সড প্রতি পিস (Fixed Piece)</option>
-                    <option value="pack">প্যাকেট সাইজ (Pack)</option>
+                    <option value="variableWeight">Variable Weight (Dynamic)</option>
+                    <option value="fixed">Fixed Unit Price</option>
+                    <option value="pack">Pack / Bundle</option>
                   </select>
                 </div>
               </div>
 
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "12px" }}>
                 <div>
-                  <label style={{ fontSize: "0.8rem", fontWeight: 700, display: "block", marginBottom: "4px" }}>মূল্য (৳) *</label>
+                  <label style={{ fontSize: "0.8rem", fontWeight: 700, display: "block", marginBottom: "4px" }}>Price (৳) *</label>
                   <input
                     type="number"
                     required
@@ -236,7 +227,7 @@ export default function VendorProductsPage() {
                   />
                 </div>
                 <div>
-                  <label style={{ fontSize: "0.8rem", fontWeight: 700, display: "block", marginBottom: "4px" }}>পূর্বের মূল্য (৳)</label>
+                  <label style={{ fontSize: "0.8rem", fontWeight: 700, display: "block", marginBottom: "4px" }}>Original Price (৳)</label>
                   <input
                     type="number"
                     value={formData.comparePrice}
@@ -245,24 +236,24 @@ export default function VendorProductsPage() {
                   />
                 </div>
                 <div>
-                  <label style={{ fontSize: "0.8rem", fontWeight: 700, display: "block", marginBottom: "4px" }}>একক (Unit)</label>
+                  <label style={{ fontSize: "0.8rem", fontWeight: 700, display: "block", marginBottom: "4px" }}>Unit</label>
                   <select
                     value={formData.baseUnit}
                     onChange={(e) => setFormData({ ...formData, baseUnit: e.target.value as any })}
                     style={{ width: "100%", padding: "8px 12px", borderRadius: "var(--radius-md)", border: "1px solid var(--border-medium)", background: "#FFF" }}
                   >
-                    <option value="kg">কেজি (kg)</option>
-                    <option value="g">গ্রাম (gram)</option>
-                    <option value="piece">পিস (piece)</option>
-                    <option value="packet">প্যাকেট (packet)</option>
-                    <option value="liter">লিটার (liter)</option>
+                    <option value="kg">kg</option>
+                    <option value="g">gram</option>
+                    <option value="piece">piece</option>
+                    <option value="packet">packet</option>
+                    <option value="liter">liter</option>
                   </select>
                 </div>
               </div>
 
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
                 <div>
-                  <label style={{ fontSize: "0.8rem", fontWeight: 700, display: "block", marginBottom: "4px" }}>বর্তমান স্টক *</label>
+                  <label style={{ fontSize: "0.8rem", fontWeight: 700, display: "block", marginBottom: "4px" }}>Current Stock *</label>
                   <input
                     type="number"
                     required
@@ -272,7 +263,7 @@ export default function VendorProductsPage() {
                   />
                 </div>
                 <div>
-                  <label style={{ fontSize: "0.8rem", fontWeight: 700, display: "block", marginBottom: "4px" }}>লো-স্টক অ্যালার্ট সীমা</label>
+                  <label style={{ fontSize: "0.8rem", fontWeight: 700, display: "block", marginBottom: "4px" }}>Low Stock Alert Level</label>
                   <input
                     type="number"
                     value={formData.lowStockAlert}
@@ -283,7 +274,7 @@ export default function VendorProductsPage() {
               </div>
 
               <div>
-                <label style={{ fontSize: "0.8rem", fontWeight: 700, display: "block", marginBottom: "4px" }}>পণ্যের ছবি (Image URL)</label>
+                <label style={{ fontSize: "0.8rem", fontWeight: 700, display: "block", marginBottom: "4px" }}>Product Image URL</label>
                 <input
                   type="url"
                   value={formData.images[0]}
@@ -294,15 +285,15 @@ export default function VendorProductsPage() {
 
               <div style={{ background: "#EFF6FF", padding: "10px 14px", borderRadius: "8px", fontSize: "0.78rem", color: "#1E40AF", display: "flex", alignItems: "center", gap: "8px" }}>
                 <Clock size={16} />
-                <span>নতুন পণ্য সাবমিট করার পর সেন্ট্রাল অ্যাডমিন অনুমোদনের পরই স্টোরফ্রন্টে প্রদর্শিত হবে।</span>
+                <span>Submitted products will appear on storefront once verified by central admin.</span>
               </div>
 
               <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px", marginTop: "8px" }}>
                 <button type="button" onClick={() => setIsModalOpen(false)} className="vendor-btn vendor-btn-secondary">
-                  বাতিল
+                  Cancel
                 </button>
                 <button type="submit" className="vendor-btn vendor-btn-primary">
-                  অনুমোদনের জন্য জমা দিন
+                  Submit for Approval
                 </button>
               </div>
 

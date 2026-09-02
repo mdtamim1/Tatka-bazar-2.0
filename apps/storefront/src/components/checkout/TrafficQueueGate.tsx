@@ -13,7 +13,7 @@ interface TrafficQueueGateProps {
 export function TrafficQueueGate({
   isOpen,
   onAdmit,
-  campaignTitle = "তাতকা বাজার মেগা ফ্ল্যাশ সেল ও দৈনিক ফ্রেশ অফার",
+  campaignTitle = "Tatka Bazar Flash Deals & Daily Fresh Offers",
   estimatedSeconds = 4,
 }: TrafficQueueGateProps) {
   const [progress, setProgress] = useState(15);
@@ -60,10 +60,10 @@ export function TrafficQueueGate({
         </div>
 
         <h3 className="text-xl font-black text-white tracking-tight mb-1">
-          আপনি ভিআইপি লাইনে আছেন
+          You are in the priority queue
         </h3>
         <p className="text-xs text-slate-400 mb-6 font-medium">
-          {campaignTitle} • উচ্চ ট্রাফিকের কারণে আপনার অর্ডার স্লট সংরক্ষিত রাখা হচ্ছে।
+          {campaignTitle} • High volume detected. Your checkout slot is reserved.
         </p>
 
         {/* Queue Stats Cards */}
@@ -71,7 +71,7 @@ export function TrafficQueueGate({
           <div className="bg-slate-800/80 border border-slate-700/60 p-3.5 rounded-2xl">
             <div className="text-[11px] font-semibold text-slate-400 flex items-center justify-center gap-1.5 mb-1">
               <Users className="w-3.5 h-3.5 text-emerald-400" />
-              আপনার অবস্থান
+              Your Position
             </div>
             <div className="text-xl font-black text-emerald-400 font-mono">
               #{position}
@@ -81,10 +81,10 @@ export function TrafficQueueGate({
           <div className="bg-slate-800/80 border border-slate-700/60 p-3.5 rounded-2xl">
             <div className="text-[11px] font-semibold text-slate-400 flex items-center justify-center gap-1.5 mb-1">
               <Clock className="w-3.5 h-3.5 text-amber-400" />
-              আনুমানিক অপেক্ষা
+              Est. Wait Time
             </div>
             <div className="text-xl font-black text-amber-400 font-mono">
-              ~{timeLeft} সেকেন্ড
+              ~{timeLeft}s
             </div>
           </div>
         </div>
@@ -98,14 +98,14 @@ export function TrafficQueueGate({
         </div>
 
         <div className="flex items-center justify-between text-[11px] text-slate-400 font-semibold mb-6">
-          <span>যাচাইকরণ চলছে...</span>
+          <span>Verifying order slot...</span>
           <span className="text-emerald-400 font-mono">{progress}%</span>
         </div>
 
         {/* Trust Badges */}
         <div className="flex items-center justify-center gap-2 text-[11px] text-slate-400 border-t border-slate-800 pt-4">
           <ShieldCheck className="w-4 h-4 text-emerald-400" />
-          <span>আপনার কার্টের স্টক ও অফার মূল্য লক করা আছে</span>
+          <span>Your cart items and promotional discounts are locked</span>
         </div>
       </div>
     </div>

@@ -21,7 +21,7 @@ export function requireRoles(...allowedRoles: UserRole[]) {
         return reply.status(401).send({
           success: false,
           error: "Unauthorized",
-          message: "লগইন করা আবশ্যক। (Authentication required)",
+          message: "Authentication required.",
         });
       }
 
@@ -29,14 +29,14 @@ export function requireRoles(...allowedRoles: UserRole[]) {
         return reply.status(403).send({
           success: false,
           error: "Forbidden",
-          message: `আপনার এই অ্যাকশনটি করার অনুমতি নেই। (Access denied. Requires role: ${allowedRoles.join(" or ")})`,
+          message: `Access denied. Requires role: ${allowedRoles.join(" or ")}`,
         });
       }
     } catch (err: any) {
       return reply.status(401).send({
         success: false,
         error: "Unauthorized",
-        message: "মেয়াদোত্তীর্ণ বা অবৈধ টোকেন। (Invalid or expired token)",
+        message: "Invalid or expired token.",
       });
     }
   };

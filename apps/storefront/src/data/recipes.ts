@@ -17,30 +17,31 @@ export interface Recipe {
   descriptionEn: string;
   cookingTime: string;
   servings: number;
-  difficulty: "সহজ" | "মাঝারি" | "স্পেশাল";
+  difficulty: "Easy" | "Medium" | "Special";
   coverImage: string;
   ingredients: RecipeIngredient[];
   totalCost: number;
   instructionsBn: string[];
+  instructionsEn?: string[];
 }
 
 export const POPULAR_RECIPES: Recipe[] = [
   {
     id: "rec-shorshe-ilish",
     slug: "shorshe-ilish",
-    titleBn: "খাঁটি সর্ষে ইলিশ ও কাঁচামরিচ ফোড়ন",
+    titleBn: "Authentic Mustard Hilsa (Shorshe Ilish)",
     titleEn: "Authentic Mustard Hilsa (Shorshe Ilish)",
-    descriptionBn: "ঘানিভাঙা খাঁটি সরিষার তেলে পদ্মার তাজা ইলিশের জিভে জল আনা ঐতিহ্যবাহী ভুনা।",
-    descriptionEn: "Classic Bengali delicacy of fresh Padma Hilsa simmered in pungent cold-pressed mustard gravy.",
-    cookingTime: "২৫ মিনিট",
+    descriptionBn: "Classic delicacy of fresh Padma Hilsa simmered in pungent cold-pressed mustard gravy.",
+    descriptionEn: "Classic delicacy of fresh Padma Hilsa simmered in pungent cold-pressed mustard gravy.",
+    cookingTime: "25 mins",
     servings: 4,
-    difficulty: "সহজ",
+    difficulty: "Easy",
     coverImage: "https://images.unsplash.com/photo-1544943910-4c1dc44a0b27?w=800&auto=format&fit=crop&q=80",
     totalCost: 1680,
     ingredients: [
       {
         productId: "fish-ilish-padma-01",
-        nameBn: "পদ্মার তাজা রূপালি ইলিশ (১ কেজি)",
+        nameBn: "Padma River Hilsa",
         nameEn: "Padma River Hilsa",
         weight: 1,
         unit: "kg",
@@ -49,7 +50,7 @@ export const POPULAR_RECIPES: Recipe[] = [
       },
       {
         productId: "oil-mustard-ghani-01",
-        nameBn: "ঘানিভাঙা খাঁটি সরিষার তেল (৫০০ মিলি)",
+        nameBn: "Cold Pressed Mustard Oil",
         nameEn: "Cold Pressed Mustard Oil",
         weight: 0.5,
         unit: "liter",
@@ -58,7 +59,7 @@ export const POPULAR_RECIPES: Recipe[] = [
       },
       {
         productId: "veg-chili-01",
-        nameBn: "তাজা কাঁচা মরিচ ও কালোজিরা",
+        nameBn: "Fresh Green Chilies",
         nameEn: "Fresh Green Chilies",
         weight: 0.25,
         unit: "kg",
@@ -67,29 +68,29 @@ export const POPULAR_RECIPES: Recipe[] = [
       },
     ],
     instructionsBn: [
-      "ইলিশ মাছ টুকরো করে ভালো করে ধুয়ে সামান্য হলুদ ও লবণ মেখে রাখুন।",
-      "সরিষা বাটার সাথে কাঁচামরিচ ও সামান্য লবণ দিয়ে মিহি পেস্ট বানান।",
-      "কড়াইয়ে ঘানিভাঙা খাঁটি সরিষার তেল গরম করে কালোজিরা ও চেরা কাঁচামরিচ ফোড়ন দিন।",
-      "সরিষা পেস্ট ও সামান্য পানি দিয়ে কষিয়ে মাছের টুকরোগুলো দিয়ে ১০-১২ মিনিট মাঝারি আঁচে রান্না করুন।",
-      "তেল ভেসে উঠলে উপরে আরও কয়েকটি কাঁচামরিচ দিয়ে গরম ভাতের সাথে পরিবেশন করুন।",
+      "Wash Hilsa pieces thoroughly and marinate with turmeric and light salt.",
+      "Blend mustard seeds with green chillies and a pinch of salt into a smooth paste.",
+      "Heat cold-pressed mustard oil in a pan and temper with nigella seeds (kalonji) and split chilies.",
+      "Sauté mustard paste gently with a splash of water, add fish cuts and simmer on medium heat for 10-12 mins.",
+      "Finish with fresh green chilies and serve steaming hot with fragrant Kataribhog rice.",
     ],
   },
   {
     id: "rec-kala-bhuna",
     slug: "chittagong-kala-bhuna",
-    titleBn: "চট্টগ্রামের ঐতিহ্যবাহী খাসির কালা ভুনা",
+    titleBn: "Traditional Chittagong Mutton Kala Bhuna",
     titleEn: "Traditional Chittagong Mutton Kala Bhuna",
-    descriptionBn: "কচি খাসির মাংস, খাঁটি গাওয়া ঘি ও বিশেষ ভাজা মসলার যুগলবন্দীতে খাঁটি কালা ভুনা।",
+    descriptionBn: "Slow-roasted tender deshi mutton cooked to dark, aromatic perfection with pure ghee.",
     descriptionEn: "Slow-roasted tender deshi mutton cooked to dark, aromatic perfection with pure ghee.",
-    cookingTime: "৫৫ মিনিট",
+    cookingTime: "55 mins",
     servings: 5,
-    difficulty: "স্পেশাল",
+    difficulty: "Special",
     coverImage: "https://images.unsplash.com/photo-1545247181-516773cae7be?w=800&auto=format&fit=crop&q=80",
     totalCost: 1480,
     ingredients: [
       {
         productId: "meat-mutton-deshi-01",
-        nameBn: "তাজা খাসির ফ্রেশ মাংস (১ কেজি)",
+        nameBn: "Fresh Deshi Mutton",
         nameEn: "Fresh Deshi Mutton",
         weight: 1,
         unit: "kg",
@@ -98,7 +99,7 @@ export const POPULAR_RECIPES: Recipe[] = [
       },
       {
         productId: "dairy-ghee-shahi-01",
-        nameBn: "বগুড়ার খাঁটি গাওয়া ঘি (২৫০ গ্রাম)",
+        nameBn: "Pure Desi Ghee",
         nameEn: "Pure Desi Ghee",
         weight: 0.25,
         unit: "kg",
@@ -107,7 +108,7 @@ export const POPULAR_RECIPES: Recipe[] = [
       },
       {
         productId: "veg-onion-01",
-        nameBn: "দেশি পেঁয়াজ ও গোলমরিচ",
+        nameBn: "Desi Onions & Whole Spices",
         nameEn: "Desi Onions & Whole Spices",
         weight: 1,
         unit: "kg",
@@ -116,9 +117,9 @@ export const POPULAR_RECIPES: Recipe[] = [
       },
     ],
     instructionsBn: [
-      "মাংস ভালো করে ধুয়ে টকদই, আদা-রসুন বাটা, পেঁয়াজ বাটা ও গুড়া মসলা দিয়ে ম্যারিনেট করে রাখুন।",
-      "তেল ও ঘিয়ে পেঁয়াজ বেরেস্তা করে মাংস অল্প আঁচে ঢাকনা দিয়ে কষাতে থাকুন।",
-      "ধীরে ধীরে গাঢ় কালচে রং না আসা পর্যন্ত সামান্য পানি ছিটিয়ে কড়াইয়ে ভাজতে থাকুন।",
+      "Wash mutton and marinate with yogurt, ginger-garlic paste, and roasted spice blend.",
+      "Fry thinly sliced onions in mustard oil and pure ghee until golden brown, then slow cook meat with lid covered.",
+      "Stir fry gradually until deep dark roasted color is achieved with rich caramelized coating.",
     ],
   },
 ];

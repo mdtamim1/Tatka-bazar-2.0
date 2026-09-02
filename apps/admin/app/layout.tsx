@@ -18,7 +18,7 @@ export default function AdminRootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="bn">
+    <html lang="en">
       <body style={{ background: "var(--bg-deep)" }}>
         <AdminProvider>
           <AdminLayoutShell>

@@ -22,7 +22,7 @@ const STATUS_COLOR: Record<string, string> = {
   SUSPENDED: "var(--red)",
 };
 const STATUS_LABEL: Record<string, string> = {
-  ACTIVE: "অ্যাক্টিভ", PENDING: "অপেক্ষারত", OFFLINE: "অফলাইন", SUSPENDED: "সাসপেন্ড",
+  ACTIVE: "Active", PENDING: "Pending", OFFLINE: "Offline", SUSPENDED: "Suspended",
 };
 
 function RiderCard({
@@ -38,10 +38,6 @@ function RiderCard({
   expanded: boolean;
   onToggleExpand: () => void;
 }) {
-  const dotCls = rider.status === "ACTIVE" && rider.activeDeliveriesCount > 0
-    ? "amber"
-    : rider.status === "ACTIVE" ? "" : rider.status === "PENDING" ? "amber" : "gray";
-
   const initials = rider.name
     .split(" ")
     .slice(0, 2)
@@ -81,9 +77,9 @@ function RiderCard({
         gap: "8px", marginBottom: "14px",
       }}>
         {[
-          { label: "চলমান", value: rider.activeDeliveriesCount, color: "var(--amber)" },
-          { label: "সম্পন্ন",  value: rider.totalDeliveriesCompleted, color: "var(--green)" },
-          { label: "রেটিং",   value: rider.rating ? `${rider.rating}★` : "নতুন", color: "var(--text-1)" },
+          { label: "Active", value: rider.activeDeliveriesCount, color: "var(--amber)" },
+          { label: "Completed", value: rider.totalDeliveriesCompleted, color: "var(--green)" },
+          { label: "Rating", value: rider.rating ? `${rider.rating}★` : "New", color: "var(--text-1)" },
         ].map(stat => (
           <div key={stat.label} style={{
             background: "var(--bg-raised)", borderRadius: "var(--r-sm)",
@@ -107,7 +103,7 @@ function RiderCard({
         {rider.status === "PENDING" ? (
           <button className="admin-btn admin-btn-primary" style={{ flex: 1, fontSize: "0.80rem" }} onClick={onApprove}>
             <CheckCircle size={14} />
-            অনুমোদন দিন
+            Approve Rider
           </button>
         ) : (
           <button
@@ -116,7 +112,7 @@ function RiderCard({
             onClick={onToggleExpand}
           >
             <ShoppingBag size={13} />
-            {riderOrders.length} অর্ডার দেখুন
+            View {riderOrders.length} Orders
             {expanded ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
           </button>
         )}
@@ -133,7 +129,7 @@ function RiderCard({
           display: "flex", flexDirection: "column", gap: "8px",
         }}>
           <div style={{ fontSize: "0.70rem", fontWeight: 700, color: "var(--text-4)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "4px" }}>
-            অ্যাসাইন করা অর্ডারসমূহ
+            Assigned Orders
           </div>
           {riderOrders.map(ord => (
             <div key={ord.id} style={{
@@ -175,7 +171,7 @@ function RiderCard({
           background: "var(--bg-deep)", borderRadius: "var(--r-md)",
           color: "var(--text-4)", fontSize: "0.80rem",
         }}>
-          কোনো অ্যাক্টিভ অর্ডার নেই
+          No active orders assigned
         </div>
       )}
     </div>
@@ -192,16 +188,16 @@ export default function AdminRidersPage() {
     name: "", phone: "", email: "", nid: "",
     vehicleType: "MOTORCYCLE" as const,
     assignedHubId: branches[0]?.id || "branch-dhanmondi",
-    assignedHubName: branches[0]?.nameBn || "ধানমন্ডি এক্সপ্রেস হাব",
+    assignedHubName: branches[0]?.nameEn || "Dhanmondi Express Hub",
     status: "ACTIVE" as const,
   });
 
   const handleCreateRider = (e: React.FormEvent) => {
     e.preventDefault();
     const branch = branches.find(b => b.id === newRiderForm.assignedHubId);
-    addRider({ ...newRiderForm, assignedHubName: branch?.nameBn || newRiderForm.assignedHubName });
+    addRider({ ...newRiderForm, assignedHubName: branch?.nameEn || branch?.nameBn || newRiderForm.assignedHubName });
     setCreate(false);
-    setNewRiderForm({ name: "", phone: "", email: "", nid: "", vehicleType: "MOTORCYCLE", assignedHubId: branches[0]?.id || "", assignedHubName: branches[0]?.nameBn || "", status: "ACTIVE" });
+    setNewRiderForm({ name: "", phone: "", email: "", nid: "", vehicleType: "MOTORCYCLE", assignedHubId: branches[0]?.id || "", assignedHubName: branches[0]?.nameEn || "", status: "ACTIVE" });
   };
 
   const filteredRiders = riders.filter(r =>
@@ -224,26 +220,26 @@ export default function AdminRidersPage() {
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "12px" }}>
         <div>
           <h1 style={{ fontSize: "1.35rem", fontWeight: 800, color: "var(--text-1)" }}>
-            রাইডার ফ্লিট ম্যানেজমেন্ট
+            Rider Fleet Management
           </h1>
           <p style={{ fontSize: "0.80rem", color: "var(--text-3)", marginTop: "3px" }}>
-            ডেলিভারি রাইডার টিম, অর্ডার ট্র্যাকিং ও পারফরম্যান্স মনিটরিং
+            Delivery rider fleet roster, active route tracking, and performance analytics
           </p>
         </div>
         <button className="admin-btn admin-btn-primary" onClick={() => setCreate(true)}>
           <Plus size={15} />
-          নতুন রাইডার যুক্ত করুন
+          Add New Rider
         </button>
       </div>
 
       {/* ── KPI Strip ──────────────────────────────────────── */}
       <div className="kpi-grid">
         {[
-          { label: "মোট রাইডার", value: riders.length, icon: "👥", accent: "var(--blue)" },
-          { label: "অ্যাক্টিভ",  value: totalActive,   icon: "✅", accent: "var(--green)" },
-          { label: "ডেলিভারিতে", value: onRoute,        icon: "🛵", accent: "var(--amber)" },
-          { label: "অনুমোদন বাকি",value: pending,       icon: "⏳", accent: "var(--red)" },
-          { label: "গড় রেটিং",   value: avgRating ? `${avgRating.toFixed(1)}★` : "—", icon: "⭐", accent: "var(--amber)" },
+          { label: "Total Riders", value: riders.length, icon: "👥", accent: "var(--blue)" },
+          { label: "Active", value: totalActive, icon: "✅", accent: "var(--green)" },
+          { label: "On Route", value: onRoute, icon: "🛵", accent: "var(--amber)" },
+          { label: "Pending Approval", value: pending, icon: "⏳", accent: "var(--red)" },
+          { label: "Average Rating", value: avgRating ? `${avgRating.toFixed(1)}★` : "—", icon: "⭐", accent: "var(--amber)" },
         ].map(kpi => (
           <div key={kpi.label} className="kpi-card" style={{ "--kpi-accent": kpi.accent } as React.CSSProperties}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
@@ -264,7 +260,7 @@ export default function AdminRidersPage() {
         <Search size={14} className="search-icon" />
         <input
           className="search-input"
-          placeholder="নাম, ফোন বা হাব দিয়ে খুঁজুন..."
+          placeholder="Search by name, phone, or hub..."
           value={search}
           onChange={e => setSearch(e.target.value)}
         />
@@ -292,7 +288,7 @@ export default function AdminRidersPage() {
         })}
         {filteredRiders.length === 0 && (
           <div style={{ gridColumn: "1/-1", textAlign: "center", padding: "48px", color: "var(--text-3)" }}>
-            কোনো রাইডার পাওয়া যায়নি
+            No riders found
           </div>
         )}
       </div>
@@ -303,56 +299,56 @@ export default function AdminRidersPage() {
           <div className="modal-content" style={{ maxWidth: "480px" }} onClick={e => e.stopPropagation()}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "24px" }}>
               <h2 style={{ fontSize: "1.1rem", fontWeight: 800, color: "var(--text-1)" }}>
-                🛵 নতুন রাইডার অ্যাকাউন্ট তৈরি
+                🛵 Create New Rider Account
               </h2>
               <button className="admin-btn admin-btn-ghost admin-btn-icon" onClick={() => setCreate(false)}><X size={16} /></button>
             </div>
             <form onSubmit={handleCreateRider} style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
               <div>
-                <label className="admin-label">রাইডারের পূর্ণ নাম *</label>
-                <input className="admin-input" type="text" required placeholder="পূর্ণ নাম বাংলায়"
+                <label className="admin-label">Rider Full Name *</label>
+                <input className="admin-input" type="text" required placeholder="Full Name"
                   value={newRiderForm.name} onChange={e => setNewRiderForm(f => ({ ...f, name: e.target.value }))} />
               </div>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
                 <div>
-                  <label className="admin-label">মোবাইল নম্বর *</label>
+                  <label className="admin-label">Mobile Phone *</label>
                   <input className="admin-input" type="tel" required placeholder="01XXXXXXXXX"
                     value={newRiderForm.phone} onChange={e => setNewRiderForm(f => ({ ...f, phone: e.target.value }))} />
                 </div>
                 <div>
-                  <label className="admin-label">NID নম্বর *</label>
-                  <input className="admin-input" type="text" required placeholder="জাতীয় পরিচয়পত্র"
+                  <label className="admin-label">National ID (NID) *</label>
+                  <input className="admin-input" type="text" required placeholder="NID Number"
                     value={newRiderForm.nid} onChange={e => setNewRiderForm(f => ({ ...f, nid: e.target.value }))} />
                 </div>
               </div>
               <div>
-                <label className="admin-label">ইমেইল</label>
-                <input className="admin-input" type="email" placeholder="rider@email.com"
+                <label className="admin-label">Email</label>
+                <input className="admin-input" type="email" placeholder="rider@tatkabazar.com"
                   value={newRiderForm.email} onChange={e => setNewRiderForm(f => ({ ...f, email: e.target.value }))} />
               </div>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
                 <div>
-                  <label className="admin-label">যানবাহনের ধরন</label>
+                  <label className="admin-label">Vehicle Type</label>
                   <select className="admin-select" value={newRiderForm.vehicleType}
                     onChange={e => setNewRiderForm(f => ({ ...f, vehicleType: e.target.value as any }))}>
-                    <option value="MOTORCYCLE">🏍️ মোটরসাইকেল</option>
-                    <option value="BICYCLE">🚴 বাইসাইকেল</option>
-                    <option value="VAN">🚐 ডেলিভারি ভ্যান</option>
+                    <option value="MOTORCYCLE">🏍️ Motorcycle</option>
+                    <option value="BICYCLE">🚴 Bicycle</option>
+                    <option value="VAN">🚐 Delivery Van</option>
                   </select>
                 </div>
                 <div>
-                  <label className="admin-label">নিযুক্ত হাব</label>
+                  <label className="admin-label">Assigned Hub</label>
                   <select className="admin-select" value={newRiderForm.assignedHubId}
                     onChange={e => setNewRiderForm(f => ({ ...f, assignedHubId: e.target.value }))}>
-                    {branches.map(b => <option key={b.id} value={b.id}>{b.nameBn}</option>)}
+                    {branches.map(b => <option key={b.id} value={b.id}>{b.nameEn || b.nameBn}</option>)}
                   </select>
                 </div>
               </div>
               <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px", marginTop: "8px" }}>
-                <button type="button" className="admin-btn admin-btn-secondary" onClick={() => setCreate(false)}>বাতিল</button>
+                <button type="button" className="admin-btn admin-btn-secondary" onClick={() => setCreate(false)}>Cancel</button>
                 <button type="submit" className="admin-btn admin-btn-primary">
                   <Plus size={15} />
-                  রাইডার তৈরি করুন
+                  Create Rider
                 </button>
               </div>
             </form>

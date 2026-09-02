@@ -47,15 +47,15 @@ export default function CustomerOrderInvoicePage() {
                     quantity: it.quantity,
                     price: it.price,
                     total: it.total,
-                    unit: "টি",
+                    unit: "unit",
                   }))
                 : [
                     {
-                      name: "তাজা দেশি শাকসবজি ও ফলমূল",
+                      name: "Fresh Local Vegetables & Produce",
                       quantity: 1,
                       price: found.totalAmount,
                       total: found.totalAmount,
-                      unit: "প্যাকেজ",
+                      unit: "package",
                     },
                   ],
             });
@@ -75,7 +75,7 @@ export default function CustomerOrderInvoicePage() {
     return (
       <div className="min-h-screen bg-slate-950 flex items-center justify-center text-slate-400 gap-3">
         <Loader2 className="w-6 h-6 animate-spin text-emerald-400" />
-        <span>ক্যাশ মেমো লোড হচ্ছে...</span>
+        <span>Loading Cash Memo...</span>
       </div>
     );
   }
@@ -83,10 +83,10 @@ export default function CustomerOrderInvoicePage() {
   if (!orderData) {
     return (
       <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-4 text-center">
-        <h2 className="text-xl font-bold text-slate-200 mb-2">অর্ডারটি পাওয়া যায়নি</h2>
-        <p className="text-xs text-slate-400 mb-6">অনুগ্রহ করে সঠিক অর্ডার নম্বর দিয়ে আবার চেষ্টা করুন।</p>
+        <h2 className="text-xl font-bold text-slate-200 mb-2">Order Not Found</h2>
+        <p className="text-xs text-slate-400 mb-6">Please check your order number and try again.</p>
         <Link href="/track" className="px-5 py-2.5 rounded-xl bg-emerald-500 text-slate-950 font-bold text-sm">
-          অর্ডার ট্র্যাকিংয়ে যান
+          Go to Order Tracking
         </Link>
       </div>
     );

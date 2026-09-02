@@ -267,7 +267,7 @@ export async function orderRoutes(fastify: FastifyInstance) {
               const currentProd = await tx.product.findUnique({ where: { id: item.productId } });
               const availableStock = currentProd?.stock || 0;
               throw new Error(
-                `স্টক শেষ: "${item.name}" পর্যাপ্ত পরিমাণে নেই। (বর্তমান স্টক: ${availableStock} টি)`
+                `Out of stock: "${item.name}" is not available in requested quantity. (Available stock: ${availableStock})`
               );
             }
           }

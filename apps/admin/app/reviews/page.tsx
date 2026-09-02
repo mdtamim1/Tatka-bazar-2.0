@@ -11,10 +11,10 @@ export default function AdminReviewsPage() {
     <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
       <div>
         <h1 style={{ fontSize: "1.4rem", fontWeight: 800, color: "var(--text-main)" }}>
-          গ্রাহক রিভিউ ও ফিডব্যাক মডারেশন
+          Customer Reviews & Moderation
         </h1>
         <p style={{ fontSize: "0.82rem", color: "var(--text-muted)", marginTop: "2px" }}>
-          স্টোরফ্রন্টে প্রকাশের পূর্বে পণ্য ও ভেন্ডর রিভিউ যাচাইকরণ ও রিপ্লাই
+          Verify and moderate product feedback and customer ratings before publishing to storefront
         </p>
       </div>
 
@@ -22,12 +22,12 @@ export default function AdminReviewsPage() {
         <table className="admin-table">
           <thead>
             <tr>
-              <th>পণ্যের নাম</th>
-              <th>গ্রাহক ও তারিখ</th>
-              <th>রেটিং</th>
-              <th>গ্রাহকের মন্তব্য (Review)</th>
-              <th>স্ট্যাটাস</th>
-              <th>অ্যাকশন</th>
+              <th>Product Name</th>
+              <th>Customer & Date</th>
+              <th>Rating</th>
+              <th>Customer Review</th>
+              <th>Status</th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -64,7 +64,7 @@ export default function AdminReviewsPage() {
                         style={{ padding: "4px 8px", fontSize: "0.72rem" }}
                       >
                         <CheckCircle size={13} />
-                        <span>অনুমোদন</span>
+                        <span>Approve</span>
                       </button>
                     )}
                     {rev.status !== "REJECTED" && (
@@ -72,7 +72,7 @@ export default function AdminReviewsPage() {
                         onClick={() => moderateReview(rev.id, "REJECTED")}
                         style={{ padding: "4px 8px", borderRadius: "6px", background: "#FEE2E2", color: "var(--danger)", fontSize: "0.72rem", fontWeight: 600 }}
                       >
-                        বাতিল
+                        Reject
                       </button>
                     )}
                   </div>

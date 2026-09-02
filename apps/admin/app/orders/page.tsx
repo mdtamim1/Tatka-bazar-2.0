@@ -13,24 +13,24 @@ import { useAdmin } from "@/context/AdminContext";
 import { AdminOrder, OrderStatus } from "@/types";
 
 /* ── Helpers ──────────────────────────────────────────────── */
-const STATUS_META: Record<OrderStatus, { label: string; labelBn: string; color: string; cls: string; icon: React.ReactNode }> = {
-  PENDING:          { label: "Pending",          labelBn: "অপেক্ষারত",     color: "var(--amber)", cls: "warning", icon: <Clock size={11} /> },
-  CONFIRMED:        { label: "Confirmed",        labelBn: "নিশ্চিত",       color: "var(--blue)",  cls: "info",    icon: <Check size={11} /> },
-  PREPARING:        { label: "Preparing",        labelBn: "প্রস্তুতি চলছে", color: "var(--purple)",cls: "purple",  icon: <Package size={11} /> },
-  OUT_FOR_DELIVERY: { label: "Out for Delivery", labelBn: "ডেলিভারিতে",    color: "var(--cyan)",  cls: "cyan",    icon: <Truck size={11} /> },
-  DELIVERED:        { label: "Delivered",        labelBn: "ডেলিভারি হয়েছে",color: "var(--green)", cls: "success", icon: <Check size={11} /> },
-  CANCELLED:        { label: "Cancelled",        labelBn: "বাতিল",         color: "var(--red)",   cls: "danger",  icon: <X size={11} /> },
+const STATUS_META: Record<OrderStatus, { label: string; color: string; cls: string; icon: React.ReactNode }> = {
+  PENDING:          { label: "Pending",          color: "var(--amber)", cls: "warning", icon: <Clock size={11} /> },
+  CONFIRMED:        { label: "Confirmed",        color: "var(--blue)",  cls: "info",    icon: <Check size={11} /> },
+  PREPARING:        { label: "Preparing",        color: "var(--purple)",cls: "purple",  icon: <Package size={11} /> },
+  OUT_FOR_DELIVERY: { label: "Out for Delivery", color: "var(--cyan)",  cls: "cyan",    icon: <Truck size={11} /> },
+  DELIVERED:        { label: "Delivered",        color: "var(--green)", cls: "success", icon: <Check size={11} /> },
+  CANCELLED:        { label: "Cancelled",        color: "var(--red)",   cls: "danger",  icon: <X size={11} /> },
 };
 const STATUS_ORDER: OrderStatus[] = ["PENDING","CONFIRMED","PREPARING","OUT_FOR_DELIVERY","DELIVERED","CANCELLED"];
 const PAY_STATUS: Record<string, { cls: string; label: string }> = {
-  PAID:     { cls: "success", label: "পেইড" },
-  UNPAID:   { cls: "warning", label: "অপেইড" },
-  REFUNDED: { cls: "info",    label: "রিফান্ড" },
+  PAID:     { cls: "success", label: "Paid" },
+  UNPAID:   { cls: "warning", label: "Unpaid" },
+  REFUNDED: { cls: "info",    label: "Refunded" },
 };
 
 function StatusBadge({ status }: { status: OrderStatus }) {
   const m = STATUS_META[status];
-  return <span className={`status-badge ${m.cls}`}>{m.icon}{m.labelBn}</span>;
+  return <span className={`status-badge ${m.cls}`}>{m.icon}{m.label}</span>;
 }
 
 /* ── Order Detail Drawer ───────────────────────────────────── */
@@ -108,7 +108,7 @@ function OrderDetailDrawer({
 
           {/* Status Pipeline */}
           <div style={{ marginBottom: "24px" }}>
-            <div className="section-label">অর্ডার স্ট্যাটাস আপডেট করুন</div>
+            <div className="section-label">Update Order Status</div>
             <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
               {STATUS_ORDER.map(s => (
                 <button
@@ -117,7 +117,7 @@ function OrderDetailDrawer({
                   onClick={() => handleStatusChange(s)}
                 >
                   {STATUS_META[s].icon}
-                  {STATUS_META[s].labelBn}
+                  {STATUS_META[s].label}
                 </button>
               ))}
             </div>
@@ -125,21 +125,21 @@ function OrderDetailDrawer({
 
           {/* Customer Info */}
           <div style={{ marginBottom: "20px" }}>
-            <div className="section-label">গ্রাহকের তথ্য</div>
+            <div className="section-label">Customer Information</div>
             <div style={{
               background: "var(--bg-raised)", border: "1px solid var(--border-1)",
               borderRadius: "var(--r-md)", padding: "14px",
             }}>
               <div className="detail-row">
-                <span className="detail-label"><User size={12} style={{ display: "inline", marginRight: 4 }} />নাম</span>
+                <span className="detail-label"><User size={12} style={{ display: "inline", marginRight: 4 }} />Name</span>
                 <span className="detail-value" style={{ fontWeight: 700 }}>{order.customerName}</span>
               </div>
               <div className="detail-row">
-                <span className="detail-label"><Phone size={12} style={{ display: "inline", marginRight: 4 }} />ফোন</span>
+                <span className="detail-label"><Phone size={12} style={{ display: "inline", marginRight: 4 }} />Phone</span>
                 <span className="detail-value mono">{order.customerPhone}</span>
               </div>
               <div className="detail-row" style={{ borderBottom: "none" }}>
-                <span className="detail-label"><MapPin size={12} style={{ display: "inline", marginRight: 4 }} />এলাকা</span>
+                <span className="detail-label"><MapPin size={12} style={{ display: "inline", marginRight: 4 }} />Area</span>
                 <span className="detail-value">{order.deliveryArea}</span>
               </div>
             </div>
@@ -147,7 +147,7 @@ function OrderDetailDrawer({
 
           {/* Editable Address */}
           <div style={{ marginBottom: "16px" }}>
-            <label className="admin-label"><Edit3 size={11} style={{ display: "inline", marginRight: 4 }} />ডেলিভারি ঠিকানা</label>
+            <label className="admin-label"><Edit3 size={11} style={{ display: "inline", marginRight: 4 }} />Delivery Address</label>
             <textarea
               className="admin-textarea"
               rows={2}
@@ -158,13 +158,13 @@ function OrderDetailDrawer({
 
           {/* Delivery Slot */}
           <div style={{ marginBottom: "16px" }}>
-            <label className="admin-label"><Clock size={11} style={{ display: "inline", marginRight: 4 }} />ডেলিভারি স্লট</label>
+            <label className="admin-label"><Clock size={11} style={{ display: "inline", marginRight: 4 }} />Delivery Slot</label>
             <select
               className="admin-select"
               value={draft.deliverySlot}
               onChange={e => update("deliverySlot", e.target.value)}
             >
-              {["তাজা সকাল (০৭:০০ - ০৯:০০)", "সকাল প্রাইম (০৯:০০ - ১১:০০)", "দুপুর এক্সপ্রেস (১২:০০ - ১৪:০০)", "বিকেল স্ট্যান্ডার্ড (১৫:০০ - ১৮:০০)", "সন্ধ্যা স্লট (১৮:০০ - ২০:৩০)"].map(s => (
+              {["Morning (07:00 - 09:00 AM)", "Prime Morning (09:00 - 11:00 AM)", "Noon Express (12:00 - 02:00 PM)", "Afternoon (03:00 - 06:00 PM)", "Evening (06:00 - 08:30 PM)"].map(s => (
                 <option key={s} value={s}>{s}</option>
               ))}
             </select>
@@ -172,32 +172,32 @@ function OrderDetailDrawer({
 
           {/* Payment Info */}
           <div style={{ marginBottom: "20px" }}>
-            <div className="section-label">পেমেন্ট তথ্য</div>
+            <div className="section-label">Payment Information</div>
             <div style={{
               background: "var(--bg-raised)", border: "1px solid var(--border-1)",
               borderRadius: "var(--r-md)", padding: "14px",
             }}>
               <div className="detail-row">
-                <span className="detail-label"><CreditCard size={12} style={{ display: "inline", marginRight: 4 }} />পদ্ধতি</span>
+                <span className="detail-label"><CreditCard size={12} style={{ display: "inline", marginRight: 4 }} />Method</span>
                 <span className="detail-value mono">{order.paymentMethod}</span>
               </div>
               <div className="detail-row">
-                <span className="detail-label">মোট পরিমাণ</span>
+                <span className="detail-label">Total Amount</span>
                 <span className="detail-value" style={{ fontWeight: 800, color: "var(--green)", fontSize: "1rem" }}>
                   ৳{order.totalAmount.toLocaleString()}
                 </span>
               </div>
               <div className="detail-row" style={{ borderBottom: "none" }}>
-                <span className="detail-label">পেমেন্ট স্ট্যাটাস</span>
+                <span className="detail-label">Payment Status</span>
                 <select
                   className="admin-select"
                   style={{ width: "auto", padding: "4px 8px", fontSize: "0.78rem" }}
                   value={draft.paymentStatus}
                   onChange={e => update("paymentStatus", e.target.value)}
                 >
-                  <option value="PAID">পেইড</option>
-                  <option value="UNPAID">অপেইড</option>
-                  <option value="REFUNDED">রিফান্ড</option>
+                  <option value="PAID">Paid</option>
+                  <option value="UNPAID">Unpaid</option>
+                  <option value="REFUNDED">Refunded</option>
                 </select>
               </div>
             </div>
@@ -205,7 +205,7 @@ function OrderDetailDrawer({
 
           {/* Rider Assignment */}
           <div style={{ marginBottom: "20px" }}>
-            <div className="section-label"><Bike size={11} style={{ display: "inline", marginRight: 4 }} />রাইডার অ্যাসাইনমেন্ট</div>
+            <div className="section-label"><Bike size={11} style={{ display: "inline", marginRight: 4 }} />Rider Assignment</div>
             {draft.assignedRiderName ? (
               <div style={{
                 display: "flex", alignItems: "center", justifyContent: "space-between",
@@ -220,7 +220,7 @@ function OrderDetailDrawer({
                   className="admin-btn admin-btn-ghost admin-btn-sm"
                   onClick={() => update("assignedRiderName", undefined)}
                 >
-                  পরিবর্তন
+                  Change
                 </button>
               </div>
             ) : (
@@ -229,7 +229,7 @@ function OrderDetailDrawer({
                 onChange={e => handleRiderAssign(e.target.value)}
                 defaultValue=""
               >
-                <option value="" disabled>— রাইডার বেছে নিন —</option>
+                <option value="" disabled>— Select Active Rider —</option>
                 {riders.filter(r => r.status === "ACTIVE").map(r => (
                   <option key={r.id} value={r.id}>
                     {r.name} · {r.vehicleType} · {r.assignedHubName}
@@ -242,7 +242,7 @@ function OrderDetailDrawer({
           {/* Sub-orders */}
           {order.subOrders.length > 0 && (
             <div style={{ marginBottom: "20px" }}>
-              <div className="section-label">ভেন্ডর সাব-অর্ডার</div>
+              <div className="section-label">Vendor Sub-Orders</div>
               <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
                 {order.subOrders.map(sub => (
                   <div key={sub.id} style={{
@@ -266,11 +266,11 @@ function OrderDetailDrawer({
 
           {/* Internal Notes */}
           <div>
-            <label className="admin-label"><FileText size={11} style={{ display: "inline", marginRight: 4 }} />অভ্যন্তরীণ নোট</label>
+            <label className="admin-label"><FileText size={11} style={{ display: "inline", marginRight: 4 }} />Internal Admin Notes</label>
             <textarea
               className="admin-textarea"
               rows={3}
-              placeholder="শুধুমাত্র অ্যাডমিন দেখতে পাবেন..."
+              placeholder="Visible to internal staff only..."
               value={draft.internalNotes || ""}
               onChange={e => update("internalNotes", e.target.value)}
             />
@@ -279,7 +279,7 @@ function OrderDetailDrawer({
 
         {/* Footer */}
         <div className="drawer-footer">
-          <button className="admin-btn admin-btn-secondary" onClick={onClose}>বাতিল</button>
+          <button className="admin-btn admin-btn-secondary" onClick={onClose}>Cancel</button>
           <button
             className="admin-btn admin-btn-primary"
             onClick={handleSave}
@@ -287,7 +287,7 @@ function OrderDetailDrawer({
             style={{ opacity: dirty ? 1 : 0.5 }}
           >
             <Save size={15} />
-            পরিবর্তন সংরক্ষণ করুন
+            Save Changes
           </button>
         </div>
       </div>
@@ -305,8 +305,8 @@ function CreateOrderModal({ onClose, onCreate }: {
     customerName: "",
     customerPhone: "",
     customerAddress: "",
-    deliveryArea: "ধানমন্ডি (Dhanmondi)",
-    deliverySlot: "তাজা সকাল (০৭:০০ - ০৯:০০)",
+    deliveryArea: "Dhanmondi",
+    deliverySlot: "Morning (07:00 - 09:00 AM)",
     totalAmount: 0,
     paymentMethod: "COD" as const,
     paymentStatus: "UNPAID" as const,
@@ -320,8 +320,8 @@ function CreateOrderModal({ onClose, onCreate }: {
     onClose();
   };
 
-  const AREAS = ["ধানমন্ডি (Dhanmondi)", "গুলশান (Gulshan)", "উত্তরা (Uttara)", "মিরপুর (Mirpur)", "মোহাম্মদপুর (Mohammadpur)", "বনানী (Banani)", "রামপুরা (Rampura)", "বাড্ডা (Badda)"];
-  const SLOTS = ["তাজা সকাল (০৭:০০ - ০৯:০০)", "সকাল প্রাইম (০৯:০০ - ১১:০০)", "দুপুর এক্সপ্রেস (১২:০০ - ১৪:০০)", "বিকেল স্ট্যান্ডার্ড (১৫:০০ - ১৮:০০)", "সন্ধ্যা স্লট (১৮:০০ - ২০:৩০)"];
+  const AREAS = ["Dhanmondi", "Gulshan", "Uttara", "Mirpur", "Mohammadpur", "Banani", "Rampura", "Badda"];
+  const SLOTS = ["Morning (07:00 - 09:00 AM)", "Prime Morning (09:00 - 11:00 AM)", "Noon Express (12:00 - 02:00 PM)", "Afternoon (03:00 - 06:00 PM)", "Evening (06:00 - 08:30 PM)"];
 
   return (
     <div className="modal-overlay" onClick={onClose}>
@@ -329,7 +329,7 @@ function CreateOrderModal({ onClose, onCreate }: {
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "24px" }}>
           <div>
             <h2 style={{ fontSize: "1.15rem", fontWeight: 800, color: "var(--text-1)" }}>
-              ➕ নতুন অর্ডার তৈরি
+              ➕ Create Manual Order
             </h2>
             <p style={{ fontSize: "0.78rem", color: "var(--text-3)", marginTop: "3px" }}>
               Admin-created order · ID: <span className="mono">{form.orderNumber}</span>
@@ -342,32 +342,32 @@ function CreateOrderModal({ onClose, onCreate }: {
           {/* Customer */}
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
             <div>
-              <label className="admin-label">গ্রাহকের নাম *</label>
-              <input className="admin-input" type="text" required placeholder="পূর্ণ নাম"
+              <label className="admin-label">Customer Name *</label>
+              <input className="admin-input" type="text" required placeholder="Full Name"
                 value={form.customerName} onChange={e => setForm(f => ({ ...f, customerName: e.target.value }))} />
             </div>
             <div>
-              <label className="admin-label">মোবাইল নম্বর *</label>
+              <label className="admin-label">Mobile Phone *</label>
               <input className="admin-input" type="tel" required placeholder="01XXXXXXXXX"
                 value={form.customerPhone} onChange={e => setForm(f => ({ ...f, customerPhone: e.target.value }))} />
             </div>
           </div>
 
           <div>
-            <label className="admin-label">ডেলিভারি ঠিকানা *</label>
-            <textarea className="admin-textarea" rows={2} required placeholder="বাড়ি, রোড, এলাকা..."
+            <label className="admin-label">Delivery Address *</label>
+            <textarea className="admin-textarea" rows={2} required placeholder="House, Road, Apartment, Area..."
               value={form.customerAddress} onChange={e => setForm(f => ({ ...f, customerAddress: e.target.value }))} />
           </div>
 
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
             <div>
-              <label className="admin-label">ডেলিভারি এলাকা</label>
+              <label className="admin-label">Delivery Area</label>
               <select className="admin-select" value={form.deliveryArea} onChange={e => setForm(f => ({ ...f, deliveryArea: e.target.value }))}>
                 {AREAS.map(a => <option key={a}>{a}</option>)}
               </select>
             </div>
             <div>
-              <label className="admin-label">ডেলিভারি স্লট</label>
+              <label className="admin-label">Delivery Slot</label>
               <select className="admin-select" value={form.deliverySlot} onChange={e => setForm(f => ({ ...f, deliverySlot: e.target.value }))}>
                 {SLOTS.map(s => <option key={s}>{s}</option>)}
               </select>
@@ -376,39 +376,39 @@ function CreateOrderModal({ onClose, onCreate }: {
 
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "12px" }}>
             <div>
-              <label className="admin-label">মোট পরিমাণ (৳) *</label>
+              <label className="admin-label">Total Amount (৳) *</label>
               <input className="admin-input" type="number" required min={0}
                 value={form.totalAmount || ""} onChange={e => setForm(f => ({ ...f, totalAmount: Number(e.target.value) }))} />
             </div>
             <div>
-              <label className="admin-label">পেমেন্ট পদ্ধতি</label>
+              <label className="admin-label">Payment Method</label>
               <select className="admin-select" value={form.paymentMethod} onChange={e => setForm(f => ({ ...f, paymentMethod: e.target.value as any }))}>
-                <option value="COD">COD (ক্যাশ)</option>
+                <option value="COD">COD (Cash on Delivery)</option>
                 <option value="BKASH">bKash</option>
                 <option value="NAGAD">Nagad</option>
                 <option value="SSLCOMMERZ">SSLCommerz</option>
               </select>
             </div>
             <div>
-              <label className="admin-label">পেমেন্ট স্ট্যাটাস</label>
+              <label className="admin-label">Payment Status</label>
               <select className="admin-select" value={form.paymentStatus} onChange={e => setForm(f => ({ ...f, paymentStatus: e.target.value as any }))}>
-                <option value="UNPAID">অপেইড</option>
-                <option value="PAID">পেইড</option>
+                <option value="UNPAID">Unpaid</option>
+                <option value="PAID">Paid</option>
               </select>
             </div>
           </div>
 
           <div>
-            <label className="admin-label">অভ্যন্তরীণ নোট</label>
-            <textarea className="admin-textarea" rows={2} placeholder="প্রয়োজনে নোট..."
+            <label className="admin-label">Internal Notes</label>
+            <textarea className="admin-textarea" rows={2} placeholder="Optional instructions or notes..."
               value={form.internalNotes} onChange={e => setForm(f => ({ ...f, internalNotes: e.target.value }))} />
           </div>
 
           <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px", marginTop: "8px" }}>
-            <button type="button" className="admin-btn admin-btn-secondary" onClick={onClose}>বাতিল</button>
+            <button type="button" className="admin-btn admin-btn-secondary" onClick={onClose}>Cancel</button>
             <button type="submit" className="admin-btn admin-btn-primary">
               <Plus size={15} />
-              অর্ডার তৈরি করুন
+              Create Order
             </button>
           </div>
         </form>
@@ -452,13 +452,13 @@ function AdminOrdersContent() {
   STATUS_ORDER.forEach(s => { counts[s] = orders.filter(o => o.status === s).length; });
 
   const TABS = [
-    { key: "all",              label: "সব" },
-    { key: "PENDING",          label: "অপেক্ষারত" },
-    { key: "CONFIRMED",        label: "নিশ্চিত" },
-    { key: "PREPARING",        label: "প্রস্তুতি" },
-    { key: "OUT_FOR_DELIVERY", label: "ডেলিভারিতে" },
-    { key: "DELIVERED",        label: "সম্পন্ন" },
-    { key: "CANCELLED",        label: "বাতিল" },
+    { key: "all",              label: "All" },
+    { key: "PENDING",          label: "Pending" },
+    { key: "CONFIRMED",        label: "Confirmed" },
+    { key: "PREPARING",        label: "Preparing" },
+    { key: "OUT_FOR_DELIVERY", label: "Out for Delivery" },
+    { key: "DELIVERED",        label: "Delivered" },
+    { key: "CANCELLED",        label: "Cancelled" },
   ];
 
   return (
@@ -483,9 +483,9 @@ function AdminOrdersContent() {
               <BellRing size={22} className="animate-bounce" />
             </div>
             <div>
-              <div style={{ fontWeight: 800, fontSize: "0.95rem" }}>🔔 নতুন কাস্টমার অর্ডার এসেছে!</div>
+              <div style={{ fontWeight: 800, fontSize: "0.95rem" }}>🔔 New Incoming Customer Order!</div>
               <div style={{ fontSize: "0.82rem", opacity: 0.9 }}>
-                অর্ডার: <strong>{newOrderAlert.orderNumber}</strong> • {newOrderAlert.customerName} • ৳{newOrderAlert.totalAmount}
+                Order: <strong>{newOrderAlert.orderNumber}</strong> • {newOrderAlert.customerName} • ৳{newOrderAlert.totalAmount}
               </div>
             </div>
           </div>
@@ -506,7 +506,7 @@ function AdminOrdersContent() {
                 cursor: "pointer",
               }}
             >
-              <Volume2 size={15} /> আবার শুনুন
+              <Volume2 size={15} /> Play Sound
             </button>
             <button
               onClick={dismissAlert}
@@ -528,10 +528,10 @@ function AdminOrdersContent() {
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "12px" }}>
         <div>
           <h1 style={{ fontSize: "1.35rem", fontWeight: 800, color: "var(--text-1)", lineHeight: 1.2 }}>
-            অর্ডার কন্ট্রোল সেন্টার
+            Order Fulfillment & Control Center
           </h1>
           <p style={{ fontSize: "0.80rem", color: "var(--text-3)", marginTop: "3px" }}>
-            {filteredOrders.length} অর্ডার দেখানো হচ্ছে · রাইডার অ্যাসাইনমেন্ট ও লাইভ স্ট্যাটাস ট্র্যাকিং
+            Displaying {filteredOrders.length} orders · Rider assignment and live status pipeline
           </p>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
@@ -551,11 +551,11 @@ function AdminOrdersContent() {
               gap: "5px",
             }}
           >
-            <Volume2 size={14} /> অডিও টেস্ট
+            <Volume2 size={14} /> Test Sound
           </button>
           <button className="admin-btn admin-btn-primary" onClick={() => setShowCreate(true)}>
             <Plus size={16} />
-            নতুন অর্ডার তৈরি
+            Create Manual Order
           </button>
         </div>
       </div>
@@ -567,7 +567,7 @@ function AdminOrdersContent() {
           <input
             className="search-input"
             type="text"
-            placeholder="Order ID বা নাম দিয়ে খুঁজুন..."
+            placeholder="Search by Order ID, name, or phone..."
             value={search}
             onChange={e => setSearch(e.target.value)}
           />
@@ -601,13 +601,13 @@ function AdminOrdersContent() {
           <thead>
             <tr>
               <th>Order ID</th>
-              <th>গ্রাহক</th>
-              <th>ডেলিভারি এলাকা</th>
-              <th>পরিমাণ</th>
-              <th>পেমেন্ট</th>
-              <th>স্ট্যাটাস</th>
-              <th>রাইডার</th>
-              <th>সময়</th>
+              <th>Customer</th>
+              <th>Delivery Area</th>
+              <th>Total Amount</th>
+              <th>Payment</th>
+              <th>Status</th>
+              <th>Rider</th>
+              <th>Date</th>
               <th></th>
             </tr>
           </thead>
@@ -616,7 +616,7 @@ function AdminOrdersContent() {
               <tr>
                 <td colSpan={9} style={{ textAlign: "center", padding: "48px", color: "var(--text-3)" }}>
                   <AlertCircle size={32} style={{ margin: "0 auto 12px", display: "block", opacity: 0.4 }} />
-                  কোনো অর্ডার পাওয়া যায়নি
+                  No orders match the current criteria
                 </td>
               </tr>
             ) : (
@@ -709,7 +709,7 @@ function AdminOrdersContent() {
 
 export default function AdminOrdersPage() {
   return (
-    <Suspense fallback={<div style={{ padding: "32px", textAlign: "center", color: "var(--text-3)" }}>অর্ডার লোড হচ্ছে...</div>}>
+    <Suspense fallback={<div style={{ padding: "32px", textAlign: "center", color: "var(--text-3)" }}>Loading Orders...</div>}>
       <AdminOrdersContent />
     </Suspense>
   );

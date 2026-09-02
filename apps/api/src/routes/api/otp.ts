@@ -17,7 +17,7 @@ export async function otpRoutes(fastify: FastifyInstance) {
         return reply.status(423).send({
           success: false,
           error: "Phone Locked",
-          message: `অতিরিক্ত ভুল চেষ্টার কারণে এই নম্বরে OTP সাময়িকভাবে বন্ধ আছে। ${lockStatus.remainingMinutes} মিনিট পর পুনরায় চেষ্টা করুন। (Too many attempts. Retry in ${lockStatus.remainingMinutes}m)`,
+          message: `OTP generation temporarily suspended for this phone number. Please retry in ${lockStatus.remainingMinutes} minutes.`,
           retryAfterMinutes: lockStatus.remainingMinutes,
         });
       }
@@ -43,7 +43,7 @@ export async function otpRoutes(fastify: FastifyInstance) {
         return reply.status(423).send({
           success: false,
           error: "Phone Locked",
-          message: `৫ বার ভুল OTP দেওয়ায় এই নম্বরটি ১০ মিনিটের জন্য লক করা হয়েছে। (Phone locked for 10 minutes due to 5 wrong attempts)`,
+          message: "Phone locked for 10 minutes due to 5 wrong attempts.",
           retryAfterMinutes: lockStatus.remainingMinutes,
         });
       }
@@ -54,8 +54,8 @@ export async function otpRoutes(fastify: FastifyInstance) {
         return reply.status(400).send({
           ...result,
           message: attempt.locked
-            ? "৫ বার ভুল OTP দেওয়ায় নম্বরটি ১০ মিনিটের জন্য লক করা হয়েছে।"
-            : `ভুল OTP কোড। আর ${attempt.attemptsLeft} বার ভুল দিলে একাউন্ট সাময়িক লক হবে।`,
+            ? "Phone locked for 10 minutes after 5 wrong OTP attempts."
+            : `Invalid OTP code. ${attempt.attemptsLeft} attempts remaining before temporary lockout.`,
           attemptsLeft: attempt.attemptsLeft,
         });
       }

@@ -36,9 +36,9 @@ export default function AdminProductsPage() {
     slug: "",
     sku: "",
     categorySlug: "vegetables",
-    categoryName: "শাকসবজি (Vegetables)",
+    categoryName: "Vegetables",
     vendorId: "tatka-official",
-    vendorName: "তাতকা বাজার নিজস্ব স্টক",
+    vendorName: "Tatka Bazar Central Stock",
     basePrice: 100,
     comparePrice: 120,
     baseUnit: "kg" as "kg" | "g" | "piece" | "packet" | "liter",
@@ -57,8 +57,8 @@ export default function AdminProductsPage() {
     if (search.trim()) {
       const q = search.toLowerCase();
       return (
-        p.nameBn.toLowerCase().includes(q) ||
-        p.nameEn.toLowerCase().includes(q) ||
+        (p.nameEn && p.nameEn.toLowerCase().includes(q)) ||
+        (p.nameBn && p.nameBn.toLowerCase().includes(q)) ||
         p.sku.toLowerCase().includes(q)
       );
     }
@@ -73,9 +73,9 @@ export default function AdminProductsPage() {
       slug: "",
       sku: `SKU-${Math.floor(1000 + Math.random() * 9000)}`,
       categorySlug: "vegetables",
-      categoryName: "শাকসবজি (Vegetables)",
+      categoryName: "Vegetables",
       vendorId: "tatka-official",
-      vendorName: "তাতকা বাজার নিজস্ব স্টক",
+      vendorName: "Tatka Bazar Central Stock",
       basePrice: 100,
       comparePrice: 120,
       baseUnit: "kg",
@@ -93,7 +93,7 @@ export default function AdminProductsPage() {
   const handleOpenEditModal = (p: AdminProduct) => {
     setEditingId(p.id);
     setFormData({
-      nameBn: p.nameBn,
+      nameBn: p.nameEn || p.nameBn,
       nameEn: p.nameEn,
       slug: p.slug,
       sku: p.sku,
@@ -120,10 +120,11 @@ export default function AdminProductsPage() {
     const generatedSlug = formData.slug || formData.nameEn.toLowerCase().replace(/[^a-z0-9]+/g, "-");
 
     if (editingId) {
-      updateProduct(editingId, { ...formData, slug: generatedSlug });
+      updateProduct(editingId, { ...formData, nameBn: formData.nameEn, slug: generatedSlug });
     } else {
       addProduct({
         ...formData,
+        nameBn: formData.nameEn,
         slug: generatedSlug,
       });
     }
@@ -137,16 +138,16 @@ export default function AdminProductsPage() {
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "12px" }}>
         <div>
           <h1 style={{ fontSize: "1.4rem", fontWeight: 800, color: "var(--text-main)" }}>
-            পণ্য ক্যাটালগ ও প্রডাক্ট ম্যানেজমেন্ট
+            Product Catalog & Management
           </h1>
           <p style={{ fontSize: "0.82rem", color: "var(--text-muted)", marginTop: "2px" }}>
-            মোট {products.length} টি পণ্য • ওজন-ভিত্তিক মূল্য ও টিয়ার্ড ডিসকাউন্ট কনফিগারেশন
+            Total {products.length} products • Variable weight pricing and tiered discount rules
           </p>
         </div>
 
         <button onClick={handleOpenCreateModal} className="admin-btn admin-btn-primary">
           <Plus size={16} />
-          <span>+ নতুন পণ্য তৈরি করুন</span>
+          <span>+ Create New Product</span>
         </button>
       </div>
 
@@ -158,7 +159,7 @@ export default function AdminProductsPage() {
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="নাম বা SKU দিয়ে পণ্য সার্চ করুন..."
+            placeholder="Search by product name or SKU..."
             style={{ width: "100%", padding: "7px 12px 7px 36px", borderRadius: "var(--radius-md)", border: "1px solid var(--border-medium)", outline: "none" }}
           />
         </div>
@@ -168,11 +169,11 @@ export default function AdminProductsPage() {
           onChange={(e) => setFilterCategory(e.target.value)}
           style={{ padding: "7px 12px", borderRadius: "var(--radius-md)", border: "1px solid var(--border-medium)", background: "#FFF" }}
         >
-          <option value="all">সকল ক্যাটাগরি</option>
-          <option value="fish-and-meat">মাছ ও মাংস (Fish & Meat)</option>
-          <option value="vegetables">শাকসবজি (Vegetables)</option>
-          <option value="rice-and-staples">চাল ও ডাল (Rice & Grains)</option>
-          <option value="oil-and-ghee">তেল ও ঘি (Oil & Ghee)</option>
+          <option value="all">All Categories</option>
+          <option value="fish-and-meat">Fish & Meat</option>
+          <option value="vegetables">Vegetables</option>
+          <option value="rice-and-staples">Rice & Grains</option>
+          <option value="oil-and-ghee">Oil & Ghee</option>
         </select>
 
         <select
@@ -180,10 +181,10 @@ export default function AdminProductsPage() {
           onChange={(e) => setFilterVendor(e.target.value)}
           style={{ padding: "7px 12px", borderRadius: "var(--radius-md)", border: "1px solid var(--border-medium)", background: "#FFF" }}
         >
-          <option value="all">সকল বিক্রেতা / ভেন্ডর</option>
-          <option value="tatka-official">তাতকা বাজার নিজস্ব স্টক</option>
+          <option value="all">All Vendors</option>
+          <option value="tatka-official">Tatka Bazar Central Stock</option>
           {vendors.map((v) => (
-            <option key={v.id} value={v.id}>{v.nameBn}</option>
+            <option key={v.id} value={v.id}>{v.nameEn || v.nameBn}</option>
           ))}
         </select>
       </div>
@@ -194,14 +195,14 @@ export default function AdminProductsPage() {
           <table className="admin-table">
             <thead>
               <tr>
-                <th>ছবি ও SKU</th>
-                <th>পণ্যের নাম (বাংলা / EN)</th>
-                <th>ক্যাটাগরি</th>
-                <th>ভেন্ডর</th>
-                <th>মূল্য ও একক</th>
-                <th>মজুদ স্টক</th>
-                <th>স্ট্যাটাস</th>
-                <th>অ্যাকশন</th>
+                <th>Image & SKU</th>
+                <th>Product Name</th>
+                <th>Category</th>
+                <th>Vendor</th>
+                <th>Price & Unit</th>
+                <th>Stock Units</th>
+                <th>Status</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -216,11 +217,10 @@ export default function AdminProductsPage() {
                     </div>
                   </td>
                   <td>
-                    <div style={{ fontWeight: 700, color: "var(--text-main)" }}>{prod.nameBn}</div>
-                    <div style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>{prod.nameEn}</div>
+                    <div style={{ fontWeight: 700, color: "var(--text-main)" }}>{prod.nameEn || prod.nameBn}</div>
                     {prod.isOrganic && (
                       <span style={{ fontSize: "0.68rem", color: "var(--primary)", fontWeight: 700 }}>
-                        🌱 ১০০% অর্গানিক
+                        🌱 100% Organic
                       </span>
                     )}
                   </td>
@@ -236,7 +236,7 @@ export default function AdminProductsPage() {
                     </div>
                     {prod.pricingType === "variableWeight" && (
                       <span style={{ fontSize: "0.7rem", color: "var(--accent)", fontWeight: 700 }}>
-                        ⚖️ ওজন-ভিত্তিক ডাইনামিক
+                        ⚖️ Variable Weight
                       </span>
                     )}
                   </td>
@@ -246,7 +246,7 @@ export default function AdminProductsPage() {
                     </div>
                     {prod.stock <= prod.lowStockAlert && (
                       <span style={{ fontSize: "0.68rem", color: "var(--danger)", fontWeight: 700 }}>
-                        ⚠️ লো স্টক!
+                        ⚠️ Low Stock!
                       </span>
                     )}
                   </td>
@@ -255,7 +255,7 @@ export default function AdminProductsPage() {
                       onClick={() => toggleProductPublish(prod.id)}
                       className={`status-badge ${prod.isPublished ? "success" : "neutral"}`}
                     >
-                      {prod.isPublished ? "পাবলিশড" : "ড্রাফট"}
+                      {prod.isPublished ? "Published" : "Draft"}
                     </button>
                   </td>
                   <td>
@@ -289,7 +289,7 @@ export default function AdminProductsPage() {
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px", borderBottom: "1px solid var(--border-subtle)", paddingBottom: "12px" }}>
               <h2 style={{ fontSize: "1.2rem", fontWeight: 800 }}>
-                {editingId ? "পণ্য এডিট করুন" : "নতুন তাজা পণ্য যুক্ত করুন"}
+                {editingId ? "Edit Product" : "Add New Fresh Product"}
               </h2>
               <button onClick={() => setIsModalOpen(false)}>
                 <X size={20} />
@@ -298,36 +298,23 @@ export default function AdminProductsPage() {
 
             <form onSubmit={handleSaveProduct} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
               
-              {/* Names */}
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
-                <div>
-                  <label style={{ fontSize: "0.8rem", fontWeight: 700, display: "block", marginBottom: "4px" }}>পণ্যের নাম (বাংলা) *</label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.nameBn}
-                    onChange={(e) => setFormData({ ...formData, nameBn: e.target.value })}
-                    placeholder="যেমন: পদ্মার তাজা ইলিশ"
-                    style={{ width: "100%", padding: "8px 12px", borderRadius: "var(--radius-md)", border: "1px solid var(--border-medium)" }}
-                  />
-                </div>
-                <div>
-                  <label style={{ fontSize: "0.8rem", fontWeight: 700, display: "block", marginBottom: "4px" }}>Product Name (English) *</label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.nameEn}
-                    onChange={(e) => setFormData({ ...formData, nameEn: e.target.value })}
-                    placeholder="e.g. Fresh Padma Hilsa"
-                    style={{ width: "100%", padding: "8px 12px", borderRadius: "var(--radius-md)", border: "1px solid var(--border-medium)" }}
-                  />
-                </div>
+              {/* Product Name */}
+              <div>
+                <label style={{ fontSize: "0.8rem", fontWeight: 700, display: "block", marginBottom: "4px" }}>Product Name *</label>
+                <input
+                  type="text"
+                  required
+                  value={formData.nameEn}
+                  onChange={(e) => setFormData({ ...formData, nameEn: e.target.value, nameBn: e.target.value })}
+                  placeholder="e.g. Fresh Padma River Hilsa"
+                  style={{ width: "100%", padding: "8px 12px", borderRadius: "var(--radius-md)", border: "1px solid var(--border-medium)" }}
+                />
               </div>
 
               {/* SKU & Category */}
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
                 <div>
-                  <label style={{ fontSize: "0.8rem", fontWeight: 700, display: "block", marginBottom: "4px" }}>SKU কোড *</label>
+                  <label style={{ fontSize: "0.8rem", fontWeight: 700, display: "block", marginBottom: "4px" }}>SKU Code *</label>
                   <input
                     type="text"
                     required
@@ -337,7 +324,7 @@ export default function AdminProductsPage() {
                   />
                 </div>
                 <div>
-                  <label style={{ fontSize: "0.8rem", fontWeight: 700, display: "block", marginBottom: "4px" }}>ক্যাটাগরি</label>
+                  <label style={{ fontSize: "0.8rem", fontWeight: 700, display: "block", marginBottom: "4px" }}>Category</label>
                   <select
                     value={formData.categorySlug}
                     onChange={(e) => {
@@ -347,10 +334,10 @@ export default function AdminProductsPage() {
                     }}
                     style={{ width: "100%", padding: "8px 12px", borderRadius: "var(--radius-md)", border: "1px solid var(--border-medium)", background: "#FFF" }}
                   >
-                    <option value="fish-and-meat">মাছ ও মাংস (Fish & Meat)</option>
-                    <option value="vegetables">শাকসবজি (Vegetables)</option>
-                    <option value="rice-and-staples">চাল ও ডাল (Rice & Grains)</option>
-                    <option value="oil-and-ghee">তেল ও ঘি (Oil & Ghee)</option>
+                    <option value="fish-and-meat">Fish & Meat</option>
+                    <option value="vegetables">Vegetables</option>
+                    <option value="rice-and-staples">Rice & Grains</option>
+                    <option value="oil-and-ghee">Oil & Ghee</option>
                   </select>
                 </div>
               </div>
@@ -358,7 +345,7 @@ export default function AdminProductsPage() {
               {/* Pricing & Unit */}
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "12px" }}>
                 <div>
-                  <label style={{ fontSize: "0.8rem", fontWeight: 700, display: "block", marginBottom: "4px" }}>মূল মূল্য (৳) *</label>
+                  <label style={{ fontSize: "0.8rem", fontWeight: 700, display: "block", marginBottom: "4px" }}>Base Price (৳) *</label>
                   <input
                     type="number"
                     required
@@ -368,7 +355,7 @@ export default function AdminProductsPage() {
                   />
                 </div>
                 <div>
-                  <label style={{ fontSize: "0.8rem", fontWeight: 700, display: "block", marginBottom: "4px" }}>পূর্বের মূল্য (৳)</label>
+                  <label style={{ fontSize: "0.8rem", fontWeight: 700, display: "block", marginBottom: "4px" }}>Compare Price (৳)</label>
                   <input
                     type="number"
                     value={formData.comparePrice}
@@ -377,17 +364,17 @@ export default function AdminProductsPage() {
                   />
                 </div>
                 <div>
-                  <label style={{ fontSize: "0.8rem", fontWeight: 700, display: "block", marginBottom: "4px" }}>বেস ইউনিট</label>
+                  <label style={{ fontSize: "0.8rem", fontWeight: 700, display: "block", marginBottom: "4px" }}>Base Unit</label>
                   <select
                     value={formData.baseUnit}
                     onChange={(e) => setFormData({ ...formData, baseUnit: e.target.value as any })}
                     style={{ width: "100%", padding: "8px 12px", borderRadius: "var(--radius-md)", border: "1px solid var(--border-medium)", background: "#FFF" }}
                   >
-                    <option value="kg">কেজি (kg)</option>
-                    <option value="g">গ্রাম (gram)</option>
-                    <option value="piece">পিস (piece)</option>
-                    <option value="packet">প্যাকেট (packet)</option>
-                    <option value="liter">লিটার (liter)</option>
+                    <option value="kg">kg</option>
+                    <option value="g">gram</option>
+                    <option value="piece">piece</option>
+                    <option value="packet">packet</option>
+                    <option value="liter">liter</option>
                   </select>
                 </div>
               </div>
@@ -395,7 +382,7 @@ export default function AdminProductsPage() {
               {/* Stock & Low Stock Threshold */}
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
                 <div>
-                  <label style={{ fontSize: "0.8rem", fontWeight: 700, display: "block", marginBottom: "4px" }}>বর্তমান স্টক *</label>
+                  <label style={{ fontSize: "0.8rem", fontWeight: 700, display: "block", marginBottom: "4px" }}>Current Stock Units *</label>
                   <input
                     type="number"
                     required
@@ -405,7 +392,7 @@ export default function AdminProductsPage() {
                   />
                 </div>
                 <div>
-                  <label style={{ fontSize: "0.8rem", fontWeight: 700, display: "block", marginBottom: "4px" }}>লো-স্টক সতর্কবার্তা থ্রেশহোল্ড</label>
+                  <label style={{ fontSize: "0.8rem", fontWeight: 700, display: "block", marginBottom: "4px" }}>Low Stock Alert Level</label>
                   <input
                     type="number"
                     value={formData.lowStockAlert}
@@ -417,7 +404,7 @@ export default function AdminProductsPage() {
 
               {/* Image URL */}
               <div>
-                <label style={{ fontSize: "0.8rem", fontWeight: 700, display: "block", marginBottom: "4px" }}>ছবির লিংক (Image URL)</label>
+                <label style={{ fontSize: "0.8rem", fontWeight: 700, display: "block", marginBottom: "4px" }}>Image URL</label>
                 <input
                   type="url"
                   value={formData.images[0]}
@@ -435,7 +422,7 @@ export default function AdminProductsPage() {
                     onChange={(e) => setFormData({ ...formData, isOrganic: e.target.checked })}
                     style={{ accentColor: "var(--primary)" }}
                   />
-                  <span>🌱 ১০০% অর্গানিক সার্টিফাইড</span>
+                  <span>🌱 100% Certified Organic</span>
                 </label>
                 <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.85rem", cursor: "pointer", fontWeight: 600 }}>
                   <input
@@ -444,16 +431,16 @@ export default function AdminProductsPage() {
                     onChange={(e) => setFormData({ ...formData, isPublished: e.target.checked })}
                     style={{ accentColor: "var(--primary)" }}
                   />
-                  <span>স্টোরফ্রন্টে সরাসরি দৃশ্যমান (Published)</span>
+                  <span>Published on Storefront</span>
                 </label>
               </div>
 
               <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px", marginTop: "12px", borderTop: "1px solid var(--border-subtle)", paddingTop: "14px" }}>
                 <button type="button" onClick={() => setIsModalOpen(false)} className="admin-btn admin-btn-secondary">
-                  বাতিল
+                  Cancel
                 </button>
                 <button type="submit" className="admin-btn admin-btn-primary">
-                  {editingId ? "পরিবর্তন সংরক্ষণ করুন" : "পণ্য সংরক্ষণ করুন"}
+                  {editingId ? "Save Changes" : "Save Product"}
                 </button>
               </div>
 

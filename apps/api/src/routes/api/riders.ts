@@ -24,7 +24,7 @@ export async function riderRoutes(fastify: FastifyInstance) {
         nid: r.nidNumber || "N/A",
         vehicleType: r.vehicleType,
         assignedHubId: "branch-dhanmondi",
-        assignedHubName: "ধানমন্ডি এক্সপ্রেস হাব",
+        assignedHubName: "Dhanmondi Express Hub",
         status: r.status,
         activeDeliveriesCount: r.assignments.length,
         totalDeliveriesCompleted: 12,

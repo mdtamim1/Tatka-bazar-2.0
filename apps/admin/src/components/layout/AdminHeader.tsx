@@ -83,7 +83,7 @@ export function AdminHeader() {
           <input
             className="search-input"
             type="text"
-            placeholder="Order ID, Customer দিয়ে search করুন..."
+            placeholder="Search by Order ID, Customer, Phone..."
             value={searchQ}
             onChange={e => setSearchQ(e.target.value)}
           />
@@ -172,7 +172,7 @@ export function AdminHeader() {
           className="admin-btn admin-btn-ghost"
           style={{ fontSize: "0.8rem", gap: "5px" }}
         >
-          <span>স্টোরফ্রন্ট</span>
+          <span>Storefront</span>
           <ExternalLink size={13} />
         </a>
 
@@ -244,7 +244,7 @@ export function AdminHeader() {
                     color: "var(--blue)", fontSize: "0.82rem",
                   }}>
                     <ShoppingBag size={15} style={{ flexShrink: 0 }} />
-                    <span><strong>{pendingOrders}</strong> টি অর্ডার নিশ্চিতকরণের অপেক্ষায়</span>
+                    <span><strong>{pendingOrders}</strong> orders pending confirmation</span>
                   </Link>
                 )}
                 {pendingVendors > 0 && (
@@ -255,7 +255,7 @@ export function AdminHeader() {
                     color: "var(--amber)", fontSize: "0.82rem",
                   }}>
                     <Zap size={15} style={{ flexShrink: 0 }} />
-                    <span><strong>{pendingVendors}</strong> ভেন্ডর অনুমোদনের অপেক্ষায়</span>
+                    <span><strong>{pendingVendors}</strong> vendors pending approval</span>
                   </Link>
                 )}
                 {lowStock > 0 && (
@@ -266,12 +266,12 @@ export function AdminHeader() {
                     color: "var(--red)", fontSize: "0.82rem",
                   }}>
                     <AlertTriangle size={15} style={{ flexShrink: 0 }} />
-                    <span><strong>{lowStock}</strong> পণ্যের স্টক কম</span>
+                    <span><strong>{lowStock}</strong> products low on stock</span>
                   </Link>
                 )}
                 {totalBadge === 0 && (
                   <div style={{ padding: "16px", textAlign: "center", color: "var(--text-3)", fontSize: "0.82rem" }}>
-                    ✅ সব কিছু ঠিক আছে!
+                    ✅ Everything is in order!
                   </div>
                 )}
               </div>
@@ -313,7 +313,7 @@ export function AdminHeader() {
             }
             router.push("/login");
           }}
-          title="লগআউট করুন"
+          title="Logout"
           style={{
             padding: "8px",
             background: "var(--bg-raised)",

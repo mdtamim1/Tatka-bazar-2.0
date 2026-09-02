@@ -1,117 +1,99 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import {
   Heart,
+  ShoppingBag,
+  Trash2,
   Share2,
   SlidersHorizontal,
-  ShoppingBag,
+  ChevronRight,
   ArrowRight,
   PackageX,
   X,
   Check,
-  ChevronRight,
 } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 import { useCartStore } from "@/lib/cart-store";
 import { PRODUCTS } from "@/lib/catalog";
-import { Product } from "@/types";
+import type { Product } from "@/types";
 
 type SortOption = "date-desc" | "price-low" | "price-high" | "name-asc";
 
 const MOCK_DATES: Record<string, string> = {
-  "prod-ilish-padma": "Dec 10, 2024",
-  "prod-beef-sirloin": "Dec 8, 2024",
-  "prod-honey-sundarban": "Dec 5, 2024",
-  "prod-kataribhog-rice": "Dec 2, 2024",
-  "prod-spinach-palong": "Nov 28, 2024",
+  "prod-1": "2 days ago",
+  "prod-2": "Yesterday",
+  "prod-3": "3 days ago",
+  "prod-4": "5 days ago",
+  "prod-5": "1 week ago",
 };
 
 export default function WishlistPage() {
-  const { locale, formatPrice } = useLanguage();
+  const { formatPrice } = useLanguage();
   const {
     wishlistIds,
     removeFromWishlist,
+    clearWishlist,
     moveWishlistToCart,
     moveAllWishlistToCart,
-    clearWishlist,
   } = useCartStore();
 
+  const [mounted, setMounted] = useState(false);
   const [sortBy, setSortBy] = useState<SortOption>("date-desc");
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const showToast = (msg: string) => {
     setToastMessage(msg);
-    setTimeout(() => {
-      setToastMessage((prev) => (prev === msg ? null : prev));
-    }, 2800);
+    setTimeout(() => setToastMessage(null), 3000);
   };
 
   const wishlistProducts = useMemo(() => {
-    const matched = PRODUCTS.filter((p) => wishlistIds.includes(p.id));
-    return [...matched].sort((a, b) => {
+    const list = PRODUCTS.filter((p) => wishlistIds.includes(p.id));
+    return [...list].sort((a, b) => {
       if (sortBy === "price-low") return a.basePrice - b.basePrice;
       if (sortBy === "price-high") return b.basePrice - a.basePrice;
       if (sortBy === "name-asc") {
-        const nameA = locale === "bn" ? a.nameBn : a.nameEn;
-        const nameB = locale === "bn" ? b.nameBn : b.nameEn;
+        const nameA = a.nameEn || a.nameBn;
+        const nameB = b.nameEn || b.nameBn;
         return nameA.localeCompare(nameB);
       }
       return wishlistIds.indexOf(a.id) - wishlistIds.indexOf(b.id);
     });
-  }, [wishlistIds, sortBy, locale]);
+  }, [wishlistIds, sortBy]);
 
   const handleShareList = async () => {
     const shareUrl = typeof window !== "undefined" ? window.location.href : "";
     try {
       if (navigator.clipboard) {
         await navigator.clipboard.writeText(shareUrl);
-        showToast(
-          locale === "bn"
-            ? "উইশলিস্ট লিংক কপি করা হয়েছে!"
-            : "Wishlist link copied to clipboard!"
-        );
+        showToast("Wishlist link copied to clipboard!");
       } else {
-        showToast(
-          locale === "bn" ? "লিংক শেয়ার করা হয়েছে!" : "Wishlist link shared!"
-        );
+        showToast("Wishlist link shared!");
       }
     } catch {
-      showToast(
-        locale === "bn"
-          ? "উইশলিস্ট লিংক কপি করা হয়েছে!"
-          : "Wishlist link copied to clipboard!"
-      );
+      showToast("Wishlist link copied to clipboard!");
     }
   };
 
   const handleAddToCart = (product: Product) => {
     moveWishlistToCart(product, false);
-    const prodName = locale === "bn" ? product.nameBn : product.nameEn;
-    showToast(
-      locale === "bn"
-        ? `✓ ${prodName} কার্টে যুক্ত হয়েছে এবং উইশলিস্ট থেকে সরানো হয়েছে`
-        : `✓ ${prodName} added to cart & removed from wishlist`
-    );
+    const prodName = product.nameEn || product.nameBn;
+    showToast(`✓ ${prodName} added to cart & removed from wishlist`);
   };
 
   const handleMoveAllToCart = () => {
     const inStockItems = wishlistProducts.filter((p) => p.stock > 0);
     if (inStockItems.length === 0) {
-      showToast(
-        locale === "bn"
-          ? "স্টকে কোনো পণ্য পাওয়া যায়নি!"
-          : "No in-stock items to move!"
-      );
+      showToast("No in-stock items to move!");
       return;
     }
     moveAllWishlistToCart(inStockItems);
-    showToast(
-      locale === "bn"
-        ? `✓ ${inStockItems.length}টি পণ্য কার্টে যুক্ত করা হয়েছে!`
-        : `✓ ${inStockItems.length} items moved to cart!`
-    );
+    showToast(`✓ ${inStockItems.length} items moved to cart!`);
   };
 
   const totalItemCount = wishlistProducts.length;
@@ -148,11 +130,11 @@ export default function WishlistPage() {
         {/* Breadcrumbs */}
         <div style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "0.82rem", color: "#64748b", marginBottom: "20px" }}>
           <Link href="/" style={{ color: "#3056D3", textDecoration: "none" }}>
-            {locale === "bn" ? "হোম" : "Home"}
+            Home
           </Link>
           <ChevronRight size={14} />
           <span style={{ color: "#0f172a", fontWeight: 600 }}>
-            {locale === "bn" ? "পছন্দের তালিকা" : "Wishlist"}
+            Wishlist
           </span>
         </div>
 
@@ -170,12 +152,10 @@ export default function WishlistPage() {
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "16px", paddingBottom: "20px", borderBottom: "1px solid #f1f5f9" }}>
             <div>
               <h1 style={{ fontSize: "1.75rem", fontWeight: 800, color: "#0f172a", margin: "0 0 4px 0", letterSpacing: "-0.02em" }}>
-                {locale === "bn" ? "পছন্দের তালিকা" : "Saved Items"}
+                Saved Items
               </h1>
               <p style={{ color: "#64748b", fontSize: "0.9rem", margin: 0 }}>
-                {locale === "bn"
-                  ? `${totalItemCount}টি পণ্য আপনার পছন্দের তালিকায় রয়েছে`
-                  : `${totalItemCount} ${totalItemCount === 1 ? "item" : "items"} in your wishlist`}
+                {totalItemCount} {totalItemCount === 1 ? "item" : "items"} in your wishlist
               </p>
             </div>
 
@@ -199,7 +179,7 @@ export default function WishlistPage() {
                   }}
                 >
                   <Share2 size={14} />
-                  <span>{locale === "bn" ? "শেয়ার করুন" : "Share List"}</span>
+                  <span>Share List</span>
                 </button>
 
                 <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
@@ -219,10 +199,10 @@ export default function WishlistPage() {
                       outline: "none",
                     }}
                   >
-                    <option value="date-desc">{locale === "bn" ? "যুক্ত করার তারিখ" : "Date Added"}</option>
-                    <option value="price-low">{locale === "bn" ? "দাম: কম থেকে বেশি" : "Price: Low to High"}</option>
-                    <option value="price-high">{locale === "bn" ? "দাম: বেশি থেকে কম" : "Price: High to Low"}</option>
-                    <option value="name-asc">{locale === "bn" ? "পণ্যের নাম (A-Z)" : "Product Name"}</option>
+                    <option value="date-desc">Date Added</option>
+                    <option value="price-low">Price: Low to High</option>
+                    <option value="price-high">Price: High to Low</option>
+                    <option value="name-asc">Product Name (A-Z)</option>
                   </select>
                 </div>
               </div>
@@ -254,7 +234,7 @@ export default function WishlistPage() {
                     <div style={{ width: "80px", height: "80px", borderRadius: "10px", overflow: "hidden", background: "#f8fafc", flexShrink: 0, border: "1px solid #f1f5f9" }}>
                       <img
                         src={product.images[0]}
-                        alt={locale === "bn" ? product.nameBn : product.nameEn}
+                        alt={product.nameEn || product.nameBn}
                         style={{ width: "100%", height: "100%", objectFit: "cover" }}
                       />
                     </div>
@@ -266,17 +246,17 @@ export default function WishlistPage() {
                           href={`/product/${product.slug}`}
                           style={{ fontSize: "1rem", fontWeight: 700, color: "#0f172a", textDecoration: "none" }}
                         >
-                          {locale === "bn" ? product.nameBn : product.nameEn}
+                          {product.nameEn || product.nameBn}
                         </Link>
                         {isOutOfStock && (
                           <span style={{ fontSize: "0.7rem", fontWeight: 700, color: "#b91c1c", background: "#fee2e2", padding: "1px 8px", borderRadius: "4px" }}>
-                            {locale === "bn" ? "স্টক শেষ" : "Out of Stock"}
+                            Out of Stock
                           </span>
                         )}
                       </div>
 
                       <span style={{ fontSize: "0.8rem", color: "#64748b" }}>
-                        {locale === "bn" ? product.categoryNameBn : product.categoryNameEn}
+                        {product.categoryNameEn || product.categoryNameBn}
                       </span>
 
                       <div style={{ display: "flex", alignItems: "baseline", gap: "8px", marginTop: "2px" }}>
@@ -291,7 +271,7 @@ export default function WishlistPage() {
                       </div>
 
                       <span style={{ fontSize: "0.72rem", color: "#94a3b8" }}>
-                        {locale === "bn" ? `যুক্ত হয়েছে: ${addedDateStr}` : `Added ${addedDateStr}`}
+                        Added {addedDateStr}
                       </span>
                     </div>
 
@@ -301,7 +281,7 @@ export default function WishlistPage() {
                         type="button"
                         onClick={() => {
                           removeFromWishlist(product.id);
-                          showToast(locale === "bn" ? "পছন্দের তালিকা থেকে মুছে ফেলা হয়েছে" : "Removed from wishlist");
+                          showToast("Removed from wishlist");
                         }}
                         style={{ background: "none", border: "none", color: "#94a3b8", cursor: "pointer", padding: "4px" }}
                         title="Remove"
@@ -328,7 +308,7 @@ export default function WishlistPage() {
                           }}
                         >
                           <PackageX size={14} />
-                          <span>{locale === "bn" ? "স্টক আউট" : "Sold Out"}</span>
+                          <span>Sold Out</span>
                         </button>
                       ) : (
                         <button
@@ -350,7 +330,7 @@ export default function WishlistPage() {
                           }}
                         >
                           <ShoppingBag size={14} />
-                          <span>{locale === "bn" ? "কার্টে যোগ করুন" : "Add to Cart"}</span>
+                          <span>Add to Cart</span>
                         </button>
                       )}
                     </div>
@@ -364,11 +344,11 @@ export default function WishlistPage() {
                   type="button"
                   onClick={() => {
                     clearWishlist();
-                    showToast(locale === "bn" ? "তালিকা খালি করা হয়েছে" : "Wishlist cleared");
+                    showToast("Wishlist cleared");
                   }}
                   style={{ background: "none", border: "none", color: "#64748b", fontSize: "0.85rem", fontWeight: 600, cursor: "pointer" }}
                 >
-                  {locale === "bn" ? "তালিকা সম্পূর্ণ মুছুন" : "Clear all saved items"}
+                  Clear all saved items
                 </button>
 
                 {inStockCount > 0 && (
@@ -392,9 +372,7 @@ export default function WishlistPage() {
                   >
                     <ShoppingBag size={16} />
                     <span>
-                      {locale === "bn"
-                        ? `সবগুলো কার্টে যোগ করুন (${inStockCount})`
-                        : `Move All to Cart (${inStockCount})`}
+                      Move All to Cart ({inStockCount})
                     </span>
                   </button>
                 )}
@@ -418,12 +396,10 @@ export default function WishlistPage() {
                 <Heart size={32} />
               </div>
               <h3 style={{ fontSize: "1.2rem", fontWeight: 800, color: "#0f172a", margin: "0 0 6px 0" }}>
-                {locale === "bn" ? "আপনার পছন্দের তালিকা খালি" : "Your wishlist is empty"}
+                Your wishlist is empty
               </h3>
               <p style={{ color: "#64748b", fontSize: "0.9rem", maxWidth: "340px", margin: "0 auto 24px", lineHeight: 1.5 }}>
-                {locale === "bn"
-                  ? "তাজা শাকসবজি, মাছ, মাংস ও অর্গানিক গ্রোসারি খুঁজে পছন্দের তালিকায় সেভ করুন।"
-                  : "Explore fresh local produce, organic specialties, and daily essentials."}
+                Explore fresh local produce, organic specialties, and daily essentials.
               </p>
               <Link
                 href="/category/all"
@@ -440,7 +416,7 @@ export default function WishlistPage() {
                   textDecoration: "none",
                 }}
               >
-                <span>{locale === "bn" ? "কেনাকাটা শুরু করুন" : "Explore Bazar"}</span>
+                <span>Explore Bazar</span>
                 <ArrowRight size={16} />
               </Link>
             </div>

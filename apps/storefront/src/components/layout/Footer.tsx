@@ -66,9 +66,7 @@ export function Footer() {
             </h2>
 
             <p className={styles.newsletterDesc}>
-              {locale === "bn"
-                ? "আমাদের সাপ্তাহিক তাজা বাজারের আপডেট, মৌসুমী রেসিপি এবং স্পেশাল ডিসকাউন্ট অফার পেতে সাবস্ক্রাইব করুন।"
-                : "Join our newsletter for fresh harvest updates, seasonal organic recipes, exclusive offers, and early access to our latest fresh arrivals."}
+              Join our newsletter for fresh harvest updates, seasonal organic recipes, exclusive offers, and early access to our latest fresh arrivals.
             </p>
 
             <form onSubmit={handleSubscribe} className={styles.newsletterForm}>
@@ -172,16 +170,6 @@ export function Footer() {
             <p className={styles.brandDesc}>
               Direct-from-source organic marketplace empowering Bangladeshi farmers and fishermen with fair prices and express chemical-free home delivery.
             </p>
-
-            {/* Language Dropdown Selector */}
-            <button
-              type="button"
-              onClick={toggleLocale}
-              className={styles.langDropdownBtn}
-            >
-              <span>{locale === "bn" ? "বাংলা" : "English"}</span>
-              <ChevronDown size={14} color="#64748b" />
-            </button>
 
             {/* Payment Badges Row */}
             <div className={styles.paymentBadgesRow}>

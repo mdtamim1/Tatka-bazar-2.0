@@ -3,80 +3,92 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import {
-  ShoppingBag,
-  Store,
+  Trash2,
   Plus,
   Minus,
-  Trash2,
   ArrowRight,
+  ShoppingBag,
   ShieldCheck,
-  Tag,
-  Sparkles,
-  ChevronRight,
   Truck,
-  RotateCcw,
+  Store,
+  ChevronRight,
 } from "lucide-react";
-import { useLanguage } from "@/context/LanguageContext";
 import { useCartStore } from "@/lib/cart-store";
+import { useLanguage } from "@/context/LanguageContext";
 
-export default function FullCartPage() {
-  const { locale, t, formatPrice } = useLanguage();
+export default function CartPage() {
   const {
     items,
-    updateQuantity,
     removeItem,
-    clearCart,
+    updateQuantity,
     getSubtotal,
-    getDiscountAmount,
     getDeliveryFee,
+    getDiscountAmount,
     getGrandTotal,
     appliedCoupon,
     applyCoupon,
     removeCoupon,
-    getVendorGroups,
   } = useCartStore();
 
+  const { t, formatPrice } = useLanguage();
   const [couponInput, setCouponInput] = useState("");
   const [couponStatus, setCouponStatus] = useState<{ text: string; isError: boolean } | null>(null);
 
-  const vendorGroups = getVendorGroups();
   const subtotal = getSubtotal();
-  const discount = getDiscountAmount();
   const deliveryFee = getDeliveryFee();
+  const discount = getDiscountAmount();
   const grandTotal = getGrandTotal();
+
+  // Group items by vendor
+  const vendorGroups = items.reduce((acc, item) => {
+    const vId = item.product.vendorId || "tatka-central";
+    const vNameEn = item.product.vendorNameEn || "Tatka Central Hub";
+    const vNameBn = item.product.vendorNameBn || "Tatka Central Hub";
+
+    let group = acc.find((g) => g.vendorId === vId);
+    if (!group) {
+      group = { vendorId: vId, vendorNameEn: vNameEn, vendorNameBn: vNameBn, items: [] };
+      acc.push(group);
+    }
+    group.items.push(item);
+    return acc;
+  }, [] as Array<{ vendorId: string; vendorNameEn: string; vendorNameBn: string; items: typeof items }>);
 
   const handleCouponSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!couponInput.trim()) return;
-    const res = applyCoupon(couponInput);
-    setCouponStatus({ text: res.message, isError: !res.success });
-    if (res.success) setCouponInput("");
+
+    const res = applyCoupon(couponInput.trim());
+    setCouponStatus({
+      text: res.message,
+      isError: !res.success,
+    });
   };
 
   if (items.length === 0) {
     return (
-      <div style={{ padding: "60px 0", textAlign: "center" }}>
-        <div className="container" style={{ maxWidth: "500px" }}>
+      <div style={{ padding: "80px 0", minHeight: "70vh", display: "flex", alignItems: "center" }}>
+        <div className="container" style={{ textAlign: "center", maxWidth: "480px" }}>
           <div
             style={{
               width: "80px",
               height: "80px",
               borderRadius: "50%",
               background: "var(--primary-light)",
+              color: "var(--primary)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               margin: "0 auto 20px",
-              color: "var(--primary)",
             }}
           >
             <ShoppingBag size={40} />
           </div>
-          <h1 style={{ fontSize: "1.5rem", fontWeight: 800, marginBottom: "8px" }}>
+          <h2 style={{ fontSize: "1.5rem", fontWeight: 800, marginBottom: "8px" }}>
             {t.emptyCart}
-          </h1>
+          </h2>
           <p style={{ color: "var(--text-muted)", fontSize: "0.95rem", marginBottom: "24px" }}>
-            {t.emptyCartMsg}
+            Your shopping bag is empty. Explore our catalog to add fresh items.
           </p>
           <Link href="/" className="btn-primary" style={{ padding: "12px 28px" }}>
             {t.startShopping}
@@ -92,9 +104,9 @@ export default function FullCartPage() {
         
         {/* Breadcrumb Navigation */}
         <div style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "0.82rem", color: "var(--text-muted)", marginBottom: "20px" }}>
-          <Link href="/" style={{ color: "var(--primary)" }}>হোম</Link>
+          <Link href="/" style={{ color: "var(--primary)" }}>Home</Link>
           <ChevronRight size={14} />
-          <span style={{ color: "var(--text-main)", fontWeight: 600 }}>শপিং কার্ট</span>
+          <span style={{ color: "var(--text-main)", fontWeight: 600 }}>Shopping Cart</span>
         </div>
 
         <h1 style={{ fontSize: "1.8rem", fontWeight: 800, color: "var(--text-main)", marginBottom: "24px" }}>
@@ -134,10 +146,10 @@ export default function FullCartPage() {
                     </div>
                     <div>
                       <div style={{ fontWeight: 800, fontSize: "0.95rem", color: "var(--primary-dark)" }}>
-                        {locale === "bn" ? group.vendorNameBn : group.vendorNameEn}
+                        {group.vendorNameEn || group.vendorNameBn}
                       </div>
                       <div style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}>
-                        {locale === "bn" ? "ভেন্ডর অনুযায়ী পৃথক প্যাকিং ও যাচাইকরণ" : "Packaged & verified by seller"}
+                        Packaged & verified by seller
                       </div>
                     </div>
                   </div>
@@ -161,14 +173,14 @@ export default function FullCartPage() {
                     >
                       <img
                         src={item.product.images[0]}
-                        alt={locale === "bn" ? item.product.nameBn : item.product.nameEn}
+                        alt={item.product.nameEn || item.product.nameBn}
                         style={{ width: "70px", height: "70px", objectFit: "cover", borderRadius: "var(--radius-md)" }}
                       />
 
                       <div style={{ flex: 1 }}>
                         <Link href={`/product/${item.product.slug}`}>
                           <h3 style={{ fontSize: "0.95rem", fontWeight: 700, color: "var(--text-main)", lineHeight: 1.3 }}>
-                            {locale === "bn" ? item.product.nameBn : item.product.nameEn}
+                            {item.product.nameEn || item.product.nameBn}
                           </h3>
                         </Link>
                         <div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "4px" }}>
@@ -276,7 +288,7 @@ export default function FullCartPage() {
             {/* Coupon Code Section */}
             <form onSubmit={handleCouponSubmit} style={{ marginBottom: "18px" }}>
               <label style={{ fontSize: "0.8rem", fontWeight: 700, color: "var(--text-muted)", display: "block", marginBottom: "6px" }}>
-                🏷️ প্রোমোকোড বা কুপন:
+                🏷️ Promo Code or Coupon:
               </label>
               <div style={{ display: "flex", gap: "8px" }}>
                 <input
@@ -373,11 +385,11 @@ export default function FullCartPage() {
             <div style={{ marginTop: "20px", display: "flex", flexDirection: "column", gap: "8px", fontSize: "0.75rem", color: "var(--text-muted)" }}>
               <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                 <ShieldCheck size={16} color="var(--primary)" />
-                <span>১০০% নিরাপদ চেকআউট ও খাঁটি পণ্যের নিশ্চয়তা</span>
+                <span>100% Secure Checkout & Fresh Guarantee</span>
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                 <Truck size={16} color="var(--accent)" />
-                <span>নির্বাচিত স্লটে দ্রুততম হোম ডেলিভারি</span>
+                <span>Express doorstep delivery in selected slot</span>
               </div>
             </div>
 

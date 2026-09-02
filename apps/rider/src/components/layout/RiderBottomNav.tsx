@@ -16,18 +16,18 @@ export function RiderBottomNav() {
 
   const navItems = [
     {
-      label: "ডেলিভারি",
+      label: "Deliveries",
       href: "/deliveries",
       icon: Package,
       badge: activeDeliveriesCount > 0 ? activeDeliveriesCount : undefined,
     },
     {
-      label: "ক্যাশ সামারি",
+      label: "Cash Summary",
       href: "/cash-summary",
       icon: DollarSign,
     },
     {
-      label: "প্রোফাইল",
+      label: "Profile",
       href: "/profile",
       icon: User,
     },

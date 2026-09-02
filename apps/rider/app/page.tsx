@@ -56,9 +56,9 @@ export default function RiderDeliveriesPage() {
               <BellRing size={24} className="animate-bounce" />
             </div>
             <div>
-              <div style={{ fontWeight: 800, fontSize: "0.95rem" }}>🔔 নতুন অর্ডার নির্ধারিত হয়েছে!</div>
+              <div style={{ fontWeight: 800, fontSize: "0.95rem" }}>🔔 New Delivery Assigned!</div>
               <div style={{ fontSize: "0.8rem", opacity: 0.9 }}>
-                অর্ডার: <strong>{newOrderAlert.orderNumber}</strong> • {newOrderAlert.customerName} ({newOrderAlert.area})
+                Order: <strong>{newOrderAlert.orderNumber}</strong> • {newOrderAlert.customerName} ({newOrderAlert.area})
               </div>
             </div>
           </div>
@@ -79,7 +79,7 @@ export default function RiderDeliveriesPage() {
                 cursor: "pointer",
               }}
             >
-              <Volume2 size={14} /> আবার শুনুন
+              <Volume2 size={14} /> Play Sound
             </button>
             <button
               onClick={dismissAlert}
@@ -110,7 +110,7 @@ export default function RiderDeliveriesPage() {
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: "6px", color: "var(--text-muted)" }}>
           <Volume2 size={16} style={{ color: "var(--primary)" }} />
-          <span>অ্যাসাইনমেন্ট সাউন্ড এলার্ট: <strong>সক্রিয় (Ting-Tong Chime)</strong></span>
+          <span>Assignment Sound Alerts: <strong>Active (Ting-Tong Chime)</strong></span>
         </div>
         <button
           onClick={playTestSound}
@@ -128,7 +128,7 @@ export default function RiderDeliveriesPage() {
             gap: "4px",
           }}
         >
-          বেল সাউন্ড টেস্ট
+          Test Bell Sound
         </button>
       </div>
 
@@ -136,7 +136,7 @@ export default function RiderDeliveriesPage() {
       {!currentRider.isOnline && (
         <div style={{ background: "#FEE2E2", border: "1px solid #FECACA", padding: "12px 14px", borderRadius: "var(--radius-md)", fontSize: "0.82rem", color: "#991B1B", display: "flex", alignItems: "center", gap: "8px" }}>
           <AlertTriangle size={18} />
-          <span>আপনি বর্তমানে <strong>অফলাইনে</strong> আছেন। নতুন ডেলিভারি পেতে উপরের সুইচ অন করুন।</span>
+          <span>You are currently <strong>Offline</strong>. Switch duty ON above to receive live deliveries.</span>
         </div>
       )}
 
@@ -159,7 +159,7 @@ export default function RiderDeliveriesPage() {
             gap: "6px",
           }}
         >
-          <span>চলমান কাজ</span>
+          <span>Active Tasks</span>
           <span style={{ background: activeTab === "ACTIVE" ? "var(--primary-light)" : "#E2E8F0", color: activeTab === "ACTIVE" ? "var(--primary-hover)" : "var(--text-muted)", padding: "2px 6px", borderRadius: "999px", fontSize: "0.72rem" }}>
             {activeDeliveries.length}
           </span>
@@ -182,7 +182,7 @@ export default function RiderDeliveriesPage() {
             gap: "6px",
           }}
         >
-          <span>সম্পন্ন ({completedDeliveries.length})</span>
+          <span>Completed ({completedDeliveries.length})</span>
         </button>
       </div>
 
@@ -192,10 +192,10 @@ export default function RiderDeliveriesPage() {
           <div className="rider-card" style={{ textAlign: "center", padding: "36px 16px" }}>
             <CheckCircle2 size={40} color="var(--primary)" style={{ margin: "0 auto 10px" }} />
             <h3 style={{ fontSize: "1.1rem", fontWeight: 800 }}>
-              {activeTab === "ACTIVE" ? "কোনো পেন্ডিং ডেলিভারি নেই!" : "এখনও কোনো ডেলিভারি সম্পন্ন হয়নি"}
+              {activeTab === "ACTIVE" ? "No pending deliveries!" : "No completed deliveries yet today"}
             </h3>
             <p style={{ fontSize: "0.82rem", color: "var(--text-muted)", marginTop: "4px" }}>
-              {activeTab === "ACTIVE" ? "নতুন ডেলিভারি আসলে নোটিফিকেশন পাবেন।" : "ডেলিভারি সম্পন্ন হলে এখানে জমা হবে।"}
+              {activeTab === "ACTIVE" ? "You will receive an alert as new delivery drops are dispatched." : "Completed tasks will appear here."}
             </p>
           </div>
         ) : (
@@ -230,7 +230,7 @@ export default function RiderDeliveriesPage() {
 
                 <div style={{ textAlign: "right" }}>
                   <span style={{ fontSize: "0.88rem", fontWeight: 800, color: del.isCod ? "var(--primary-dark)" : "#2563EB" }}>
-                    {del.isCod ? `৳${del.codAmountToCollect.toLocaleString()} COD` : "অনলাইন পেইড"}
+                    {del.isCod ? `৳${del.codAmountToCollect.toLocaleString()} COD` : "Prepaid Online"}
                   </span>
                 </div>
               </div>
@@ -246,9 +246,9 @@ export default function RiderDeliveriesPage() {
 
               {/* Items Preview */}
               <div style={{ background: "#F8FAFC", padding: "8px 12px", borderRadius: "var(--radius-sm)", fontSize: "0.78rem" }}>
-                <div style={{ color: "var(--text-muted)", fontWeight: 700, marginBottom: "2px" }}>প্যাকেজ আইটেম:</div>
+                <div style={{ color: "var(--text-muted)", fontWeight: 700, marginBottom: "2px" }}>Package Items:</div>
                 <div style={{ color: "var(--text-main)" }}>
-                  {del.items.map((it) => `${it.nameBn} (${it.weight})`).join(", ")}
+                  {del.items.map((it) => `${it.nameEn || it.nameBn} (${it.weight})`).join(", ")}
                 </div>
               </div>
 
@@ -260,7 +260,7 @@ export default function RiderDeliveriesPage() {
                   style={{ minHeight: "40px", padding: "8px", fontSize: "0.85rem" }}
                 >
                   <Phone size={15} color="var(--primary)" />
-                  <span>কল করুন</span>
+                  <span>Call Customer</span>
                 </a>
 
                 <a
@@ -271,7 +271,7 @@ export default function RiderDeliveriesPage() {
                   style={{ minHeight: "40px", padding: "8px", fontSize: "0.85rem" }}
                 >
                   <Navigation size={15} color="#2563EB" />
-                  <span>গুগল ম্যাপ</span>
+                  <span>Google Maps</span>
                 </a>
               </div>
 
@@ -282,7 +282,7 @@ export default function RiderDeliveriesPage() {
                   className="rider-btn rider-btn-primary"
                 >
                   <Package size={18} />
-                  <span>১. হাবে পিকআপ গ্রহণ করুন</span>
+                  <span>1. Pick up from Hub</span>
                 </button>
               )}
 
@@ -293,7 +293,7 @@ export default function RiderDeliveriesPage() {
                   style={{ background: "var(--accent)", color: "#FFF" }}
                 >
                   <Bike size={18} />
-                  <span>২. ডেলিভারির উদ্দেশ্যে রওনা দিন</span>
+                  <span>2. Start Delivery Route</span>
                 </button>
               )}
 
@@ -307,17 +307,17 @@ export default function RiderDeliveriesPage() {
                     <CheckCircle2 size={18} />
                     <span>
                       {del.isCod
-                        ? `✓ ৳${del.codAmountToCollect} ক্যাশ গ্রহণ ও ডেলিভারি`
-                        : "✓ ডেলিভারি সম্পন্ন করুন"}
+                        ? `✓ Collect ৳${del.codAmountToCollect} Cash & Complete`
+                        : "✓ Complete Delivery"}
                     </span>
                   </button>
 
                   <button
-                    onClick={() => updateStatus(del.id, "FAILED", "গ্রাহক ফোনে অপ্রাপ্য")}
+                    onClick={() => updateStatus(del.id, "FAILED", "Customer unreachable")}
                     className="rider-btn rider-btn-secondary"
                     style={{ minHeight: "36px", padding: "6px", fontSize: "0.75rem", color: "var(--danger)" }}
                   >
-                    ডেলিভারি ব্যর্থ হয়েছে (রিপোর্ট করুন)
+                    Report Failed Delivery
                   </button>
                 </div>
               )}
@@ -326,7 +326,7 @@ export default function RiderDeliveriesPage() {
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", background: "var(--primary-light)", padding: "8px 12px", borderRadius: "var(--radius-sm)", fontSize: "0.8rem", color: "var(--primary-hover)", fontWeight: 700 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                     <CheckCircle2 size={16} />
-                    <span>সফল ডেলিভারি</span>
+                    <span>Delivered Successfully</span>
                   </div>
                   <span>{del.deliveredAt}</span>
                 </div>
@@ -346,7 +346,7 @@ export default function RiderDeliveriesPage() {
                   fontWeight: 600,
                 }}
               >
-                <span>বিস্তারিত তথ্য ও চালান রান-শীট দেখুন</span>
+                <span>View Order Run-Sheet & Details</span>
                 <ChevronRight size={14} />
               </Link>
 

@@ -59,6 +59,7 @@ interface CartState {
   getDeliveryFee: () => number;
   getGrandTotal: () => number;
   getVendorGroups: () => { vendorId: string; vendorNameBn: string; vendorNameEn: string; items: CartItem[] }[];
+  submitOrder: (orderPayload: any) => Promise<{ success: boolean; orderNumber: string }>;
 }
 
 export const useCartStore = create<CartState>()(
@@ -323,6 +324,13 @@ export const useCartStore = create<CartState>()(
         });
 
         return Array.from(groupMap.values());
+      },
+
+      submitOrder: async (orderPayload: any) => {
+        return {
+          success: true,
+          orderNumber: "TB-" + Math.floor(1000000 + Math.random() * 9000000),
+        };
       },
     }),
     {

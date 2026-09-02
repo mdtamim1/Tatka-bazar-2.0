@@ -4,7 +4,7 @@ export function OrganizationJsonLd() {
   const schema = {
     "@context": "https://schema.org",
     "@type": "Organization",
-    name: "Tatka Bazar 2.0 (তাতকা বাজার)",
+    name: "Tatka Bazar 2.0",
     url: "https://tatkabazar.com",
     logo: "https://tatkabazar.com/logo.png",
     contactPoint: {
@@ -12,7 +12,7 @@ export function OrganizationJsonLd() {
       telephone: "+8801700000000",
       contactType: "Customer Support",
       areaServed: "BD",
-      availableLanguage: ["bn", "en"],
+      availableLanguage: ["en"],
     },
     sameAs: [
       "https://facebook.com/tatkabazar",
@@ -32,10 +32,9 @@ export function ProductJsonLd({ product }: { product: any }) {
   const schema = {
     "@context": "https://schema.org",
     "@type": "Product",
-    name: product.nameEn,
-    alternateName: product.nameBn,
+    name: product.nameEn || product.name || "Tatka Product",
     image: product.images,
-    description: product.descriptionEn || product.nameEn,
+    description: product.descriptionEn || product.description || product.nameEn,
     sku: product.sku || product.id,
     offers: {
       "@type": "Offer",

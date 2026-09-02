@@ -151,7 +151,7 @@ export function FlashDeals() {
                       textTransform: "uppercase",
                     }}
                   >
-                    <Zap size={9} fill="var(--rose)" /> {locale === "bn" ? "সীমিত সময়" : "Limited Time"}
+                    <Zap size={9} fill="var(--rose)" /> Limited Time
                   </div>
                   <h2
                     style={{
@@ -162,10 +162,10 @@ export function FlashDeals() {
                       margin: 0,
                     }}
                   >
-                    {t.flashDealsTitle || (locale === "bn" ? "আজকের ফ্ল্যাশ অফার" : "Flash Deals")}
+                    {t.flashDealsTitle || "Flash Deals"}
                   </h2>
                   <p style={{ fontSize: "0.76rem", color: "var(--text-muted)", marginTop: "2px", lineHeight: 1.35, margin: "2px 0 0 0" }}>
-                    {t.flashDealsSubtitle || (locale === "bn" ? "সীমিত স্টক — তাড়াতাড়ি অর্ডার করুন" : "Limited stock — order before time runs out")}
+                    {t.flashDealsSubtitle || "Limited stock — order before time runs out"}
                   </p>
                 </div>
               </div>
@@ -192,14 +192,14 @@ export function FlashDeals() {
                       whiteSpace: "nowrap",
                     }}
                   >
-                    ⏰ {locale === "bn" ? "শেষ হতে:" : "Ends in:"}
+                    ⏰ Ends in:
                   </span>
                   <div style={{ display: "flex", alignItems: "center", gap: "3px" }}>
-                    <FlipDigit value={timeLeft.hours}   label={locale === "bn" ? "ঘণ্টা" : "HRS"} />
+                    <FlipDigit value={timeLeft.hours}   label="HRS" />
                     <span style={{ color: "var(--rose)", fontWeight: 900, fontSize: "1rem", lineHeight: "36px", opacity: 0.75 }}>:</span>
-                    <FlipDigit value={timeLeft.minutes} label={locale === "bn" ? "মিনিট" : "MIN"} />
+                    <FlipDigit value={timeLeft.minutes} label="MIN" />
                     <span style={{ color: "var(--rose)", fontWeight: 900, fontSize: "1rem", lineHeight: "36px", opacity: 0.75 }}>:</span>
-                    <FlipDigit value={timeLeft.seconds} label={locale === "bn" ? "সেকেন্ড" : "SEC"} {...(flipping["s"] ? { isFlipping: true } : {})} />
+                    <FlipDigit value={timeLeft.seconds} label="SEC" {...(flipping["s"] ? { isFlipping: true } : {})} />
                   </div>
                 </div>
 
@@ -229,7 +229,7 @@ export function FlashDeals() {
                     e.currentTarget.style.boxShadow = "none";
                   }}
                 >
-                  <span>{locale === "bn" ? "সব দেখুন" : "View All"}</span>
+                  <span>View All</span>
                   <ArrowRight size={13} />
                 </Link>
               </div>

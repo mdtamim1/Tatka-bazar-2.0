@@ -43,7 +43,7 @@ export function RecipeToCartRail() {
               color: "var(--text-main)", lineHeight: 1.2, letterSpacing: "-0.025em",
             }}
           >
-            {locale === "bn" ? "ঐতিহ্যবাহী রেসিপি ও তাজা উপাদান" : "Traditional Recipes & Fresh Ingredients"}
+            Traditional Recipes & Fresh Ingredients
           </h2>
         </div>
 
@@ -51,7 +51,7 @@ export function RecipeToCartRail() {
           href="/recipes"
           className="view-all-link"
         >
-          <span>{locale === "bn" ? "সব রেসিপি" : "All Recipes"}</span>
+          <span>All Recipes</span>
           <ArrowRight size={15} />
         </Link>
       </div>
@@ -96,7 +96,7 @@ export function RecipeToCartRail() {
             <div style={{ position: "relative", height: "190px", overflow: "hidden" }}>
               <img
                 src={recipe.coverImage}
-                alt={locale === "bn" ? recipe.titleBn : recipe.titleEn}
+                alt={recipe.titleEn || recipe.titleBn}
                 style={{
                   width: "100%", height: "100%", objectFit: "cover",
                   transition: "transform 0.55s var(--ease-out)",
@@ -156,7 +156,7 @@ export function RecipeToCartRail() {
                   }}
                 >
                   <Users size={10} />
-                  {recipe.servings || 4} {locale === "bn" ? "জন" : "serves"}
+                  {recipe.servings || 4} serves
                 </span>
               </div>
             </div>
@@ -171,7 +171,7 @@ export function RecipeToCartRail() {
                   lineHeight: 1.3,
                 }}
               >
-                {locale === "bn" ? recipe.titleBn : recipe.titleEn}
+                {recipe.titleEn || recipe.titleBn}
               </h3>
               <p
                 style={{
@@ -181,7 +181,7 @@ export function RecipeToCartRail() {
                   WebkitBoxOrient: "vertical", overflow: "hidden",
                 }}
               >
-                {locale === "bn" ? recipe.descriptionBn : recipe.descriptionEn}
+                {recipe.descriptionEn || recipe.descriptionBn}
               </p>
 
               {/* Footer */}
@@ -206,7 +206,7 @@ export function RecipeToCartRail() {
                     ৳{recipe.totalCost}
                   </div>
                   <div style={{ fontSize: "0.65rem", color: "var(--text-muted)", marginTop: "1px" }}>
-                    {locale === "bn" ? "সকল উপাদান" : "All ingredients"}
+                    All ingredients
                   </div>
                 </div>
 
@@ -221,7 +221,7 @@ export function RecipeToCartRail() {
                   }}
                 >
                   <Zap size={12} fill="#fff" />
-                  <span>{locale === "bn" ? "১-ক্লিকে কিনুন" : "1-Click Cart"}</span>
+                  <span>1-Click Cart</span>
                 </div>
               </div>
             </div>

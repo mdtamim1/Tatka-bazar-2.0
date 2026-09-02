@@ -14,13 +14,13 @@ import { audioAlert } from "../utils/audioAlert";
 export const AVAILABLE_RIDERS: RiderProfile[] = [
   {
     id: "rider-karim",
-    name: "করিম মোল্লা",
+    name: "Karim Molla",
     phone: "01701998877",
     email: "karim.rider@tatkabazar.com",
     nid: "19942691234567890",
     vehicleType: "MOTORCYCLE",
     assignedHubId: "branch-dhanmondi",
-    assignedHubName: "ধানমন্ডি এক্সপ্রেস হাব",
+    assignedHubName: "Dhanmondi Express Hub",
     rating: 4.95,
     totalDeliveriesCompleted: 142,
     isOnline: true,
@@ -28,13 +28,13 @@ export const AVAILABLE_RIDERS: RiderProfile[] = [
   },
   {
     id: "rider-rahim",
-    name: "রহিম শেখ",
+    name: "Rahim Sheikh",
     phone: "01802334455",
     email: "rahim.rider@tatkabazar.com",
     nid: "19952699887766554",
     vehicleType: "BICYCLE",
     assignedHubId: "branch-gulshan",
-    assignedHubName: "গুলশান সেন্ট্রাল হাব",
+    assignedHubName: "Gulshan Central Hub",
     rating: 4.88,
     totalDeliveriesCompleted: 98,
     isOnline: true,
@@ -46,55 +46,55 @@ const INITIAL_DELIVERIES: RiderDeliveryOrder[] = [
   {
     id: "del-01",
     orderNumber: "TB-928410",
-    customerName: "রাফিক আহমেদ (Rafiq Ahmed)",
+    customerName: "Rafiq Ahmed",
     customerPhone: "01700000002",
-    deliveryAddress: "বাড়ি ২৭, রোড ৮/এ, ধানমন্ডি আ/এ, ঢাকা",
-    deliveryArea: "ধানমন্ডি (Dhanmondi)",
+    deliveryAddress: "House 27, Road 8/A, Flat 4B, Dhanmondi R/A, Dhaka",
+    deliveryArea: "Dhanmondi",
     mapQuery: "House 27, Road 8/A, Dhanmondi, Dhaka",
-    deliverySlot: "তাজা সকাল (০৭:০০ - ০৯:০০)",
+    deliverySlot: "Morning (07:00 - 09:00 AM)",
     items: [
-      { nameBn: "পদ্মার তাজা রূপালি ইলিশ", nameEn: "Fresh Padma Hilsa", weight: "১ কেজি", quantity: 1 },
-      { nameBn: "পাকা লাল দেশি টমেটো", nameEn: "Organic Tomatoes", weight: "১ কেজি", quantity: 1 },
-      { nameBn: "তাজা কচি দেশি লাল শাক", nameEn: "Red Spinach", weight: "৫০০ গ্রাম", quantity: 1 },
+      { nameBn: "Fresh Padma River Hilsa", nameEn: "Fresh Padma Hilsa", weight: "1 kg", quantity: 1 },
+      { nameBn: "Organic Farm Tomatoes", nameEn: "Organic Tomatoes", weight: "1 kg", quantity: 1 },
+      { nameBn: "Fresh Red Spinach", nameEn: "Red Spinach", weight: "500 g", quantity: 1 },
     ],
     isCod: true,
     codAmountToCollect: 1550,
     codCollected: false,
     status: "ASSIGNED",
     assignedAt: "21 Aug 2026, 07:05 AM",
-    notes: "গেটে পৌঁছে দারোয়ানকে ফোন দিতে হবে না, সরাসরি লিফটের ৪-এ কলিংবেল বাজাবেন।",
+    notes: "Directly ring the calling bell on 4th floor via elevator.",
   },
   {
     id: "del-02",
     orderNumber: "TB-928412",
-    customerName: "সুলতানা জাহান (Sultana Jahan)",
+    customerName: "Sultana Jahan",
     customerPhone: "01711223388",
-    deliveryAddress: "ফ্ল্যাট ৩বি, বাড়ি ১২, রোড ৪, কলাবাগান, ঢাকা",
-    deliveryArea: "কলাবাগান (Kalabagan)",
+    deliveryAddress: "Flat 3B, House 12, Road 4, Kalabagan, Dhaka",
+    deliveryArea: "Kalabagan",
     mapQuery: "Road 4, Kalabagan, Dhaka",
-    deliverySlot: "তাজা সকাল (০৭:০০ - ০৯:০০)",
+    deliverySlot: "Morning (07:00 - 09:00 AM)",
     items: [
-      { nameBn: "দেশি কচি লাউ", nameEn: "Desi Bottle Gourd", weight: "১ পিস", quantity: 1 },
-      { nameBn: "খাঁটি গাওয়া ঘি", nameEn: "Pure Desi Ghee", weight: "৫০০ গ্রাম", quantity: 1 },
+      { nameBn: "Desi Bottle Gourd", nameEn: "Desi Bottle Gourd", weight: "1 pc", quantity: 1 },
+      { nameBn: "Pure Desi Ghee", nameEn: "Pure Desi Ghee", weight: "500 g", quantity: 1 },
     ],
-    isCod: false, // Paid via bKash online
+    isCod: false,
     codAmountToCollect: 0,
     codCollected: true,
     status: "PICKED_UP_FROM_HUB",
     assignedAt: "21 Aug 2026, 07:10 AM",
-    notes: "অনলাইনে বিকাশ দিয়ে পেইড করা আছে। ক্যাশ নেওয়ার প্রয়োজন নেই।",
+    notes: "Prepaid online via bKash. No cash collection required.",
   },
   {
     id: "del-03",
     orderNumber: "TB-928405",
-    customerName: "মাহমুদ হাসান (Mahmud Hasan)",
+    customerName: "Mahmud Hasan",
     customerPhone: "01999887766",
-    deliveryAddress: "বাড়ি ১৫, রোড ২৭, ধানমন্ডি, ঢাকা",
-    deliveryArea: "ধানমন্ডি (Dhanmondi)",
+    deliveryAddress: "House 15, Road 27, Dhanmondi, Dhaka",
+    deliveryArea: "Dhanmondi",
     mapQuery: "Road 27, Dhanmondi, Dhaka",
-    deliverySlot: "ভোরের এক্সপ্রেস (০৬:৩০ - ০৭:৩০)",
+    deliverySlot: "Dawn Express (06:30 - 07:30 AM)",
     items: [
-      { nameBn: "কাঁচাগোল্লা ও মিষ্টি দই", nameEn: "Shahi Bogura Sweets", weight: "১ কেজি", quantity: 1 },
+      { nameBn: "Shahi Bogura Sweets", nameEn: "Shahi Bogura Sweets", weight: "1 kg", quantity: 1 },
     ],
     isCod: true,
     codAmountToCollect: 480,
@@ -102,7 +102,7 @@ const INITIAL_DELIVERIES: RiderDeliveryOrder[] = [
     status: "DELIVERED",
     assignedAt: "21 Aug 2026, 06:40 AM",
     deliveredAt: "21 Aug 2026, 07:20 AM",
-    notes: "ডেলিভারি সফল হয়েছে।",
+    notes: "Delivery completed successfully.",
   },
 ];
 
@@ -161,7 +161,7 @@ export function RiderProvider({ children }: { children: React.ReactNode }) {
             codCollected: o.paymentStatus === "PAID",
             status: o.status === "DELIVERED" ? "DELIVERED" : o.status === "OUT_FOR_DELIVERY" ? "EN_ROUTE" : "ASSIGNED",
             assignedAt: o.createdAt,
-            notes: o.internalNotes || "তাজা শাকসবজি ও মাছ দ্রুত ডেলিভারি করুন।",
+            notes: o.internalNotes || "Deliver fresh groceries promptly.",
           }));
 
           // Detect new assignments
@@ -169,7 +169,6 @@ export function RiderProvider({ children }: { children: React.ReactNode }) {
             const newlyAssigned = mapped.filter(d => !prevKnown.has(d.id) && d.status === "ASSIGNED");
             if (newlyAssigned.length > 0) {
               const latest = newlyAssigned[0]!;
-              // 🔔 Trigger Live "Ting-Tong" Delivery Chime!
               audioAlert.playOrderAssignedSound();
               setNewOrderAlert({
                 orderNumber: latest.orderNumber,
@@ -188,7 +187,7 @@ export function RiderProvider({ children }: { children: React.ReactNode }) {
     }
 
     loadRiderDeliveries();
-    const interval = setInterval(loadRiderDeliveries, 5000); // 5-second live polling
+    const interval = setInterval(loadRiderDeliveries, 5000);
     return () => {
       isMounted = false;
       clearInterval(interval);
@@ -222,7 +221,6 @@ export function RiderProvider({ children }: { children: React.ReactNode }) {
       )
     );
 
-    // Map Rider status to OrderStatus and sync to Fastify API & Supabase
     const apiStatus = status === "DELIVERED" ? "DELIVERED" : status === "FAILED" ? "CANCELLED" : "OUT_FOR_DELIVERY";
     fetch(`${API_BASE}/api/orders/${orderId}`, {
       method: "PATCH",
@@ -244,15 +242,16 @@ export function RiderProvider({ children }: { children: React.ReactNode }) {
     (sum, d) => (d.isCod && d.codCollected ? sum + d.codAmountToCollect : sum),
     0
   );
-  const riderEarnings = completedDeliveries.length * 60; // ৳60 base per successful fresh drop
+  const totalEarnings = completedDeliveries.length * 60;
+  const cashInHandToDeposit = totalCodCollected;
 
   const dailySummary: DailySummary = {
-    date: "২১ আগস্ট ২০২৬ (আজ)",
+    date: "21 Aug 2026 (Today)",
     completedCount: completedDeliveries.length,
     failedCount: failedDeliveries.length,
     totalCodCollected,
-    riderEarnings,
-    hubCashDepositStatus: hubDepositStatus,
+    totalEarnings,
+    cashInHandToDeposit,
   };
 
   const depositCashToHub = () => {

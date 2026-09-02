@@ -38,6 +38,9 @@ Thumbs.db
 # TypeScript
 *.tsbuildinfo
 
+# Temp files
+skin-o-deep-ocean-mineral-refreshing-s
+
 # Redis dump
 dump.rdb
 

@@ -21,7 +21,7 @@ export function WeightPricingSelector({ product, onAddToCartSuccess }: WeightPri
   const defaultOption = product.weightOptions?.find((o) => o.popular) || product.weightOptions?.[0] || {
     value: 1,
     unit: product.baseUnit,
-    labelBn: `১ ${product.baseUnit}`,
+    labelBn: `1 ${product.baseUnit}`,
     labelEn: `1 ${product.baseUnit}`,
     multiplier: 1,
   };
@@ -37,13 +37,13 @@ export function WeightPricingSelector({ product, onAddToCartSuccess }: WeightPri
   const isFishOrMeat = product.categorySlug === "fish-and-meat" || product.nameEn.toLowerCase().includes("fish") || product.nameEn.toLowerCase().includes("meat");
   const cutOptions = isFishOrMeat
     ? [
-        { id: "default", labelBn: "আস্ত তাজা (Whole Fresh)", labelEn: "Whole Fresh" },
-        { id: "clean_gut", labelBn: "কাটা ও আঁশ ছাড়ানো (Cleaned & Gutted)", labelEn: "Cleaned & Gutted" },
-        { id: "curry_cut", labelBn: "কারি কাট টুকরো (Curry Cut)", labelEn: "Curry Cut" },
+        { id: "default", labelBn: "Whole Fresh", labelEn: "Whole Fresh" },
+        { id: "clean_gut", labelBn: "Cleaned & Gutted", labelEn: "Cleaned & Gutted" },
+        { id: "curry_cut", labelBn: "Curry Cut", labelEn: "Curry Cut" },
       ]
     : [
-        { id: "default", labelBn: "আস্ত তাজা সংগ্রহ (Fresh Whole)", labelEn: "Fresh Whole" },
-        { id: "pre_sorted", labelBn: "বাছাইকৃত প্রিমিয়াম (Sorted & Graded)", labelEn: "Hand-Picked Grade A" },
+        { id: "default", labelBn: "Fresh Whole", labelEn: "Fresh Whole" },
+        { id: "pre_sorted", labelBn: "Hand-Picked Grade A", labelEn: "Hand-Picked Grade A" },
       ];
 
   // Check if tiered bulk discount applies
@@ -142,7 +142,7 @@ export function WeightPricingSelector({ product, onAddToCartSuccess }: WeightPri
             }}
           >
             <Scale size={14} />
-            <span>{t.selectWeight || (locale === "bn" ? "ওজন ও কাস্টমাইজেশন নির্বাচন" : "Select Weight & Customization")}</span>
+            <span>Select Weight & Customization</span>
           </div>
 
           <div style={{ display: "flex", alignItems: "baseline", gap: "10px", marginTop: "4px" }}>
@@ -189,7 +189,7 @@ export function WeightPricingSelector({ product, onAddToCartSuccess }: WeightPri
               }}
             >
               <Sparkles size={11} />
-              <span>{locale === "bn" ? `মোট সাশ্রয় ${formatPrice(savingsAmount)}!` : `Total Savings: ${formatPrice(savingsAmount)}!`}</span>
+              <span>Total Savings: {formatPrice(savingsAmount)}!</span>
             </div>
           )}
         </div>
@@ -212,7 +212,7 @@ export function WeightPricingSelector({ product, onAddToCartSuccess }: WeightPri
             }}
           >
             <Zap size={14} fill="var(--emerald)" />
-            <span>{locale === "bn" ? activeTier.labelBn : activeTier.labelEn}</span>
+            <span>{activeTier.labelEn}</span>
           </div>
         ) : (
           product.tieredPricing && product.tieredPricing.length > 0 && (
@@ -231,7 +231,7 @@ export function WeightPricingSelector({ product, onAddToCartSuccess }: WeightPri
               }}
             >
               <Flame size={12} fill="var(--gold)" />
-              <span>{t.tieredDiscountBadge || (locale === "bn" ? "বাল্ক অর্ডারে বিশেষ ছাড়" : "Bulk Tier Pricing")}</span>
+              <span>Bulk Tier Pricing</span>
             </div>
           )
         )}
@@ -275,18 +275,6 @@ export function WeightPricingSelector({ product, onAddToCartSuccess }: WeightPri
                     boxShadow: isActive ? "0 6px 20px rgba(16, 216, 118, 0.25)" : "none",
                     transform: isActive ? "translateY(-2px)" : "translateY(0)",
                   }}
-                  onMouseEnter={(e) => {
-                    if (!isActive) {
-                      e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.2)";
-                      e.currentTarget.style.background = "rgba(255, 255, 255, 0.05)";
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (!isActive) {
-                      e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.08)";
-                      e.currentTarget.style.background = "rgba(255, 255, 255, 0.03)";
-                    }
-                  }}
                 >
                   {/* Popular Tag */}
                   {opt.popular && (
@@ -303,7 +291,7 @@ export function WeightPricingSelector({ product, onAddToCartSuccess }: WeightPri
                         boxShadow: "0 2px 6px rgba(0,0,0,0.4)",
                       }}
                     >
-                      ★ {locale === "bn" ? "জনপ্রিয়" : "Popular"}
+                      ★ Popular
                     </span>
                   )}
 
@@ -315,7 +303,7 @@ export function WeightPricingSelector({ product, onAddToCartSuccess }: WeightPri
                       fontFamily: "var(--font-heading)",
                     }}
                   >
-                    {locale === "bn" ? opt.labelBn : opt.labelEn}
+                    {opt.labelEn}
                   </span>
 
                   <span
@@ -356,7 +344,7 @@ export function WeightPricingSelector({ product, onAddToCartSuccess }: WeightPri
           }}
         >
           <Scissors size={13} color="var(--emerald)" />
-          <span>{locale === "bn" ? "কাটিং ও প্রসেসিং পছন্দ (ফ্রি সার্ভিস):" : "Custom Preparation (Free Service):"}</span>
+          <span>Custom Preparation (Free Service):</span>
         </div>
 
         <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
@@ -377,7 +365,7 @@ export function WeightPricingSelector({ product, onAddToCartSuccess }: WeightPri
                 transition: "all var(--t-fast)",
               }}
             >
-              {locale === "bn" ? opt.labelBn : opt.labelEn}
+              {opt.labelEn}
             </button>
           ))}
         </div>
@@ -405,7 +393,7 @@ export function WeightPricingSelector({ product, onAddToCartSuccess }: WeightPri
             }}
           >
             <Flame size={14} />
-            <span>{locale === "bn" ? "পাইকারি সাশ্রয় অফার তালিকা:" : "Bulk Volume Pricing Discounts:"}</span>
+            <span>Bulk Volume Pricing Discounts:</span>
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
             {product.tieredPricing.map((tp, idx) => (
@@ -421,7 +409,7 @@ export function WeightPricingSelector({ product, onAddToCartSuccess }: WeightPri
                 }}
               >
                 <span style={{ color: activeTier?.minQty === tp.minQty ? "var(--emerald)" : "var(--text-body)" }}>
-                  {locale === "bn" ? tp.labelBn : tp.labelEn}
+                  {tp.labelEn}
                 </span>
                 <span
                   style={{
@@ -429,7 +417,7 @@ export function WeightPricingSelector({ product, onAddToCartSuccess }: WeightPri
                     color: activeTier?.minQty === tp.minQty ? "var(--emerald)" : "var(--gold)",
                   }}
                 >
-                  {formatPrice(tp.pricePerUnit)} / {locale === "bn" ? "কেজি" : "kg"}
+                  {formatPrice(tp.pricePerUnit)} / kg
                 </span>
               </div>
             ))}
@@ -467,8 +455,6 @@ export function WeightPricingSelector({ product, onAddToCartSuccess }: WeightPri
               border: "none",
               transition: "all var(--t-fast)",
             }}
-            onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(255, 77, 109, 0.2)")}
-            onMouseLeave={(e) => (e.currentTarget.style.background = "rgba(255, 255, 255, 0.06)")}
           >
             <Minus size={15} />
           </button>
@@ -502,8 +488,6 @@ export function WeightPricingSelector({ product, onAddToCartSuccess }: WeightPri
               transition: "all var(--t-fast)",
               boxShadow: "0 2px 10px rgba(16,216,118,0.3)",
             }}
-            onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.08)")}
-            onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
           >
             <Plus size={15} strokeWidth={3} />
           </button>
@@ -535,26 +519,16 @@ export function WeightPricingSelector({ product, onAddToCartSuccess }: WeightPri
             transition: "all 0.3s var(--ease-bounce)",
             fontFamily: "var(--font-heading)",
           }}
-          onMouseEnter={(e) => {
-            if (!isAdded) {
-              e.currentTarget.style.transform = "translateY(-3px) scale(1.02)";
-              e.currentTarget.style.boxShadow = "0 14px 40px rgba(16, 216, 118, 0.6)";
-            }
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.transform = "translateY(0) scale(1)";
-            e.currentTarget.style.boxShadow = "0 8px 28px rgba(16, 216, 118, 0.45), inset 0 1px 0 rgba(255,255,255,0.3)";
-          }}
         >
           {isAdded ? (
             <>
               <Check size={20} strokeWidth={3} style={{ animation: "scaleIn 0.3s var(--ease-bounce)" }} />
-              <span>{t.addedToCart || (locale === "bn" ? "কার্টে যোগ হয়েছে ✓" : "Added to Cart!")}</span>
+              <span>Added to Cart!</span>
             </>
           ) : (
             <>
               <Zap size={18} fill="var(--bg-page)" />
-              <span>{t.addToCart || (locale === "bn" ? "কার্টে যোগ করুন" : "Add to Cart")}</span>
+              <span>Add to Cart</span>
               <span style={{ opacity: 0.85 }}>• {formatPrice(totalPrice)}</span>
             </>
           )}

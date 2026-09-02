@@ -99,7 +99,7 @@ export function Header() {
                       href={`/category/${cat.slug}`}
                       className={styles.dropdownItem}
                     >
-                      <span>{locale === "bn" ? cat.nameBn : cat.nameEn}</span>
+                      <span>{cat.nameEn}</span>
                       <span>{cat.icon}</span>
                     </Link>
                   ))}
@@ -108,7 +108,7 @@ export function Header() {
                     className={styles.dropdownItem}
                     style={{ borderTop: "1px solid #f1f5f9", fontWeight: 700, color: "#3056D3" }}
                   >
-                    <span>{locale === "bn" ? "সকল ক্যাটাগরি দেখুন →" : "View All Categories →"}</span>
+                    <span>View All Categories →</span>
                   </Link>
                 </div>
               </li>
@@ -205,11 +205,7 @@ export function Header() {
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder={
-                    locale === "bn"
-                      ? "পণ্য বা ব্র্যান্ড খুঁজুন (যেমন: ইলিশ, ঘি, চাল)..."
-                      : "Search fresh items, organic products, brands..."
-                  }
+                  placeholder="Search fresh items, organic products, brands..."
                   className={styles.searchInput}
                 />
                 <button
@@ -245,7 +241,7 @@ export function Header() {
                       <img src={prod.images[0]} alt="" className={styles.searchResultThumb} />
                       <div style={{ flex: 1 }}>
                         <div className={styles.searchResultTitle}>
-                          {locale === "bn" ? prod.nameBn : prod.nameEn}
+                          {prod.nameEn}
                         </div>
                         <div className={styles.searchResultPrice}>
                           {formatPrice(prod.basePrice)}
@@ -289,21 +285,21 @@ export function Header() {
                   onClick={() => setMobileDrawerOpen(false)}
                   className={styles.drawerPrimaryLink}
                 >
-                  <span>{locale === "bn" ? "হোম" : "Home"}</span>
+                  <span>Home</span>
                 </Link>
                 <Link
                   href="/category/all"
                   onClick={() => setMobileDrawerOpen(false)}
                   className={styles.drawerPrimaryLink}
                 >
-                  <span>{locale === "bn" ? "সকল তাজা পণ্য" : "Shop All Products"}</span>
+                  <span>Shop All Products</span>
                 </Link>
                 <Link
                   href="/bundles"
                   onClick={() => setMobileDrawerOpen(false)}
                   className={styles.drawerPrimaryLink}
                 >
-                  <span>{locale === "bn" ? "ডেইলি বাজার ডিল" : "Daily Bazar Deals"}</span>
+                  <span>Daily Bazar Deals</span>
                   <span style={{ fontSize: "0.62rem", background: "#ef4444", color: "#fff", padding: "1px 6px", borderRadius: "4px", fontWeight: 800 }}>HOT</span>
                 </Link>
               </div>
@@ -311,7 +307,7 @@ export function Header() {
               {/* 2. Categories (A-Z) */}
               <div className={styles.drawerSection}>
                 <span className={styles.drawerSectionTitle}>
-                  {locale === "bn" ? "পণ্যের বিভাগ (A-Z)" : "Categories (A-Z)"}
+                  Categories (A-Z)
                 </span>
                 <div className={styles.drawerItemList}>
                   {CATEGORIES.map((cat) => (
@@ -321,7 +317,7 @@ export function Header() {
                       onClick={() => setMobileDrawerOpen(false)}
                       className={styles.drawerItemLink}
                     >
-                      <span>{locale === "bn" ? cat.nameBn : cat.nameEn}</span>
+                      <span>{cat.nameEn}</span>
                       <span>{cat.icon}</span>
                     </Link>
                   ))}
@@ -331,7 +327,7 @@ export function Header() {
               {/* 3. Bazar Tools & Services */}
               <div className={styles.drawerSection}>
                 <span className={styles.drawerSectionTitle}>
-                  {locale === "bn" ? "বাজার টুলস ও সেবা" : "Bazar Tools & Services"}
+                  Bazar Tools & Services
                 </span>
                 <div className={styles.drawerItemList}>
                   <Link
@@ -339,21 +335,21 @@ export function Header() {
                     onClick={() => setMobileDrawerOpen(false)}
                     className={styles.drawerItemLink}
                   >
-                    <span>🍳 {locale === "bn" ? "রেসিপি টু কার্ট" : "Recipe to Cart"}</span>
+                    <span>🍳 Recipe to Cart</span>
                   </Link>
                   <Link
                     href="/track"
                     onClick={() => setMobileDrawerOpen(false)}
                     className={styles.drawerItemLink}
                   >
-                    <span>📦 {locale === "bn" ? "লাইভ অর্ডার ট্র্যাকিং" : "Track Order"}</span>
+                    <span>📦 Track Live Order</span>
                   </Link>
                   <Link
                     href="/b2b"
                     onClick={() => setMobileDrawerOpen(false)}
                     className={styles.drawerItemLink}
                   >
-                    <span>🏬 {locale === "bn" ? "পাইকারি সাপ্লাই (B2B)" : "B2B Wholesale"}</span>
+                    <span>🏬 B2B Wholesale Supply</span>
                   </Link>
                 </div>
               </div>
@@ -370,7 +366,7 @@ export function Header() {
                 >
                   <span style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                     <Heart size={16} color="#ef4444" />
-                    <span>{locale === "bn" ? "পছন্দের তালিকা" : "My Wishlist"}</span>
+                    <span>My Wishlist</span>
                   </span>
                   <span className={styles.drawerBadgePill}>{wishlistCount}</span>
                 </button>
@@ -385,7 +381,7 @@ export function Header() {
                 >
                   <span style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                     <ShoppingBag size={16} color="#3056D3" />
-                    <span>{locale === "bn" ? "শপিং কার্ট" : "My Cart"}</span>
+                    <span>My Cart</span>
                   </span>
                   <span className={styles.drawerBadgePill}>{itemCount}</span>
                 </button>
@@ -398,22 +394,14 @@ export function Header() {
                 >
                   <span style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                     <User size={16} />
-                    <span>{locale === "bn" ? "আমার অ্যাকাউন্ট / সাইন ইন" : "My Account / Sign In"}</span>
+                    <span>My Account / Sign In</span>
                   </span>
                 </Link>
               </div>
             </nav>
 
-            {/* Footer with Language Switcher & Copyright */}
+            {/* Footer with Copyright */}
             <div className={styles.drawerFooter}>
-              <button
-                type="button"
-                onClick={toggleLocale}
-                className={styles.langSwitchBtn}
-              >
-                <Globe size={15} />
-                <span>{locale === "bn" ? "ভাষা: বাংলা (বাং)" : "Language: English (EN)"}</span>
-              </button>
               <div className={styles.drawerCopyright}>
                 © 2026 Tatka Bazar — 100% Fresh Chemical Free
               </div>

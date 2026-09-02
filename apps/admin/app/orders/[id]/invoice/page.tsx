@@ -44,7 +44,7 @@ export default function AdminOrderInvoicePage() {
     return (
       <div className="min-h-screen bg-slate-950 flex items-center justify-center text-slate-400 gap-3">
         <Loader2 className="w-6 h-6 animate-spin text-emerald-400" />
-        <span>চালান / ক্যাশ মেমো প্রস্তুত হচ্ছে...</span>
+        <span>Preparing invoice / delivery challan...</span>
       </div>
     );
   }
@@ -52,9 +52,9 @@ export default function AdminOrderInvoicePage() {
   if (!order) {
     return (
       <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-4 text-center">
-        <h2 className="text-xl font-bold text-slate-200 mb-2">অর্ডারটি পাওয়া যায়নি</h2>
+        <h2 className="text-xl font-bold text-slate-200 mb-2">Order Not Found</h2>
         <Link href="/orders" className="px-5 py-2.5 rounded-xl bg-emerald-500 text-slate-950 font-bold text-sm">
-          অর্ডার তালিকায় ফিরে যান
+          Return to Orders List
         </Link>
       </div>
     );
@@ -62,7 +62,7 @@ export default function AdminOrderInvoicePage() {
 
   const isPaid = order.paymentStatus === "PAID";
   const items = order.items && order.items.length > 0 ? order.items : [
-    { name: "তাতকা ফ্রেশ গ্রোসারি প্যাকেজ", quantity: 1, price: order.totalAmount, total: order.totalAmount }
+    { name: "Tatka Fresh Grocery Package", quantity: 1, price: order.totalAmount, total: order.totalAmount }
   ];
 
   return (
@@ -75,14 +75,14 @@ export default function AdminOrderInvoicePage() {
           className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 text-sm font-semibold border border-slate-800 transition-all"
         >
           <ArrowLeft className="w-4 h-4" />
-          অর্ডার তালিকায় ফিরুন
+          Return to Orders
         </Link>
         <button
           onClick={handlePrint}
           className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-sm font-bold shadow-lg shadow-emerald-500/20 transition-all hover:scale-105 active:scale-95"
         >
           <Printer className="w-4 h-4" />
-          চালান প্রিন্ট করুন (Print / PDF)
+          Print Invoice / PDF
         </button>
       </div>
 
@@ -98,11 +98,11 @@ export default function AdminOrderInvoicePage() {
               <Image src="/logo.jpg" alt="Tatka Bazar" fill className="object-cover" />
             </div>
             <div>
-              <h1 className="text-2xl font-black text-emerald-800 tracking-tight">তাতকা বাজার (Tatka Bazar)</h1>
-              <p className="text-xs font-semibold text-slate-500 mt-0.5">অফিশিয়াল ডেলিভারি চালান ও ক্যাশ মেমো</p>
+              <h1 className="text-2xl font-black text-emerald-800 tracking-tight">Tatka Bazar</h1>
+              <p className="text-xs font-semibold text-slate-500 mt-0.5">Official Delivery Challan & Invoice</p>
               <div className="text-[11px] text-slate-600 flex flex-wrap gap-x-4 mt-1">
-                <span>হটলাইন: ০১৭০০-০০০০০০</span>
-                <span>ইমেইল: billing@tatkabazar.com</span>
+                <span>Hotline: 01700-000000</span>
+                <span>Email: billing@tatkabazar.com</span>
               </div>
             </div>
           </div>
@@ -111,36 +111,36 @@ export default function AdminOrderInvoicePage() {
             <div className="inline-block px-3 py-1 bg-emerald-100 text-emerald-900 rounded-lg text-xs font-black uppercase tracking-wider mb-2">
               DELIVERY CHALLAN / INVOICE
             </div>
-            <div className="text-sm font-bold text-slate-900">অর্ডার নম্বর: #{order.orderNumber}</div>
-            <div className="text-xs text-slate-500 mt-0.5">তারিখ: {order.createdAt}</div>
+            <div className="text-sm font-bold text-slate-900">Order #: {order.orderNumber}</div>
+            <div className="text-xs text-slate-500 mt-0.5">Date: {order.createdAt}</div>
           </div>
         </div>
 
         {/* Customer Info */}
         <div className="grid grid-cols-2 gap-6 bg-slate-50 p-4 rounded-2xl border border-slate-200 mb-6 text-xs leading-relaxed">
           <div>
-            <div className="font-bold text-slate-700 uppercase tracking-wider text-[10px] mb-1">গ্রাহকের তথ্য:</div>
+            <div className="font-bold text-slate-700 uppercase tracking-wider text-[10px] mb-1">Customer Details:</div>
             <div className="font-bold text-slate-900 text-sm">{order.customerName}</div>
             <div className="text-slate-700 font-medium">{order.customerPhone}</div>
             <div className="text-slate-600 mt-1">{order.customerAddress}</div>
-            {order.deliveryArea && <div className="text-emerald-700 font-semibold mt-0.5">এলাকা: {order.deliveryArea}</div>}
+            {order.deliveryArea && <div className="text-emerald-700 font-semibold mt-0.5">Area: {order.deliveryArea}</div>}
           </div>
 
           <div className="text-right">
-            <div className="font-bold text-slate-700 uppercase tracking-wider text-[10px] mb-1">ডেলিভারি ও পেমেন্ট:</div>
+            <div className="font-bold text-slate-700 uppercase tracking-wider text-[10px] mb-1">Fulfillment & Payment:</div>
             <div className="flex items-center justify-end gap-2">
-              <span className="font-semibold text-slate-700">পেমেন্ট মেথড:</span>
+              <span className="font-semibold text-slate-700">Payment Method:</span>
               <span className="font-bold text-slate-900">{order.paymentMethod}</span>
             </div>
             <div className="flex items-center justify-end gap-2 mt-1">
-              <span className="font-semibold text-slate-700">পেমেন্ট স্ট্যাটাস:</span>
+              <span className="font-semibold text-slate-700">Payment Status:</span>
               <span className={`px-2 py-0.5 rounded text-[11px] font-bold ${isPaid ? "bg-emerald-100 text-emerald-800" : "bg-amber-100 text-amber-900"}`}>
-                {isPaid ? "পরিশোধিত (PAID)" : "বকেয়া (COD)"}
+                {isPaid ? "PAID" : "COD (UNPAID)"}
               </span>
             </div>
             {order.assignedRiderName && (
               <div className="text-slate-700 font-medium mt-1">
-                রাইডার: <span className="font-bold text-emerald-800">{order.assignedRiderName}</span>
+                Assigned Rider: <span className="font-bold text-emerald-800">{order.assignedRiderName}</span>
               </div>
             )}
           </div>
@@ -150,11 +150,11 @@ export default function AdminOrderInvoicePage() {
         <table className="w-full text-left text-xs mb-6 border-collapse">
           <thead>
             <tr className="bg-slate-100 border-y border-slate-300 text-slate-700 font-bold">
-              <th className="py-2.5 px-3 w-12 text-center">ক্রম</th>
-              <th className="py-2.5 px-3">পণ্যের নাম</th>
-              <th className="py-2.5 px-3 text-center">পরিমাণ</th>
-              <th className="py-2.5 px-3 text-right">একক মূল্য</th>
-              <th className="py-2.5 px-3 text-right">মোট টাকা</th>
+              <th className="py-2.5 px-3 w-12 text-center">#</th>
+              <th className="py-2.5 px-3">Item Description</th>
+              <th className="py-2.5 px-3 text-center">Qty</th>
+              <th className="py-2.5 px-3 text-right">Unit Price</th>
+              <th className="py-2.5 px-3 text-right">Total</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-200 text-slate-800 font-medium">
@@ -162,7 +162,7 @@ export default function AdminOrderInvoicePage() {
               <tr key={idx} className="hover:bg-slate-50/80">
                 <td className="py-2.5 px-3 text-center font-bold text-slate-500">{idx + 1}</td>
                 <td className="py-2.5 px-3 font-semibold text-slate-900">{item.name}</td>
-                <td className="py-2.5 px-3 text-center">{item.quantity} টি</td>
+                <td className="py-2.5 px-3 text-center">{item.quantity}</td>
                 <td className="py-2.5 px-3 text-right">৳{item.price?.toLocaleString()}</td>
                 <td className="py-2.5 px-3 text-right font-bold text-slate-900">৳{item.total?.toLocaleString()}</td>
               </tr>
@@ -174,21 +174,21 @@ export default function AdminOrderInvoicePage() {
         <div className="flex justify-end mb-8">
           <div className="w-64 text-xs space-y-1.5 border-t-2 border-slate-300 pt-3">
             <div className="flex justify-between text-slate-600">
-              <span>উপমোট (Subtotal):</span>
+              <span>Subtotal:</span>
               <span className="font-semibold text-slate-800">৳{(order.subtotal || order.totalAmount)?.toLocaleString()}</span>
             </div>
             <div className="flex justify-between text-slate-600">
-              <span>ডেলিভারি ফি:</span>
-              <span className="font-semibold text-slate-800">{order.deliveryFee === 0 ? "ফ্রি (৳০)" : `৳${order.deliveryFee}`}</span>
+              <span>Delivery Fee:</span>
+              <span className="font-semibold text-slate-800">{order.deliveryFee === 0 ? "Free (৳0)" : `৳${order.deliveryFee}`}</span>
             </div>
             {order.discount > 0 && (
               <div className="flex justify-between text-emerald-700 font-medium">
-                <span>ডিসকাউন্ট:</span>
+                <span>Discount:</span>
                 <span>-৳{order.discount?.toLocaleString()}</span>
               </div>
             )}
             <div className="flex justify-between text-sm font-black text-emerald-900 border-t-2 border-emerald-600 pt-2 mt-2">
-              <span>সর্বমোট প্রদেয় টাকা:</span>
+              <span>Total Payable Amount:</span>
               <span className="text-base font-black">৳{order.totalAmount?.toLocaleString()}</span>
             </div>
           </div>
@@ -197,18 +197,18 @@ export default function AdminOrderInvoicePage() {
         {/* Signatures */}
         <div className="border-t border-slate-200 pt-6 mt-6 text-[11px] text-slate-500 flex items-end justify-between">
           <div className="max-w-md leading-relaxed">
-            <p className="font-bold text-slate-700 mb-1">অফিশিয়াল নোট:</p>
-            <p>পণ্য ডেলিভারি নিশ্চিত করার পর চালানটি স্টোর আর্কাইভে সংরক্ষণ করুন।</p>
+            <p className="font-bold text-slate-700 mb-1">Official Note:</p>
+            <p>Retain this challan copy for delivery verification and store records.</p>
           </div>
 
           <div className="flex gap-12 text-center pt-8">
             <div>
               <div className="w-28 border-b border-slate-400 mb-1"></div>
-              <span className="font-medium text-slate-600">গ্রাহকের স্বাক্ষর</span>
+              <span className="font-medium text-slate-600">Customer Signature</span>
             </div>
             <div>
               <div className="w-28 border-b border-slate-400 mb-1"></div>
-              <span className="font-medium text-slate-600">অ্যাডমিন / প্যাকার</span>
+              <span className="font-medium text-slate-600">Admin / Packer</span>
             </div>
           </div>
         </div>
@@ -228,8 +228,6 @@ export default function AdminOrderInvoicePage() {
             border: none !important;
             width: 100% !important;
             max-width: 100% !important;
-            margin: 0 !important;
-            padding: 0 !important;
           }
         }
       `}</style>

@@ -192,7 +192,7 @@ export function CartDrawer() {
                 <div style={{ display: "flex", alignItems: "center", gap: "14px", flex: 1, minWidth: 0 }}>
                   <img
                     src={item.product?.images?.[0] || "https://images.unsplash.com/photo-1544943910-4c1dc44a0b27?w=300&auto=format&fit=crop&q=80"}
-                    alt={locale === "bn" ? item.product?.nameBn : item.product?.nameEn}
+                    alt={item.product?.nameEn || item.product?.nameBn}
                     style={{
                       width: "74px",
                       height: "74px",
@@ -215,7 +215,7 @@ export function CartDrawer() {
                         textOverflow: "ellipsis",
                       }}
                     >
-                      {locale === "bn" ? item.product?.nameBn : item.product?.nameEn}
+                      {item.product?.nameEn || item.product?.nameBn}
                     </h4>
                     <p
                       style={{

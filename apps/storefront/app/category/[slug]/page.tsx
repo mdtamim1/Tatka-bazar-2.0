@@ -17,15 +17,15 @@ interface CategoryPageProps {
 
 export default function CategoryListingPage({ params }: CategoryPageProps) {
   const resolvedParams = use(params);
-  const { locale, formatPrice } = useLanguage();
+  const { formatPrice } = useLanguage();
 
   const isAll = resolvedParams.slug === "all";
   const category = CATEGORIES.find((c) => c.slug === resolvedParams.slug) || {
     id: "all",
     slug: "all",
-    nameBn: "সকল তাজা পণ্য ও বাজার অফার",
+    nameBn: "All Fresh Products & Daily Deals",
     nameEn: "All Fresh Products & Daily Deals",
-    descriptionBn: "নদী ও খামার থেকে প্রতিদিনের সতেজ পণ্যের সম্পূর্ণ সংগ্রহ",
+    descriptionBn: "Complete fresh collection from trusted local rivers and organic farms",
     descriptionEn: "Complete fresh collection from trusted local rivers and organic farms",
     icon: "🛒",
     image: "https://images.unsplash.com/photo-1542838132-92c53300491e?w=800&auto=format&fit=crop&q=80",
@@ -117,14 +117,12 @@ export default function CategoryListingPage({ params }: CategoryPageProps) {
   const allCategoryTabs = useMemo(() => [
     {
       slug: "all",
-      nameBn: "সব পণ্য",
-      nameEn: "All",
+      nameEn: "All Products",
       icon: "🛒",
       itemCount: PRODUCTS.length,
     },
     ...CATEGORIES.map((c) => ({
       slug: c.slug,
-      nameBn: c.nameBn,
       nameEn: c.nameEn,
       icon: c.icon,
       itemCount: c.itemCount,
@@ -139,28 +137,28 @@ export default function CategoryListingPage({ params }: CategoryPageProps) {
     }
   }, [resolvedParams.slug]);
 
-  // ── Reusable Filter Content (for both Desktop Sidebar & Mobile Drawer) ──
+  // ── Reusable Filter Content ──
   const renderFilterContent = () => (
     <>
       <div className={styles.filterHeader}>
         <div className={styles.filterTitleGroup}>
           <SlidersHorizontal size={17} color="#0f172a" />
-          <span className={styles.filterTitle}>{locale === "bn" ? "ফিল্টার সমূহ" : "Filters"}</span>
+          <span className={styles.filterTitle}>Filters</span>
           {activeFiltersCount > 0 && (
             <span className={styles.filterCountBadge}>
-              {activeFiltersCount} {locale === "bn" ? "সক্রিয়" : "active"}
+              {activeFiltersCount} active
             </span>
           )}
         </div>
         {hasActiveFilters && (
           <button type="button" onClick={handleResetFilters} className={styles.resetBtn}>
-            {locale === "bn" ? "রিসেট" : "Clear All"}
+            Clear All
           </button>
         )}
       </div>
 
       <div className={styles.accordionGroup}>
-        {/* 1. Subcategories Accordion (if category has subcategories) */}
+        {/* 1. Subcategories Accordion */}
         {category.subcategories && category.subcategories.length > 0 && (
           <div className={styles.accordionItem}>
             <button
@@ -169,7 +167,7 @@ export default function CategoryListingPage({ params }: CategoryPageProps) {
               className={styles.accordionHeader}
             >
               <span className={styles.accordionTitle}>
-                📂 {locale === "bn" ? "উপ-বিভাগ" : "Subcategories"}
+                📂 Subcategories
               </span>
               <ChevronDown
                 size={16}
@@ -190,7 +188,7 @@ export default function CategoryListingPage({ params }: CategoryPageProps) {
                         className={`${styles.pillBtn} ${isSelected ? styles.pillBtnActive : ""}`}
                       >
                         {isSelected && <Check size={11} />}
-                        <span>{locale === "bn" ? sub.nameBn : sub.nameEn}</span>
+                        <span>{sub.nameEn || sub.nameBn}</span>
                       </button>
                     );
                   })}
@@ -200,7 +198,7 @@ export default function CategoryListingPage({ params }: CategoryPageProps) {
           </div>
         )}
 
-        {/* 2. Quick Filter Tags (Pills) */}
+        {/* 2. Quick Filter Tags */}
         <div className={styles.accordionItem}>
           <button
             type="button"
@@ -208,7 +206,7 @@ export default function CategoryListingPage({ params }: CategoryPageProps) {
             className={styles.accordionHeader}
           >
             <span className={styles.accordionTitle}>
-              ✨ {locale === "bn" ? "বিশেষ অফার ও ট্যাগ" : "Highlights & Tags"}
+              ✨ Highlights & Tags
             </span>
             <ChevronDown
               size={16}
@@ -225,7 +223,7 @@ export default function CategoryListingPage({ params }: CategoryPageProps) {
                   className={`${styles.pillBtn} ${organicOnly ? styles.pillBtnActive : ""}`}
                 >
                   {organicOnly && <Check size={11} />}
-                  <span>🌱 {locale === "bn" ? "১০০% অর্গানিক" : "Organic"}</span>
+                  <span>🌱 Organic</span>
                 </button>
 
                 <button
@@ -234,7 +232,7 @@ export default function CategoryListingPage({ params }: CategoryPageProps) {
                   className={`${styles.pillBtn} ${dailyDealsOnly ? styles.pillBtnActive : ""}`}
                 >
                   {dailyDealsOnly && <Check size={11} />}
-                  <span>⚡ {locale === "bn" ? "ফ্ল্যাশ অফার" : "Flash Deals"}</span>
+                  <span>⚡ Flash Deals</span>
                 </button>
 
                 <button
@@ -243,14 +241,14 @@ export default function CategoryListingPage({ params }: CategoryPageProps) {
                   className={`${styles.pillBtn} ${fastDeliveryOnly ? styles.pillBtnActive : ""}`}
                 >
                   {fastDeliveryOnly && <Check size={11} />}
-                  <span>🚚 {locale === "bn" ? "দ্রুত ডেলিভারি" : "Same-Day"}</span>
+                  <span>🚚 Same-Day</span>
                 </button>
               </div>
             </div>
           )}
         </div>
 
-        {/* 3. Price Range Filter (Dual Box + Slider + Presets) */}
+        {/* 3. Price Range Filter */}
         <div className={styles.accordionItem}>
           <button
             type="button"
@@ -258,7 +256,7 @@ export default function CategoryListingPage({ params }: CategoryPageProps) {
             className={styles.accordionHeader}
           >
             <span className={styles.accordionTitle}>
-              💰 {locale === "bn" ? "মূল্য সীমা" : "Price Range"}
+              💰 Price Range
             </span>
             <ChevronDown
               size={16}
@@ -270,7 +268,7 @@ export default function CategoryListingPage({ params }: CategoryPageProps) {
             <div className={styles.accordionBody}>
               <div className={styles.priceInputRow}>
                 <div className={styles.priceBox}>
-                  <span className={styles.priceBoxLabel}>{locale === "bn" ? "নূন্যতম" : "Min"}</span>
+                  <span className={styles.priceBoxLabel}>Min</span>
                   <div className={styles.priceInputWrapper}>
                     <span className={styles.priceCurrencyPrefix}>৳</span>
                     <input
@@ -287,7 +285,7 @@ export default function CategoryListingPage({ params }: CategoryPageProps) {
                 <span className={styles.priceDivider}>—</span>
 
                 <div className={styles.priceBox}>
-                  <span className={styles.priceBoxLabel}>{locale === "bn" ? "সর্বোচ্চ" : "Max"}</span>
+                  <span className={styles.priceBoxLabel}>Max</span>
                   <div className={styles.priceInputWrapper}>
                     <span className={styles.priceCurrencyPrefix}>৳</span>
                     <input
@@ -320,28 +318,28 @@ export default function CategoryListingPage({ params }: CategoryPageProps) {
                   onClick={() => { setMinPrice(0); setMaxPrice(100); }}
                   className={styles.pricePresetBtn}
                 >
-                  ৳১০০ নিচে
+                  Under ৳100
                 </button>
                 <button
                   type="button"
                   onClick={() => { setMinPrice(100); setMaxPrice(500); }}
                   className={styles.pricePresetBtn}
                 >
-                  ৳১০০ - ৳৫০০
+                  ৳100 - ৳500
                 </button>
                 <button
                   type="button"
                   onClick={() => { setMinPrice(500); setMaxPrice(1000); }}
                   className={styles.pricePresetBtn}
                 >
-                  ৳৫০০ - ৳১০০০
+                  ৳500 - ৳1000
                 </button>
                 <button
                   type="button"
                   onClick={() => { setMinPrice(1000); setMaxPrice(2000); }}
                   className={styles.pricePresetBtn}
                 >
-                  ৳১০০০+
+                  ৳1000+
                 </button>
               </div>
             </div>
@@ -356,7 +354,7 @@ export default function CategoryListingPage({ params }: CategoryPageProps) {
             className={styles.accordionHeader}
           >
             <span className={styles.accordionTitle}>
-              ⭐ {locale === "bn" ? "গ্রাহক রিভিউ ও রেটিং" : "Customer Ratings"}
+              ⭐ Customer Ratings
             </span>
             <ChevronDown
               size={16}
@@ -368,9 +366,9 @@ export default function CategoryListingPage({ params }: CategoryPageProps) {
             <div className={styles.accordionBody}>
               <div className={styles.ratingOptionList}>
                 {[
-                  { stars: 5, label: locale === "bn" ? "৫.০ শুধুমাত্র" : "5.0 only" },
-                  { stars: 4, label: locale === "bn" ? "৪.০ ও তদূর্ধ্ব" : "4.0 & above" },
-                  { stars: 3, label: locale === "bn" ? "৩.০ ও তদূর্ধ্ব" : "3.0 & above" },
+                  { stars: 5, label: "5.0 only" },
+                  { stars: 4, label: "4.0 & above" },
+                  { stars: 3, label: "3.0 & above" },
                 ].map(({ stars, label }) => {
                   const isActive = minRating === stars;
                   return (
@@ -403,7 +401,7 @@ export default function CategoryListingPage({ params }: CategoryPageProps) {
 
   return (
     <div className={styles.pageWrapper}>
-      {/* ── Top Category Quick-Switch Bar (Image 2 Aesthetic) ── */}
+      {/* ── Top Category Quick-Switch Bar ── */}
       <div className={styles.categoryNavSection}>
         <div className={styles.container}>
           <div className={styles.categoryNavScroll}>
@@ -415,10 +413,10 @@ export default function CategoryListingPage({ params }: CategoryPageProps) {
                   ref={isActive ? activeTabRef : undefined}
                   href={`/category/${catTab.slug}`}
                   className={`${styles.categoryTab} ${isActive ? styles.categoryTabActive : ""}`}
-                  title={locale === "bn" ? catTab.nameBn : catTab.nameEn}
+                  title={catTab.nameEn}
                 >
                   <span className={styles.categoryTabIcon}>{catTab.icon}</span>
-                  <span>{locale === "bn" ? catTab.nameBn : catTab.nameEn}</span>
+                  <span>{catTab.nameEn}</span>
                   {typeof catTab.itemCount === "number" && (
                     <span className={styles.categoryTabCount}>{catTab.itemCount}</span>
                   )}
@@ -432,10 +430,10 @@ export default function CategoryListingPage({ params }: CategoryPageProps) {
       <div className={styles.container}>
         {/* Breadcrumb Navigation */}
         <div className={styles.breadcrumb}>
-          <Link href="/">হোম</Link>
+          <Link href="/">Home</Link>
           <ChevronRight size={14} />
           <span className={styles.breadcrumbCurrent}>
-            {locale === "bn" ? category.nameBn : category.nameEn}
+            {category.nameEn || category.nameBn}
           </span>
         </div>
 
@@ -445,19 +443,19 @@ export default function CategoryListingPage({ params }: CategoryPageProps) {
             <div className={styles.bannerTitleRow}>
               <span className={styles.bannerIcon}>{category.icon}</span>
               <h1 className={styles.bannerTitle}>
-                {locale === "bn" ? category.nameBn : category.nameEn}
+                {category.nameEn || category.nameBn}
               </h1>
             </div>
             <p className={styles.bannerDesc}>
-              {locale === "bn" ? category.descriptionBn : category.descriptionEn}
+              {category.descriptionEn || category.descriptionBn}
             </p>
           </div>
           <div className={styles.bannerCountBadge}>
-            {filteredProducts.length} {locale === "bn" ? "টি পণ্য উপলব্ধ" : "Products available"}
+            {filteredProducts.length} Products available
           </div>
         </div>
 
-        {/* Mobile Quick Filter Bar (Visible only on mobile <= 991px) */}
+        {/* Mobile Quick Filter Bar */}
         <div className={styles.mobileFilterBar}>
           <button
             type="button"
@@ -465,7 +463,7 @@ export default function CategoryListingPage({ params }: CategoryPageProps) {
             className={styles.mobileFilterBtn}
           >
             <SlidersHorizontal size={15} />
-            <span>{locale === "bn" ? "ফিল্টার সমূহ" : "Filters"}</span>
+            <span>Filters</span>
             {activeFiltersCount > 0 && (
               <span className={styles.mobileFilterBtnBadge}>{activeFiltersCount}</span>
             )}
@@ -477,7 +475,7 @@ export default function CategoryListingPage({ params }: CategoryPageProps) {
               onClick={handleResetFilters}
               className={styles.mobileResetChip}
             >
-              <X size={12} /> {locale === "bn" ? "রিসেট করুন" : "Reset"}
+              <X size={12} /> Reset
             </button>
           )}
         </div>
@@ -491,10 +489,10 @@ export default function CategoryListingPage({ params }: CategoryPageProps) {
 
           {/* Right Main Product Area */}
           <main className={styles.productArea}>
-            {/* ── Active Filter Tags Bar (Vayro Aesthetic) ── */}
+            {/* ── Active Filter Tags Bar ── */}
             {hasActiveFilters && (
               <div className={styles.activeTagsRow}>
-                <span className={styles.activeTagsLabel}>{locale === "bn" ? "সক্রিয়:" : "Active:"}</span>
+                <span className={styles.activeTagsLabel}>Active:</span>
 
                 {selectedSubcategories.map((slug) => {
                   const subObj = category.subcategories?.find((s) => s.slug === slug);
@@ -505,7 +503,7 @@ export default function CategoryListingPage({ params }: CategoryPageProps) {
                       onClick={() => toggleSubcategory(slug)}
                       className={styles.activeFilterChip}
                     >
-                      <span>{subObj ? (locale === "bn" ? subObj.nameBn : subObj.nameEn) : slug}</span>
+                      <span>{subObj ? (subObj.nameEn || subObj.nameBn) : slug}</span>
                       <X size={12} />
                     </button>
                   );
@@ -517,7 +515,7 @@ export default function CategoryListingPage({ params }: CategoryPageProps) {
                     onClick={() => setOrganicOnly(false)}
                     className={styles.activeFilterChip}
                   >
-                    <span>🌱 অর্গানিক</span>
+                    <span>🌱 Organic</span>
                     <X size={12} />
                   </button>
                 )}
@@ -528,7 +526,7 @@ export default function CategoryListingPage({ params }: CategoryPageProps) {
                     onClick={() => setDailyDealsOnly(false)}
                     className={styles.activeFilterChip}
                   >
-                    <span>⚡ ফ্ল্যাশ ডিল</span>
+                    <span>⚡ Flash Deals</span>
                     <X size={12} />
                   </button>
                 )}
@@ -539,7 +537,7 @@ export default function CategoryListingPage({ params }: CategoryPageProps) {
                     onClick={() => setFastDeliveryOnly(false)}
                     className={styles.activeFilterChip}
                   >
-                    <span>🚚 দ্রুত ডেলিভারি</span>
+                    <span>🚚 Same-Day</span>
                     <X size={12} />
                   </button>
                 )}
@@ -561,7 +559,7 @@ export default function CategoryListingPage({ params }: CategoryPageProps) {
                     onClick={() => setMinRating(0)}
                     className={styles.activeFilterChip}
                   >
-                    <span>⭐ {minRating}+ স্টার</span>
+                    <span>⭐ {minRating}+ Stars</span>
                     <X size={12} />
                   </button>
                 )}
@@ -571,7 +569,7 @@ export default function CategoryListingPage({ params }: CategoryPageProps) {
                   onClick={handleResetFilters}
                   className={styles.clearAllTagsBtn}
                 >
-                  {locale === "bn" ? "সব মুছুন" : "Clear All"}
+                  Clear All
                 </button>
               </div>
             )}
@@ -579,21 +577,21 @@ export default function CategoryListingPage({ params }: CategoryPageProps) {
             {/* Top Sort & Count Bar */}
             <div className={styles.sortBar}>
               <div className={styles.productCount}>
-                {filteredProducts.length} {locale === "bn" ? "টি তাজা পণ্য প্রদর্শিত হচ্ছে" : "fresh products found"}
+                {filteredProducts.length} fresh products found
               </div>
 
               {/* Sort Selector */}
               <div className={styles.sortGroup}>
-                <span className={styles.sortLabel}>{locale === "bn" ? "সাজান:" : "Sort by:"}</span>
+                <span className={styles.sortLabel}>Sort by:</span>
                 <select
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value as any)}
                   className={styles.sortSelect}
                 >
-                  <option value="featured">{locale === "bn" ? "জনপ্রিয় ও সেরা" : "Popular & Featured"}</option>
-                  <option value="price-asc">{locale === "bn" ? "দাম: কম থেকে বেশি" : "Price: Low to High"}</option>
-                  <option value="price-desc">{locale === "bn" ? "দাম: বেশি থেকে কম" : "Price: High to Low"}</option>
-                  <option value="rating">{locale === "bn" ? "সর্বোচ্চ রেটিং" : "Customer Rating"}</option>
+                  <option value="featured">Popular & Featured</option>
+                  <option value="price-asc">Price: Low to High</option>
+                  <option value="price-desc">Price: High to Low</option>
+                  <option value="rating">Customer Rating</option>
                 </select>
               </div>
             </div>
@@ -603,17 +601,17 @@ export default function CategoryListingPage({ params }: CategoryPageProps) {
               <div className={styles.emptyState}>
                 <div className={styles.emptyIcon}>🥬</div>
                 <h3 className={styles.emptyTitle}>
-                  {locale === "bn" ? "কোনো পণ্য পাওয়া যায়নি" : "No matching fresh products"}
+                  No matching fresh products
                 </h3>
                 <p className={styles.emptyDesc}>
-                  {locale === "bn" ? "ফিল্টার পরিবর্তন করে আবার চেষ্টা করুন।" : "Try adjusting your filters to see more results."}
+                  Try adjusting your filters to see more results.
                 </p>
                 <button
                   type="button"
                   onClick={handleResetFilters}
                   className={styles.emptyResetBtn}
                 >
-                  {locale === "bn" ? "ফিল্টার রিসেট করুন" : "Reset Filters"}
+                  Reset Filters
                 </button>
               </div>
             ) : (
@@ -627,9 +625,7 @@ export default function CategoryListingPage({ params }: CategoryPageProps) {
         </div>
       </div>
 
-      {/* ═══════════════════════════════════════════════════════════════════════
-         PREMIUM SLIDE-IN FILTER SIDEBAR DRAWER
-         ═══════════════════════════════════════════════════════════════════════ */}
+      {/* ── Slide-in Filter Sidebar Drawer ── */}
       {mobileFilterOpen && (
         <div className={styles.sideDrawerWrapper}>
           <div className={styles.sideDrawerBackdrop} onClick={() => setMobileFilterOpen(false)} />
@@ -637,7 +633,7 @@ export default function CategoryListingPage({ params }: CategoryPageProps) {
             <div className={styles.sideDrawerHeader}>
               <div className={styles.sideDrawerTitleGroup}>
                 <SlidersHorizontal size={18} color="#0f172a" />
-                <h3 className={styles.sideDrawerTitle}>{locale === "bn" ? "ফিল্টার সমূহ" : "Filters"}</h3>
+                <h3 className={styles.sideDrawerTitle}>Filters</h3>
                 {activeFiltersCount > 0 && (
                   <span className={styles.sideDrawerBadge}>{activeFiltersCount}</span>
                 )}
@@ -663,7 +659,7 @@ export default function CategoryListingPage({ params }: CategoryPageProps) {
                   onClick={handleResetFilters}
                   className={styles.sideDrawerResetBtn}
                 >
-                  {locale === "bn" ? "রিসেট" : "Reset"}
+                  Reset
                 </button>
               )}
               <button
@@ -671,7 +667,7 @@ export default function CategoryListingPage({ params }: CategoryPageProps) {
                 onClick={() => setMobileFilterOpen(false)}
                 className={styles.sideDrawerApplyBtn}
               >
-                <span>{locale === "bn" ? "ফিল্টার প্রয়োগ করুন" : "Apply Filters"}</span>
+                <span>Apply Filters</span>
                 <span>({filteredProducts.length})</span>
               </button>
             </div>

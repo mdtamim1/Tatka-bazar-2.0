@@ -17,7 +17,7 @@ export default function VendorRootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="bn">
+    <html lang="en">
       <body>
         <VendorProvider>
           <VendorLayoutShell>

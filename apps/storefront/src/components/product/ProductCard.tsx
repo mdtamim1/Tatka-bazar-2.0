@@ -32,10 +32,10 @@ export function ProductCard({ product }: ProductCardProps) {
     product.weightOptions && product.weightOptions.length > 0
       ? product.weightOptions
       : [
-          { value: 0.5, unit: product.baseUnit || "kg", labelBn: "৫০০ গ্রাম", labelEn: "500g", multiplier: 0.5 },
-          { value: 1, unit: product.baseUnit || "kg", labelBn: "১ কেজি", labelEn: "1 kg", multiplier: 1, popular: true },
-          { value: 2, unit: product.baseUnit || "kg", labelBn: "২ কেজি", labelEn: "2 kg", multiplier: 2 },
-          { value: 5, unit: product.baseUnit || "kg", labelBn: "৫ কেজি", labelEn: "5 kg", multiplier: 4.8 },
+          { value: 0.5, unit: product.baseUnit || "kg", labelBn: "500g", labelEn: "500g", multiplier: 0.5 },
+          { value: 1, unit: product.baseUnit || "kg", labelBn: "1 kg", labelEn: "1 kg", multiplier: 1, popular: true },
+          { value: 2, unit: product.baseUnit || "kg", labelBn: "2 kg", labelEn: "2 kg", multiplier: 2 },
+          { value: 5, unit: product.baseUnit || "kg", labelBn: "5 kg", labelEn: "5 kg", multiplier: 4.8 },
         ];
 
   const activeWeightOpt = weightOptions[selectedWeightIdx] || weightOptions[0]!;
@@ -81,7 +81,7 @@ export function ProductCard({ product }: ProductCardProps) {
   };
 
   // Vendor brand name
-  const vendorName = product.vendorNameBn || product.vendorNameEn || "TATKA BAZAR";
+  const vendorName = product.vendorNameEn || product.vendorNameBn || "TATKA BAZAR";
   const [imgSrc, setImgSrc] = useState(product.images?.[0] || "https://images.unsplash.com/photo-1542838132-92c53300491e?w=800&auto=format&fit=crop&q=80");
 
   useEffect(() => {
@@ -100,7 +100,7 @@ export function ProductCard({ product }: ProductCardProps) {
         >
           <img
             src={imgSrc}
-            alt={locale === "bn" ? product.nameBn : product.nameEn}
+            alt={product.nameEn || product.nameBn}
             loading="lazy"
             className={styles.productImg}
             onError={() => {
@@ -148,7 +148,7 @@ export function ProductCard({ product }: ProductCardProps) {
             title="Add to Cart"
           >
             <ShoppingBag size={10} />
-            <span>{isAdded ? (locale === "bn" ? "যোগ হয়েছে ✓" : "ADDED ✓") : (locale === "bn" ? "কার্ট" : "ADD")}</span>
+            <span>{isAdded ? "ADDED ✓" : "ADD"}</span>
           </button>
 
           <div className={styles.actionBarDivider} />
@@ -160,7 +160,7 @@ export function ProductCard({ product }: ProductCardProps) {
             title="Buy Now"
           >
             <Zap size={10} />
-            <span>{locale === "bn" ? "কিনুন" : "BUY NOW"}</span>
+            <span>BUY NOW</span>
           </button>
         </div>
       </div>
@@ -170,7 +170,7 @@ export function ProductCard({ product }: ProductCardProps) {
         {/* Brand / Quality Badge & Star Rating Row */}
         <div className={styles.brandRatingRow}>
           <span className={styles.brandName}>
-            {product.isOrganic ? (locale === "bn" ? "🌿 ১০০% অর্গানিক" : "🌿 100% ORGANIC") : (locale === "bn" ? "✨ তাতকা ফ্রেশ" : "✨ TATKA FRESH")}
+            {product.isOrganic ? "🌿 100% ORGANIC" : "✨ TATKA FRESH"}
           </span>
 
           <div className={styles.ratingGroup}>
@@ -181,7 +181,7 @@ export function ProductCard({ product }: ProductCardProps) {
 
         {/* Product Title (2 lines max) */}
         <Link href={`/product/${product.slug}`} className={styles.productTitle}>
-          {locale === "bn" ? product.nameBn : product.nameEn}
+          {product.nameEn || product.nameBn}
         </Link>
 
         {/* ── 3. Bottom Price & Interactive Weight Dropdown Row ── */}
@@ -208,10 +208,10 @@ export function ProductCard({ product }: ProductCardProps) {
               }}
               className={`${styles.weightPillBtn} ${isPortionPickerOpen ? styles.weightPillBtnActive : ""}`}
               aria-label="Change Weight Portion"
-              title={locale === "bn" ? "ওজন বা পরিমাণ পরিবর্তন করতে ক্লিক করুন" : "Click to select weight / portion"}
+              title="Click to select weight / portion"
             >
               <Scale size={10} className={styles.scaleIcon} />
-              <span className={styles.weightPillLabel}>{locale === "bn" ? activeWeightOpt.labelBn : activeWeightOpt.labelEn}</span>
+              <span className={styles.weightPillLabel}>{activeWeightOpt.labelEn}</span>
               <ChevronDown size={10} className={`${styles.chevronIcon} ${isPortionPickerOpen ? styles.chevronRotated : ""}`} />
             </button>
 
@@ -232,7 +232,7 @@ export function ProductCard({ product }: ProductCardProps) {
                 >
                   <div className={styles.portionDropdownHeader}>
                     <Scale size={12} color="#15803d" />
-                    <span>{locale === "bn" ? "পরিমাণ নির্বাচন করুন" : "Select Portion"}</span>
+                    <span>Select Portion</span>
                   </div>
 
                   <div className={styles.portionOptionList}>
@@ -254,7 +254,7 @@ export function ProductCard({ product }: ProductCardProps) {
                           <div className={styles.portionOptionLabel}>
                             <span className={`${styles.optionRadioDot} ${isSelected ? styles.optionRadioDotActive : ""}`} />
                             <span className={styles.optionWeightName}>
-                              {locale === "bn" ? opt.labelBn : opt.labelEn}
+                              {opt.labelEn}
                             </span>
                           </div>
                           <span className={styles.optionPriceTag}>

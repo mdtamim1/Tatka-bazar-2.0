@@ -17,27 +17,27 @@ export default function AdminAuditPage() {
     <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
       <div>
         <h1 style={{ fontSize: "1.4rem", fontWeight: 800, color: "var(--text-main)" }}>
-          সিস্টেম অডিট ও অ্যাকশন ট্রেইল লগ
+          System Audit Trail & Action Logs
         </h1>
         <p style={{ fontSize: "0.82rem", color: "var(--text-muted)", marginTop: "2px" }}>
-          কে, কখন, কোন রোল ব্যবহার করে কোন রেকর্ড পরিবর্তন করেছে তার সম্পূর্ণ অপরিবর্তনযোগ্য লগ
+          Immutable activity logs capturing who made modifications, which role was used, and associated timestamps
         </p>
       </div>
 
       <div className="admin-card" style={{ padding: "12px 18px", display: "flex", gap: "12px", alignItems: "center" }}>
-        <span style={{ fontSize: "0.82rem", fontWeight: 700, color: "var(--text-muted)" }}>মডিউল ফিল্টার:</span>
+        <span style={{ fontSize: "0.82rem", fontWeight: 700, color: "var(--text-muted)" }}>Module Filter:</span>
         <select
           value={filterModule}
           onChange={(e) => setFilterModule(e.target.value)}
           style={{ padding: "6px 12px", borderRadius: "var(--radius-md)", border: "1px solid var(--border-medium)", background: "#FFF" }}
         >
-          <option value="all">সকল মডিউল</option>
-          <option value="Orders">অর্ডার (Orders)</option>
-          <option value="Products">পণ্য (Products)</option>
-          <option value="Vendors">ভেন্ডর (Vendors)</option>
-          <option value="B2B">B2B হোলসেল (B2B)</option>
-          <option value="Riders">রাইডার (Riders)</option>
-          <option value="Inventory">ইনভেন্টরি (Inventory)</option>
+          <option value="all">All Modules</option>
+          <option value="Orders">Orders</option>
+          <option value="Products">Products</option>
+          <option value="Vendors">Vendors</option>
+          <option value="B2B">B2B Wholesale</option>
+          <option value="Riders">Riders</option>
+          <option value="Inventory">Inventory</option>
         </select>
       </div>
 
@@ -45,11 +45,11 @@ export default function AdminAuditPage() {
         <table className="admin-table">
           <thead>
             <tr>
-              <th>সময় ও তারিখ</th>
-              <th>অ্যাডমিন ব্যবহারকারী ও রোল</th>
-              <th>অ্যাকশন ধরন</th>
-              <th>মডিউল</th>
-              <th>বিবরণ ও পরিবর্তনের তথ্য</th>
+              <th>Timestamp</th>
+              <th>Actor & Role</th>
+              <th>Action Type</th>
+              <th>Module</th>
+              <th>Details & Modifications</th>
             </tr>
           </thead>
           <tbody>

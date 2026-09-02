@@ -24,7 +24,7 @@ export async function adminAuthRoutes(fastify: FastifyInstance) {
       return reply.status(423).send({
         success: false,
         error: "Admin Account Locked",
-        message: `অতিরিক্ত ভুল চেষ্টার কারণে অ্যাডমিন একাউন্টটি সাময়িকভাবে লক করা হয়েছে। অনুগ্রহ করে ${lockStatus.remainingMinutes} মিনিট পর চেষ্টা করুন। (Admin account locked due to too many failed attempts. Retry in ${lockStatus.remainingMinutes}m)`,
+        message: `Admin account is temporarily locked due to too many failed attempts. Please retry in ${lockStatus.remainingMinutes} minutes.`,
         retryAfterMinutes: lockStatus.remainingMinutes,
       });
     }
@@ -37,8 +37,8 @@ export async function adminAuthRoutes(fastify: FastifyInstance) {
         success: false,
         error: "Invalid credentials",
         message: attempt.locked
-          ? "৫ বার ভুল তথ্য দেওয়ায় অ্যাডমিন প্যানেল ১০ মিনিটের জন্য লক হয়েছে।"
-          : `ভুল তথ্য। আর ${attempt.attemptsLeft} বার ভুল দিলে একাউন্ট সাময়িক লক হবে।`,
+          ? "Admin panel locked for 10 minutes after 5 failed attempts."
+          : `Invalid credentials. ${attempt.attemptsLeft} attempts remaining before temporary lockout.`,
         attemptsLeft: attempt.attemptsLeft,
       });
     }
@@ -50,8 +50,8 @@ export async function adminAuthRoutes(fastify: FastifyInstance) {
         success: false,
         error: "Invalid credentials",
         message: attempt.locked
-          ? "৫ বার ভুল তথ্য দেওয়ায় অ্যাডমিন প্যানেল ১০ মিনিটের জন্য লক হয়েছে।"
-          : `ভুল তথ্য। আর ${attempt.attemptsLeft} বার ভুল দিলে একাউন্ট সাময়িক লক হবে।`,
+          ? "Admin panel locked for 10 minutes after 5 failed attempts."
+          : `Invalid credentials. ${attempt.attemptsLeft} attempts remaining before temporary lockout.`,
         attemptsLeft: attempt.attemptsLeft,
       });
     }

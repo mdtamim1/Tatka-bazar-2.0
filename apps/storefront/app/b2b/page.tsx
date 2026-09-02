@@ -6,7 +6,7 @@ import { Store, ShieldCheck, CheckCircle2, Truck, FileText, ArrowRight, Building
 import { useLanguage } from "@/context/LanguageContext";
 
 export default function B2BPage() {
-  const { locale, t } = useLanguage();
+  const { t } = useLanguage();
   const [submitted, setSubmitted] = useState(false);
   const [b2bForm, setB2bForm] = useState({
     companyName: "",
@@ -14,8 +14,8 @@ export default function B2BPage() {
     contactPerson: "",
     phone: "",
     email: "",
-    categoryNeeded: "চাল ও খাদ্যশস্য (Rice & Grains)",
-    monthlyVolume: "৫০০ কেজি - ১০০০ কেজি",
+    categoryNeeded: "Rice & Grains",
+    monthlyVolume: "500 kg - 1000 kg",
     notes: "",
   });
 
@@ -59,14 +59,10 @@ export default function B2BPage() {
             TATKA BAZAR B2B ENTERPRISE
           </span>
           <h1 style={{ fontSize: "clamp(1.6rem, 3.5vw, 2.3rem)", fontWeight: 800, lineHeight: 1.2, marginBottom: "12px" }}>
-            {locale === "bn"
-              ? "পাইকারি সাপ্লাই ও প্রাতিষ্ঠানিক চুক্তি"
-              : "Wholesale & Institutional Bulk Supply"}
+            Wholesale & Institutional Bulk Supply
           </h1>
           <p style={{ color: "rgba(255, 255, 255, 0.85)", fontSize: "1rem", maxWidth: "640px", margin: "0 auto" }}>
-            {locale === "bn"
-              ? "রেস্তোরাঁ, সুপারশপ, হোটেল, ক্যাটারিং ও করপোরেট অফিসের জন্য সরাসরি মিল ও নদী থেকে পাইকারি মূল্যে বাল্ক সাপ্লাই।"
-              : "Direct mill-rate supply of fresh fish, meat, premium rice and organic vegetables for restaurants, hotels and corporate pantries."}
+            Direct mill-rate supply of fresh fish, meat, premium rice, and organic vegetables for restaurants, hotels, catering, and corporate pantries.
           </p>
         </div>
 
@@ -74,20 +70,20 @@ export default function B2BPage() {
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "20px", marginBottom: "40px" }}>
           <div style={{ background: "var(--bg-surface)", padding: "20px", borderRadius: "var(--radius-lg)", border: "1px solid var(--border-subtle)", textAlign: "center" }}>
             <div style={{ fontSize: "2rem", marginBottom: "8px" }}>💰</div>
-            <h3 style={{ fontSize: "1rem", fontWeight: 700, marginBottom: "4px" }}>সর্বনিম্ন পাইকারি মূল্য</h3>
-            <p style={{ fontSize: "0.82rem", color: "var(--text-muted)" }}>সরাসরি কৃষক ও মিল থেকে মধ্যস্বত্বভোগী ছাড়া সর্বোচ্চ সাশ্রয়।</p>
+            <h3 style={{ fontSize: "1rem", fontWeight: 700, marginBottom: "4px" }}>Lowest Wholesale Rates</h3>
+            <p style={{ fontSize: "0.82rem", color: "var(--text-muted)" }}>Directly sourced from verified farms and mills with no middlemen margin.</p>
           </div>
 
           <div style={{ background: "var(--bg-surface)", padding: "20px", borderRadius: "var(--radius-lg)", border: "1px solid var(--border-subtle)", textAlign: "center" }}>
             <div style={{ fontSize: "2rem", marginBottom: "8px" }}>⏰</div>
-            <h3 style={{ fontSize: "1rem", fontWeight: 700, marginBottom: "4px" }}>নির্ধারিত ভোর ডেলিভারি</h3>
-            <p style={{ fontSize: "0.82rem", color: "var(--text-muted)" }}>আপনার রান্নাঘরের জন্য প্রতিদিন ভোর ৬:০০ - ৭:৩০ এর মধ্যে ডেলিভারি।</p>
+            <h3 style={{ fontSize: "1rem", fontWeight: 700, marginBottom: "4px" }}>Scheduled Dawn Delivery</h3>
+            <p style={{ fontSize: "0.82rem", color: "var(--text-muted)" }}>Delivered fresh to your commercial kitchen between 6:00 AM - 7:30 AM daily.</p>
           </div>
 
           <div style={{ background: "var(--bg-surface)", padding: "20px", borderRadius: "var(--radius-lg)", border: "1px solid var(--border-subtle)", textAlign: "center" }}>
             <div style={{ fontSize: "2rem", marginBottom: "8px" }}>📋</div>
-            <h3 style={{ fontSize: "1rem", fontWeight: 700, marginBottom: "4px" }}>ইনভয়েস ও ক্রেডিট সুবিধা</h3>
-            <p style={{ fontSize: "0.82rem", color: "var(--text-muted)" }}>ভ্যাট চালান, মাসিক বিলিং ও অনুমোদিত ব্যবসার জন্য ক্রেডিট লাইন।</p>
+            <h3 style={{ fontSize: "1rem", fontWeight: 700, marginBottom: "4px" }}>Invoicing & Credit Lines</h3>
+            <p style={{ fontSize: "0.82rem", color: "var(--text-muted)" }}>Official VAT invoices, monthly consolidated billing, and flexible credit facilities.</p>
           </div>
         </div>
 
@@ -107,35 +103,35 @@ export default function B2BPage() {
                 <CheckCircle2 size={36} />
               </div>
               <h2 style={{ fontSize: "1.4rem", fontWeight: 800, color: "var(--primary-dark)", marginBottom: "8px" }}>
-                আপনার B2B আবেদন সফলভাবে জমা হয়েছে!
+                Your B2B Application Has Been Submitted!
               </h2>
               <p style={{ color: "var(--text-muted)", fontSize: "0.95rem", marginBottom: "20px" }}>
-                আমাদের B2B করপোরেট রিলেশনস ম্যানেজার আগামী ২ ঘণ্টার মধ্যে আপনার সাথে যোগাযোগ করবেন।
+                Our corporate accounts manager will contact your representative within 2 hours.
               </p>
               <Link href="/" className="btn-primary">
-                হোমপেজে ফিরে যান
+                Return to Home
               </Link>
             </div>
           ) : (
             <form onSubmit={handleSubmit}>
               <h2 style={{ fontSize: "1.3rem", fontWeight: 800, marginBottom: "20px", borderBottom: "1px solid var(--border-subtle)", paddingBottom: "10px" }}>
-                🏢 পাইকারি কোটেশন ও করপোরেট অ্যাকাউন্ট ফর্ম
+                🏢 Wholesale Quotation & Corporate Account Application
               </h2>
 
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px", marginBottom: "20px" }}>
                 <div>
-                  <label style={{ fontSize: "0.85rem", fontWeight: 700, display: "block", marginBottom: "6px" }}>প্রতিষ্ঠানের নাম (Company / Restaurant Name) *</label>
+                  <label style={{ fontSize: "0.85rem", fontWeight: 700, display: "block", marginBottom: "6px" }}>Company / Restaurant Name *</label>
                   <input
                     type="text"
                     required
-                    placeholder="যেমন: গ্রিন গার্ডেন রেস্তোরাঁ"
+                    placeholder="e.g. Green Garden Restaurant"
                     value={b2bForm.companyName}
                     onChange={(e) => setB2bForm({ ...b2bForm, companyName: e.target.value })}
                     style={{ width: "100%", padding: "10px 14px", borderRadius: "var(--radius-md)", border: "1px solid var(--border-medium)", outline: "none" }}
                   />
                 </div>
                 <div>
-                  <label style={{ fontSize: "0.85rem", fontWeight: 700, display: "block", marginBottom: "6px" }}>ট্রেড লাইসেন্স নম্বর (Trade License No) *</label>
+                  <label style={{ fontSize: "0.85rem", fontWeight: 700, display: "block", marginBottom: "6px" }}>Trade License Number *</label>
                   <input
                     type="text"
                     required
@@ -149,18 +145,18 @@ export default function B2BPage() {
 
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px", marginBottom: "20px" }}>
                 <div>
-                  <label style={{ fontSize: "0.85rem", fontWeight: 700, display: "block", marginBottom: "6px" }}>যোগাযোগকারী ব্যক্তির নাম (Contact Person) *</label>
+                  <label style={{ fontSize: "0.85rem", fontWeight: 700, display: "block", marginBottom: "6px" }}>Contact Person Name *</label>
                   <input
                     type="text"
                     required
-                    placeholder="নাম ও পদবি"
+                    placeholder="Name & Designation"
                     value={b2bForm.contactPerson}
                     onChange={(e) => setB2bForm({ ...b2bForm, contactPerson: e.target.value })}
                     style={{ width: "100%", padding: "10px 14px", borderRadius: "var(--radius-md)", border: "1px solid var(--border-medium)", outline: "none" }}
                   />
                 </div>
                 <div>
-                  <label style={{ fontSize: "0.85rem", fontWeight: 700, display: "block", marginBottom: "6px" }}>মোবাইল নম্বর (Phone Number) *</label>
+                  <label style={{ fontSize: "0.85rem", fontWeight: 700, display: "block", marginBottom: "6px" }}>Mobile Number *</label>
                   <input
                     type="tel"
                     required
@@ -174,38 +170,38 @@ export default function B2BPage() {
 
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px", marginBottom: "20px" }}>
                 <div>
-                  <label style={{ fontSize: "0.85rem", fontWeight: 700, display: "block", marginBottom: "6px" }}>প্রয়োজনীয় পণ্যের বিভাগ</label>
+                  <label style={{ fontSize: "0.85rem", fontWeight: 700, display: "block", marginBottom: "6px" }}>Required Product Category</label>
                   <select
                     value={b2bForm.categoryNeeded}
                     onChange={(e) => setB2bForm({ ...b2bForm, categoryNeeded: e.target.value })}
                     style={{ width: "100%", padding: "10px 14px", borderRadius: "var(--radius-md)", border: "1px solid var(--border-medium)", background: "var(--bg-surface)", outline: "none" }}
                   >
-                    <option value="চাল ও খাদ্যশস্য">চাল ও খাদ্যশস্য (Rice & Grains)</option>
-                    <option value="তাজা মাছ ও মাংস">তাজা মাছ ও মাংস (Fish & Meat)</option>
-                    <option value="শাকসবজি ও সালাদ">শাকসবজি ও সালাদ (Fresh Vegetables)</option>
-                    <option value="খাঁটি তেল ও মসলা">খাঁটি তেল ও মসলা (Oils & Spices)</option>
+                    <option value="Rice & Grains">Rice & Grains</option>
+                    <option value="Fish & Meat">Fish & Meat</option>
+                    <option value="Fresh Vegetables">Fresh Vegetables</option>
+                    <option value="Oils & Spices">Oils & Spices</option>
                   </select>
                 </div>
                 <div>
-                  <label style={{ fontSize: "0.85rem", fontWeight: 700, display: "block", marginBottom: "6px" }}>আনুমানিক মাসিক চাহিদা (Estimated Monthly Volume)</label>
+                  <label style={{ fontSize: "0.85rem", fontWeight: 700, display: "block", marginBottom: "6px" }}>Estimated Monthly Volume</label>
                   <select
                     value={b2bForm.monthlyVolume}
                     onChange={(e) => setB2bForm({ ...b2bForm, monthlyVolume: e.target.value })}
                     style={{ width: "100%", padding: "10px 14px", borderRadius: "var(--radius-md)", border: "1px solid var(--border-medium)", background: "var(--bg-surface)", outline: "none" }}
                   >
-                    <option value="১০০ কেজি - ৫০০ কেজি">১০০ কেজি - ৫০০ কেজি</option>
-                    <option value="৫০০ কেজি - ১০০০ কেজি">৫০০ কেজি - ১০০০ কেজি</option>
-                    <option value="১ টন - ৫ টন">১ টন - ৫ টন</option>
-                    <option value="৫ টন+ (মেগা সাপ্লাই)">৫ টন+ (মেগা সাপ্লাই)</option>
+                    <option value="100 kg - 500 kg">100 kg - 500 kg</option>
+                    <option value="500 kg - 1000 kg">500 kg - 1000 kg</option>
+                    <option value="1 Ton - 5 Ton">1 Ton - 5 Ton</option>
+                    <option value="5 Ton+ (Mega Supply)">5 Ton+ (Mega Supply)</option>
                   </select>
                 </div>
               </div>
 
               <div style={{ marginBottom: "24px" }}>
-                <label style={{ fontSize: "0.85rem", fontWeight: 700, display: "block", marginBottom: "6px" }}>বিশেষ চাহিদা বা বিবরণ (Notes / Special Requests)</label>
+                <label style={{ fontSize: "0.85rem", fontWeight: 700, display: "block", marginBottom: "6px" }}>Special Requirements / Notes</label>
                 <textarea
                   rows={3}
-                  placeholder="নির্দিষ্ট কোনো জাতের চাল বা কাটিং সাইজ থাকলে উল্লেখ করুন..."
+                  placeholder="Specify particular grain varieties, custom cutting requirements, or delivery instructions..."
                   value={b2bForm.notes}
                   onChange={(e) => setB2bForm({ ...b2bForm, notes: e.target.value })}
                   style={{ width: "100%", padding: "10px 14px", borderRadius: "var(--radius-md)", border: "1px solid var(--border-medium)", outline: "none" }}
@@ -217,7 +213,7 @@ export default function B2BPage() {
                 className="btn-primary"
                 style={{ width: "100%", padding: "14px", fontSize: "1.05rem" }}
               >
-                <span>কোটেশন রিকুয়েস্ট জমা দিন</span>
+                <span>Submit Quotation Request</span>
                 <ArrowRight size={18} />
               </button>
             </form>
@@ -228,4 +224,3 @@ export default function B2BPage() {
     </div>
   );
 }
-

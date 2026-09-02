@@ -61,9 +61,9 @@ export default function VendorOrdersPage() {
               <BellRing size={22} className="animate-bounce" />
             </div>
             <div>
-              <div style={{ fontWeight: 800, fontSize: "0.95rem" }}>🔔 আপনার দোকানে নতুন আইটেম অর্ডার হয়েছে!</div>
+              <div style={{ fontWeight: 800, fontSize: "0.95rem" }}>🔔 New items ordered from your store!</div>
               <div style={{ fontSize: "0.82rem", opacity: 0.9 }}>
-                অর্ডার: <strong>{newOrderAlert.orderNumber}</strong> • {newOrderAlert.customerName} • ৳{newOrderAlert.subtotal}
+                Order: <strong>{newOrderAlert.orderNumber}</strong> • {newOrderAlert.customerName} • ৳{newOrderAlert.subtotal}
               </div>
             </div>
           </div>
@@ -84,7 +84,7 @@ export default function VendorOrdersPage() {
                 cursor: "pointer",
               }}
             >
-              <Volume2 size={15} /> আবার শুনুন
+              <Volume2 size={15} /> Play Again
             </button>
             <button
               onClick={dismissAlert}
@@ -106,10 +106,10 @@ export default function VendorOrdersPage() {
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "12px" }}>
         <div>
           <h1 style={{ fontSize: "1.4rem", fontWeight: 800, color: "var(--text-main)" }}>
-            অর্ডার ফুলফিলমেন্ট ও প্যাকেজিং (Slice-Only View)
+            Order Fulfillment & Packaging (Slice-Only View)
           </h1>
           <p style={{ fontSize: "0.82rem", color: "var(--text-muted)", marginTop: "2px" }}>
-            নিরাপদ ভেন্ডর আইসোলেশন — শুধুমাত্র আপনার দোকানের অংশের অর্ডার আইটেম ও রাইডার পিকআপ
+            Strict vendor isolation — view and manage only items belonging to your shop with rider dispatch
           </p>
         </div>
       </div>
@@ -122,7 +122,7 @@ export default function VendorOrdersPage() {
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="অর্ডার নম্বর বা গ্রাহক এলাকা দিয়ে খুঁজুন..."
+            placeholder="Search by order number or delivery area..."
             style={{ width: "100%", padding: "7px 12px 7px 36px", borderRadius: "var(--radius-md)", border: "1px solid var(--border-medium)", outline: "none" }}
           />
         </div>
@@ -132,11 +132,11 @@ export default function VendorOrdersPage() {
           onChange={(e) => setFilterStatus(e.target.value)}
           style={{ padding: "7px 12px", borderRadius: "var(--radius-md)", border: "1px solid var(--border-medium)", background: "#FFF" }}
         >
-          <option value="all">সকল অর্ডার অবস্থা</option>
-          <option value="PREPARING">PREPARING (প্যাকিং চলছে)</option>
-          <option value="READY_FOR_PICKUP">READY_FOR_PICKUP (পিকআপের জন্য প্রস্তুত)</option>
-          <option value="PICKED_UP_BY_RIDER">PICKED_UP_BY_RIDER (রাইডার নিয়ে গেছে)</option>
-          <option value="DELIVERED">DELIVERED (সম্পন্ন)</option>
+          <option value="all">All Order Statuses</option>
+          <option value="PREPARING">PREPARING (Packaging in progress)</option>
+          <option value="READY_FOR_PICKUP">READY FOR PICKUP</option>
+          <option value="PICKED_UP_BY_RIDER">PICKED UP BY RIDER</option>
+          <option value="DELIVERED">DELIVERED (Completed)</option>
         </select>
       </div>
 
@@ -146,13 +146,13 @@ export default function VendorOrdersPage() {
           <table className="vendor-table">
             <thead>
               <tr>
-                <th>মাস্টার অর্ডার নং</th>
-                <th>আমার দোকানের আইটেমসমূহ</th>
-                <th>ডেলিভারি স্লট ও এলাকা</th>
-                <th>মোট ও নেট আয়</th>
-                <th>রাইডার পিকআপ</th>
-                <th>ফুলফিলমেন্ট স্ট্যাটাস</th>
-                <th>অ্যাকশন</th>
+                <th>Master Order No</th>
+                <th>Shop Items</th>
+                <th>Delivery Slot & Area</th>
+                <th>Subtotal & Net</th>
+                <th>Rider Pickup</th>
+                <th>Fulfillment Status</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -166,7 +166,7 @@ export default function VendorOrdersPage() {
                     <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
                       {ord.items.map((item, idx) => (
                         <div key={idx} style={{ fontSize: "0.82rem", fontWeight: 600 }}>
-                          • {item.nameBn} — <span style={{ color: "var(--primary-dark)", fontWeight: 700 }}>{item.quantity * item.weight} {item.unit}</span> (৳{item.totalPrice})
+                          • {item.nameEn || item.nameBn} — <span style={{ color: "var(--primary-dark)", fontWeight: 700 }}>{item.quantity * item.weight} {item.unit}</span> (৳{item.totalPrice})
                         </div>
                       ))}
                     </div>
@@ -180,10 +180,10 @@ export default function VendorOrdersPage() {
                   <td>
                     <div style={{ fontWeight: 800, fontSize: "0.95rem" }}>৳{ord.subtotal}</div>
                     <div style={{ fontSize: "0.72rem", color: "var(--primary-dark)", fontWeight: 700 }}>
-                      নেট প্রদেয়: ৳{ord.netEarnings}
+                      Net Earnings: ৳{ord.netEarnings}
                     </div>
                     <div style={{ fontSize: "0.68rem", color: "var(--text-muted)" }}>
-                      (কমিশন -{currentVendor.commissionRate}%: ৳{ord.commissionDeducted})
+                      (Commission -{currentVendor.commissionRate}%: ৳{ord.commissionDeducted})
                     </div>
                   </td>
                   <td>
@@ -193,7 +193,7 @@ export default function VendorOrdersPage() {
                         <div style={{ fontSize: "0.7rem", color: "var(--text-muted)" }}>{ord.assignedRiderPhone}</div>
                       </div>
                     ) : (
-                      <span style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>রাইডার অপেক্ষমাণ</span>
+                      <span style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>Rider Pending</span>
                     )}
                   </td>
                   <td>
@@ -209,10 +209,10 @@ export default function VendorOrdersPage() {
                         background: "#FFF",
                       }}
                     >
-                      <option value="PREPARING">PREPARING (প্যাকিং)</option>
-                      <option value="READY_FOR_PICKUP">READY_FOR_PICKUP (প্রস্তুত)</option>
-                      <option value="PICKED_UP_BY_RIDER">PICKED_UP_BY_RIDER (পথে)</option>
-                      <option value="DELIVERED">DELIVERED (সম্পন্ন)</option>
+                      <option value="PREPARING">PREPARING (Packing)</option>
+                      <option value="READY_FOR_PICKUP">READY FOR PICKUP</option>
+                      <option value="PICKED_UP_BY_RIDER">ON THE WAY</option>
+                      <option value="DELIVERED">DELIVERED</option>
                     </select>
                   </td>
                   <td>
@@ -223,7 +223,7 @@ export default function VendorOrdersPage() {
                       title="Print Vendor Packing Slip"
                     >
                       <Printer size={14} />
-                      <span>স্লিপ</span>
+                      <span>Slip</span>
                     </button>
                   </td>
                 </tr>
@@ -239,8 +239,8 @@ export default function VendorOrdersPage() {
           <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: "480px" }}>
             <div style={{ display: "flex", justifyContent: "space-between", borderBottom: "2px solid #000", paddingBottom: "10px", marginBottom: "14px" }}>
               <div>
-                <h2 style={{ fontSize: "1.2rem", fontWeight: 800 }}>{currentVendor.nameBn}</h2>
-                <div style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>ভেন্ডর প্যাকেজিং চালান (Vendor Slip)</div>
+                <h2 style={{ fontSize: "1.2rem", fontWeight: 800 }}>{currentVendor.nameEn || currentVendor.nameBn}</h2>
+                <div style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>Vendor Packaging Slip</div>
               </div>
               <div style={{ textAlign: "right" }}>
                 <div style={{ fontWeight: 800 }}>{selectedOrder.masterOrderNumber}</div>
@@ -249,33 +249,33 @@ export default function VendorOrdersPage() {
             </div>
 
             <div style={{ background: "#F8FAFC", padding: "10px", borderRadius: "6px", fontSize: "0.8rem", marginBottom: "14px" }}>
-              <div><strong>ডেলিভারি এলাকা:</strong> {selectedOrder.deliveryArea}</div>
-              <div><strong>ডেলিভারি স্লট:</strong> {selectedOrder.deliverySlot}</div>
-              <div><strong>নিযুক্ত রাইডার:</strong> {selectedOrder.assignedRiderName || "অ্যাসাইনমেন্ট চলছে"}</div>
+              <div><strong>Delivery Area:</strong> {selectedOrder.deliveryArea}</div>
+              <div><strong>Delivery Slot:</strong> {selectedOrder.deliverySlot}</div>
+              <div><strong>Assigned Rider:</strong> {selectedOrder.assignedRiderName || "Assignment in progress"}</div>
             </div>
 
             <div style={{ marginBottom: "14px" }}>
-              <div style={{ fontWeight: 700, fontSize: "0.85rem", marginBottom: "6px" }}>প্যাকেজিং আইটেমসমূহ:</div>
+              <div style={{ fontWeight: 700, fontSize: "0.85rem", marginBottom: "6px" }}>Packaging Items:</div>
               {selectedOrder.items.map((it, idx) => (
                 <div key={idx} style={{ display: "flex", justifyContent: "space-between", padding: "4px 0", borderBottom: "1px dashed #DDD", fontSize: "0.82rem" }}>
-                  <span>{it.nameBn} ({it.quantity * it.weight} {it.unit})</span>
+                  <span>{it.nameEn || it.nameBn} ({it.quantity * it.weight} {it.unit})</span>
                   <span style={{ fontWeight: 700 }}>৳{it.totalPrice}</span>
                 </div>
               ))}
             </div>
 
             <div style={{ borderTop: "2px solid #000", paddingTop: "8px", display: "flex", justifyContent: "space-between", fontWeight: 800 }}>
-              <span>ভেন্ডর সাবটোটাল:</span>
+              <span>Vendor Subtotal:</span>
               <span>৳{selectedOrder.subtotal}</span>
             </div>
 
             <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px", marginTop: "18px" }}>
               <button onClick={() => window.print()} className="vendor-btn vendor-btn-primary">
                 <Printer size={16} />
-                <span>প্রিন্ট করুন</span>
+                <span>Print</span>
               </button>
               <button onClick={() => setSelectedOrder(null)} className="vendor-btn vendor-btn-secondary">
-                বন্ধ করুন
+                Close
               </button>
             </div>
           </div>
