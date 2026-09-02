@@ -30,6 +30,11 @@ import {
   Fish,
   Scale,
   RefreshCw,
+  ThumbsUp,
+  BadgeCheck,
+  PenLine,
+  Filter,
+  MessageSquare,
 } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 import { useCartStore } from "@/lib/cart-store";
@@ -124,6 +129,8 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
       rating: 5,
       date: "Aug 2026",
       verified: true,
+      tag: "35m Insulated Delivery",
+      helpful: 18,
       comment:
         "Extremely fresh and pure authentic aroma! Received within 35 minutes packed in an insulated box with food-grade gel ice. Excellent quality.",
     },
@@ -133,6 +140,8 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
       rating: 5,
       date: "Aug 2026",
       verified: true,
+      tag: "100% Formalin-Free",
+      helpful: 14,
       comment:
         "100% formalin-free as promised by Tatka Bazar. Cleaned and cut perfectly according to my instructions. Highly recommended for daily bazar.",
     },
@@ -142,6 +151,8 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
       rating: 4,
       date: "Jul 2026",
       verified: true,
+      tag: "Dawn Harvest Catch",
+      helpful: 9,
       comment:
         "Harvested freshly at dawn and delivered right on time. Taste and texture are incomparably better than ordinary local wet market produce.",
     },
@@ -152,8 +163,81 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
   );
   const [reviewName, setReviewName] = useState("");
   const [reviewRating, setReviewRating] = useState(5);
+  const [hoverRating, setHoverRating] = useState(0);
   const [reviewComment, setReviewComment] = useState("");
   const [reviewSubmitted, setReviewSubmitted] = useState(false);
+  const [reviewFilter, setReviewFilter] = useState<"all" | number>("all");
+  const [helpfulMap, setHelpfulMap] = useState<Record<string, number>>({
+    "rev-1": 18,
+    "rev-2": 14,
+    "rev-3": 9,
+  });
+  const [votedReviews, setVotedReviews] = useState<Record<string, boolean>>({});
+
+  const handleToggleHelpful = (revId: string) => {
+    if (votedReviews[revId]) return;
+    setHelpfulMap((prev) => ({
+      ...prev,
+      [revId]: (prev[revId] || 0) + 1,
+    }));
+    setVotedReviews((prev) => ({
+      ...prev,
+      [revId]: true,
+    }));
+  };
+
+  const handleAddQuickTag = (tagText: string) => {
+    setReviewComment((prev) => (prev ? `${prev} • ${tagText}` : tagText));
+  };
+
+  const scrollToWriteReview = () => {
+    const el = document.getElementById("write-review-section");
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  };
+
+  const ratingLabels: Record<number, string> = {
+    5: "Outstanding Freshness & Quality! (5/5)",
+    4: "Very Fresh & Well-Packaged (4/5)",
+    3: "Average Market Standard (3/5)",
+    2: "Below Expectations (2/5)",
+    1: "Unsatisfactory Quality (1/5)",
+  };
+
+  const getInitials = (name: string) => {
+    const clean = name.trim();
+    if (!clean) return "VB";
+    const parts = clean.split(" ");
+    if (parts.length >= 2 && parts[0] && parts[1]) {
+      return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
+    }
+    return clean.slice(0, 2).toUpperCase();
+  };
+
+  const getAvatarGradient = (idx: number) => {
+    const gradients = [
+      "linear-gradient(135deg, #10D876 0%, #059669 100%)",
+      "linear-gradient(135deg, #3B82F6 0%, #1D4ED8 100%)",
+      "linear-gradient(135deg, #F59E0B 0%, #D97706 100%)",
+      "linear-gradient(135deg, #8B5CF6 0%, #6D28D9 100%)",
+      "linear-gradient(135deg, #EC4899 0%, #BE185D 100%)",
+      "linear-gradient(135deg, #14B8A6 0%, #0F766E 100%)",
+    ];
+    return gradients[idx % gradients.length];
+  };
+
+  const filteredReviews =
+    reviewFilter === "all"
+      ? reviews
+      : reviews.filter((r) => r.rating === reviewFilter);
+
+  const count5 = reviews.filter((r) => r.rating === 5).length;
+  const count4 = reviews.filter((r) => r.rating === 4).length;
+  const count3 = reviews.filter((r) => r.rating === 3).length;
+  const count2 = reviews.filter((r) => r.rating === 2).length;
+  const count1 = reviews.filter((r) => r.rating === 1).length;
+  const totalReviewsCount = reviews.length || 1;
 
   // Q&A State
   const defaultQA = [
@@ -228,15 +312,19 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
       id: `rev-${Date.now()}`,
       author: reviewName.trim() || "Verified Buyer",
       rating: Number(reviewRating),
-      date: "Aug 2026",
+      date: "Just now",
       verified: true,
+      tag: "Verified Customer Purchase",
+      helpful: 1,
       comment: reviewComment.trim(),
     };
     setReviews([newRev, ...reviews]);
     setReviewComment("");
     setReviewName("");
+    setReviewRating(5);
+    setHoverRating(0);
     setReviewSubmitted(true);
-    setTimeout(() => setReviewSubmitted(false), 4000);
+    setTimeout(() => setReviewSubmitted(false), 4500);
   };
 
   // Post question
@@ -726,115 +814,366 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
           </div>
         </section>
 
-        {/* ── Customer Reviews Section ──────────────────────────────── */}
+        {/* ── Customer Reviews Section (Ultra-Premium Redesign) ──────── */}
         <section className="tb-reviews-section">
           <div className="tb-container">
+            {/* Top Bar with Glow Badge & Trust Highlights */}
+            <div className="tb-reviews-header-block">
+              <div>
+                <div className="tb-reviews-glow-pill">
+                  <Sparkles size={13} className="tb-sparkle-spin" />
+                  <span>AUTHENTIC MARKETPLACE EXPERIENCES</span>
+                </div>
+                <h2 className="tb-reviews-main-title">Customer Reviews & Freshness Ratings</h2>
+                <p className="tb-reviews-subtitle">
+                  Real feedback from households who cooked with today&apos;s morning harvest and experienced our cold-chain delivery.
+                </p>
+              </div>
+
+              {/* Mini Trust Highlights */}
+              <div className="tb-reviews-highlights-row">
+                <div className="tb-rev-hl-chip">
+                  <ShieldCheck size={15} color="#10D876" />
+                  <span>100% Formalin-Free</span>
+                </div>
+                <div className="tb-rev-hl-chip">
+                  <Truck size={15} color="#10D876" />
+                  <span>Avg 35m Express Delivery</span>
+                </div>
+                <div className="tb-rev-hl-chip">
+                  <Award size={15} color="#F5C842" />
+                  <span>4.8/5.0 Overall Freshness</span>
+                </div>
+              </div>
+            </div>
+
             <div className="tb-reviews-grid">
-              {/* Rating Summary Box */}
+              {/* ── Left Column: Master Rating Scorecard ──────────── */}
               <div className="tb-rating-card">
-                <h3 className="tb-card-title">Customer Feedback</h3>
+                <div className="tb-card-badge-row">
+                  <h3 className="tb-card-title">Overall Freshness</h3>
+                  <span className="tb-verified-buyers-pill">
+                    <BadgeCheck size={13} /> Verified
+                  </span>
+                </div>
+
                 <div className="tb-score-display">
-                  <span className="tb-big-score">{product.rating || "4.9"}</span>
-                  <div>
+                  <div className="tb-score-number-wrap">
+                    <span className="tb-big-score">{product.rating || "4.8"}</span>
+                    <span className="tb-score-max">/5.0</span>
+                  </div>
+                  <div className="tb-score-stars-col">
                     <div className="tb-stars-row">
                       {[...Array(5)].map((_, i) => (
-                        <Star key={i} size={16} fill="#F5C842" color="#F5C842" />
+                        <Star key={i} size={17} fill="#F5C842" color="#F5C842" className="tb-star-glow" />
                       ))}
                     </div>
-                    <p className="tb-score-sub">{reviews.length} Verified Buyers</p>
+                    <p className="tb-score-sub">
+                      Based on <strong>{reviews.length} verified purchases</strong>
+                    </p>
+                    <span className="tb-score-sentiment">Outstanding • 100% Organic Standard</span>
                   </div>
                 </div>
 
-                {/* Rating Breakdown */}
+                {/* Rating Breakdown Bars with Filter Click */}
                 <div className="tb-bars-list">
                   {[
-                    { star: 5, pct: 92 },
-                    { star: 4, pct: 6 },
-                    { star: 3, pct: 2 },
-                    { star: 2, pct: 0 },
-                    { star: 1, pct: 0 },
+                    { star: 5, count: count5, pct: Math.round((count5 / totalReviewsCount) * 100) },
+                    { star: 4, count: count4, pct: Math.round((count4 / totalReviewsCount) * 100) },
+                    { star: 3, count: count3, pct: Math.round((count3 / totalReviewsCount) * 100) },
+                    { star: 2, count: count2, pct: Math.round((count2 / totalReviewsCount) * 100) },
+                    { star: 1, count: count1, pct: Math.round((count1 / totalReviewsCount) * 100) },
                   ].map((row) => (
-                    <div key={row.star} className="tb-bar-row">
-                      <span className="tb-bar-num">{row.star}★</span>
+                    <button
+                      key={row.star}
+                      type="button"
+                      onClick={() => setReviewFilter(reviewFilter === row.star ? "all" : row.star)}
+                      className={`tb-bar-row ${reviewFilter === row.star ? "tb-bar-row--active" : ""}`}
+                      title={`Filter by ${row.star} stars`}
+                    >
+                      <span className="tb-bar-num">
+                        {row.star} <Star size={11} fill="#F5C842" color="#F5C842" />
+                      </span>
                       <div className="tb-bar-track">
                         <div className="tb-bar-fill" style={{ width: `${row.pct}%` }} />
                       </div>
                       <span className="tb-bar-pct">{row.pct}%</span>
-                    </div>
+                      <span className="tb-bar-count">({row.count})</span>
+                    </button>
                   ))}
                 </div>
 
+                {/* Recommendation Rate Pill */}
                 <div className="tb-rating-promise">
-                  <CheckCircle2 size={16} color="#10D876" />
-                  <span>100% of customers recommend Tatka Bazar fresh quality</span>
+                  <div className="tb-promise-icon-wrap">
+                    <CheckCircle2 size={18} color="#10D876" />
+                  </div>
+                  <div>
+                    <strong className="tb-promise-headline">100% Quality Recommendation</strong>
+                    <p className="tb-promise-detail">
+                      All buyers confirmed morning-fresh aroma, zero chemical smell, and cold gel packaging.
+                    </p>
+                  </div>
                 </div>
+
+                {/* Quick Write CTA button */}
+                <button
+                  type="button"
+                  onClick={scrollToWriteReview}
+                  className="tb-card-cta-btn"
+                >
+                  <PenLine size={15} />
+                  <span>Write Your Review</span>
+                </button>
               </div>
 
-              {/* Reviews List & Write Review */}
+              {/* ── Right Column: Filter Bar + Review Cards + Form ─ */}
               <div className="tb-reviews-list-col">
-                <div className="tb-reviews-container">
-                  {reviews.map((rev) => (
-                    <div key={rev.id} className="tb-review-item">
-                      <div className="tb-review-header">
-                        <div>
-                          <p className="tb-reviewer-name">
-                            {rev.author}
-                            <span className="tb-verified-tag">✓ Verified Purchase</span>
-                          </p>
-                          <div className="tb-review-stars">
-                            {[...Array(rev.rating)].map((_, i) => (
-                              <Star key={i} size={13} fill="#F5C842" color="#F5C842" />
-                            ))}
-                          </div>
-                        </div>
-                        <span className="tb-review-date">{rev.date}</span>
-                      </div>
-                      <p className="tb-review-text">&ldquo;{rev.comment}&rdquo;</p>
-                    </div>
-                  ))}
+                {/* Filter and Count Row */}
+                <div className="tb-filter-bar">
+                  <div className="tb-filter-tabs">
+                    <button
+                      type="button"
+                      onClick={() => setReviewFilter("all")}
+                      className={`tb-filter-tab ${reviewFilter === "all" ? "tb-filter-tab--active" : ""}`}
+                    >
+                      All Reviews ({reviews.length})
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setReviewFilter(5)}
+                      className={`tb-filter-tab ${reviewFilter === 5 ? "tb-filter-tab--active" : ""}`}
+                    >
+                      5 Stars ({count5})
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setReviewFilter(4)}
+                      className={`tb-filter-tab ${reviewFilter === 4 ? "tb-filter-tab--active" : ""}`}
+                    >
+                      4 Stars ({count4})
+                    </button>
+                  </div>
+
+                  <span className="tb-filter-counter">
+                    Showing <strong>{filteredReviews.length}</strong> of {reviews.length} reviews
+                  </span>
                 </div>
 
-                {/* Write a Review Box */}
-                <div className="tb-write-card">
-                  <h4 className="tb-write-title">Write a Product Review</h4>
+                {/* Reviews List */}
+                <div className="tb-reviews-container">
+                  {filteredReviews.length === 0 ? (
+                    <div className="tb-no-reviews-box">
+                      <p>No reviews found for this rating filter.</p>
+                      <button
+                        type="button"
+                        onClick={() => setReviewFilter("all")}
+                        className="tb-reset-filter-btn"
+                      >
+                        Show all reviews
+                      </button>
+                    </div>
+                  ) : (
+                    filteredReviews.map((rev, idx) => {
+                      const helpfulCount = helpfulMap[rev.id] ?? ((rev as any).helpful || 5);
+                      const isVoted = votedReviews[rev.id];
+
+                      return (
+                        <div key={rev.id} className="tb-review-item">
+                          {/* Review Item Header */}
+                          <div className="tb-review-header">
+                            <div className="tb-reviewer-identity">
+                              {/* Avatar */}
+                              <div
+                                className="tb-avatar-circle"
+                                style={{ background: getAvatarGradient(idx) }}
+                              >
+                                {getInitials(rev.author)}
+                              </div>
+
+                              <div>
+                                <div className="tb-reviewer-name-row">
+                                  <h4 className="tb-reviewer-name">{rev.author}</h4>
+                                  <span className="tb-verified-tag">
+                                    <BadgeCheck size={12} /> Verified Buyer
+                                  </span>
+                                </div>
+                                <span className="tb-review-meta">
+                                  Dhaka, Bangladesh • {rev.date}
+                                </span>
+                              </div>
+                            </div>
+
+                            {/* Stars and Score */}
+                            <div className="tb-review-rating-box">
+                              <div className="tb-review-stars">
+                                {[...Array(rev.rating)].map((_, i) => (
+                                  <Star key={i} size={14} fill="#F5C842" color="#F5C842" />
+                                ))}
+                              </div>
+                              <span className="tb-rating-score-tag">{rev.rating}.0</span>
+                            </div>
+                          </div>
+
+                          {/* Quality Attribute Tag */}
+                          <div className="tb-review-tag-row">
+                            <span className="tb-review-tag">
+                              <Leaf size={12} /> {(rev as any).tag || "Fresh Harvest Verified"}
+                            </span>
+                            <span className="tb-review-tag tb-review-tag--cold">
+                              <Truck size={12} /> Chilled Insulated Box
+                            </span>
+                          </div>
+
+                          {/* Review Text */}
+                          <p className="tb-review-text">&ldquo;{rev.comment}&rdquo;</p>
+
+                          {/* Card Footer: Helpful Button & Trust Seal */}
+                          <div className="tb-review-footer">
+                            <button
+                              type="button"
+                              onClick={() => handleToggleHelpful(rev.id)}
+                              className={`tb-helpful-btn ${isVoted ? "tb-helpful-btn--voted" : ""}`}
+                            >
+                              <ThumbsUp size={13} />
+                              <span>{isVoted ? "Marked Helpful" : "Helpful"}</span>
+                              <span className="tb-helpful-count">({helpfulCount})</span>
+                            </button>
+
+                            <span className="tb-doorstep-check">
+                              <ShieldCheck size={13} color="#10D876" /> Doorstep Quality Inspected
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+
+                {/* ── Write a Review Form Card ──────────────────────── */}
+                <div id="write-review-section" className="tb-write-card">
+                  <div className="tb-write-header">
+                    <div>
+                      <div className="tb-write-badge">
+                        <PenLine size={12} />
+                        <span>SHARE YOUR CULINARY EXPERIENCE</span>
+                      </div>
+                      <h4 className="tb-write-title">Write a Verified Product Review</h4>
+                      <p className="tb-write-desc">
+                        Help fellow Tatka Bazar families by rating aroma, texture, freshness, and cold delivery speed.
+                      </p>
+                    </div>
+                  </div>
+
                   {reviewSubmitted && (
                     <div className="tb-success-msg">
-                      ✓ Thank you! Your review has been posted to the Tatka community.
+                      <CheckCircle2 size={18} />
+                      <span>Thank you! Your review has been verified and published to the Tatka community.</span>
                     </div>
                   )}
+
                   <form onSubmit={handlePostReview} className="tb-review-form">
-                    <div className="tb-form-row">
-                      <input
-                        type="text"
-                        placeholder="Your Full Name"
-                        required
-                        value={reviewName}
-                        onChange={(e) => setReviewName(e.target.value)}
-                        className="tb-input"
-                      />
-                      <select
-                        value={reviewRating}
-                        onChange={(e) => setReviewRating(Number(e.target.value))}
-                        className="tb-input"
-                      >
-                        <option value="5">⭐⭐⭐⭐⭐ — 5 Stars (Outstanding)</option>
-                        <option value="4">⭐⭐⭐⭐ — 4 Stars (Very Fresh)</option>
-                        <option value="3">⭐⭐⭐ — 3 Stars (Satisfactory)</option>
-                        <option value="2">⭐⭐ — 2 Stars (Average)</option>
-                        <option value="1">⭐ — 1 Star (Below Expectations)</option>
-                      </select>
+                    {/* Interactive Star Rating Selector */}
+                    <div className="tb-star-picker-block">
+                      <label className="tb-picker-label">Rate Produce Quality & Freshness:</label>
+                      <div className="tb-star-picker-row">
+                        <div className="tb-star-buttons" onMouseLeave={() => setHoverRating(0)}>
+                          {[1, 2, 3, 4, 5].map((starNum) => {
+                            const isFilled = (hoverRating || reviewRating) >= starNum;
+                            return (
+                              <button
+                                key={starNum}
+                                type="button"
+                                onClick={() => setReviewRating(starNum)}
+                                onMouseEnter={() => setHoverRating(starNum)}
+                                className={`tb-star-pick-btn ${isFilled ? "tb-star-pick-btn--filled" : ""}`}
+                                aria-label={`Rate ${starNum} stars`}
+                              >
+                                <Star
+                                  size={22}
+                                  fill={isFilled ? "#F5C842" : "none"}
+                                  color={isFilled ? "#F5C842" : "#4B5563"}
+                                />
+                              </button>
+                            );
+                          })}
+                        </div>
+                        <span className="tb-selected-rating-label">
+                          {ratingLabels[hoverRating || reviewRating]}
+                        </span>
+                      </div>
                     </div>
-                    <textarea
-                      rows={3}
-                      placeholder="Share your experience with product freshness, river aroma, taste, and delivery..."
-                      required
-                      value={reviewComment}
-                      onChange={(e) => setReviewComment(e.target.value)}
-                      className="tb-input"
-                    />
-                    <button type="submit" className="tb-btn tb-btn--submit">
-                      Post Review <ArrowRight size={14} />
-                    </button>
+
+                    {/* Quick Suggestion Chips */}
+                    <div className="tb-quick-tags-wrap">
+                      <span className="tb-quick-tags-title">Tap to add highlights:</span>
+                      <div className="tb-quick-tags-list">
+                        {[
+                          "100% Formalin-Free",
+                          "Superfast 35m Delivery",
+                          "Pure River Aroma",
+                          "Hygienically Cleaned",
+                          "Dawn Fresh Catch",
+                        ].map((chip) => (
+                          <button
+                            key={chip}
+                            type="button"
+                            onClick={() => handleAddQuickTag(chip)}
+                            className="tb-quick-chip"
+                          >
+                            + {chip}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Input Fields */}
+                    <div className="tb-form-fields-grid">
+                      <div className="tb-field-group">
+                        <label className="tb-input-label">Your Full Name:</label>
+                        <input
+                          type="text"
+                          placeholder="e.g. Tanvir Chowdhury"
+                          required
+                          value={reviewName}
+                          onChange={(e) => setReviewName(e.target.value)}
+                          className="tb-input"
+                        />
+                      </div>
+
+                      <div className="tb-field-group">
+                        <label className="tb-input-label">Verified Order City:</label>
+                        <input
+                          type="text"
+                          defaultValue="Dhaka, Bangladesh"
+                          readOnly
+                          className="tb-input tb-input--readonly"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="tb-field-group">
+                      <label className="tb-input-label">Detailed Review & Cooking Notes:</label>
+                      <textarea
+                        rows={3}
+                        placeholder="Describe the freshness, river aroma, taste, texture, cutting quality, and delivery speed..."
+                        required
+                        value={reviewComment}
+                        onChange={(e) => setReviewComment(e.target.value)}
+                        className="tb-input tb-textarea"
+                      />
+                    </div>
+
+                    <div className="tb-form-submit-row">
+                      <button type="submit" className="tb-btn tb-btn--submit">
+                        <Sparkles size={15} />
+                        <span>Publish Verified Review</span>
+                        <ArrowRight size={14} />
+                      </button>
+                      <span className="tb-submit-hint">
+                        🛡️ Inspected & verified under Tatka Bazar Freshness Standards
+                      </span>
+                    </div>
                   </form>
                 </div>
               </div>
@@ -1914,71 +2253,216 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
           margin: 0;
         }
 
-        /* ── Reviews Section ── */
+        /* ── Customer Reviews Section (Ultra-Premium Redesign) ────── */
         .tb-reviews-section {
-          padding: 64px 0;
+          padding: 72px 0;
+          background: #08090B;
           border-top: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .tb-reviews-header-block {
+          display: flex;
+          justify-content: space-between;
+          align-items: flex-end;
+          gap: 24px;
+          margin-bottom: 36px;
+          flex-wrap: wrap;
+        }
+
+        .tb-reviews-glow-pill {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          padding: 4px 14px;
+          border-radius: 999px;
+          background: rgba(16, 216, 118, 0.1);
+          border: 1px solid rgba(16, 216, 118, 0.3);
+          color: #10D876;
+          font-size: 0.72rem;
+          font-weight: 800;
+          letter-spacing: 0.06em;
+          margin-bottom: 10px;
+        }
+
+        .tb-sparkle-spin {
+          animation: tbSpinSlow 6s linear infinite;
+        }
+
+        @keyframes tbSpinSlow {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+
+        .tb-reviews-main-title {
+          font-size: clamp(1.5rem, 2.4vw, 1.95rem);
+          font-weight: 900;
+          color: #F8FAFC;
+          letter-spacing: -0.02em;
+          margin: 0 0 6px 0;
+        }
+
+        .tb-reviews-subtitle {
+          font-size: 0.9rem;
+          color: #94A3B8;
+          max-width: 620px;
+          line-height: 1.6;
+          margin: 0;
+        }
+
+        .tb-reviews-highlights-row {
+          display: flex;
+          gap: 10px;
+          flex-wrap: wrap;
+          align-items: center;
+        }
+
+        .tb-rev-hl-chip {
+          display: inline-flex;
+          align-items: center;
+          gap: 7px;
+          background: rgba(255, 255, 255, 0.03);
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          border-radius: 999px;
+          padding: 7px 14px;
+          font-size: 0.78rem;
+          font-weight: 700;
+          color: #E2E8F0;
+        }
+
+        .tb-hl-green {
+          color: #10D876;
+        }
+
+        .tb-hl-gold {
+          color: #F5C842;
         }
 
         .tb-reviews-grid {
           display: grid;
-          grid-template-columns: 320px 1fr;
-          gap: 44px;
+          grid-template-columns: 360px 1fr;
+          gap: 36px;
+          align-items: start;
         }
 
-        @media (max-width: 900px) {
+        @media (max-width: 960px) {
           .tb-reviews-grid {
             grid-template-columns: 1fr;
             gap: 32px;
           }
         }
 
+        /* ── Rating Scorecard (Left Column) ── */
         .tb-rating-card {
-          background: #0E1117;
-          border: 1px solid rgba(255, 255, 255, 0.08);
-          border-radius: 18px;
-          padding: 24px;
+          background: linear-gradient(180deg, rgba(16, 23, 36, 0.88) 0%, rgba(10, 13, 20, 0.96) 100%);
+          backdrop-filter: blur(20px);
+          border: 1px solid rgba(16, 216, 118, 0.22);
+          border-radius: 24px;
+          padding: 28px 24px;
           display: flex;
           flex-direction: column;
           gap: 20px;
+          box-shadow: 0 20px 48px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+          position: sticky;
+          top: 90px;
+        }
+
+        @media (max-width: 960px) {
+          .tb-rating-card {
+            position: static;
+          }
+        }
+
+        .tb-card-badge-row {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
         }
 
         .tb-card-title {
           font-size: 1.15rem;
-          font-weight: 800;
-          color: #F0F2F7;
+          font-weight: 900;
+          color: #F8FAFC;
           margin: 0;
+          letter-spacing: -0.01em;
+        }
+
+        .tb-verified-buyers-pill {
+          display: inline-flex;
+          align-items: center;
+          gap: 5px;
+          font-size: 0.72rem;
+          font-weight: 800;
+          color: #10D876;
+          background: rgba(16, 216, 118, 0.12);
+          border: 1px solid rgba(16, 216, 118, 0.28);
+          border-radius: 999px;
+          padding: 3px 10px;
         }
 
         .tb-score-display {
           display: flex;
           align-items: center;
-          gap: 16px;
+          gap: 18px;
+          padding-bottom: 6px;
+          border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .tb-score-number-wrap {
+          display: flex;
+          align-items: baseline;
         }
 
         .tb-big-score {
-          font-size: 3.2rem;
+          font-size: 3.6rem;
           font-weight: 900;
-          color: #F0F2F7;
+          color: #F8FAFC;
           line-height: 1;
+          letter-spacing: -0.03em;
+          background: linear-gradient(135deg, #FFFFFF 40%, #10D876 100%);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+        }
+
+        .tb-score-max {
+          font-size: 1rem;
+          font-weight: 700;
+          color: #64748B;
+          margin-left: 2px;
+        }
+
+        .tb-score-stars-col {
+          display: flex;
+          flex-direction: column;
+          gap: 3px;
         }
 
         .tb-stars-row {
           display: flex;
-          gap: 2px;
-          margin-bottom: 4px;
+          gap: 3px;
+        }
+
+        .tb-star-glow {
+          filter: drop-shadow(0 0 6px rgba(245, 200, 66, 0.4));
         }
 
         .tb-score-sub {
           font-size: 0.78rem;
-          color: #7E8899;
+          color: #94A3B8;
           margin: 0;
+        }
+
+        .tb-score-sentiment {
+          font-size: 0.72rem;
+          font-weight: 800;
+          color: #10D876;
+          text-transform: uppercase;
+          letter-spacing: 0.04em;
         }
 
         .tb-bars-list {
           display: flex;
           flex-direction: column;
-          gap: 8px;
+          gap: 6px;
         }
 
         .tb-bar-row {
@@ -1986,83 +2470,283 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
           align-items: center;
           gap: 8px;
           font-size: 0.78rem;
-          color: #7E8899;
+          color: #94A3B8;
+          background: transparent;
+          border: 1px solid transparent;
+          border-radius: 8px;
+          padding: 6px 8px;
+          cursor: pointer;
+          transition: all 0.2s ease;
+          width: 100%;
+          text-align: left;
+        }
+
+        .tb-bar-row:hover {
+          background: rgba(255, 255, 255, 0.04);
+        }
+
+        .tb-bar-row--active {
+          background: rgba(16, 216, 118, 0.1);
+          border-color: rgba(16, 216, 118, 0.3);
         }
 
         .tb-bar-num {
-          width: 24px;
-          font-weight: 700;
+          display: inline-flex;
+          align-items: center;
+          gap: 3px;
+          width: 32px;
+          font-weight: 800;
+          color: #CBD5E1;
         }
 
         .tb-bar-track {
           flex: 1;
-          height: 6px;
-          background: #1A2030;
+          height: 7px;
+          background: rgba(255, 255, 255, 0.07);
           border-radius: 999px;
           overflow: hidden;
         }
 
         .tb-bar-fill {
           height: 100%;
-          background: #10D876;
+          background: linear-gradient(90deg, #10D876 0%, #34D399 100%);
           border-radius: 999px;
+          box-shadow: 0 0 10px rgba(16, 216, 118, 0.35);
+          transition: width 0.4s ease;
         }
 
         .tb-bar-pct {
-          width: 32px;
+          width: 34px;
           text-align: right;
+          font-weight: 700;
+          color: #CBD5E1;
+        }
+
+        .tb-bar-count {
+          width: 24px;
+          text-align: right;
+          color: #64748B;
+          font-size: 0.72rem;
         }
 
         .tb-rating-promise {
           display: flex;
-          align-items: center;
-          gap: 8px;
-          font-size: 0.78rem;
-          color: #10D876;
-          font-weight: 700;
+          align-items: flex-start;
+          gap: 12px;
           background: rgba(16, 216, 118, 0.08);
-          padding: 10px 12px;
-          border-radius: 8px;
+          border: 1px solid rgba(16, 216, 118, 0.2);
+          border-radius: 14px;
+          padding: 12px 14px;
+        }
+
+        .tb-promise-icon-wrap {
+          flex-shrink: 0;
+          margin-top: 2px;
+        }
+
+        .tb-promise-headline {
+          display: block;
+          font-size: 0.82rem;
+          font-weight: 800;
+          color: #10D876;
+          margin-bottom: 2px;
+        }
+
+        .tb-promise-detail {
+          font-size: 0.74rem;
+          color: #94A3B8;
+          line-height: 1.45;
+          margin: 0;
+        }
+
+        .tb-card-cta-btn {
+          width: 100%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+          background: rgba(255, 255, 255, 0.04);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          color: #F8FAFC;
+          border-radius: 12px;
+          height: 42px;
+          font-size: 0.82rem;
+          font-weight: 800;
+          cursor: pointer;
+          transition: all 0.2s ease;
+        }
+
+        .tb-card-cta-btn:hover {
+          background: rgba(16, 216, 118, 0.15);
+          border-color: #10D876;
+          color: #10D876;
+        }
+
+        /* ── Reviews List (Right Column) ── */
+        .tb-reviews-list-col {
+          display: flex;
+          flex-direction: column;
+        }
+
+        .tb-filter-bar {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          margin-bottom: 20px;
+          flex-wrap: wrap;
+          gap: 12px;
+        }
+
+        .tb-filter-tabs {
+          display: flex;
+          gap: 8px;
+          flex-wrap: wrap;
+        }
+
+        .tb-filter-tab {
+          background: rgba(255, 255, 255, 0.04);
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          color: #94A3B8;
+          border-radius: 999px;
+          padding: 6px 14px;
+          font-size: 0.78rem;
+          font-weight: 700;
+          cursor: pointer;
+          transition: all 0.2s ease;
+        }
+
+        .tb-filter-tab:hover {
+          background: rgba(255, 255, 255, 0.08);
+          color: #F8FAFC;
+        }
+
+        .tb-filter-tab--active {
+          background: #10D876;
+          color: #08090B;
+          border-color: #10D876;
+          box-shadow: 0 0 14px rgba(16, 216, 118, 0.4);
+        }
+
+        .tb-filter-counter {
+          font-size: 0.78rem;
+          color: #64748B;
+        }
+
+        .tb-filter-counter strong {
+          color: #CBD5E1;
         }
 
         .tb-reviews-container {
           display: flex;
           flex-direction: column;
-          gap: 14px;
-          margin-bottom: 32px;
+          gap: 16px;
+          margin-bottom: 36px;
         }
 
-        .tb-review-item {
+        .tb-no-reviews-box {
           background: #0E1117;
-          border: 1px solid rgba(255, 255, 255, 0.08);
-          border-radius: 14px;
-          padding: 20px;
+          border: 1px dashed rgba(255, 255, 255, 0.12);
+          border-radius: 16px;
+          padding: 40px 20px;
+          text-align: center;
+          color: #94A3B8;
+        }
+
+        .tb-reset-filter-btn {
+          margin-top: 10px;
+          background: rgba(16, 216, 118, 0.12);
+          border: 1px solid rgba(16, 216, 118, 0.3);
+          color: #10D876;
+          padding: 6px 14px;
+          border-radius: 999px;
+          font-size: 0.78rem;
+          font-weight: 700;
+          cursor: pointer;
+        }
+
+        /* ── Individual Review Item Card ── */
+        .tb-review-item {
+          background: linear-gradient(180deg, rgba(17, 23, 35, 0.75) 0%, rgba(10, 13, 20, 0.9) 100%);
+          backdrop-filter: blur(16px);
+          border: 1px solid rgba(255, 255, 255, 0.07);
+          border-radius: 20px;
+          padding: 24px;
+          transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+          box-shadow: 0 6px 24px rgba(0, 0, 0, 0.25);
+        }
+
+        .tb-review-item:hover {
+          border-color: rgba(16, 216, 118, 0.35);
+          transform: translateY(-2px);
+          box-shadow: 0 16px 36px rgba(0, 0, 0, 0.45);
         }
 
         .tb-review-header {
           display: flex;
           justify-content: space-between;
           align-items: flex-start;
-          margin-bottom: 10px;
+          margin-bottom: 12px;
+          flex-wrap: wrap;
+          gap: 12px;
         }
 
-        .tb-reviewer-name {
-          font-size: 0.92rem;
+        .tb-reviewer-identity {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+        }
+
+        .tb-avatar-circle {
+          width: 44px;
+          height: 44px;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
           font-weight: 800;
-          color: #F0F2F7;
-          margin: 0 0 4px 0;
+          font-size: 0.92rem;
+          color: #08090B;
+          flex-shrink: 0;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .tb-reviewer-name-row {
           display: flex;
           align-items: center;
           gap: 8px;
+          margin-bottom: 2px;
+          flex-wrap: wrap;
+        }
+
+        .tb-reviewer-name {
+          font-size: 0.95rem;
+          font-weight: 800;
+          color: #F8FAFC;
+          margin: 0;
         }
 
         .tb-verified-tag {
+          display: inline-flex;
+          align-items: center;
+          gap: 4px;
           font-size: 0.68rem;
-          font-weight: 700;
+          font-weight: 800;
           color: #10D876;
           background: rgba(16, 216, 118, 0.12);
-          padding: 2px 6px;
+          border: 1px solid rgba(16, 216, 118, 0.25);
+          padding: 2px 8px;
           border-radius: 999px;
+        }
+
+        .tb-review-meta {
+          font-size: 0.74rem;
+          color: #64748B;
+        }
+
+        .tb-review-rating-box {
+          display: flex;
+          align-items: center;
+          gap: 8px;
         }
 
         .tb-review-stars {
@@ -2070,90 +2754,333 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
           gap: 2px;
         }
 
-        .tb-review-date {
-          font-size: 0.76rem;
-          color: #7E8899;
+        .tb-rating-score-tag {
+          background: rgba(245, 200, 66, 0.12);
+          border: 1px solid rgba(245, 200, 66, 0.25);
+          color: #F5C842;
+          font-size: 0.74rem;
+          font-weight: 800;
+          padding: 2px 7px;
+          border-radius: 6px;
+        }
+
+        .tb-review-tag-row {
+          display: flex;
+          gap: 8px;
+          margin-bottom: 12px;
+          flex-wrap: wrap;
+        }
+
+        .tb-review-tag {
+          display: inline-flex;
+          align-items: center;
+          gap: 5px;
+          font-size: 0.72rem;
+          font-weight: 700;
+          padding: 3px 10px;
+          border-radius: 999px;
+          background: rgba(16, 216, 118, 0.08);
+          border: 1px solid rgba(16, 216, 118, 0.2);
+          color: #10D876;
+        }
+
+        .tb-review-tag--cold {
+          background: rgba(59, 130, 246, 0.08);
+          border-color: rgba(59, 130, 246, 0.22);
+          color: #60A5FA;
         }
 
         .tb-review-text {
-          font-size: 0.88rem;
-          color: #C8CDD9;
-          line-height: 1.65;
-          margin: 0;
+          font-size: 0.92rem;
+          color: #CBD5E1;
+          line-height: 1.7;
+          margin: 0 0 16px 0;
           font-style: italic;
         }
 
-        .tb-write-card {
-          background: #0E1117;
+        .tb-review-footer {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding-top: 12px;
+          border-top: 1px solid rgba(255, 255, 255, 0.05);
+          flex-wrap: wrap;
+          gap: 10px;
+        }
+
+        .tb-helpful-btn {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          background: rgba(255, 255, 255, 0.03);
           border: 1px solid rgba(255, 255, 255, 0.08);
-          border-radius: 16px;
-          padding: 22px;
+          color: #94A3B8;
+          border-radius: 8px;
+          padding: 5px 12px;
+          font-size: 0.76rem;
+          font-weight: 700;
+          cursor: pointer;
+          transition: all 0.15s ease;
+        }
+
+        .tb-helpful-btn:hover {
+          background: rgba(16, 216, 118, 0.1);
+          border-color: rgba(16, 216, 118, 0.25);
+          color: #10D876;
+        }
+
+        .tb-helpful-btn--voted {
+          background: rgba(16, 216, 118, 0.15);
+          border-color: rgba(16, 216, 118, 0.4);
+          color: #10D876;
+        }
+
+        .tb-helpful-count {
+          color: #64748B;
+        }
+
+        .tb-helpful-btn--voted .tb-helpful-count {
+          color: #10D876;
+        }
+
+        .tb-doorstep-check {
+          display: inline-flex;
+          align-items: center;
+          gap: 5px;
+          font-size: 0.72rem;
+          font-weight: 700;
+          color: #94A3B8;
+        }
+
+        /* ── Write Review Card ── */
+        .tb-write-card {
+          background: linear-gradient(180deg, rgba(16, 23, 36, 0.88) 0%, rgba(9, 12, 19, 0.96) 100%);
+          backdrop-filter: blur(20px);
+          border: 1px solid rgba(16, 216, 118, 0.24);
+          border-radius: 24px;
+          padding: 30px;
+          box-shadow: 0 20px 50px rgba(0, 0, 0, 0.55);
+        }
+
+        .tb-write-header {
+          margin-bottom: 20px;
+        }
+
+        .tb-write-badge {
+          display: inline-flex;
+          align-items: center;
+          gap: 5px;
+          font-size: 0.7rem;
+          font-weight: 800;
+          color: #10D876;
+          letter-spacing: 0.05em;
+          margin-bottom: 6px;
         }
 
         .tb-write-title {
-          font-size: 1.05rem;
-          font-weight: 800;
-          color: #F0F2F7;
-          margin: 0 0 16px 0;
+          font-size: 1.15rem;
+          font-weight: 900;
+          color: #F8FAFC;
+          margin: 0 0 6px 0;
+          letter-spacing: -0.01em;
         }
 
-        .tb-review-form {
+        .tb-write-desc {
+          font-size: 0.82rem;
+          color: #94A3B8;
+          margin: 0;
+          line-height: 1.5;
+        }
+
+        .tb-star-picker-block {
+          background: rgba(0, 0, 0, 0.3);
+          border: 1px solid rgba(255, 255, 255, 0.06);
+          border-radius: 14px;
+          padding: 14px 16px;
+          margin-bottom: 16px;
+        }
+
+        .tb-picker-label {
+          display: block;
+          font-size: 0.78rem;
+          font-weight: 800;
+          color: #CBD5E1;
+          margin-bottom: 8px;
+        }
+
+        .tb-star-picker-row {
           display: flex;
-          flex-direction: column;
+          align-items: center;
+          justify-content: space-between;
+          flex-wrap: wrap;
           gap: 12px;
         }
 
-        .tb-form-row {
+        .tb-star-buttons {
+          display: flex;
+          gap: 4px;
+        }
+
+        .tb-star-pick-btn {
+          background: none;
+          border: none;
+          cursor: pointer;
+          padding: 3px;
+          transition: transform 0.15s ease;
+        }
+
+        .tb-star-pick-btn:hover {
+          transform: scale(1.22);
+        }
+
+        .tb-selected-rating-label {
+          font-size: 0.82rem;
+          font-weight: 800;
+          color: #F5C842;
+        }
+
+        .tb-quick-tags-wrap {
+          margin-bottom: 16px;
+        }
+
+        .tb-quick-tags-title {
+          display: block;
+          font-size: 0.74rem;
+          font-weight: 700;
+          color: #64748B;
+          margin-bottom: 6px;
+        }
+
+        .tb-quick-tags-list {
+          display: flex;
+          gap: 6px;
+          flex-wrap: wrap;
+        }
+
+        .tb-quick-chip {
+          background: rgba(255, 255, 255, 0.04);
+          border: 1px solid rgba(255, 255, 255, 0.09);
+          border-radius: 999px;
+          padding: 4px 11px;
+          font-size: 0.72rem;
+          font-weight: 700;
+          color: #94A3B8;
+          cursor: pointer;
+          transition: all 0.15s ease;
+        }
+
+        .tb-quick-chip:hover {
+          background: rgba(16, 216, 118, 0.12);
+          border-color: rgba(16, 216, 118, 0.3);
+          color: #10D876;
+          transform: translateY(-1px);
+        }
+
+        .tb-form-fields-grid {
           display: grid;
           grid-template-columns: 1fr 1fr;
-          gap: 12px;
+          gap: 14px;
+          margin-bottom: 14px;
         }
 
         @media (max-width: 600px) {
-          .tb-form-row {
+          .tb-form-fields-grid {
             grid-template-columns: 1fr;
           }
         }
 
+        .tb-field-group {
+          display: flex;
+          flex-direction: column;
+          gap: 6px;
+          margin-bottom: 14px;
+        }
+
+        .tb-input-label {
+          font-size: 0.78rem;
+          font-weight: 800;
+          color: #CBD5E1;
+        }
+
         .tb-input {
           width: 100%;
-          background: #131720;
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          border-radius: 10px;
-          padding: 10px 14px;
-          font-size: 0.85rem;
-          color: #F0F2F7;
+          background: rgba(15, 20, 30, 0.85);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          border-radius: 12px;
+          padding: 12px 16px;
+          font-size: 0.86rem;
+          color: #F8FAFC;
           font-family: inherit;
           outline: none;
-          transition: border-color 0.2s ease;
+          transition: all 0.2s ease;
         }
 
         .tb-input:focus {
           border-color: #10D876;
+          box-shadow: 0 0 0 3px rgba(16, 216, 118, 0.18);
+          background: rgba(18, 24, 36, 0.95);
+        }
+
+        .tb-input--readonly {
+          opacity: 0.75;
+          cursor: not-allowed;
+          background: rgba(10, 13, 20, 0.6);
+        }
+
+        .tb-textarea {
+          resize: vertical;
+          min-height: 85px;
+          line-height: 1.6;
+        }
+
+        .tb-form-submit-row {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          flex-wrap: wrap;
+          gap: 14px;
+          margin-top: 6px;
         }
 
         .tb-btn--submit {
-          align-self: flex-start;
-          background: #10D876;
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          background: linear-gradient(135deg, #10D876 0%, #059669 100%);
           color: #08090B;
-          padding: 0 24px;
-          height: 42px;
-          font-size: 0.82rem;
+          padding: 0 28px;
+          height: 46px;
+          font-size: 0.86rem;
+          font-weight: 900;
+          border-radius: 12px;
+          border: none;
+          cursor: pointer;
+          box-shadow: 0 8px 24px rgba(16, 216, 118, 0.35);
+          transition: all 0.2s ease;
         }
 
         .tb-btn--submit:hover {
-          background: #0DC968;
+          box-shadow: 0 12px 30px rgba(16, 216, 118, 0.5);
+          transform: translateY(-1px);
+        }
+
+        .tb-submit-hint {
+          font-size: 0.74rem;
+          color: #64748B;
         }
 
         .tb-success-msg {
+          display: flex;
+          align-items: center;
+          gap: 10px;
           background: rgba(16, 216, 118, 0.12);
-          border: 1px solid rgba(16, 216, 118, 0.3);
+          border: 1px solid rgba(16, 216, 118, 0.35);
           color: #10D876;
-          padding: 10px 14px;
-          border-radius: 8px;
+          padding: 12px 16px;
+          border-radius: 12px;
           font-size: 0.82rem;
           font-weight: 700;
-          margin-bottom: 12px;
+          margin-bottom: 16px;
         }
 
         /* ── Q&A ── */
