@@ -169,37 +169,37 @@ export function CategoryListing({ initialSlug = "all" }: CategoryListingProps) {
           <div className="absolute inset-0 bg-gradient-to-t from-charcoal/85 via-charcoal/40 to-charcoal/30" />
         </div>
 
-        {/* Top Controls: Filter on Top-Left (Yellow Mark) & Sort on Top-Right (Blue Mark) - 3D Transparent */}
-        <div className="absolute top-4 sm:top-6 inset-x-0 z-20">
+        {/* Top Controls: Filter on Top-Left & Sort on Top-Right - Pure Crystal Clear Glass (No Border, No Blur) */}
+        <div className="absolute top-3 sm:top-5 inset-x-0 z-20">
           <div className="container-full flex items-center justify-between">
-            {/* Yellow Mark: Top-Left 3D Transparent Filter Button */}
+            {/* Top-Left Pure Crystal Clear Filter Capsule */}
             <Button
               type="button"
               onClick={() => setIsFilterDrawerOpen(true)}
               variant="outline"
               size="sm"
               className={cn(
-                "rounded-none h-10 px-4 sm:px-5 text-[11px] sm:text-xs tracking-[0.12em] uppercase flex items-center gap-2",
-                "bg-white/20 hover:bg-white/35 text-white border border-white/40 backdrop-blur-xl transition-all duration-300",
-                "shadow-[0_8px_32px_rgba(0,0,0,0.25),inset_0_1px_1px_rgba(255,255,255,0.6)] active:translate-y-0.5 active:scale-95",
-                activeFilterCount > 0 && "bg-primary/80 hover:bg-primary border-white/40 text-primary-foreground shadow-[0_8px_32px_rgba(24,131,80,0.4),inset_0_1px_1px_rgba(255,255,255,0.5)] font-semibold"
+                "rounded-full h-8 px-3.5 sm:px-4 text-[10px] sm:text-[11px] font-medium tracking-[0.08em] uppercase flex items-center gap-1.5 transition-all duration-300",
+                "bg-white/15 hover:bg-white/30 text-white",
+                "shadow-[0_4px_16px_rgba(0,0,0,0.2)] active:translate-y-0.5 active:scale-95",
+                activeFilterCount > 0 && "bg-white/35 font-semibold shadow-[0_4px_20px_rgba(24,131,80,0.3)]"
               )}
             >
-              <SlidersHorizontal className="w-3.5 h-3.5 drop-shadow" />
-              <span className="drop-shadow-sm">{locale === "bn" ? "ফিল্টার" : "Filters"}</span>
+              <SlidersHorizontal className="w-3 h-3 sm:w-3.5 sm:h-3.5 drop-shadow-[0_1.5px_3px_rgba(0,0,0,0.85)]" />
+              <span className="drop-shadow-[0_1.5px_3px_rgba(0,0,0,0.85)]">{locale === "bn" ? "ফিল্টার" : "Filters"}</span>
               {activeFilterCount > 0 && (
-                <span className="w-4 h-4 rounded-full bg-white text-primary text-[10px] font-bold flex items-center justify-center shadow">
+                <span className="w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full bg-primary text-white text-[9px] font-bold flex items-center justify-center shadow-sm">
                   {activeFilterCount}
                 </span>
               )}
             </Button>
 
-            {/* Blue Mark: Top-Right 3D Transparent Sorting Dropdown */}
+            {/* Top-Right Pure Crystal Clear Sorting Capsule */}
             <div className="relative inline-block">
               <select
                 value={activeSort}
                 onChange={(e) => setActiveSort(e.target.value as SortOption)}
-                className="bg-white/20 hover:bg-white/35 text-white border border-white/40 backdrop-blur-xl text-[11px] sm:text-xs uppercase tracking-[0.12em] px-4 sm:px-5 py-2 pr-9 h-10 rounded-none appearance-none focus:outline-none focus:border-white/80 cursor-pointer shadow-[0_8px_32px_rgba(0,0,0,0.25),inset_0_1px_1px_rgba(255,255,255,0.6)] active:translate-y-0.5 transition-all duration-300"
+                className="rounded-full h-8 px-3.5 sm:px-4 pr-8 text-[10px] sm:text-[11px] font-medium uppercase tracking-[0.08em] bg-white/15 hover:bg-white/30 text-white appearance-none focus:outline-none cursor-pointer shadow-[0_4px_16px_rgba(0,0,0,0.2)] active:translate-y-0.5 transition-all duration-300 drop-shadow-[0_1.5px_3px_rgba(0,0,0,0.85)]"
               >
                 {sortOptions.map((opt) => (
                   <option key={opt.value} value={opt.value} className="bg-charcoal text-white">
@@ -207,7 +207,7 @@ export function CategoryListing({ initialSlug = "all" }: CategoryListingProps) {
                   </option>
                 ))}
               </select>
-              <ChevronDown className="w-3.5 h-3.5 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-white drop-shadow" />
+              <ChevronDown className="w-3 h-3 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-white drop-shadow-[0_1.5px_3px_rgba(0,0,0,0.85)]" />
             </div>
           </div>
         </div>
@@ -241,7 +241,7 @@ export function CategoryListing({ initialSlug = "all" }: CategoryListingProps) {
           <div className="flex items-center justify-between gap-3">
             
             {/* Category Quick Pills (horizontal scroll on mobile) */}
-            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 scrollbar-hide flex-1 mr-2">
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 scrollbar-hide flex-1">
               <Button
                 variant="ghost"
                 size="sm"
@@ -266,37 +266,12 @@ export function CategoryListing({ initialSlug = "all" }: CategoryListingProps) {
                     "rounded-none h-8 px-3 whitespace-nowrap text-[11px] tracking-[0.08em] uppercase transition-all",
                     selectedCategory === cat.slug
                       ? "bg-foreground text-background hover:bg-foreground/90 hover:text-background font-semibold"
-                      : "text-muted-foreground hover:text-foreground"
+                    : "text-muted-foreground hover:text-foreground"
                   )}
                 >
                   {locale === "bn" ? cat.nameBn : cat.nameEn}
                 </Button>
               ))}
-            </div>
-
-            {/* Right: Items Count & Sticky Quick Filter */}
-            <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
-              <span className="text-[11px] sm:text-xs text-muted-foreground whitespace-nowrap">
-                {filteredAndSortedProducts.length} {locale === "bn" ? "টি পণ্য" : "pieces"}
-              </span>
-
-              <Button
-                type="button"
-                onClick={() => setIsFilterDrawerOpen(true)}
-                variant="ghost"
-                size="sm"
-                className={cn(
-                  "rounded-none h-8 px-2 sm:px-2.5 text-[11px] tracking-[0.08em] uppercase flex items-center gap-1 text-muted-foreground hover:text-foreground",
-                  activeFilterCount > 0 && "text-primary font-semibold"
-                )}
-              >
-                <SlidersHorizontal className="w-3.5 h-3.5" />
-                {activeFilterCount > 0 && (
-                  <span className="w-4 h-4 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center">
-                    {activeFilterCount}
-                  </span>
-                )}
-              </Button>
             </div>
 
           </div>

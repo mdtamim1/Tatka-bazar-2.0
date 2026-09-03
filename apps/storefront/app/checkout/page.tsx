@@ -10,7 +10,10 @@ import {
   CreditCard,
   Building,
   CheckCircle2,
-  Package
+  Package,
+  Clock,
+  Calendar,
+  Info
 } from "lucide-react";
 import confetti from "canvas-confetti";
 import { motion } from "framer-motion";
@@ -20,6 +23,52 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 type CheckoutStep = "details" | "payment" | "complete";
+
+const BANGLADESH_DISTRICTS = [
+  { id: "Dhaka", bn: "ঢাকা", en: "Dhaka" },
+  { id: "Gazipur", bn: "গাজীপুর", en: "Gazipur" },
+  { id: "Narayanganj", bn: "নারায়ণগঞ্জ", en: "Narayanganj" },
+  { id: "Chattogram", bn: "চট্টগ্রাম", en: "Chattogram" },
+  { id: "Sylhet", bn: "সিলেট", en: "Sylhet" },
+  { id: "Bogura", bn: "বগুড়া", en: "Bogura" },
+  { id: "Dinajpur", bn: "দিনাজপুর", en: "Dinajpur" },
+  { id: "Rajshahi", bn: "রাজশাহী", en: "Rajshahi" },
+  { id: "Khulna", bn: "খুলনা", en: "Khulna" },
+  { id: "Barishal", bn: "বরিশাল", en: "Barishal" },
+  { id: "Cumilla", bn: "কুমিল্লা", en: "Cumilla" },
+  { id: "Mymensingh", bn: "ময়মনসিংহ", en: "Mymensingh" },
+  { id: "Rangpur", bn: "রংপুর", en: "Rangpur" },
+  { id: "Cox's Bazar", bn: "কক্সবাজার", en: "Cox's Bazar" },
+  { id: "Brahmanbaria", bn: "ব্রাহ্মণবাড়িয়া", en: "Brahmanbaria" },
+  { id: "Jessore", bn: "যশোর", en: "Jessore" },
+  { id: "Pabna", bn: "পাবনা", en: "Pabna" },
+  { id: "Tangail", bn: "টাঙ্গাইল", en: "Tangail" },
+  { id: "Sirajganj", bn: "সিরাজগঞ্জ", en: "Sirajganj" },
+  { id: "Faridpur", bn: "ফরিদপুর", en: "Faridpur" },
+  { id: "Kushtia", bn: "কুষ্টিয়া", en: "Kushtia" },
+  { id: "Noakhali", bn: "নোয়াখালী", en: "Noakhali" },
+  { id: "Feni", bn: "ফেনী", en: "Feni" },
+  { id: "Narsingdi", bn: "নরসিংদী", en: "Narsingdi" },
+  { id: "Munshiganj", bn: "মুন্সিগঞ্জ", en: "Munshiganj" },
+  { id: "Manikganj", bn: "মানিকগঞ্জ", en: "Manikganj" },
+];
+
+interface TimeSlotDef {
+  val: string;
+  labelBn: string;
+  labelEn: string;
+  startHour: number;
+}
+
+const ALL_TIME_SLOTS: TimeSlotDef[] = [
+  { val: "08:00 AM - 10:00 AM", labelBn: "সকাল (৮-১০ টা)", labelEn: "Morning (8-10 AM)", startHour: 8 },
+  { val: "10:00 AM - 12:00 PM", labelBn: "সকাল (১০-১২ টা)", labelEn: "Mid-Day (10-12 PM)", startHour: 10 },
+  { val: "12:00 PM - 02:00 PM", labelBn: "দুপুর (১২-২ টা)", labelEn: "Noon (12-2 PM)", startHour: 12 },
+  { val: "02:00 PM - 04:00 PM", labelBn: "দুপুর (২-৪ টা)", labelEn: "Afternoon (2-4 PM)", startHour: 14 },
+  { val: "04:00 PM - 06:00 PM", labelBn: "বিকেল (৪-৬ টা)", labelEn: "Late Afternoon (4-6 PM)", startHour: 16 },
+  { val: "06:00 PM - 08:00 PM", labelBn: "সন্ধ্যা (৬-৮ টা)", labelEn: "Evening (6-8 PM)", startHour: 18 },
+  { val: "08:00 PM - 10:00 PM", labelBn: "রাত (৮-১০ টা)", labelEn: "Night (8-10 PM)", startHour: 20 },
+];
 
 export default function CheckoutPage() {
   const { locale, formatPrice } = useLanguage();
@@ -36,17 +85,38 @@ export default function CheckoutPage() {
   const [currentStep, setCurrentStep] = useState<CheckoutStep>("details");
   const [isProcessing, setIsProcessing] = useState(false);
 
+  // Dynamic 1-2 Hours Minimum Delivery Slot Calculation
+  const [currentHour] = useState(() => new Date().getHours());
+  const [currentMinute] = useState(() => new Date().getMinutes());
+
+  // Rule: Delivery takes 1-2 hours, so slot must start at least 1.5 - 2 hours from now
+  const minStartHourToday = currentMinute > 15 ? currentHour + 2 : currentHour + 1;
+
+  const availableSlotsToday = ALL_TIME_SLOTS.filter((s) => s.startHour >= minStartHourToday);
+  const availableSlotsTomorrow = ALL_TIME_SLOTS;
+
+  // Determine initial day & slot based on current time
+  const defaultDate = availableSlotsToday.length > 0 ? "today" : "tomorrow";
+  const defaultSlot = availableSlotsToday[0]?.val || availableSlotsTomorrow[0]?.val || "08:00 AM - 10:00 AM";
+
   // Form State
   const [formData, setFormData] = useState({
     fullName: "Rafiq Ahmed",
     phone: "01712-345678",
     email: "rafiq.ahmed@example.com",
-    city: "Dhaka",
-    area: "Dhanmondi",
-    address: "House 42, Road 7/A, Dhanmondi",
-    deliverySlot: "morning",
+    district: "Dhaka",
+    thana: "Dhanmondi",
+    village: "Dhanmondi R/A",
+    address: "House 42, Road 7/A",
+    city: "Dhaka", // compat
+    area: "Dhanmondi", // compat
+    deliveryDate: defaultDate,
+    deliverySlot: defaultSlot,
+    customDeliveryTime: "",
     specialNote: "Please pack with extra ice care.",
   });
+
+  const activeSlots = formData.deliveryDate === "today" ? availableSlotsToday : availableSlotsTomorrow;
 
   // Payment Method
   const [paymentMethod, setPaymentMethod] = useState<"BKASH" | "NAGAD" | "COD">("BKASH");
@@ -136,7 +206,22 @@ export default function CheckoutPage() {
             </div>
             <div className="flex justify-between">
               <span>{locale === "bn" ? "ঠিকানা:" : "Address:"}</span>
-              <span className="text-foreground font-medium">{placedOrder.customer.address}, {placedOrder.customer.city}</span>
+              <span className="text-foreground font-medium text-right max-w-[65%]">
+                {placedOrder.customer.address}
+                {placedOrder.customer.village ? `, ${placedOrder.customer.village}` : ""}
+                {placedOrder.customer.thana ? `, ${placedOrder.customer.thana}` : ""}
+                {placedOrder.customer.district ? `, ${placedOrder.customer.district}` : `, ${placedOrder.customer.city}`}
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span>{locale === "bn" ? "ডেলিভারি সময়:" : "Delivery Time:"}</span>
+              <span className="text-primary font-medium text-right">
+                {placedOrder.customer.deliveryDate === "tomorrow"
+                  ? (locale === "bn" ? "আগামীকাল: " : "Tomorrow: ")
+                  : (locale === "bn" ? "আজ: " : "Today: ")}
+                {placedOrder.customer.deliverySlot}
+                {placedOrder.customer.customDeliveryTime ? ` (${placedOrder.customer.customDeliveryTime})` : ""}
+              </span>
             </div>
             <div className="flex justify-between">
               <span>{locale === "bn" ? "পদ্ধতি:" : "Payment:"}</span>
@@ -242,76 +327,206 @@ export default function CheckoutPage() {
                     </div>
                   </div>
 
+                  {/* District & Thana/Upazila */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                     <div className="space-y-1.5">
                       <label className="text-[10px] font-semibold tracking-[0.2em] uppercase text-muted-foreground">
-                        {locale === "bn" ? "শহর" : "City"}
+                        {locale === "bn" ? "জেলা" : "District"}
                       </label>
                       <select
-                        name="city"
-                        value={formData.city}
+                        name="district"
+                        value={formData.district}
                         onChange={handleInputChange}
-                        className="w-full px-4 py-3 text-sm bg-background border border-border text-foreground rounded-none focus:outline-none focus:border-primary"
+                        className="w-full px-4 py-3 text-sm bg-background border border-border text-foreground rounded-none focus:outline-none focus:border-primary cursor-pointer"
                       >
-                        <option value="Dhaka">Dhaka</option>
-                        <option value="Chittagong">Chittagong</option>
-                        <option value="Sylhet">Sylhet</option>
+                        {BANGLADESH_DISTRICTS.map((d) => (
+                          <option key={d.id} value={d.id}>
+                            {locale === "bn" ? d.bn : d.en}
+                          </option>
+                        ))}
                       </select>
                     </div>
 
                     <div className="space-y-1.5">
                       <label className="text-[10px] font-semibold tracking-[0.2em] uppercase text-muted-foreground">
-                        {locale === "bn" ? "এলাকা" : "Area / Zone"}
+                        {locale === "bn" ? "থানা / উপজেলা" : "Thana / Upazila"}
                       </label>
                       <input
                         type="text"
-                        name="area"
+                        name="thana"
                         required
-                        value={formData.area}
+                        placeholder={locale === "bn" ? "যেমন: ধানমন্ডি, মিরপুর বা সদর" : "e.g. Dhanmondi, Mirpur or Sadar"}
+                        value={formData.thana}
                         onChange={handleInputChange}
                         className="w-full px-4 py-3 text-sm bg-background border border-border text-foreground rounded-none focus:outline-none focus:border-primary"
                       />
                     </div>
                   </div>
 
+                  {/* Village / Neighborhood */}
                   <div className="space-y-1.5">
                     <label className="text-[10px] font-semibold tracking-[0.2em] uppercase text-muted-foreground">
-                      {locale === "bn" ? "বিস্তারিত ঠিকানা" : "Street Address"}
+                      {locale === "bn" ? "গ্রাম / পাড়া / এলাকা" : "Village / Neighborhood"}
+                    </label>
+                    <input
+                      type="text"
+                      name="village"
+                      required
+                      placeholder={locale === "bn" ? "যেমন: পশ্চিম পাড়া, উত্তর মহল্লা বা হাউজিং এলাকা" : "e.g. West Para, North Village or Housing area"}
+                      value={formData.village}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-3 text-sm bg-background border border-border text-foreground rounded-none focus:outline-none focus:border-primary"
+                    />
+                  </div>
+
+                  {/* Detailed Road & House Address */}
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-semibold tracking-[0.2em] uppercase text-muted-foreground">
+                      {locale === "bn" ? "রোড, বাসা নং ও বিস্তারিত ঠিকানা" : "Road, House No & Street Address"}
                     </label>
                     <textarea
                       name="address"
                       rows={2}
                       required
+                      placeholder={locale === "bn" ? "বাসা/হোল্ডিং নং, রোড নং, ফ্ল্যাট বা ল্যান্ডমার্কের বিবরণ" : "House no, Road no, Flat or nearby landmark"}
                       value={formData.address}
                       onChange={handleInputChange}
                       className="w-full px-4 py-3 text-sm bg-background border border-border text-foreground rounded-none focus:outline-none focus:border-primary resize-none"
                     />
                   </div>
 
-                  <div className="space-y-1.5">
-                    <label className="text-[10px] font-semibold tracking-[0.2em] uppercase text-muted-foreground">
-                      {locale === "bn" ? "ডেলিভারি সময় স্লট" : "Delivery Window"}
-                    </label>
-                    <div className="grid grid-cols-3 gap-3">
-                      {[
-                        { val: "morning", labelBn: "সকাল (৮-১১ টা)", labelEn: "Morning (8-11 AM)" },
-                        { val: "afternoon", labelBn: "দুপুর (১২-৩ টা)", labelEn: "Afternoon (12-3 PM)" },
-                        { val: "evening", labelBn: "সন্ধ্যা (৪-৮ টা)", labelEn: "Evening (4-8 PM)" },
-                      ].map((slot) => (
-                        <button
-                          key={slot.val}
-                          type="button"
-                          onClick={() => setFormData((p) => ({ ...p, deliverySlot: slot.val }))}
-                          className={cn(
-                            "py-3 px-2 text-xs border text-center transition-colors rounded-none",
-                            formData.deliverySlot === slot.val
-                              ? "border-primary bg-primary/5 text-primary font-semibold"
-                              : "border-border text-muted-foreground hover:border-foreground/40"
-                          )}
-                        >
-                          {locale === "bn" ? slot.labelBn : slot.labelEn}
-                        </button>
-                      ))}
+                  {/* ── Custom Delivery Time Scheduler (Minimum 1-2 Hours Rule) ── */}
+                  <div className="space-y-3 pt-3 border-t border-border">
+                    <div className="flex items-center justify-between">
+                      <label className="text-[10px] font-semibold tracking-[0.2em] uppercase text-muted-foreground flex items-center gap-1.5">
+                        <Clock className="w-3.5 h-3.5 text-primary" />
+                        {locale === "bn" ? "কখন ডেলিভারি নিতে চান?" : "When would you like delivery?"}
+                      </label>
+                      <span className="text-[10px] text-primary/90 font-medium tracking-wide">
+                        {locale === "bn" ? "১-২ ঘণ্টা প্রস্তুতি সময়" : "1-2 hrs prep time required"}
+                      </span>
+                    </div>
+
+                    {/* Notice Banner */}
+                    <div className="bg-primary/5 border border-primary/20 px-3.5 py-2.5 flex items-start gap-2.5 text-xs text-foreground/85">
+                      <Info className="w-4 h-4 text-primary shrink-0 mt-0.5" />
+                      <p className="leading-relaxed text-[11px]">
+                        {locale === "bn"
+                          ? "আমাদের পণ্যগুলো খামার ও আড়ত থেকে তাজা প্যাক করে আপনার ঠিকানায় পৌঁছাতে ১-২ ঘণ্টা সময় লাগে। তাই বর্তমান সময় থেকে অন্তত ২ ঘণ্টা পরের যেকোনো সময় বেছে নিন।"
+                          : "Orders require 1-2 hours minimum to harvest fresh, cold-pack, and deliver to your doorstep. Please select a time at least 2 hours from now."}
+                      </p>
+                    </div>
+
+                    {/* Day Selection Tabs: Today vs Tomorrow */}
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setFormData((p) => ({
+                            ...p,
+                            deliveryDate: "today",
+                            deliverySlot: availableSlotsToday[0]?.val || "tomorrow-morning",
+                          }));
+                        }}
+                        disabled={availableSlotsToday.length === 0}
+                        className={cn(
+                          "flex-1 py-2.5 px-3 text-xs tracking-[0.08em] uppercase transition-all flex items-center justify-center gap-1.5 border rounded-none",
+                          formData.deliveryDate === "today" && availableSlotsToday.length > 0
+                            ? "bg-foreground text-background border-foreground font-semibold"
+                            : availableSlotsToday.length === 0
+                            ? "opacity-40 cursor-not-allowed border-border text-muted-foreground bg-muted/40"
+                            : "border-border text-muted-foreground hover:text-foreground hover:border-foreground/50"
+                        )}
+                      >
+                        <Calendar className="w-3.5 h-3.5" />
+                        <span>{locale === "bn" ? "আজ (Today)" : "Today"}</span>
+                        {availableSlotsToday.length === 0 && (
+                          <span className="text-[9px] text-rose-500 font-normal">
+                            ({locale === "bn" ? "সময় শেষ" : "Closed"})
+                          </span>
+                        )}
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setFormData((p) => ({
+                            ...p,
+                            deliveryDate: "tomorrow",
+                            deliverySlot: "08:00 AM - 10:00 AM",
+                          }));
+                        }}
+                        className={cn(
+                          "flex-1 py-2.5 px-3 text-xs tracking-[0.08em] uppercase transition-all flex items-center justify-center gap-1.5 border rounded-none",
+                          formData.deliveryDate === "tomorrow"
+                            ? "bg-foreground text-background border-foreground font-semibold"
+                            : "border-border text-muted-foreground hover:text-foreground hover:border-foreground/50"
+                        )}
+                      >
+                        <Calendar className="w-3.5 h-3.5" />
+                        <span>{locale === "bn" ? "আগামীকাল (Tomorrow)" : "Tomorrow"}</span>
+                      </button>
+                    </div>
+
+                    {/* Available Time Slots Grid */}
+                    <div className="space-y-1.5 pt-1">
+                      <span className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground font-semibold block">
+                        {locale === "bn" ? "ডেলিভারি সময় স্লট বেছে নিন:" : "Select Delivery Time Slot:"}
+                      </span>
+                      
+                      {activeSlots.length === 0 ? (
+                        <div className="p-4 bg-muted/30 border border-border text-center text-xs text-muted-foreground">
+                          {locale === "bn"
+                            ? "আজকের দিনের সকল ডেলিভারি স্লট পূর্ণ বা ২ ঘণ্টার চেয়ে কম সময় অবশিষ্ট রয়েছে। অনুগ্রহ করে উপরের 'আগামীকাল' অপশনটি বেছে নিন।"
+                            : "All delivery slots for today have passed or are within the 2-hour prep window. Please select Tomorrow above."}
+                        </div>
+                      ) : (
+                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                          {activeSlots.map((slot) => {
+                            const isSelected = formData.deliverySlot === slot.val;
+                            return (
+                              <button
+                                key={slot.val}
+                                type="button"
+                                onClick={() => setFormData((p) => ({ ...p, deliverySlot: slot.val }))}
+                                className={cn(
+                                  "py-3 px-2 text-xs border text-center transition-all duration-200 rounded-none flex flex-col items-center justify-center gap-1",
+                                  isSelected
+                                    ? "border-primary bg-primary/10 text-primary font-semibold shadow-sm"
+                                    : "border-border text-foreground hover:border-primary/50 bg-background"
+                                )}
+                              >
+                                <span className="font-medium tracking-wide">{slot.val}</span>
+                                <span className="text-[9px] text-muted-foreground">
+                                  {locale === "bn" ? slot.labelBn : slot.labelEn}
+                                </span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Customer Specific Exact Time / Custom Instruction */}
+                    <div className="space-y-1.5 pt-2">
+                      <label className="text-[10px] font-semibold tracking-[0.2em] uppercase text-muted-foreground flex items-center justify-between">
+                        <span>{locale === "bn" ? "নির্দিষ্ট সময় বা ডেলিভারি নির্দেশনা (ঐচ্ছিক)" : "Specific Time or Note (Optional)"}</span>
+                        <span className="text-[9px] text-muted-foreground font-normal">
+                          {locale === "bn" ? "যেমন: ঠিক ৭:৩০ এ কল করবেন" : "e.g. Call at 7:30 PM"}
+                        </span>
+                      </label>
+                      <input
+                        type="text"
+                        name="customDeliveryTime"
+                        placeholder={
+                          locale === "bn"
+                            ? "কোনো নির্দিষ্ট মিনিট বা সময়ে পেতে চাইলে লিখে দিন (যেমন: 'সন্ধ্যা ৭:৩০ এ দিন')"
+                            : "Specific preferred minute or instructions (e.g. 'Deliver exactly at 7:30 PM')"
+                        }
+                        value={formData.customDeliveryTime}
+                        onChange={handleInputChange}
+                        className="w-full px-4 py-2.5 text-xs bg-background border border-border text-foreground rounded-none focus:outline-none focus:border-primary"
+                      />
                     </div>
                   </div>
 

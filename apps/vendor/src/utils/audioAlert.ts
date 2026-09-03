@@ -1,17 +1,30 @@
-// =============================================================================
-// Tatka Bazar — Web Audio API Live Order Sound Notification Engine
-// Generates crystal-clear "Ting-Tong" Delivery Chime without external MP3 dependencies
-// =============================================================================
+// Web Audio API zero-dependency chime synthesizer for vendor operations
 
-class AudioAlertEngine {
+class AudioManager {
   private audioCtx: AudioContext | null = null;
+  private soundEnabled: boolean = true;
+
+  constructor() {
+    // Initialized lazily on first user gesture
+  }
+
+  public setSoundEnabled(enabled: boolean) {
+    this.soundEnabled = enabled;
+  }
+
+  public isSoundEnabled(): boolean {
+    return this.soundEnabled;
+  }
 
   private getContext(): AudioContext | null {
     if (typeof window === "undefined") return null;
     if (!this.audioCtx) {
-      const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
-      if (AudioContextClass) {
-        this.audioCtx = new AudioContextClass();
+      const AudioCtxClass =
+        window.AudioContext ||
+        (window as unknown as { webkitAudioContext: typeof AudioContext })
+          .webkitAudioContext;
+      if (AudioCtxClass) {
+        this.audioCtx = new AudioCtxClass();
       }
     }
     if (this.audioCtx && this.audioCtx.state === "suspended") {
@@ -20,42 +33,90 @@ class AudioAlertEngine {
     return this.audioCtx;
   }
 
-  /**
-   * Play sweet Foodpanda/Pathao-style "Ting-Tong" order chime
-   */
-  playOrderAssignedSound() {
+  // Double chime for incoming new orders (bright, professional, unmistakable)
+  public playNewOrderChime() {
+    if (!this.soundEnabled) return;
     try {
       const ctx = this.getContext();
       if (!ctx) return;
 
-      const notes = [
-        { freq: 523.25, time: 0.0,  duration: 0.12 },
-        { freq: 659.25, time: 0.12, duration: 0.12 },
-        { freq: 783.99, time: 0.24, duration: 0.14 },
-        { freq: 1046.50, time: 0.38, duration: 0.35 },
-      ];
+      const now = ctx.currentTime;
 
-      notes.forEach(({ freq, time, duration }) => {
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
+      // Note 1: E5 (659.25 Hz)
+      const osc1 = ctx.createOscillator();
+      const gain1 = ctx.createGain();
+      osc1.type = "sine";
+      osc1.frequency.setValueAtTime(659.25, now);
+      gain1.gain.setValueAtTime(0.3, now);
+      gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+      osc1.connect(gain1);
+      gain1.connect(ctx.destination);
+      osc1.start(now);
+      osc1.stop(now + 0.35);
 
-        osc.type = "sine";
-        osc.frequency.setValueAtTime(freq, ctx.currentTime + time);
+      // Note 2: B5 (987.77 Hz)
+      const osc2 = ctx.createOscillator();
+      const gain2 = ctx.createGain();
+      osc2.type = "sine";
+      osc2.frequency.setValueAtTime(987.77, now + 0.15);
+      gain2.gain.setValueAtTime(0.35, now + 0.15);
+      gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.55);
+      osc2.connect(gain2);
+      gain2.connect(ctx.destination);
+      osc2.start(now + 0.15);
+      osc2.stop(now + 0.55);
+    } catch {
+      // Audio context may fail if no user gesture yet
+    }
+  }
 
-        gain.gain.setValueAtTime(0, ctx.currentTime + time);
-        gain.gain.linearRampToValueAtTime(0.35, ctx.currentTime + time + 0.02);
-        gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + time + duration);
+  // Low-stock or urgent warning alert
+  public playAlertSound() {
+    if (!this.soundEnabled) return;
+    try {
+      const ctx = this.getContext();
+      if (!ctx) return;
 
-        osc.connect(gain);
-        gain.connect(ctx.destination);
+      const now = ctx.currentTime;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = "triangle";
+      osc.frequency.setValueAtTime(440, now); // A4
+      osc.frequency.setValueAtTime(370, now + 0.12); // F#4
+      gain.gain.setValueAtTime(0.25, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.3);
+    } catch {
+      // ignore
+    }
+  }
 
-        osc.start(ctx.currentTime + time);
-        osc.stop(ctx.currentTime + time + duration);
-      });
-    } catch (e) {
-      console.warn("[AudioAlertEngine] Could not play chime:", e);
+  // Pleasant success chime for order dispatched / weight reconciled / payout requested
+  public playSuccessSound() {
+    if (!this.soundEnabled) return;
+    try {
+      const ctx = this.getContext();
+      if (!ctx) return;
+
+      const now = ctx.currentTime;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(523.25, now); // C5
+      osc.frequency.exponentialRampToValueAtTime(1046.5, now + 0.2); // C6
+      gain.gain.setValueAtTime(0.2, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.35);
+    } catch {
+      // ignore
     }
   }
 }
 
-export const audioAlert = new AudioAlertEngine();
+export const audioAlert = new AudioManager();

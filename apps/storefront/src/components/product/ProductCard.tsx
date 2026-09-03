@@ -108,30 +108,32 @@ export const ProductCard: React.FC<ProductCardProps> = ({
               src={product.images[1]}
               alt={`${product.nameEn} alternate view`}
               className="absolute inset-0 w-full h-full object-cover opacity-0 scale-105 transition-all duration-[1s] ease-out group-hover:opacity-100 group-hover:scale-100"
+              onError={(e) => {
+                e.currentTarget.style.display = "none";
+              }}
             />
           )}
 
-          {/* Gradient Overlay on Hover */}
-          <div className="absolute inset-0 bg-gradient-to-t from-charcoal/25 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
-
-          {/* Wishlist toggle button (3D Transparent Glass) */}
+          {/* Wishlist toggle button (Ultra Clear - No Border, No Blur) */}
           <button
             type="button"
             onClick={handleWishlistToggle}
             aria-label="Toggle wishlist"
             className={cn(
-              "absolute top-2 right-2 sm:top-3 sm:right-3 p-2 sm:p-2.5 rounded-full transition-all duration-300",
-              "bg-white/40 dark:bg-black/40 backdrop-blur-xl border border-white/60 dark:border-white/20",
-              "shadow-[0_8px_20px_rgba(0,0,0,0.12),inset_0_1px_1px_rgba(255,255,255,0.7)]",
-              "hover:bg-white/70 hover:scale-105 hover:shadow-[0_10px_25px_rgba(0,0,0,0.18)] active:scale-95 active:translate-y-0.5",
+              "absolute top-2 right-2 sm:top-3 sm:right-3 w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center transition-all duration-300",
+              "bg-white/10 hover:bg-white/25 text-white",
+              "shadow-[0_4px_16px_rgba(0,0,0,0.2)]",
+              "hover:scale-105 active:scale-95 active:translate-y-0.5",
               "opacity-90 sm:opacity-0 sm:translate-y-1 group-hover:opacity-100 group-hover:translate-y-0",
-              inWishlist && "opacity-100 translate-y-0 bg-white/75"
+              inWishlist && "opacity-100 translate-y-0 bg-white/30 shadow-[0_4px_20px_rgba(244,63,94,0.4)]"
             )}
           >
             <Heart
               className={cn(
-                "w-3.5 h-3.5 sm:w-4 sm:h-4 transition-all duration-300 drop-shadow-sm",
-                inWishlist ? "fill-primary text-primary scale-110" : "text-foreground"
+                "w-3.5 h-3.5 sm:w-4 sm:h-4 transition-all duration-300",
+                inWishlist
+                  ? "fill-rose-500 text-rose-500 scale-110 drop-shadow-[0_2px_8px_rgba(244,63,94,0.6)]"
+                  : "text-white drop-shadow-[0_1.5px_3px_rgba(0,0,0,0.9)]"
               )}
             />
           </button>
@@ -155,22 +157,22 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             )}
           </div>
 
-          {/* Quick Add Bar (3D Transparent Glass) */}
-          <div className="absolute bottom-0 left-0 right-0 flex items-center justify-center pb-2 px-2 sm:pb-3 sm:px-3 opacity-0 group-hover:opacity-100 transition-all duration-300">
+          {/* Quick Add Bar (Ultra Clear - No Border, No Blur, Zero Darkening) */}
+          <div className="absolute bottom-0 left-0 right-0 flex items-center justify-center pb-2.5 px-3 sm:pb-3.5 sm:px-4 opacity-0 group-hover:opacity-100 transition-all duration-300">
             <button
               type="button"
               onClick={handleQuickAdd}
-              className="w-full py-2 sm:py-2.5 px-3 text-[10px] sm:text-xs font-semibold tracking-[0.12em] sm:tracking-[0.18em] uppercase transition-all duration-300 flex items-center justify-center gap-1.5 rounded-none bg-white/60 dark:bg-black/60 backdrop-blur-xl border border-white/70 dark:border-white/20 text-foreground shadow-[0_10px_25px_rgba(0,0,0,0.15),inset_0_1px_1px_rgba(255,255,255,0.85)] hover:bg-primary hover:border-primary hover:text-primary-foreground hover:shadow-[0_12px_28px_rgba(24,131,80,0.35)] active:translate-y-0.5 active:scale-[0.99]"
+              className="w-full py-2 sm:py-2.5 px-4 text-[10px] sm:text-xs font-semibold tracking-[0.15em] uppercase transition-all duration-300 flex items-center justify-center gap-1.5 rounded-full bg-white/15 hover:bg-white/30 text-white shadow-[0_4px_20px_rgba(0,0,0,0.22)] active:translate-y-0.5 active:scale-[0.98] drop-shadow-[0_1.5px_3px_rgba(0,0,0,0.9)]"
             >
               {addedAnim ? (
                 <>
-                  <Check className="w-3.5 h-3.5" />
-                  <span>{locale === "bn" ? "যোগ হয়েছে" : "Added"}</span>
+                  <Check className="w-3.5 h-3.5 drop-shadow-[0_1.5px_3px_rgba(0,0,0,0.9)]" />
+                  <span className="drop-shadow-[0_1.5px_3px_rgba(0,0,0,0.9)]">{locale === "bn" ? "যোগ হয়েছে" : "Added"}</span>
                 </>
               ) : (
                 <>
-                  <ShoppingBag className="w-3.5 h-3.5" />
-                  <span>{locale === "bn" ? "+ ব্যাগে" : "+ Add"}</span>
+                  <ShoppingBag className="w-3.5 h-3.5 drop-shadow-[0_1.5px_3px_rgba(0,0,0,0.9)]" />
+                  <span className="drop-shadow-[0_1.5px_3px_rgba(0,0,0,0.9)]">{locale === "bn" ? "+ ব্যাগে" : "+ Add"}</span>
                 </>
               )}
             </button>
