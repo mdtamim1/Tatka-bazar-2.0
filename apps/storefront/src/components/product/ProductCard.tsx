@@ -114,21 +114,23 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           {/* Gradient Overlay on Hover */}
           <div className="absolute inset-0 bg-gradient-to-t from-charcoal/25 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
 
-          {/* Wishlist toggle button */}
+          {/* Wishlist toggle button (3D Transparent Glass) */}
           <button
             type="button"
             onClick={handleWishlistToggle}
             aria-label="Toggle wishlist"
             className={cn(
-              "absolute top-2 right-2 sm:top-3.5 sm:right-3.5 p-1.5 sm:p-2 rounded-full transition-all duration-300",
-              "bg-background/90 backdrop-blur-md hover:bg-background shadow-sm",
+              "absolute top-2 right-2 sm:top-3 sm:right-3 p-2 sm:p-2.5 rounded-full transition-all duration-300",
+              "bg-white/40 dark:bg-black/40 backdrop-blur-xl border border-white/60 dark:border-white/20",
+              "shadow-[0_8px_20px_rgba(0,0,0,0.12),inset_0_1px_1px_rgba(255,255,255,0.7)]",
+              "hover:bg-white/70 hover:scale-105 hover:shadow-[0_10px_25px_rgba(0,0,0,0.18)] active:scale-95 active:translate-y-0.5",
               "opacity-90 sm:opacity-0 sm:translate-y-1 group-hover:opacity-100 group-hover:translate-y-0",
-              inWishlist && "opacity-100 translate-y-0"
+              inWishlist && "opacity-100 translate-y-0 bg-white/75"
             )}
           >
             <Heart
               className={cn(
-                "w-3.5 h-3.5 sm:w-4 sm:h-4 transition-all duration-300",
+                "w-3.5 h-3.5 sm:w-4 sm:h-4 transition-all duration-300 drop-shadow-sm",
                 inWishlist ? "fill-primary text-primary scale-110" : "text-foreground"
               )}
             />
@@ -153,21 +155,21 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             )}
           </div>
 
-          {/* Quick Add Bar */}
+          {/* Quick Add Bar (3D Transparent Glass) */}
           <div className="absolute bottom-0 left-0 right-0 flex items-center justify-center pb-2 px-2 sm:pb-3 sm:px-3 opacity-0 group-hover:opacity-100 transition-all duration-300">
             <button
               type="button"
               onClick={handleQuickAdd}
-              className="w-full py-1.5 sm:py-2 px-2 sm:px-3 text-[9px] sm:text-xs font-medium tracking-[0.1em] sm:tracking-[0.15em] uppercase bg-background/95 backdrop-blur-md text-foreground shadow-md hover:bg-primary hover:text-primary-foreground transition-all duration-300 flex items-center justify-center gap-1.5 rounded-none"
+              className="w-full py-2 sm:py-2.5 px-3 text-[10px] sm:text-xs font-semibold tracking-[0.12em] sm:tracking-[0.18em] uppercase transition-all duration-300 flex items-center justify-center gap-1.5 rounded-none bg-white/60 dark:bg-black/60 backdrop-blur-xl border border-white/70 dark:border-white/20 text-foreground shadow-[0_10px_25px_rgba(0,0,0,0.15),inset_0_1px_1px_rgba(255,255,255,0.85)] hover:bg-primary hover:border-primary hover:text-primary-foreground hover:shadow-[0_12px_28px_rgba(24,131,80,0.35)] active:translate-y-0.5 active:scale-[0.99]"
             >
               {addedAnim ? (
                 <>
-                  <Check className="w-3 h-3" />
+                  <Check className="w-3.5 h-3.5" />
                   <span>{locale === "bn" ? "যোগ হয়েছে" : "Added"}</span>
                 </>
               ) : (
                 <>
-                  <ShoppingBag className="w-3 h-3" />
+                  <ShoppingBag className="w-3.5 h-3.5" />
                   <span>{locale === "bn" ? "+ ব্যাগে" : "+ Add"}</span>
                 </>
               )}
