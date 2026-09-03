@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Heart, ShoppingBag, Check, Zap } from "lucide-react";
+import { Heart, ShoppingBag, Check, Zap, SlidersHorizontal } from "lucide-react";
 import { motion } from "framer-motion";
 import { useLanguage } from "@/context/LanguageContext";
 import { useCartStore } from "@/lib/cart-store";
@@ -32,6 +32,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 
   const inWishlist = mounted ? wishlistIds.includes(product.id) : false;
   const hasSecondImage = product.images && product.images.length > 1;
+  const hasMultipleWeights = Boolean(product.weightOptions && product.weightOptions.length > 1);
 
   const handleWishlistToggle = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -56,17 +57,21 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 
   const router = useRouter();
 
-  const handleOrderNow = (e: React.MouseEvent) => {
+  const handleActionClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    addItem(
-      product,
-      1,
-      product.baseUnit || "kg",
-      product.basePrice,
-      1
-    );
-    router.push("/checkout");
+    if (hasMultipleWeights) {
+      router.push(`/product/${product.slug}`);
+    } else {
+      addItem(
+        product,
+        1,
+        product.baseUnit || "kg",
+        product.basePrice,
+        1
+      );
+      router.push("/checkout");
+    }
   };
 
   return (
@@ -202,15 +207,28 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             )}
           </div>
 
-          {/* Order Now Button */}
+          {/* Action Button: Dynamic based on weight options */}
           <div className="pt-2">
             <button
               type="button"
-              onClick={handleOrderNow}
-              className="w-full py-1.5 sm:py-2 px-2.5 text-[10px] sm:text-xs font-semibold tracking-[0.1em] uppercase bg-primary hover:bg-primary/90 text-primary-foreground transition-all duration-300 flex items-center justify-center gap-1.5 shadow-sm active:scale-[0.98] rounded-none"
+              onClick={handleActionClick}
+              className="w-full py-1.5 sm:py-2 px-1.5 sm:px-2.5 text-[9px] sm:text-[11px] font-semibold tracking-[0.03em] sm:tracking-[0.08em] uppercase bg-primary hover:bg-primary/90 text-primary-foreground transition-all duration-300 flex items-center justify-center gap-1 sm:gap-1.5 shadow-sm active:scale-[0.98] rounded-none"
             >
-              <Zap className="w-3 h-3 fill-current" />
-              <span>{locale === "bn" ? "অর্ডার করুন" : "Order Now"}</span>
+              {hasMultipleWeights ? (
+                <>
+                  <SlidersHorizontal className="w-3 h-3 flex-shrink-0" />
+                  <span className="truncate">
+                    {locale === "bn" ? "পরিমাণ বেছে অর্ডার করুন" : "Select Weight to Order"}
+                  </span>
+                </>
+              ) : (
+                <>
+                  <Zap className="w-3 h-3 fill-current flex-shrink-0" />
+                  <span className="truncate">
+                    {locale === "bn" ? "অর্ডার করুন" : "Order Now"}
+                  </span>
+                </>
+              )}
             </button>
           </div>
         </div>
