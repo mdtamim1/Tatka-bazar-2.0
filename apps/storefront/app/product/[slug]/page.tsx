@@ -15,7 +15,13 @@ import {
   Truck,
   Leaf,
   Plus,
-  Minus
+  Minus,
+  Sparkles,
+  ChefHat,
+  Utensils,
+  Clock,
+  MapPin,
+  ChevronDown,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLanguage } from "@/context/LanguageContext";
@@ -49,11 +55,11 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
   const [addedAnim, setAddedAnim] = useState(false);
   const [mounted, setMounted] = useState(false);
 
-  // Accordion open states
+  // Food presentation accordion open states
   const [accordionOpen, setAccordionOpen] = useState<{ [key: string]: boolean }>({
-    origin: true,
-    nutrition: false,
-    shipping: false,
+    nutrition: true,
+    culinary: false,
+    origin: false,
   });
 
   const toggleAccordion = (key: string) => {
@@ -95,6 +101,56 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
   const relatedProducts = PRODUCTS.filter(
     (p) => p.categorySlug === product.categorySlug && p.id !== product.id
   ).slice(0, 4);
+
+  // Food culinary tips & recommended recipes based on category
+  const getCulinaryInfo = (catSlug: string) => {
+    switch (catSlug) {
+      case "fish-and-meat":
+        return {
+          dishesBn: ["সর্ষে বা পাতুরি", "আলু দিয়ে ঝোল", "দো-পেঁয়াজা ভুনা"],
+          dishesEn: ["Mustard Steam (Shorshe)", "Traditional Curry", "Spicy Bhuna"],
+          tipBn: "হালকা হলুদ ও লবণ মাখিয়ে কম আঁচে রান্না করলে মাছ ও মাংসের স্বাভাবিক স্বাদ ও কোমলতা পুরোপুরি বজায় থাকে।",
+          tipEn: "Marinate gently with sea salt and turmeric; cook on gentle medium heat to preserve moisture and rich natural aroma.",
+        };
+      case "vegetables":
+        return {
+          dishesBn: ["রসুন-মরিচ দিয়ে ভাজি", "হালকা পাঁচমিশালি চচ্চড়ি", "তাজা কাঁচা সালাদ"],
+          dishesEn: ["Garlic Stir Fry", "Light Mixed Chorchori", "Crisp Garden Salad"],
+          tipBn: "সবুজ শাকসবজি বেশিক্ষণ উচ্চতাপে ভাজবেন না; এতে সবজির ভিটামিন, সতেজ সবুজ রঙ ও প্রাকৃতিক ক্রাঞ্চ অটুট থাকে।",
+          tipEn: "Steam or flash sauté over moderate heat to lock in crisp texture, natural vitamins, and vibrant farm color.",
+        };
+      case "fruits":
+        return {
+          dishesBn: ["তাজা স্লাইস ডেজার্ট", "ফ্রুট কাস্টার্ড", "প্রাকৃতিক ফ্রেশ জুস"],
+          dishesEn: ["Fresh Slices", "Seasonal Fruit Bowl", "Cold Pressed Juice"],
+          tipBn: "খাওয়ার আগে হালকা পানিতে ভিজিয়ে ধুয়ে নিন; স্বাভাবিক তাপমাত্রায় রাখলে ফলের আসল মিষ্টতা ও সুবাস সবচেয়ে ভালো পাওয়া যায়।",
+          tipEn: "Rinse gently in cold water before slicing; best enjoyed at natural cellar temperature for peak sweetness.",
+        };
+      case "rice-and-staples":
+        return {
+          dishesBn: ["সুগন্ধি সাদা ভাত", "শাহি পোলাও", "ঘিয়ে ভাজা ভুনা খিচুড়ি"],
+          dishesEn: ["Steaming Fragrant Rice", "Shahi Polao", "Ghee Tempered Khichuri"],
+          tipBn: "রান্নার আগে চাল ভালো করে ধুয়ে ১০ মিনিট জল ঝরিয়ে নিলে প্রতিটি ভাত হবে ঝরঝরে, লম্বা ও সুবাসিত।",
+          tipEn: "Rinse gently and rest for 10 minutes before boiling; grains expand gracefully into fluffy, non-sticky texture.",
+        };
+      case "oil-and-ghee":
+        return {
+          dishesBn: ["গরম ভাতে ১ চামচ ঘি", "ঝাঁঝালো সরিষার ভর্তা", "মধু-লেবু কুসুম গরম পানি"],
+          dishesEn: ["Dollop on Warm Rice", "Mustard Mash (Bhorta)", "Honey Detox Water"],
+          tipBn: "রান্না নামানোর ঠিক আগে ১ চামচ খাঁটি ঘি ছড়িয়ে ঢাকনা বন্ধ রাখুন; এতে সারা ঘরে ছড়িয়ে পড়বে অতুলনীয় ঘ্রাণ।",
+          tipEn: "Drizzle raw just before serving to impart an unmistakable artisanal bouquet and wholesome nutritional warmth.",
+        };
+      default: // dairy-and-eggs etc.
+        return {
+          dishesBn: ["ডিম ভুনা ও ওমলেট", "মিষ্টি দই ডেজার্ট", "ঘি দিয়ে পোচ"],
+          dishesEn: ["Golden Egg Bhuna", "Chilled Curd Dessert", "Ghee Poached Eggs"],
+          tipBn: "মাটির হাঁড়ির দই ঠাণ্ডা পরিবেশন করুন এবং দেশি ডিম হালকা আঁচে রান্না করলে কুসুমের কোমল স্বাদ চমৎকার থাকে।",
+          tipEn: "Keep clay pot curd refrigerated and cook country eggs gently to enjoy rich velvety yolks and sweet finish.",
+        };
+    }
+  };
+
+  const culinary = getCulinaryInfo(product.categorySlug);
 
   const nextImage = () => {
     setCurrentImageIndex((prev) =>
@@ -396,57 +452,214 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
                 </Button>
               </div>
 
-              {/* Accordions (Origin, Integrity, Delivery) */}
-              <div className="border-t border-border pt-6 divide-y divide-border text-sm">
-                {/* Origin / Provenance */}
-                <div className="py-4">
-                  <button
-                    type="button"
-                    onClick={() => toggleAccordion("origin")}
-                    className="w-full flex justify-between items-center text-left font-serif text-lg text-foreground"
-                  >
-                    <span>{locale === "bn" ? "উৎপত্তি ও সোর্সিং" : "Origin & Provenance"}</span>
-                    <span>{accordionOpen["origin"] ? "−" : "+"}</span>
-                  </button>
-                  {accordionOpen["origin"] && (
-                    <div className="pt-3 text-xs text-muted-foreground leading-relaxed space-y-2">
-                      <p><strong>{locale === "bn" ? "স্থান:" : "Origin:"}</strong> {locale === "bn" ? product.originBn : product.originEn}</p>
-                      <p><strong>{locale === "bn" ? "তাজা নিশ্চয়তা:" : "Freshness Promise:"}</strong> {locale === "bn" ? product.freshnessGuaranteeBn : product.freshnessGuaranteeEn}</p>
-                    </div>
-                  )}
+              {/* ── Premium Food-Centric Presentation Module (3 Food Options) ── */}
+              <div className="border-t border-border pt-6 space-y-3">
+                <div className="flex items-center justify-between pb-1">
+                  <p className="text-[11px] font-semibold tracking-[0.2em] uppercase text-primary flex items-center gap-1.5">
+                    <Sparkles className="w-3.5 h-3.5" />
+                    <span>{locale === "bn" ? "খাবারের বৈশিষ্ট্য ও সতেজতা" : "Food Details & Integrity"}</span>
+                  </p>
+                  <span className="text-[10px] font-medium text-muted-foreground bg-muted/60 px-2.5 py-1 rounded-full border border-border">
+                    {locale === "bn" ? "৩টি বিশেষ তথ্য" : "3 Key Highlights"}
+                  </span>
                 </div>
 
-                {/* Storage & Care */}
-                <div className="py-4">
+                {/* Option 1: Nutrition & Health Benefits */}
+                <div className="rounded-xl border border-border bg-background/50 overflow-hidden transition-all duration-300 shadow-xs hover:border-primary/40">
                   <button
                     type="button"
                     onClick={() => toggleAccordion("nutrition")}
-                    className="w-full flex justify-between items-center text-left font-serif text-lg text-foreground"
+                    className="w-full p-4 flex items-center justify-between text-left group transition-colors hover:bg-muted/30"
                   >
-                    <span>{locale === "bn" ? "সংরক্ষণ পদ্ধতি" : "Storage & Care"}</span>
-                    <span>{accordionOpen["nutrition"] ? "−" : "+"}</span>
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-500/20">
+                        <Sparkles className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <h4 className="font-serif text-base font-semibold text-foreground group-hover:text-primary transition-colors">
+                          {locale === "bn" ? "১. পুষ্টিগুণ ও স্বাস্থ্য উপকারিতা" : "1. Nutrition & Health Benefits"}
+                        </h4>
+                        <p className="text-[11px] text-muted-foreground">
+                          {locale === "bn" ? "প্রাকৃতিক ভিটামিন, প্রোটিন ও ম্যাক্রো উপাদান" : "Natural vitamins, proteins & vital macros"}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="w-7 h-7 rounded-full bg-muted/40 flex items-center justify-center text-muted-foreground transition-transform duration-300 group-hover:text-foreground">
+                      <ChevronDown className={cn("w-4 h-4 transition-transform duration-300", accordionOpen["nutrition"] ? "rotate-180" : "")} />
+                    </div>
                   </button>
+
                   {accordionOpen["nutrition"] && (
-                    <div className="pt-3 text-xs text-muted-foreground leading-relaxed">
-                      <p>{locale === "bn" ? product.storageTipsBn || "শীতল ও শুষ্ক স্থানে সংরক্ষণ করুন।" : product.storageTipsEn || "Keep refrigerated in optimal temperature control."}</p>
+                    <div className="px-4 pb-4 pt-1 border-t border-border/40 bg-muted/15 space-y-3 animate-in fade-in-50 duration-200">
+                      {/* Macro Pills Grid */}
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1">
+                        <div className="p-2.5 bg-background border border-border rounded-lg text-center">
+                          <span className="block text-[10px] text-muted-foreground uppercase tracking-wider">{locale === "bn" ? "ক্যালোরি" : "Calories"}</span>
+                          <span className="text-xs font-bold text-foreground mt-0.5 block">{product.nutritionInfo?.calories || "১০০% প্রাকৃতিক"}</span>
+                        </div>
+                        <div className="p-2.5 bg-background border border-border rounded-lg text-center">
+                          <span className="block text-[10px] text-muted-foreground uppercase tracking-wider">{locale === "bn" ? "প্রোটিন" : "Protein"}</span>
+                          <span className="text-xs font-bold text-foreground mt-0.5 block">{product.nutritionInfo?.protein || "উচ্চমান সম্পন্ন"}</span>
+                        </div>
+                        <div className="p-2.5 bg-background border border-border rounded-lg text-center">
+                          <span className="block text-[10px] text-muted-foreground uppercase tracking-wider">{locale === "bn" ? "কার্বস" : "Carbs"}</span>
+                          <span className="text-xs font-bold text-foreground mt-0.5 block">{product.nutritionInfo?.carbs || "প্রাকৃতিক শর্করা"}</span>
+                        </div>
+                        <div className="p-2.5 bg-background border border-border rounded-lg text-center">
+                          <span className="block text-[10px] text-muted-foreground uppercase tracking-wider">{locale === "bn" ? "স্বাস্থ্যকর ফ্যাট/উপাদান" : "Healthy Fats"}</span>
+                          <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 mt-0.5 block truncate" title={product.nutritionInfo?.fat}>
+                            {product.nutritionInfo?.fat || "জিরো কেমিক্যাল"}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Health & Safety Badges */}
+                      <div className="flex flex-wrap gap-2 pt-1">
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-semibold bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20">
+                          <Check className="w-3 h-3" />
+                          {locale === "bn" ? "১০০% ফরমালিন ও রাসায়নিকমুক্ত" : "100% Formalin & Chemical Free"}
+                        </span>
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-semibold bg-primary/10 text-primary border border-primary/20">
+                          <Leaf className="w-3 h-3" />
+                          {locale === "bn" ? "প্রাকৃতিক ও ভেজালহীন পুষ্টি" : "Pure Unadulterated Nutrition"}
+                        </span>
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-semibold bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/20">
+                          <ShieldCheck className="w-3 h-3" />
+                          {locale === "bn" ? "ল্যাব সার্টিফাইড বিশুদ্ধতা" : "Lab Certified Quality"}
+                        </span>
+                      </div>
                     </div>
                   )}
                 </div>
 
-                {/* Shipping & Delivery */}
-                <div className="py-4">
+                {/* Option 2: Culinary & Cooking Tips */}
+                <div className="rounded-xl border border-border bg-background/50 overflow-hidden transition-all duration-300 shadow-xs hover:border-primary/40">
                   <button
                     type="button"
-                    onClick={() => toggleAccordion("shipping")}
-                    className="w-full flex justify-between items-center text-left font-serif text-lg text-foreground"
+                    onClick={() => toggleAccordion("culinary")}
+                    className="w-full p-4 flex items-center justify-between text-left group transition-colors hover:bg-muted/30"
                   >
-                    <span>{locale === "bn" ? "ডেলিভারি ও নিশ্চয়তা" : "Delivery & Guarantee"}</span>
-                    <span>{accordionOpen["shipping"] ? "−" : "+"}</span>
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-lg bg-orange-500/10 text-orange-600 dark:text-orange-400 flex items-center justify-center shrink-0 border border-orange-500/20">
+                        <ChefHat className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <h4 className="font-serif text-base font-semibold text-foreground group-hover:text-primary transition-colors">
+                          {locale === "bn" ? "২. রান্না ও পরিবেশন পরামর্শ" : "2. Culinary & Cooking Tips"}
+                        </h4>
+                        <p className="text-[11px] text-muted-foreground">
+                          {locale === "bn" ? "সেরা রন্ধনশৈলী, পেয়ারিং ও শেফের টিপস" : "Signature dishes, pairings & chef advice"}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="w-7 h-7 rounded-full bg-muted/40 flex items-center justify-center text-muted-foreground transition-transform duration-300 group-hover:text-foreground">
+                      <ChevronDown className={cn("w-4 h-4 transition-transform duration-300", accordionOpen["culinary"] ? "rotate-180" : "")} />
+                    </div>
                   </button>
-                  {accordionOpen["shipping"] && (
-                    <div className="pt-3 text-xs text-muted-foreground leading-relaxed space-y-1">
-                      <p>• {locale === "bn" ? "৬০-১২০ মিনিট কোল্ড-চেইন এক্সপ্রেস ডেলিভারি।" : "60-120 minute temperature-controlled express dispatch."}</p>
-                      <p>• {locale === "bn" ? "দোরগোড়ায় চেক করে গ্রহণের সুযোগ।" : "Quality check on doorstep before payment."}</p>
+
+                  {accordionOpen["culinary"] && (
+                    <div className="px-4 pb-4 pt-1 border-t border-border/40 bg-muted/15 space-y-3 animate-in fade-in-50 duration-200">
+                      {/* Signature Dishes Tags */}
+                      <div className="space-y-1.5 pt-1">
+                        <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1">
+                          <Utensils className="w-3 h-3 text-orange-500" />
+                          <span>{locale === "bn" ? "যেসব রান্নায় দারুণ জমে:" : "Recommended Preparations:"}</span>
+                        </span>
+                        <div className="flex flex-wrap gap-1.5">
+                          {culinary.dishesBn.map((d, i) => (
+                            <span key={i} className="px-2.5 py-1 text-[11px] font-medium bg-background border border-border rounded-md text-foreground shadow-xs">
+                              {locale === "bn" ? d : culinary.dishesEn[i]}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Chef's Tip Quote Box */}
+                      <div className="p-3 bg-orange-500/5 border border-orange-500/15 rounded-lg flex items-start gap-2.5">
+                        <ChefHat className="w-4 h-4 text-orange-600 shrink-0 mt-0.5" />
+                        <div className="text-xs text-foreground/90 leading-relaxed">
+                          <strong className="text-orange-600 block text-[11px] mb-0.5">
+                            {locale === "bn" ? "শেফের বিশেষ টিপস:" : "Chef's Secret:"}
+                          </strong>
+                          {locale === "bn" ? culinary.tipBn : culinary.tipEn}
+                        </div>
+                      </div>
+
+                      {/* Storage instruction */}
+                      <div className="text-[11px] text-muted-foreground pt-1 flex items-center justify-between">
+                        <span>
+                          <strong>{locale === "bn" ? "সংরক্ষণ:" : "Storage:"}</strong>{" "}
+                          {locale === "bn" ? product.storageTipsBn || "শীতল স্থানে স্বাভাবিক তাপমাত্রায় রাখুন।" : product.storageTipsEn || "Store in a cool dry place."}
+                        </span>
+                        <Link href="/recipes" className="text-primary hover:underline text-[11px] font-semibold shrink-0 ml-2">
+                          {locale === "bn" ? "রেসিপি দেখুন →" : "View Recipes →"}
+                        </Link>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Option 3: Farm Origin & Freshness Promise */}
+                <div className="rounded-xl border border-border bg-background/50 overflow-hidden transition-all duration-300 shadow-xs hover:border-primary/40">
+                  <button
+                    type="button"
+                    onClick={() => toggleAccordion("origin")}
+                    className="w-full p-4 flex items-center justify-between text-left group transition-colors hover:bg-muted/30"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0 border border-primary/20">
+                        <Leaf className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <h4 className="font-serif text-base font-semibold text-foreground group-hover:text-primary transition-colors">
+                          {locale === "bn" ? "৩. খামারের উৎস ও টাটকা নিশ্চয়তা" : "3. Farm Origin & Freshness Promise"}
+                        </h4>
+                        <p className="text-[11px] text-muted-foreground">
+                          {locale === "bn" ? "আসল সোর্সিং স্থান ও কোল্ড-চেইন নিশ্চয়তা" : "Verified terroir sourcing & cold-chain guarantee"}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="w-7 h-7 rounded-full bg-muted/40 flex items-center justify-center text-muted-foreground transition-transform duration-300 group-hover:text-foreground">
+                      <ChevronDown className={cn("w-4 h-4 transition-transform duration-300", accordionOpen["origin"] ? "rotate-180" : "")} />
+                    </div>
+                  </button>
+
+                  {accordionOpen["origin"] && (
+                    <div className="px-4 pb-4 pt-1 border-t border-border/40 bg-muted/15 space-y-3 animate-in fade-in-50 duration-200">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
+                        <div className="p-3 bg-background border border-border rounded-lg space-y-1">
+                          <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1">
+                            <MapPin className="w-3 h-3 text-primary" />
+                            {locale === "bn" ? "সোর্সিং এলাকা" : "Harvest Location"}
+                          </span>
+                          <p className="text-xs font-semibold text-foreground">
+                            {locale === "bn" ? product.originBn : product.originEn}
+                          </p>
+                        </div>
+
+                        <div className="p-3 bg-background border border-border rounded-lg space-y-1">
+                          <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1">
+                            <Clock className="w-3 h-3 text-primary" />
+                            {locale === "bn" ? "তাজা থাকার প্রতিশ্রুতি" : "Freshness Promise"}
+                          </span>
+                          <p className="text-xs font-semibold text-foreground">
+                            {locale === "bn" ? product.freshnessGuaranteeBn : product.freshnessGuaranteeEn}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Delivery & Doorstep Check Assurance */}
+                      <div className="p-3 bg-primary/5 border border-primary/15 rounded-lg space-y-1.5 text-xs text-foreground/90">
+                        <div className="flex items-center gap-2 text-primary font-semibold text-xs">
+                          <Truck className="w-4 h-4" />
+                          <span>{locale === "bn" ? "কোল্ড-চেইন এক্সপ্রেস ডেলিভারি" : "Cold-Chain Express Delivery"}</span>
+                        </div>
+                        <p className="text-[11px] text-muted-foreground leading-relaxed">
+                          {locale === "bn"
+                            ? "অর্ডার পাওয়ার পর তাপমাত্রা-নিয়ন্ত্রিত প্যাকেজিংয়ে ৬০-১২০ মিনিটে আপনার দোরগোড়ায় পৌঁছে দেওয়া হবে। পার্সেল দেখে নেওয়ার ১০০% সুযোগ।"
+                            : "Dispatched within 60-120 minutes in temperature-controlled packaging. Full inspection on doorstep guaranteed."}
+                        </p>
+                      </div>
                     </div>
                   )}
                 </div>
