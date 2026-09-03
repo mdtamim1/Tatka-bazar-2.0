@@ -88,111 +88,7 @@ export default function StorefrontHomePage() {
         </div>
       </div>
 
-      {/* ── 3. Featured Collection Split Editorial ── */}
-      {featuredCollection && (
-        <section className="py-20 md:py-28">
-          <div className="container-full">
-            <div className="grid md:grid-cols-2 gap-8 lg:gap-16 items-center">
-              {/* Left Image with zoom */}
-              <motion.div
-                initial={{ opacity: 0, x: -30 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.8, ease: [0.25, 0.46, 0.45, 0.94] }}
-                className="relative aspect-[4/5] overflow-hidden group bg-muted"
-              >
-                <img
-                  src={featuredCollection.image}
-                  alt={featuredCollection.nameEn}
-                  className="w-full h-full object-cover transition-transform duration-[1.5s] ease-out group-hover:scale-105"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-charcoal/40 via-transparent to-transparent" />
-              </motion.div>
-
-              {/* Right Story Copy */}
-              <motion.div
-                initial={{ opacity: 0, x: 30 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.8, delay: 0.15, ease: [0.25, 0.46, 0.45, 0.94] }}
-                className="md:py-10"
-              >
-                <p className="text-[11px] font-semibold tracking-[0.3em] uppercase text-primary mb-4">
-                  {locale === "bn" ? "বিশেষ সংগ্রহ" : "Featured Collection"}
-                </p>
-                <h2 className="font-serif text-4xl md:text-5xl lg:text-6xl text-foreground mb-6 leading-[0.96]">
-                  {locale === "bn" ? featuredCollection.nameBn : featuredCollection.nameEn}
-                </h2>
-                <p className="text-muted-foreground leading-relaxed mb-8 max-w-lg text-sm md:text-base">
-                  {locale === "bn"
-                    ? `${featuredCollection.descriptionBn}। পদ্মার বুক থেকে ভোরে সংগৃহীত রূপালী ইলিশ এবং উপকূলীয় গলদা চিংড়ি। কোল্ড-চেইন সংরক্ষণে পৌঁছাবে অক্ষুণ্ণ স্বাদে।`
-                    : `${featuredCollection.descriptionEn}. Sourced at daybreak from the legendary river deltas. Kept under strict temperature control to preserve the delicate sea-sweet texture and authentic heritage taste.`}
-                </p>
-                <Button
-                  asChild
-                  size="lg"
-                  className="rounded-none px-10 py-6 text-xs md:text-sm tracking-[0.15em] uppercase btn-premium"
-                >
-                  <Link href={`/category/${featuredCollection.slug}`}>
-                    {locale === "bn" ? "কালেকশন ব্রাউজ করুন" : `Explore ${featuredCollection.nameEn}`}
-                    <ArrowRight className="ml-3 w-4 h-4" />
-                  </Link>
-                </Button>
-              </motion.div>
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* ── 4. Latest Arrivals / Customer Favorites (Linen Background) ── */}
-      <section className="py-12 sm:py-20 md:py-28 bg-linen">
-        <div className="container-full">
-          <div className="flex items-end justify-between mb-8 sm:mb-12 md:mb-16">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6 }}
-            >
-              <p className="text-[10px] sm:text-[11px] font-semibold tracking-[0.25em] sm:tracking-[0.3em] uppercase text-primary mb-2 sm:mb-3">
-                {locale === "bn" ? "সদ্য আহরিত" : "Just Arrived"}
-              </p>
-              <h2 className="font-serif text-3xl sm:text-4xl md:text-5xl text-foreground">
-                {locale === "bn" ? "দৈনিক তাজা সমাহার" : "Latest Pieces"}
-              </h2>
-            </motion.div>
-
-            <Link
-              href="/shop"
-              className="hidden md:flex items-center gap-3 text-xs font-medium tracking-[0.15em] uppercase text-muted-foreground hover:text-foreground transition-colors group"
-            >
-              <span>{locale === "bn" ? "সব দেখুন" : "View All"}</span>
-              <ArrowRight className="w-4 h-4 transform group-hover:translate-x-1.5 transition-transform duration-300" />
-            </Link>
-          </div>
-
-          {/* Product Editorial Grid (2 cols on mobile, 3 on md, 4 on lg) */}
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6 md:gap-8">
-            {latestProducts.map((product, index) => (
-              <ProductCard key={product.id} product={product} index={index} />
-            ))}
-          </div>
-
-          <div className="mt-12 text-center md:hidden">
-            <Button
-              asChild
-              variant="outline"
-              className="rounded-none px-8 py-5 text-xs tracking-[0.15em] uppercase w-full sm:w-auto"
-            >
-              <Link href="/shop">
-                {locale === "bn" ? "সব পণ্য দেখুন" : "View All Products"}
-              </Link>
-            </Button>
-          </div>
-        </div>
-      </section>
-
-      {/* ── 5. Browse by Asymmetric Collections Grid ── */}
+      {/* ── 3. Browse by Asymmetric Collections Grid (Image 2) ── */}
       <section className="py-12 sm:py-20 md:py-28">
         <div className="container-full">
           <motion.div
@@ -273,6 +169,110 @@ export default function StorefrontHomePage() {
           </div>
         </div>
       </section>
+
+      {/* ── 4. Latest Arrivals / Customer Favorites (Linen Background) ── */}
+      <section className="py-12 sm:py-20 md:py-28 bg-linen">
+        <div className="container-full">
+          <div className="flex items-end justify-between mb-8 sm:mb-12 md:mb-16">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+            >
+              <p className="text-[10px] sm:text-[11px] font-semibold tracking-[0.25em] sm:tracking-[0.3em] uppercase text-primary mb-2 sm:mb-3">
+                {locale === "bn" ? "সদ্য আহরিত" : "Just Arrived"}
+              </p>
+              <h2 className="font-serif text-3xl sm:text-4xl md:text-5xl text-foreground">
+                {locale === "bn" ? "দৈনিক তাজা সমাহার" : "Latest Pieces"}
+              </h2>
+            </motion.div>
+
+            <Link
+              href="/shop"
+              className="hidden md:flex items-center gap-3 text-xs font-medium tracking-[0.15em] uppercase text-muted-foreground hover:text-foreground transition-colors group"
+            >
+              <span>{locale === "bn" ? "সব দেখুন" : "View All"}</span>
+              <ArrowRight className="w-4 h-4 transform group-hover:translate-x-1.5 transition-transform duration-300" />
+            </Link>
+          </div>
+
+          {/* Product Editorial Grid (2 cols on mobile, 3 on md, 4 on lg) */}
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6 md:gap-8">
+            {latestProducts.map((product, index) => (
+              <ProductCard key={product.id} product={product} index={index} />
+            ))}
+          </div>
+
+          <div className="mt-12 text-center md:hidden">
+            <Button
+              asChild
+              variant="outline"
+              className="rounded-none px-8 py-5 text-xs tracking-[0.15em] uppercase w-full sm:w-auto"
+            >
+              <Link href="/shop">
+                {locale === "bn" ? "সব পণ্য দেখুন" : "View All Products"}
+              </Link>
+            </Button>
+          </div>
+        </div>
+      </section>
+
+      {/* ── 5. Featured Collection Split Editorial (Image 1) ── */}
+      {featuredCollection && (
+        <section className="py-20 md:py-28">
+          <div className="container-full">
+            <div className="grid md:grid-cols-2 gap-8 lg:gap-16 items-center">
+              {/* Left Image with zoom */}
+              <motion.div
+                initial={{ opacity: 0, x: -30 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.8, ease: [0.25, 0.46, 0.45, 0.94] }}
+                className="relative aspect-[4/5] overflow-hidden group bg-muted"
+              >
+                <img
+                  src={featuredCollection.image}
+                  alt={featuredCollection.nameEn}
+                  className="w-full h-full object-cover transition-transform duration-[1.5s] ease-out group-hover:scale-105"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-charcoal/40 via-transparent to-transparent" />
+              </motion.div>
+
+              {/* Right Story Copy */}
+              <motion.div
+                initial={{ opacity: 0, x: 30 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.8, delay: 0.15, ease: [0.25, 0.46, 0.45, 0.94] }}
+                className="md:py-10"
+              >
+                <p className="text-[11px] font-semibold tracking-[0.3em] uppercase text-primary mb-4">
+                  {locale === "bn" ? "বিশেষ সংগ্রহ" : "Featured Collection"}
+                </p>
+                <h2 className="font-serif text-4xl md:text-5xl lg:text-6xl text-foreground mb-6 leading-[0.96]">
+                  {locale === "bn" ? featuredCollection.nameBn : featuredCollection.nameEn}
+                </h2>
+                <p className="text-muted-foreground leading-relaxed mb-8 max-w-lg text-sm md:text-base">
+                  {locale === "bn"
+                    ? `${featuredCollection.descriptionBn}। পদ্মার বুক থেকে ভোরে সংগৃহীত রূপালী ইলিশ এবং উপকূলীয় গলদা চিংড়ি। কোল্ড-চেইন সংরক্ষণে পৌঁছাবে অক্ষুণ্ণ স্বাদে।`
+                    : `${featuredCollection.descriptionEn}. Sourced at daybreak from the legendary river deltas. Kept under strict temperature control to preserve the delicate sea-sweet texture and authentic heritage taste.`}
+                </p>
+                <Button
+                  asChild
+                  size="lg"
+                  className="rounded-none px-10 py-6 text-xs md:text-sm tracking-[0.15em] uppercase btn-premium"
+                >
+                  <Link href={`/category/${featuredCollection.slug}`}>
+                    {locale === "bn" ? "কালেকশন ব্রাউজ করুন" : `Explore ${featuredCollection.nameEn}`}
+                    <ArrowRight className="ml-3 w-4 h-4" />
+                  </Link>
+                </Button>
+              </motion.div>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* ── 6. Philosophy / About Us Editorial ── */}
       <section className="py-24 md:py-32 bg-linen border-y border-border">
