@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, Suspense } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import {
   Check,
   ShieldCheck,
@@ -13,7 +14,11 @@ import {
   Package,
   Clock,
   Calendar,
-  Info
+  Info,
+  ShoppingBag,
+  Plus,
+  X,
+  Sparkles,
 } from "lucide-react";
 import confetti from "canvas-confetti";
 import { motion } from "framer-motion";
@@ -53,12 +58,15 @@ const BANGLADESH_DISTRICTS = [
   { id: "Manikganj", bn: "মানিকগঞ্জ", en: "Manikganj" },
 ];
 
-export default function CheckoutPage() {
+function CheckoutContent() {
+  const searchParams = useSearchParams();
+  const mode = searchParams.get("mode");
   const { locale, formatPrice } = useLanguage();
   const {
     items,
     buyNowItem,
     clearBuyNowItem,
+    removeItem,
     getSubtotal,
     getDiscountAmount,
     getDeliveryFee,
@@ -70,9 +78,19 @@ export default function CheckoutPage() {
   const [currentStep, setCurrentStep] = useState<CheckoutStep>("details");
   const [isProcessing, setIsProcessing] = useState(false);
 
-  // Direct Buy Now detection (isolated from persistent cart)
-  const isDirectBuy = Boolean(buyNowItem);
-  const checkoutItems = buyNowItem ? [buyNowItem] : items;
+  // Direct Buy Now detection (strictly requires ?mode=direct and a valid buyNowItem)
+  const isDirectBuy = mode === "direct" && Boolean(buyNowItem);
+
+  // Granular additional items chosen from cart in direct buy mode
+  const [mergedCartItemIds, setMergedCartItemIds] = useState<string[]>([]);
+  const [reminderDismissed, setReminderDismissed] = useState(false);
+
+  const mergedItems = isDirectBuy ? items.filter((it) => mergedCartItemIds.includes(it.id)) : [];
+  const unmergedCartItems = isDirectBuy ? items.filter((it) => !mergedCartItemIds.includes(it.id)) : [];
+
+  const checkoutItems = isDirectBuy && buyNowItem
+    ? [buyNowItem, ...mergedItems]
+    : items;
 
   // Optional Pre-order / Scheduled Delivery
   const [isPreOrder, setIsPreOrder] = useState(false);
@@ -101,10 +119,23 @@ export default function CheckoutPage() {
   const [paymentMethod, setPaymentMethod] = useState<"BKASH" | "NAGAD" | "COD">("BKASH");
   const [placedOrder, setPlacedOrder] = useState<any | null>(null);
 
-  const subtotal = isDirectBuy && buyNowItem ? (buyNowItem.unitPrice * buyNowItem.quantity) : getSubtotal();
-  const discount = isDirectBuy ? 0 : getDiscountAmount();
-  const deliveryFee = isDirectBuy ? (subtotal >= 1500 ? 0 : 60) : getDeliveryFee();
+  // Dynamic cost calculation based on active checkoutItems
+  const subtotal = checkoutItems.reduce((acc, it) => acc + it.unitPrice * it.quantity, 0);
+  const discount = isDirectBuy && mergedItems.length === 0 ? 0 : getDiscountAmount();
+  const deliveryFee = subtotal >= 1500 ? 0 : (isDirectBuy ? 60 : getDeliveryFee());
   const grandTotal = Math.max(0, subtotal - discount + deliveryFee);
+
+  const handleMergeItem = (itemId: string) => {
+    setMergedCartItemIds((prev) => (prev.includes(itemId) ? prev : [...prev, itemId]));
+  };
+
+  const handleUnmergeItem = (itemId: string) => {
+    setMergedCartItemIds((prev) => prev.filter((id) => id !== itemId));
+  };
+
+  const handleMergeAll = () => {
+    setMergedCartItemIds(items.map((it) => it.id));
+  };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -140,6 +171,8 @@ export default function CheckoutPage() {
         setCurrentStep("complete");
         if (isDirectBuy) {
           clearBuyNowItem();
+          // Remove only merged items from the persistent cart
+          mergedCartItemIds.forEach((id) => removeItem(id));
         } else {
           clearCart();
         }
@@ -606,27 +639,128 @@ export default function CheckoutPage() {
               </div>
 
               <div className="divide-y divide-border/70 max-h-80 overflow-y-auto pr-2">
-                {checkoutItems.map((it) => (
-                  <div key={it.id} className="py-3 flex gap-3 items-center">
-                    <img
-                      src={it.product.images[0]}
-                      alt={it.product.nameEn}
-                      className="w-12 h-14 object-cover bg-muted flex-shrink-0"
-                    />
-                    <div className="flex-1 min-w-0">
-                      <p className="font-serif text-sm text-foreground truncate">
-                        {locale === "bn" ? it.product.nameBn : it.product.nameEn}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {it.quantity} × {it.selectedWeight} {it.selectedUnit}
-                      </p>
+                {checkoutItems.map((it) => {
+                  const isMerged = mergedCartItemIds.includes(it.id);
+                  return (
+                    <div key={it.id} className="py-3 flex gap-3 items-center">
+                      <img
+                        src={it.product.images[0]}
+                        alt={it.product.nameEn}
+                        className="w-12 h-14 object-cover bg-muted flex-shrink-0"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-1.5">
+                          <p className="font-serif text-sm text-foreground truncate">
+                            {locale === "bn" ? it.product.nameBn : it.product.nameEn}
+                          </p>
+                          {isMerged && (
+                            <span className="text-[9px] font-sans px-1.5 py-0.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 shrink-0">
+                              {locale === "bn" ? "ব্যাগ থেকে" : "From Bag"}
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          {it.quantity} × {it.selectedWeight} {it.selectedUnit}
+                        </p>
+                      </div>
+                      <div className="text-right shrink-0">
+                        <span className="font-serif text-sm text-foreground font-medium block">
+                          {formatPrice(it.unitPrice * it.quantity)}
+                        </span>
+                        {isMerged && (
+                          <button
+                            type="button"
+                            onClick={() => handleUnmergeItem(it.id)}
+                            className="text-[10px] text-destructive hover:underline cursor-pointer"
+                          >
+                            {locale === "bn" ? "বাদ দিন" : "Remove"}
+                          </button>
+                        )}
+                      </div>
                     </div>
-                    <span className="font-serif text-sm text-foreground font-medium">
-                      {formatPrice(it.unitPrice * it.quantity)}
-                    </span>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
+
+              {/* ── Granular Sensitive Cart Reminder Card ── */}
+              {isDirectBuy && unmergedCartItems.length > 0 && !reminderDismissed && (
+                <div className="p-4 bg-amber-500/10 border border-amber-500/25 rounded-xl space-y-3 transition-all duration-300">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-center gap-2">
+                      <div className="w-7 h-7 rounded-full bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
+                        <ShoppingBag className="w-3.5 h-3.5" />
+                      </div>
+                      <div>
+                        <h4 className="text-xs font-semibold text-foreground">
+                          {locale === "bn"
+                            ? `আপনার শপিং ব্যাগে আরও ${unmergedCartItems.length}টি পণ্য রয়েছে`
+                            : `You also have ${unmergedCartItems.length} item(s) in your bag`}
+                        </h4>
+                        <p className="text-[11px] text-muted-foreground">
+                          {locale === "bn"
+                            ? "চাইলে যেকোনো পণ্য এই অর্ডারের সাথে এখনই যোগ করতে পারেন:"
+                            : "Select any item below to combine with this order:"}
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setReminderDismissed(true)}
+                      className="text-muted-foreground hover:text-foreground p-1 transition-colors cursor-pointer"
+                      aria-label="Dismiss"
+                      title={locale === "bn" ? "বন্ধ করুন" : "Dismiss"}
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+
+                  {/* Individual Items with [ + যোগ করুন ] */}
+                  <div className="divide-y divide-border/40 max-h-48 overflow-y-auto pr-1">
+                    {unmergedCartItems.map((cartItem) => (
+                      <div key={cartItem.id} className="py-2.5 flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <img
+                            src={cartItem.product.images[0]}
+                            alt={cartItem.product.nameEn}
+                            className="w-9 h-9 object-cover rounded bg-muted shrink-0"
+                          />
+                          <div className="min-w-0">
+                            <p className="text-xs font-medium text-foreground truncate">
+                              {locale === "bn" ? cartItem.product.nameBn : cartItem.product.nameEn}
+                            </p>
+                            <p className="text-[10px] text-muted-foreground">
+                              {cartItem.quantity} × {cartItem.selectedWeight} {cartItem.selectedUnit} • {formatPrice(cartItem.unitPrice * cartItem.quantity)}
+                            </p>
+                          </div>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => handleMergeItem(cartItem.id)}
+                          className="px-2.5 py-1 text-[11px] font-semibold bg-background hover:bg-primary hover:text-primary-foreground text-primary border border-primary/30 hover:border-primary transition-all duration-200 rounded shrink-0 flex items-center gap-1 shadow-2xs cursor-pointer active:scale-95"
+                        >
+                          <Plus className="w-3 h-3" />
+                          <span>{locale === "bn" ? "যোগ করুন" : "Add"}</span>
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Batch Combine All Button */}
+                  {unmergedCartItems.length > 1 && (
+                    <div className="pt-2 border-t border-border/40 flex justify-end">
+                      <button
+                        type="button"
+                        onClick={handleMergeAll}
+                        className="text-[11px] font-semibold text-primary hover:underline flex items-center gap-1 cursor-pointer"
+                      >
+                        <Sparkles className="w-3 h-3" />
+                        <span>{locale === "bn" ? "সবগুলো একসাথে যোগ করুন" : "Add All to This Order"}</span>
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
 
               <div className="space-y-2 text-xs border-t border-border pt-4 text-muted-foreground">
                 <div className="flex justify-between">
@@ -656,5 +790,20 @@ export default function CheckoutPage() {
         </div>
       </section>
     </div>
+  );
+}
+
+export default function CheckoutPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="container-narrow py-28 text-center text-muted-foreground">
+          <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <p className="font-serif text-lg">লোড হচ্ছে...</p>
+        </div>
+      }
+    >
+      <CheckoutContent />
+    </Suspense>
   );
 }

@@ -15,6 +15,7 @@ export function CartDrawer() {
     items,
     isOpen,
     closeCart,
+    clearBuyNowItem,
     updateQuantity,
     removeItem,
     appliedCoupon,
@@ -234,7 +235,10 @@ export function CartDrawer() {
               <div className="space-y-2 pt-2">
                 <Button
                   asChild
-                  onClick={closeCart}
+                  onClick={() => {
+                    clearBuyNowItem();
+                    closeCart();
+                  }}
                   className="w-full btn-premium py-6 rounded-none text-xs tracking-[0.15em] uppercase font-semibold"
                 >
                   <Link href="/checkout">

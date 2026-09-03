@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 export default function CartPage() {
   const {
     items,
+    clearBuyNowItem,
     removeItem,
     updateQuantity,
     getSubtotal,
@@ -250,6 +251,7 @@ export default function CartPage() {
               {/* Checkout Button */}
               <Button
                 asChild
+                onClick={clearBuyNowItem}
                 className="w-full btn-premium py-6 rounded-none text-xs tracking-[0.15em] uppercase font-semibold"
               >
                 <Link href="/checkout">

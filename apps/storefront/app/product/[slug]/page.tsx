@@ -186,7 +186,7 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
       quantity
     );
     closeCart();
-    router.push("/checkout");
+    router.push("/checkout?mode=direct");
   };
 
   return (

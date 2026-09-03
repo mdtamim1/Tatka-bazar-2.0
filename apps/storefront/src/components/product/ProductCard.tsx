@@ -75,7 +75,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
       1
     );
     closeCart();
-    router.push("/checkout");
+    router.push("/checkout?mode=direct");
   };
 
   return (
