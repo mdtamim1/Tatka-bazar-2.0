@@ -142,7 +142,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
               </span>
             )}
             {product.isDailyBazar && (
-              <span className="px-1.5 sm:px-2 py-0.5 text-[8px] sm:text-[9px] font-semibold tracking-[0.15em] sm:tracking-[0.2em] uppercase bg-amber-700 text-white">
+              <span className="px-1.5 sm:px-2 py-0.5 text-[8px] sm:text-[9px] font-semibold tracking-[0.15em] sm:tracking-[0.2em] uppercase bg-emerald-700 text-white">
                 {locale === "bn" ? "তাজা" : "Fresh"}
               </span>
             )}
