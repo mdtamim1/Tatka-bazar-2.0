@@ -288,8 +288,8 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
                       className={cn(
                         "px-4 py-2 text-xs uppercase tracking-[0.1em] border transition-all rounded-none",
                         !isCustomWeight && selectedWeightIdx === i
-                          ? "bg-foreground text-background border-foreground font-semibold"
-                          : "bg-background text-foreground border-border hover:border-foreground/50"
+                          ? "bg-orange-500 text-white border-orange-500 font-semibold shadow-sm"
+                          : "bg-background text-foreground border-border hover:border-orange-500/50"
                       )}
                     >
                       {locale === "bn" ? opt.labelBn : opt.labelEn}
@@ -303,8 +303,8 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
                     className={cn(
                       "px-4 py-2 text-xs uppercase tracking-[0.1em] border transition-all rounded-none flex items-center gap-1.5",
                       isCustomWeight
-                        ? "bg-foreground text-background border-foreground font-semibold"
-                        : "bg-background text-foreground border-border hover:border-foreground/50"
+                        ? "bg-orange-500 text-white border-orange-500 font-semibold shadow-sm"
+                        : "bg-background text-foreground border-border hover:border-orange-500/50"
                     )}
                   >
                     <span>+</span>
@@ -329,7 +329,7 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
                           const val = parseFloat(e.target.value);
                           setCustomWeightValue(isNaN(val) || val <= 0 ? 0.1 : Math.round(val * 100) / 100);
                         }}
-                        className="w-24 px-3 py-1.5 bg-background border border-border text-foreground text-sm font-semibold text-center focus:outline-none focus:border-primary"
+                        className="w-24 px-3 py-1.5 bg-background border border-border text-foreground text-sm font-semibold text-center focus:outline-none focus:border-orange-500"
                       />
                       <span className="text-xs font-semibold uppercase text-foreground">
                         {product.baseUnit || "kg"}
@@ -355,12 +355,11 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
                   <Button
                     type="button"
                     onClick={handleAddToCart}
-                    variant="outline"
-                    className="flex-1 py-6 rounded-none text-xs tracking-[0.15em] uppercase font-semibold flex items-center justify-center gap-2 border-foreground/30 hover:border-foreground hover:bg-foreground/5"
+                    className="flex-1 py-6 rounded-none text-xs tracking-[0.15em] uppercase font-semibold flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600 text-white border border-orange-500 shadow-sm transition-all duration-300 active:scale-[0.99]"
                   >
                     {addedAnim ? (
                       <>
-                        <Check className="w-4 h-4 text-primary" />
+                        <Check className="w-4 h-4 text-white" />
                         <span>{locale === "bn" ? "ব্যাগে যোগ হয়েছে" : "Added to Bag"}</span>
                       </>
                     ) : (
