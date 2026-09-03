@@ -193,28 +193,28 @@ export default function StorefrontHomePage() {
       </section>
 
       {/* ── 5. Browse by Asymmetric Collections Grid ── */}
-      <section className="py-24 md:py-32">
+      <section className="py-12 sm:py-20 md:py-28">
         <div className="container-full">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
-            className="text-center mb-14 md:mb-18"
+            className="text-center mb-8 sm:mb-12 md:mb-16"
           >
-            <p className="text-[11px] font-semibold tracking-[0.3em] uppercase text-primary mb-3">
+            <p className="text-[10px] sm:text-[11px] font-semibold tracking-[0.25em] sm:tracking-[0.3em] uppercase text-primary mb-2 sm:mb-3">
               {locale === "bn" ? "বিভাগ অনুযায়ী" : "Browse By"}
             </p>
-            <h2 className="font-serif text-4xl md:text-5xl text-foreground">
+            <h2 className="font-serif text-3xl sm:text-4xl md:text-5xl text-foreground">
               {locale === "bn" ? "আমাদের কালেকশন" : "Collections"}
             </h2>
           </motion.div>
 
-          {/* Asymmetric grid layout (7-5, 4-4-4, 12) */}
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-6">
-            {/* First row: 2 items */}
+          {/* 2-column mobile, 12-column desktop asymmetric grid layout */}
+          <div className="grid grid-cols-2 md:grid-cols-12 gap-2.5 sm:gap-4 md:gap-6">
+            {/* First row: 1 wide featured item spanning 2 cols on mobile, 7 cols on md */}
             {displayedCollections[0] && (
-              <div className="md:col-span-7">
+              <div className="col-span-2 md:col-span-7">
                 <CollectionCard
                   collection={displayedCollections[0]}
                   index={0}
@@ -222,8 +222,9 @@ export default function StorefrontHomePage() {
                 />
               </div>
             )}
+            {/* 1 col on mobile, 5 cols on md */}
             {displayedCollections[1] && (
-              <div className="md:col-span-5">
+              <div className="col-span-1 md:col-span-5">
                 <CollectionCard
                   collection={displayedCollections[1]}
                   index={1}
@@ -231,25 +232,27 @@ export default function StorefrontHomePage() {
               </div>
             )}
 
-            {/* Second row: 3 items */}
+            {/* 1 col on mobile, 4 cols on md */}
             {displayedCollections[2] && (
-              <div className="md:col-span-4">
+              <div className="col-span-1 md:col-span-4">
                 <CollectionCard
                   collection={displayedCollections[2]}
                   index={2}
                 />
               </div>
             )}
+            {/* 1 col on mobile, 4 cols on md */}
             {displayedCollections[3] && (
-              <div className="md:col-span-4">
+              <div className="col-span-1 md:col-span-4">
                 <CollectionCard
                   collection={displayedCollections[3]}
                   index={3}
                 />
               </div>
             )}
+            {/* 1 col on mobile, 4 cols on md */}
             {displayedCollections[4] && (
-              <div className="md:col-span-4">
+              <div className="col-span-1 md:col-span-4">
                 <CollectionCard
                   collection={displayedCollections[4]}
                   index={4}
@@ -257,9 +260,9 @@ export default function StorefrontHomePage() {
               </div>
             )}
 
-            {/* Third row: 1 wide featured item */}
+            {/* Third row: 1 wide featured item spanning 2 cols on mobile, 12 on md */}
             {displayedCollections[5] && (
-              <div className="md:col-span-12">
+              <div className="col-span-2 md:col-span-12">
                 <CollectionCard
                   collection={displayedCollections[5]}
                   index={5}
