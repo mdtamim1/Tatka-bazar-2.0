@@ -150,7 +150,7 @@ export function HeroCarousel() {
       onMouseLeave={() => setIsPaused(false)}
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
-      className="relative w-full overflow-hidden select-none bg-charcoal h-[52vh] min-h-[430px] max-h-[580px] md:h-[62vh] md:min-h-[500px] md:max-h-[640px]"
+      className="relative w-full overflow-hidden select-none bg-charcoal h-[230px] sm:h-[340px] md:h-[460px] lg:h-[520px]"
     >
       {/* ── Background Image Animation (Ken Burns + Crossfade) ── */}
       <AnimatePresence mode="wait">
@@ -168,66 +168,66 @@ export function HeroCarousel() {
             className="w-full h-full object-cover animate-ken-burns"
           />
           {/* Ambient gradient layer */}
-          <div className="absolute inset-0 bg-gradient-to-t from-charcoal/85 via-charcoal/40 to-charcoal/50" />
+          <div className="absolute inset-0 bg-gradient-to-t from-charcoal/90 via-charcoal/45 to-charcoal/40" />
         </motion.div>
       </AnimatePresence>
 
       {/* ── Slide Text Content ── */}
-      <div className="relative container-full h-full flex flex-col justify-center py-8 sm:py-12 z-10">
+      <div className="relative container-full h-full flex flex-col justify-center py-4 sm:py-8 md:py-12 z-10">
         <AnimatePresence mode="wait">
           <motion.div
             key={slide.id}
-            initial={{ opacity: 0, y: 25 }}
+            initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.7, ease: [0.25, 0.46, 0.45, 0.94] }}
+            exit={{ opacity: 0, y: -15 }}
+            transition={{ duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] }}
             className="max-w-2xl"
           >
             {/* Eyebrow badge */}
             <motion.p
-              initial={{ opacity: 0, y: 10 }}
+              initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1, duration: 0.5 }}
-              className="text-[10px] sm:text-[11px] font-semibold tracking-[0.28em] uppercase text-white/75 mb-3 sm:mb-4"
+              transition={{ delay: 0.1, duration: 0.4 }}
+              className="text-[9px] sm:text-[11px] font-semibold tracking-[0.2em] sm:tracking-[0.28em] uppercase text-white/80 mb-1 sm:mb-2.5"
             >
               {locale === "bn" ? slide.eyebrowBn : slide.eyebrowEn}
             </motion.p>
 
             {/* Headline */}
             <motion.h1
-              initial={{ opacity: 0, y: 15 }}
+              initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2, duration: 0.6 }}
-              className="font-serif text-3xl sm:text-5xl md:text-6xl lg:text-7xl text-white mb-3 sm:mb-4 leading-[1.05] tracking-tight"
+              transition={{ delay: 0.15, duration: 0.5 }}
+              className="font-serif text-xl sm:text-3xl md:text-5xl lg:text-6xl text-white mb-1.5 sm:mb-3 leading-[1.1] tracking-tight"
             >
               {locale === "bn" ? slide.titleBn : slide.titleEn}
             </motion.h1>
 
             {/* Subtitle description */}
             <motion.p
-              initial={{ opacity: 0, y: 15 }}
+              initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3, duration: 0.6 }}
-              className="text-xs sm:text-sm md:text-base text-white/80 mb-6 sm:mb-7 leading-relaxed max-w-lg font-light line-clamp-2 sm:line-clamp-3"
+              transition={{ delay: 0.2, duration: 0.5 }}
+              className="text-[11px] sm:text-xs md:text-sm text-white/80 mb-3 sm:mb-5 leading-relaxed max-w-lg font-light line-clamp-1 sm:line-clamp-2"
             >
               {locale === "bn" ? slide.descBn : slide.descEn}
             </motion.p>
 
             {/* CTA Buttons */}
             <motion.div
-              initial={{ opacity: 0, y: 15 }}
+              initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4, duration: 0.6 }}
-              className="flex flex-wrap items-center gap-3"
+              transition={{ delay: 0.25, duration: 0.5 }}
+              className="flex items-center gap-2.5"
             >
               <Button
                 asChild
                 size="default"
-                className="rounded-none px-6 sm:px-8 py-5 text-[11px] sm:text-xs tracking-[0.15em] uppercase btn-premium bg-primary text-primary-foreground border-none"
+                className="rounded-none h-8 sm:h-11 px-4 sm:px-7 text-[10px] sm:text-xs tracking-[0.12em] sm:tracking-[0.15em] uppercase btn-premium bg-primary text-primary-foreground border-none"
               >
                 <Link href={slide.primaryLink}>
                   {locale === "bn" ? slide.primaryTextBn : slide.primaryTextEn}
-                  <ArrowRight className="ml-2 w-3.5 h-3.5" />
+                  <ArrowRight className="ml-1.5 w-3 h-3 sm:w-3.5 sm:h-3.5" />
                 </Link>
               </Button>
 
@@ -236,7 +236,7 @@ export function HeroCarousel() {
                   asChild
                   variant="outline"
                   size="default"
-                  className="rounded-none px-5 sm:px-7 py-5 text-[11px] sm:text-xs tracking-[0.15em] uppercase bg-white/10 hover:bg-white/20 text-white border-white/30 backdrop-blur-sm"
+                  className="hidden sm:inline-flex rounded-none h-11 px-5 sm:px-7 text-xs tracking-[0.15em] uppercase bg-white/10 hover:bg-white/20 text-white border-white/30 backdrop-blur-sm"
                 >
                   <Link href={slide.secondaryLink}>
                     {locale === "bn" ? slide.secondaryTextBn : slide.secondaryTextEn}
@@ -253,7 +253,7 @@ export function HeroCarousel() {
         type="button"
         onClick={prevSlide}
         aria-label="Previous Slide"
-        className="absolute left-3 sm:left-6 top-1/2 -translate-y-1/2 z-20 p-2 sm:p-2.5 rounded-full bg-background/20 hover:bg-background/40 backdrop-blur-md text-white transition-all duration-300 opacity-70 hover:opacity-100 hover:scale-105"
+        className="hidden sm:flex absolute left-3 sm:left-6 top-1/2 -translate-y-1/2 z-20 p-2 sm:p-2.5 rounded-full bg-background/20 hover:bg-background/40 backdrop-blur-md text-white transition-all duration-300 opacity-70 hover:opacity-100 hover:scale-105 items-center justify-center"
       >
         <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
       </button>
@@ -262,13 +262,13 @@ export function HeroCarousel() {
         type="button"
         onClick={nextSlide}
         aria-label="Next Slide"
-        className="absolute right-3 sm:right-6 top-1/2 -translate-y-1/2 z-20 p-2 sm:p-2.5 rounded-full bg-background/20 hover:bg-background/40 backdrop-blur-md text-white transition-all duration-300 opacity-70 hover:opacity-100 hover:scale-105"
+        className="hidden sm:flex absolute right-3 sm:right-6 top-1/2 -translate-y-1/2 z-20 p-2 sm:p-2.5 rounded-full bg-background/20 hover:bg-background/40 backdrop-blur-md text-white transition-all duration-300 opacity-70 hover:opacity-100 hover:scale-105 items-center justify-center"
       >
         <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
       </button>
 
       {/* ── Bottom Line Indicators / Dots ── */}
-      <div className="absolute bottom-5 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2">
+      <div className="absolute bottom-2.5 sm:bottom-4 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1.5 sm:gap-2">
         {SLIDES.map((s, idx) => (
           <button
             key={s.id}
@@ -278,8 +278,8 @@ export function HeroCarousel() {
             className={cn(
               "h-1 transition-all duration-500 rounded-full",
               currentIdx === idx
-                ? "w-8 bg-primary"
-                : "w-3 bg-white/40 hover:bg-white/70"
+                ? "w-6 sm:w-8 bg-primary"
+                : "w-2.5 sm:w-3 bg-white/40 hover:bg-white/70"
             )}
           />
         ))}
