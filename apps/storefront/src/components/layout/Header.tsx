@@ -1,34 +1,43 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
-  Menu, Search, Heart, ShoppingBag, User,
-  ChevronDown, X, Globe, ArrowRight, Store,
-  Utensils, Truck, Sparkles
+  Heart, Menu, X, Search, ChevronDown, Globe, ShoppingBag
 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { useLanguage } from "@/context/LanguageContext";
 import { useCartStore } from "@/lib/cart-store";
-import { PRODUCTS, CATEGORIES } from "@/lib/catalog";
+import { CATEGORIES, PRODUCTS } from "@/lib/catalog";
+import { CartIcon } from "@/components/layout/CartIcon";
 import { useDebounce } from "@/hooks/useDebounce";
-import styles from "./Header.module.css";
+import { cn } from "@/lib/utils";
 
-export function Header() {
+export const Header = () => {
   const router = useRouter();
-  const { locale, toggleLocale, formatPrice } = useLanguage();
-  const { getItemCount, wishlistIds, openCart, openWishlist } = useCartStore();
+  const { locale, toggleLocale, t } = useLanguage();
+  const { wishlistIds, openWishlist } = useCartStore();
 
+  const [scrolled, setScrolled] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [collectionsOpen, setCollectionsOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [wishlistTooltip, setWishlistTooltip] = useState(false);
 
-  const debouncedQuery = useDebounce(searchQuery, 250);
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const collectionsRef = useRef<HTMLDivElement>(null);
+  const debouncedQuery = useDebounce(searchQuery, 200);
 
   useEffect(() => {
     setMounted(true);
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 30);
+    };
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
   useEffect(() => {
@@ -36,6 +45,17 @@ export function Header() {
       searchInputRef.current.focus();
     }
   }, [searchOpen]);
+
+  // Click outside collections dropdown
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (collectionsRef.current && !collectionsRef.current.contains(event.target as Node)) {
+        setCollectionsOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const searchResults = debouncedQuery.trim()
     ? PRODUCTS.filter((p) => {
@@ -52,363 +72,373 @@ export function Header() {
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
-      router.push(`/category/all?q=${encodeURIComponent(searchQuery)}`);
+      router.push(`/shop?q=${encodeURIComponent(searchQuery)}`);
       setSearchOpen(false);
       setSearchQuery("");
     }
   };
 
-  const itemCount = mounted ? getItemCount() : 0;
   const wishlistCount = mounted ? wishlistIds.length : 0;
+  const wishlistedProducts = mounted
+    ? PRODUCTS.filter((p) => wishlistIds.includes(p.id)).slice(0, 3)
+    : [];
 
   return (
-    <>
-      <header className={styles.headerWrapper}>
-        <div className={styles.container}>
-          <div className={styles.navRow}>
+    <header
+      className={cn(
+        "sticky top-0 z-50 transition-all duration-500",
+        scrolled
+          ? "bg-background/95 backdrop-blur-md border-b border-border shadow-sm"
+          : "bg-background/80 backdrop-blur-sm border-b border-border/50"
+      )}
+    >
+      <div className="container-full">
+        <div className="flex items-center justify-between h-16 md:h-20">
+          
+          {/* Brand Logo (Serif editorial styling) */}
+          <Link
+            href="/"
+            className="font-serif text-2xl md:text-3xl tracking-tight text-foreground hover:text-primary transition-colors duration-300 flex items-baseline gap-1.5"
+          >
+            <span>Tatka Bazar</span>
+          </Link>
 
-            {/* ── Left: Mobile Hamburger OR Desktop Logo ── */}
-            <button
-              type="button"
-              onClick={() => setMobileDrawerOpen(true)}
-              className={styles.mobileMenuBtn}
-              aria-label="Open Navigation Menu"
-            >
-              <Menu size={22} strokeWidth={2} />
-            </button>
-
-            {/* Brand Logo (Left on Desktop, Center on Mobile) */}
-            <div className={styles.logoContainer}>
-              <Link href="/" className={styles.logoLink}>
-                <span className={styles.logoText}>TATKA BAZAR</span>
-              </Link>
-            </div>
-
-            {/* ── Center: Desktop Navigation Links (Image 1) ── */}
-            <ul className={styles.desktopNav}>
-              {/* SHOP Dropdown */}
-              <li className={styles.navItem}>
-                <Link href="/category/all" className={styles.navLink}>
-                  <span>SHOP</span>
-                  <ChevronDown size={12} className={styles.chevronIcon} />
-                </Link>
-                <div className={styles.dropdownMenu}>
-                  {CATEGORIES.slice(0, 6).map((cat) => (
-                    <Link
-                      key={cat.id}
-                      href={`/category/${cat.slug}`}
-                      className={styles.dropdownItem}
-                    >
-                      <span>{cat.nameEn}</span>
-                      <span>{cat.icon}</span>
-                    </Link>
-                  ))}
-                  <Link
-                    href="/category/all"
-                    className={styles.dropdownItem}
-                    style={{ borderTop: "1px solid #f1f5f9", fontWeight: 700, color: "#3056D3" }}
-                  >
-                    <span>View All Categories →</span>
-                  </Link>
-                </div>
-              </li>
-
-              {/* DAILY BAZAR */}
-              <li className={styles.navItem}>
-                <Link href="/bundles" className={styles.navLink}>
-                  <span>DAILY BAZAR</span>
-                </Link>
-              </li>
-
-              {/* ORGANIC HARVEST */}
-              <li className={styles.navItem}>
-                <Link href="/category/vegetables" className={styles.navLink}>
-                  <span>ORGANIC HARVEST</span>
-                </Link>
-              </li>
-
-              {/* RECIPES */}
-              <li className={styles.navItem}>
-                <Link href="/recipes" className={styles.navLink}>
-                  <span>RECIPES</span>
-                </Link>
-              </li>
-
-              {/* BLOG / STORIES */}
-              <li className={styles.navItem}>
-                <Link href="/recipes" className={styles.navLink}>
-                  <span>BLOG</span>
-                </Link>
-              </li>
-            </ul>
-
-            {/* ── Right: 4 Action Icons (Image 1 & Image 2) ── */}
-            <div className={styles.actionGroup}>
-              {/* 1. User / Account Icon */}
-              <Link
-                href="/account"
-                className={styles.actionIconBtn}
-                title="Account"
-                aria-label="User Account"
-              >
-                <User size={20} strokeWidth={1.8} />
-              </Link>
-
-              {/* 2. Search Icon (Toggle Search Bar) */}
+          {/* Desktop Navigation Links */}
+          <nav className="hidden md:flex items-center gap-8 lg:gap-10">
+            {/* Collections Dropdown */}
+            <div className="relative" ref={collectionsRef}>
               <button
                 type="button"
-                onClick={() => setSearchOpen((prev) => !prev)}
-                className={styles.actionIconBtn}
-                title="Search products"
-                aria-label="Search products"
+                onClick={() => setCollectionsOpen(!collectionsOpen)}
+                className="flex items-center gap-1.5 text-xs font-medium tracking-[0.15em] uppercase text-muted-foreground hover:text-foreground transition-colors duration-300 py-2 link-underline"
               >
-                <Search size={20} strokeWidth={1.8} />
+                <span>{locale === "bn" ? "কালেকশন" : "Collections"}</span>
+                <ChevronDown
+                  className={cn("w-3.5 h-3.5 transition-transform duration-300", collectionsOpen && "rotate-180")}
+                />
               </button>
 
-              {/* 3. Wishlist Heart Icon (Opens Wishlist Drawer) */}
+              <AnimatePresence>
+                {collectionsOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 8 }}
+                    transition={{ duration: 0.2 }}
+                    className="absolute top-full left-0 mt-2 w-[520px] bg-background/98 backdrop-blur-md border border-border p-4 shadow-xl grid grid-cols-2 gap-2 z-50 rounded-none"
+                  >
+                    {CATEGORIES.map((cat) => (
+                      <Link
+                        key={cat.id}
+                        href={`/category/${cat.slug}`}
+                        onClick={() => setCollectionsOpen(false)}
+                        className="p-3 hover:bg-accent transition-colors block text-left group"
+                      >
+                        <div className="text-sm font-serif font-medium text-foreground group-hover:text-primary transition-colors">
+                          {locale === "bn" ? cat.nameBn : cat.nameEn}
+                        </div>
+                        <p className="text-xs text-muted-foreground line-clamp-1 mt-0.5">
+                          {locale === "bn" ? cat.descriptionBn : cat.descriptionEn}
+                        </p>
+                      </Link>
+                    ))}
+                    <div className="col-span-2 pt-2 border-t border-border mt-1">
+                      <Link
+                        href="/shop"
+                        onClick={() => setCollectionsOpen(false)}
+                        className="text-xs font-medium tracking-[0.15em] uppercase text-primary hover:underline block text-center py-1"
+                      >
+                        {locale === "bn" ? "সব পণ্য দেখুন →" : "View All Products →"}
+                      </Link>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
+            <Link
+              href="/shop"
+              className="text-xs font-medium tracking-[0.15em] uppercase text-muted-foreground hover:text-foreground transition-colors duration-300 link-underline"
+            >
+              {locale === "bn" ? "সব পণ্য" : "Shop All"}
+            </Link>
+
+            <Link
+              href="/recipes"
+              className="text-xs font-medium tracking-[0.15em] uppercase text-muted-foreground hover:text-foreground transition-colors duration-300 link-underline"
+            >
+              {locale === "bn" ? "রেসিপি" : "Recipes"}
+            </Link>
+
+            <Link
+              href="/about"
+              className="text-xs font-medium tracking-[0.15em] uppercase text-muted-foreground hover:text-foreground transition-colors duration-300 link-underline"
+            >
+              {locale === "bn" ? "আমাদের গল্প" : "About"}
+            </Link>
+          </nav>
+
+          {/* Right side actions */}
+          <div className="flex items-center gap-1 sm:gap-2">
+            
+            {/* Search Trigger */}
+            <button
+              type="button"
+              onClick={() => setSearchOpen(true)}
+              className="p-2.5 hover:bg-accent transition-colors duration-300 group"
+              aria-label="Search"
+            >
+              <Search className="w-5 h-5 text-foreground transition-transform duration-300 group-hover:scale-110" />
+            </button>
+
+            {/* Language Switcher */}
+            <button
+              type="button"
+              onClick={toggleLocale}
+              className="p-2.5 hover:bg-accent transition-colors duration-300 flex items-center gap-1.5 text-xs font-medium tracking-[0.1em] uppercase text-muted-foreground hover:text-foreground"
+              aria-label="Toggle language"
+            >
+              <Globe className="w-4 h-4 text-foreground" />
+              <span className="hidden sm:inline font-sans font-semibold">{locale === "bn" ? "বাং" : "EN"}</span>
+            </button>
+
+            {/* Wishlist Icon with Tooltip */}
+            <div
+              className="relative"
+              onMouseEnter={() => setWishlistTooltip(true)}
+              onMouseLeave={() => setWishlistTooltip(false)}
+            >
               <button
                 type="button"
                 onClick={openWishlist}
-                className={styles.actionIconBtn}
-                title="Saved Items / Wishlist"
+                className="relative p-2.5 hover:bg-accent transition-colors duration-300 group"
                 aria-label="Wishlist"
               >
-                <Heart size={20} strokeWidth={1.8} />
-                {wishlistCount > 0 && (
-                  <span className={styles.wishlistBadge}>{wishlistCount}</span>
-                )}
+                <Heart className={cn("w-5 h-5 transition-all duration-300 group-hover:scale-110", wishlistCount > 0 ? "text-primary" : "text-foreground")} />
+                <AnimatePresence>
+                  {wishlistCount > 0 && (
+                    <motion.span
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      exit={{ scale: 0 }}
+                      className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-primary text-primary-foreground text-[10px] font-semibold rounded-full flex items-center justify-center pointer-events-none"
+                    >
+                      {wishlistCount > 9 ? "9+" : wishlistCount}
+                    </motion.span>
+                  )}
+                </AnimatePresence>
               </button>
 
-              {/* 4. Shopping Bag Icon with Count Badge */}
-              <button
-                type="button"
-                onClick={openCart}
-                className={styles.actionIconBtn}
-                title="Shopping Bag"
-                aria-label="Shopping Bag"
-              >
-                <ShoppingBag size={20} strokeWidth={1.8} />
-                <span className={styles.cartBadge}>{itemCount}</span>
-              </button>
+              {/* Tooltip Hover Preview */}
+              <AnimatePresence>
+                {wishlistTooltip && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 6 }}
+                    className="absolute right-0 mt-1 w-64 bg-background border border-border p-3 shadow-xl z-50 hidden md:block rounded-none"
+                  >
+                    {wishlistCount === 0 ? (
+                      <p className="text-xs text-muted-foreground">{locale === "bn" ? "উইশলিস্ট খালি" : "Your wishlist is empty"}</p>
+                    ) : (
+                      <div className="space-y-2">
+                        <div className="flex justify-between items-center text-xs font-medium">
+                          <span>{wishlistCount} {locale === "bn" ? "টি সংরক্ষিত" : (wishlistCount === 1 ? "saved item" : "saved items")}</span>
+                          <button
+                            type="button"
+                            onClick={openWishlist}
+                            className="text-primary hover:underline text-[11px]"
+                          >
+                            {locale === "bn" ? "দেখুন" : "View"}
+                          </button>
+                        </div>
+                        <div className="space-y-1.5 pt-1 border-t border-border">
+                          {wishlistedProducts.map((p) => (
+                            <div key={p.id} className="text-xs text-muted-foreground truncate hover:text-foreground">
+                              {locale === "bn" ? p.nameBn : p.nameEn}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
 
+            {/* Shopping Bag Cart Icon */}
+            <CartIcon />
+
+            {/* Mobile menu trigger */}
+            <button
+              type="button"
+              className="md:hidden p-2.5 hover:bg-accent transition-colors duration-300"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              aria-label="Toggle Menu"
+            >
+              <AnimatePresence mode="wait">
+                {mobileMenuOpen ? (
+                  <motion.div
+                    key="close"
+                    initial={{ rotate: -90, opacity: 0 }}
+                    animate={{ rotate: 0, opacity: 1 }}
+                    exit={{ rotate: 90, opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <X className="w-5 h-5" />
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key="menu"
+                    initial={{ rotate: 90, opacity: 0 }}
+                    animate={{ rotate: 0, opacity: 1 }}
+                    exit={{ rotate: -90, opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <Menu className="w-5 h-5" />
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </button>
           </div>
         </div>
 
-        {/* ── Slide-Down Search Overlay ── */}
+        {/* Mobile slide-down menu */}
+        <AnimatePresence>
+          {mobileMenuOpen && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
+              className="md:hidden border-t border-border overflow-hidden bg-background"
+            >
+              <div className="py-6 space-y-6">
+                <div className="space-y-1">
+                  <p className="text-[10px] font-semibold tracking-[0.3em] uppercase text-muted-foreground/60 px-2 mb-2">
+                    {locale === "bn" ? "কালেকশন" : "Collections"}
+                  </p>
+                  {CATEGORIES.slice(0, 6).map((cat, i) => (
+                    <motion.div
+                      key={cat.id}
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: i * 0.04 }}
+                    >
+                      <Link
+                        href={`/category/${cat.slug}`}
+                        className="block px-3 py-2 text-sm hover:bg-accent transition-colors"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        {locale === "bn" ? cat.nameBn : cat.nameEn}
+                      </Link>
+                    </motion.div>
+                  ))}
+                </div>
+
+                <div className="pt-4 border-t border-border space-y-1">
+                  {[
+                    { href: "/shop", label: locale === "bn" ? "সব পণ্য" : "Shop All" },
+                    { href: "/recipes", label: locale === "bn" ? "রেসিপি" : "Recipes" },
+                    { href: "/about", label: locale === "bn" ? "আমাদের গল্প" : "About Our Story" },
+                    { href: "/cart", label: locale === "bn" ? "শপিং ব্যাগ" : "Shopping Bag" },
+                  ].map((link, i) => (
+                    <motion.div
+                      key={link.href}
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.25 + i * 0.04 }}
+                    >
+                      <Link
+                        href={link.href}
+                        className="block px-3 py-2 text-sm font-medium hover:bg-accent transition-colors"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        {link.label}
+                      </Link>
+                    </motion.div>
+                  ))}
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+
+      {/* Global Minimalist Search Modal */}
+      <AnimatePresence>
         {searchOpen && (
-          <div className={styles.searchBarOverlay}>
-            <div className={styles.container}>
-              <form onSubmit={handleSearchSubmit} className={styles.searchForm}>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 bg-charcoal/60 backdrop-blur-sm flex flex-col justify-start pt-20 px-4"
+            onClick={() => setSearchOpen(false)}
+          >
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="bg-background max-w-2xl w-full mx-auto p-6 md:p-8 shadow-2xl border border-border"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex justify-between items-center mb-6">
+                <p className="text-[10px] font-semibold tracking-[0.3em] uppercase text-primary">
+                  {locale === "bn" ? "পণ্য খুঁজুন" : "Search Pieces"}
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setSearchOpen(false)}
+                  className="p-1 hover:bg-accent transition-colors"
+                >
+                  <X className="w-5 h-5 text-muted-foreground" />
+                </button>
+              </div>
+
+              <form onSubmit={handleSearchSubmit} className="relative">
                 <input
                   ref={searchInputRef}
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search fresh items, organic products, brands..."
-                  className={styles.searchInput}
+                  placeholder={locale === "bn" ? "পদ্মার ইলিশ, অর্গানিক মধু, সুগন্ধি চাল..." : "Search organic honey, Padma Ilish, heritage rice..."}
+                  className="w-full bg-background border-b-2 border-border focus:border-primary py-3 pr-10 text-lg md:text-xl font-serif text-foreground outline-none transition-colors"
                 />
                 <button
                   type="submit"
-                  className={styles.searchSubmitBtn}
-                  aria-label="Submit search"
+                  className="absolute right-0 top-1/2 -translate-y-1/2 p-2 text-muted-foreground hover:text-foreground"
                 >
-                  <Search size={16} />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setSearchOpen(false)}
-                  className={styles.searchCloseBtn}
-                  aria-label="Close search"
-                >
-                  <X size={20} />
+                  <Search className="w-5 h-5" />
                 </button>
               </form>
 
-              {/* Instant Search Results Dropdown */}
               {searchResults.length > 0 && (
-                <div className={styles.searchResultsBox}>
-                  {searchResults.map((prod) => (
+                <div className="mt-6 divide-y divide-border">
+                  {searchResults.map((p) => (
                     <Link
-                      key={prod.id}
-                      href={`/product/${prod.slug}`}
-                      onClick={() => {
-                        setSearchOpen(false);
-                        setSearchQuery("");
-                      }}
-                      className={styles.searchResultItem}
+                      key={p.id}
+                      href={`/product/${p.slug}`}
+                      onClick={() => setSearchOpen(false)}
+                      className="flex items-center gap-4 py-3 hover:bg-accent px-2 transition-colors group"
                     >
-                      <img src={prod.images[0]} alt="" className={styles.searchResultThumb} />
-                      <div style={{ flex: 1 }}>
-                        <div className={styles.searchResultTitle}>
-                          {prod.nameEn}
-                        </div>
-                        <div className={styles.searchResultPrice}>
-                          {formatPrice(prod.basePrice)}
-                        </div>
+                      <div className="w-12 h-12 bg-muted flex-shrink-0 overflow-hidden">
+                        <img src={p.images[0]} alt={p.nameEn} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
                       </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-serif text-base text-foreground group-hover:text-primary transition-colors truncate">
+                          {locale === "bn" ? p.nameBn : p.nameEn}
+                        </p>
+                        <p className="text-xs text-muted-foreground">{locale === "bn" ? p.categoryNameBn : p.categoryNameEn}</p>
+                      </div>
+                      <p className="text-sm font-medium text-foreground">৳{p.basePrice}</p>
                     </Link>
                   ))}
                 </div>
               )}
-            </div>
-          </div>
+            </motion.div>
+          </motion.div>
         )}
-      </header>
-
-      {/* ── Mobile Slide-Out Drawer ── */}
-      {mobileDrawerOpen && (
-        <div className={styles.drawerBackdrop} onClick={() => setMobileDrawerOpen(false)}>
-          <div className={styles.mobileDrawer} onClick={(e) => e.stopPropagation()}>
-            {/* Drawer Header */}
-            <div className={styles.drawerHeader}>
-              <div className={styles.drawerLogoText}>
-                <span>TATKA BAZAR</span>
-                <span className={styles.drawerFreshBadge}>100% FRESH</span>
-              </div>
-              <button
-                type="button"
-                onClick={() => setMobileDrawerOpen(false)}
-                className={styles.drawerCloseBtn}
-                aria-label="Close Menu"
-              >
-                <X size={18} />
-              </button>
-            </div>
-
-            {/* Scrollable Navigation Body */}
-            <nav className={styles.drawerNavBody}>
-              {/* 1. Primary Navigation Links */}
-              <div className={styles.drawerPrimaryLinks}>
-                <Link
-                  href="/"
-                  onClick={() => setMobileDrawerOpen(false)}
-                  className={styles.drawerPrimaryLink}
-                >
-                  <span>Home</span>
-                </Link>
-                <Link
-                  href="/category/all"
-                  onClick={() => setMobileDrawerOpen(false)}
-                  className={styles.drawerPrimaryLink}
-                >
-                  <span>Shop All Products</span>
-                </Link>
-                <Link
-                  href="/bundles"
-                  onClick={() => setMobileDrawerOpen(false)}
-                  className={styles.drawerPrimaryLink}
-                >
-                  <span>Daily Bazar Deals</span>
-                  <span style={{ fontSize: "0.62rem", background: "#ef4444", color: "#fff", padding: "1px 6px", borderRadius: "4px", fontWeight: 800 }}>HOT</span>
-                </Link>
-              </div>
-
-              {/* 2. Categories (A-Z) */}
-              <div className={styles.drawerSection}>
-                <span className={styles.drawerSectionTitle}>
-                  Categories (A-Z)
-                </span>
-                <div className={styles.drawerItemList}>
-                  {CATEGORIES.map((cat) => (
-                    <Link
-                      key={cat.id}
-                      href={`/category/${cat.slug}`}
-                      onClick={() => setMobileDrawerOpen(false)}
-                      className={styles.drawerItemLink}
-                    >
-                      <span>{cat.nameEn}</span>
-                      <span>{cat.icon}</span>
-                    </Link>
-                  ))}
-                </div>
-              </div>
-
-              {/* 3. Bazar Tools & Services */}
-              <div className={styles.drawerSection}>
-                <span className={styles.drawerSectionTitle}>
-                  Bazar Tools & Services
-                </span>
-                <div className={styles.drawerItemList}>
-                  <Link
-                    href="/recipes"
-                    onClick={() => setMobileDrawerOpen(false)}
-                    className={styles.drawerItemLink}
-                  >
-                    <span>🍳 Recipe to Cart</span>
-                  </Link>
-                  <Link
-                    href="/track"
-                    onClick={() => setMobileDrawerOpen(false)}
-                    className={styles.drawerItemLink}
-                  >
-                    <span>📦 Track Live Order</span>
-                  </Link>
-                  <Link
-                    href="/b2b"
-                    onClick={() => setMobileDrawerOpen(false)}
-                    className={styles.drawerItemLink}
-                  >
-                    <span>🏬 B2B Wholesale Supply</span>
-                  </Link>
-                </div>
-              </div>
-
-              {/* 5. Wishlist & Shopping Cart */}
-              <div className={styles.drawerSection}>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setMobileDrawerOpen(false);
-                    openWishlist();
-                  }}
-                  className={styles.drawerActionButton}
-                >
-                  <span style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                    <Heart size={16} color="#ef4444" />
-                    <span>My Wishlist</span>
-                  </span>
-                  <span className={styles.drawerBadgePill}>{wishlistCount}</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    setMobileDrawerOpen(false);
-                    openCart();
-                  }}
-                  className={styles.drawerActionButton}
-                >
-                  <span style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                    <ShoppingBag size={16} color="#3056D3" />
-                    <span>My Cart</span>
-                  </span>
-                  <span className={styles.drawerBadgePill}>{itemCount}</span>
-                </button>
-
-                <Link
-                  href="/account"
-                  onClick={() => setMobileDrawerOpen(false)}
-                  className={styles.drawerActionButton}
-                  style={{ textDecoration: "none" }}
-                >
-                  <span style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                    <User size={16} />
-                    <span>My Account / Sign In</span>
-                  </span>
-                </Link>
-              </div>
-            </nav>
-
-            {/* Footer with Copyright */}
-            <div className={styles.drawerFooter}>
-              <div className={styles.drawerCopyright}>
-                © 2026 Tatka Bazar — 100% Fresh Chemical Free
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-    </>
+      </AnimatePresence>
+    </header>
   );
-}
+};

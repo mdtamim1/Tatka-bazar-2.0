@@ -2,19 +2,12 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import {
-  Trash2,
-  Plus,
-  Minus,
-  ArrowRight,
-  ShoppingBag,
-  ShieldCheck,
-  Truck,
-  Store,
-  ChevronRight,
-} from "lucide-react";
+import { motion } from "framer-motion";
+import { ArrowRight, ShoppingBag, Trash2, Tag, ShieldCheck } from "lucide-react";
 import { useCartStore } from "@/lib/cart-store";
 import { useLanguage } from "@/context/LanguageContext";
+import { QuantitySelector } from "@/components/ui/QuantitySelector";
+import { Button } from "@/components/ui/button";
 
 export default function CartPage() {
   const {
@@ -30,374 +23,250 @@ export default function CartPage() {
     removeCoupon,
   } = useCartStore();
 
-  const { t, formatPrice } = useLanguage();
+  const { locale, formatPrice } = useLanguage();
   const [couponInput, setCouponInput] = useState("");
-  const [couponStatus, setCouponStatus] = useState<{ text: string; isError: boolean } | null>(null);
+  const [couponError, setCouponError] = useState("");
 
   const subtotal = getSubtotal();
   const deliveryFee = getDeliveryFee();
   const discount = getDiscountAmount();
   const grandTotal = getGrandTotal();
 
-  // Group items by vendor
-  const vendorGroups = items.reduce((acc, item) => {
-    const vId = item.product.vendorId || "tatka-central";
-    const vNameEn = item.product.vendorNameEn || "Tatka Central Hub";
-    const vNameBn = item.product.vendorNameBn || "Tatka Central Hub";
-
-    let group = acc.find((g) => g.vendorId === vId);
-    if (!group) {
-      group = { vendorId: vId, vendorNameEn: vNameEn, vendorNameBn: vNameBn, items: [] };
-      acc.push(group);
-    }
-    group.items.push(item);
-    return acc;
-  }, [] as Array<{ vendorId: string; vendorNameEn: string; vendorNameBn: string; items: typeof items }>);
-
   const handleCouponSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!couponInput.trim()) return;
-
     const res = applyCoupon(couponInput.trim());
-    setCouponStatus({
-      text: res.message,
-      isError: !res.success,
-    });
+    if (!res.success) {
+      setCouponError(res.message);
+    } else {
+      setCouponError("");
+      setCouponInput("");
+    }
   };
 
   if (items.length === 0) {
     return (
-      <div style={{ padding: "80px 0", minHeight: "70vh", display: "flex", alignItems: "center" }}>
-        <div className="container" style={{ textAlign: "center", maxWidth: "480px" }}>
-          <div
-            style={{
-              width: "80px",
-              height: "80px",
-              borderRadius: "50%",
-              background: "var(--primary-light)",
-              color: "var(--primary)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              margin: "0 auto 20px",
-            }}
-          >
-            <ShoppingBag size={40} />
-          </div>
-          <h2 style={{ fontSize: "1.5rem", fontWeight: 800, marginBottom: "8px" }}>
-            {t.emptyCart}
-          </h2>
-          <p style={{ color: "var(--text-muted)", fontSize: "0.95rem", marginBottom: "24px" }}>
-            Your shopping bag is empty. Explore our catalog to add fresh items.
+      <div className="container-narrow py-28 text-center">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+        >
+          <ShoppingBag className="w-16 h-16 mx-auto mb-6 text-muted-foreground/30 stroke-1" />
+          <h1 className="font-serif text-4xl mb-4 text-foreground">
+            {locale === "bn" ? "আপনার ব্যাগ খালি" : "Your Bag is Empty"}
+          </h1>
+          <p className="text-muted-foreground mb-8 max-w-md mx-auto text-sm leading-relaxed">
+            {locale === "bn"
+              ? "আমাদের তাজা প্রাকৃতিক খাদ্যপণ্য এবং ঐতিহ্যবাহী উপাদান সংগ্রহ থেকে পছন্দমতো পণ্য যোগ করুন।"
+              : "Discover our curated collection of farm-fresh provisions and find pieces that speak to your home."}
           </p>
-          <Link href="/" className="btn-primary" style={{ padding: "12px 28px" }}>
-            {t.startShopping}
-          </Link>
-        </div>
+          <Button
+            asChild
+            size="lg"
+            className="rounded-none px-10 py-6 text-xs md:text-sm tracking-[0.15em] uppercase btn-premium"
+          >
+            <Link href="/shop">
+              {locale === "bn" ? "কেনাকাটা শুরু করুন" : "Start Shopping"}
+              <ArrowRight className="ml-3 w-4 h-4" />
+            </Link>
+          </Button>
+        </motion.div>
       </div>
     );
   }
 
   return (
-    <div style={{ padding: "20px 0 60px" }}>
-      <div className="container">
-        
-        {/* Breadcrumb Navigation */}
-        <div style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "0.82rem", color: "var(--text-muted)", marginBottom: "20px" }}>
-          <Link href="/" style={{ color: "var(--primary)" }}>Home</Link>
-          <ChevronRight size={14} />
-          <span style={{ color: "var(--text-main)", fontWeight: 600 }}>Shopping Cart</span>
+    <div className="w-full">
+      {/* Breadcrumb */}
+      <div className="container-full py-5 border-b border-border">
+        <div className="flex items-center gap-2.5 text-xs text-muted-foreground uppercase tracking-[0.1em]">
+          <Link href="/shop" className="hover:text-foreground transition-colors">
+            {locale === "bn" ? "দোকান" : "Shop"}
+          </Link>
+          <span>/</span>
+          <span className="text-foreground font-medium">
+            {locale === "bn" ? "শপিং ব্যাগ" : "Your Bag"}
+          </span>
         </div>
+      </div>
 
-        <h1 style={{ fontSize: "1.8rem", fontWeight: 800, color: "var(--text-main)", marginBottom: "24px" }}>
-          {t.myCart} ({items.length} {t.items})
-        </h1>
+      <section className="py-12 md:py-16">
+        <div className="container-full">
+          <motion.h1
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="font-serif text-4xl md:text-5xl mb-12 text-foreground"
+          >
+            {locale === "bn" ? "শপিং ব্যাগ" : "Your Bag"}
+          </motion.h1>
 
-        {/* 2-Column Layout: Items List (Left) + Order Summary (Right) */}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 360px", gap: "30px", alignItems: "flex-start" }}>
-          
-          {/* Left Column: Vendor Grouped Items */}
-          <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
-            {vendorGroups.map((group) => (
-              <div
-                key={group.vendorId}
-                style={{
-                  background: "var(--bg-surface)",
-                  borderRadius: "var(--radius-xl)",
-                  border: "1.5px solid var(--border-subtle)",
-                  padding: "20px",
-                  boxShadow: "var(--shadow-sm)",
-                }}
-              >
-                {/* Vendor Header */}
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    paddingBottom: "12px",
-                    borderBottom: "1px solid var(--border-subtle)",
-                    marginBottom: "16px",
-                  }}
-                >
-                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                    <div style={{ padding: "6px", borderRadius: "8px", background: "var(--primary-light)", color: "var(--primary-dark)" }}>
-                      <Store size={18} />
-                    </div>
-                    <div>
-                      <div style={{ fontWeight: 800, fontSize: "0.95rem", color: "var(--primary-dark)" }}>
-                        {group.vendorNameEn || group.vendorNameBn}
-                      </div>
-                      <div style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}>
-                        Packaged & verified by seller
-                      </div>
-                    </div>
-                  </div>
-                  <span style={{ fontSize: "0.8rem", fontWeight: 700, color: "var(--text-muted)" }}>
-                    {group.items.length} {t.items}
-                  </span>
-                </div>
-
-                {/* Items in this Vendor Group */}
-                <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
-                  {group.items.map((item) => (
-                    <div
-                      key={item.id}
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "16px",
-                        paddingBottom: "14px",
-                        borderBottom: "1px dashed var(--border-subtle)",
-                      }}
+          <div className="grid lg:grid-cols-12 gap-12 lg:gap-16 items-start">
+            {/* Left 7 cols: Items List */}
+            <div className="lg:col-span-7">
+              <div className="divide-y divide-border border-t border-b border-border">
+                {items.map((item, index) => (
+                  <motion.div
+                    key={item.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.4, delay: index * 0.08 }}
+                    className="flex gap-6 py-8"
+                  >
+                    {/* Thumbnail */}
+                    <Link
+                      href={`/product/${item.product.slug}`}
+                      className="w-28 h-36 md:w-36 md:h-44 flex-shrink-0 overflow-hidden bg-muted group"
                     >
                       <img
                         src={item.product.images[0]}
-                        alt={item.product.nameEn || item.product.nameBn}
-                        style={{ width: "70px", height: "70px", objectFit: "cover", borderRadius: "var(--radius-md)" }}
+                        alt={item.product.nameEn}
+                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                       />
+                    </Link>
 
-                      <div style={{ flex: 1 }}>
-                        <Link href={`/product/${item.product.slug}`}>
-                          <h3 style={{ fontSize: "0.95rem", fontWeight: 700, color: "var(--text-main)", lineHeight: 1.3 }}>
-                            {item.product.nameEn || item.product.nameBn}
-                          </h3>
-                        </Link>
-                        <div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "4px" }}>
-                          <span
-                            style={{
-                              fontSize: "0.75rem",
-                              fontWeight: 700,
-                              color: "var(--primary-dark)",
-                              background: "var(--primary-light)",
-                              padding: "2px 8px",
-                              borderRadius: "var(--radius-sm)",
-                            }}
+                    {/* Details */}
+                    <div className="flex-1 flex flex-col justify-between">
+                      <div>
+                        <div className="flex justify-between items-start gap-2">
+                          <Link
+                            href={`/product/${item.product.slug}`}
+                            className="font-serif text-xl md:text-2xl text-foreground hover:text-primary transition-colors"
                           >
-                            {item.selectedWeight} {item.selectedUnit}
-                          </span>
-                          <span style={{ fontSize: "0.85rem", color: "var(--text-muted)" }}>
-                            {formatPrice(item.unitPrice)} / {item.selectedUnit}
-                          </span>
+                            {locale === "bn" ? item.product.nameBn : item.product.nameEn}
+                          </Link>
+                          <button
+                            type="button"
+                            onClick={() => removeItem(item.id)}
+                            className="p-1.5 text-muted-foreground hover:text-destructive transition-colors"
+                            aria-label="Remove"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
                         </div>
+
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {item.selectedWeight} {item.selectedUnit}
+                        </p>
+
+                        <p className="font-serif text-lg text-foreground mt-3 font-medium">
+                          {formatPrice(item.unitPrice * item.quantity)}
+                        </p>
                       </div>
 
-                      {/* Quantity Stepper */}
-                      <div
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "6px",
-                          background: "var(--bg-subtle)",
-                          borderRadius: "var(--radius-md)",
-                          padding: "4px",
-                        }}
-                      >
-                        <button
-                          onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                          style={{
-                            width: "28px",
-                            height: "28px",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            background: "var(--bg-surface)",
-                            borderRadius: "4px",
-                          }}
-                        >
-                          <Minus size={14} />
-                        </button>
-                        <span style={{ minWidth: "24px", textAlign: "center", fontWeight: 800, fontSize: "0.9rem" }}>
-                          {item.quantity}
-                        </span>
-                        <button
-                          onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                          style={{
-                            width: "28px",
-                            height: "28px",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            background: "var(--primary)",
-                            color: "#FFF",
-                            borderRadius: "4px",
-                          }}
-                        >
-                          <Plus size={14} />
-                        </button>
+                      {/* Quantity Selector */}
+                      <div className="pt-4">
+                        <QuantitySelector
+                          quantity={item.quantity}
+                          onQuantityChange={(qty) => updateQuantity(item.id, qty)}
+                          min={1}
+                          max={99}
+                        />
                       </div>
-
-                      {/* Line Total */}
-                      <div style={{ minWidth: "90px", textAlign: "right" }}>
-                        <div style={{ fontSize: "1.05rem", fontWeight: 800, color: "var(--primary-dark)" }}>
-                          {formatPrice(item.totalPrice)}
-                        </div>
-                      </div>
-
-                      {/* Remove */}
-                      <button
-                        onClick={() => removeItem(item.id)}
-                        style={{ color: "var(--text-muted)", padding: "6px" }}
-                        title="Remove"
-                      >
-                        <Trash2 size={18} />
-                      </button>
                     </div>
-                  ))}
-                </div>
+                  </motion.div>
+                ))}
               </div>
-            ))}
-          </div>
 
-          {/* Right Column: Calculations & Checkout Summary */}
-          <div
-            style={{
-              background: "var(--bg-surface)",
-              borderRadius: "var(--radius-xl)",
-              border: "1px solid var(--border-subtle)",
-              padding: "24px",
-              boxShadow: "var(--shadow-md)",
-              position: "sticky",
-              top: "140px",
-            }}
-          >
-            <h2 style={{ fontSize: "1.2rem", fontWeight: 800, marginBottom: "16px", borderBottom: "1px solid var(--border-subtle)", paddingBottom: "10px" }}>
-              {t.orderSummary}
-            </h2>
-
-            {/* Coupon Code Section */}
-            <form onSubmit={handleCouponSubmit} style={{ marginBottom: "18px" }}>
-              <label style={{ fontSize: "0.8rem", fontWeight: 700, color: "var(--text-muted)", display: "block", marginBottom: "6px" }}>
-                🏷️ Promo Code or Coupon:
-              </label>
-              <div style={{ display: "flex", gap: "8px" }}>
-                <input
-                  type="text"
-                  placeholder="WELCOME10"
-                  value={couponInput}
-                  onChange={(e) => setCouponInput(e.target.value)}
-                  style={{
-                    flex: 1,
-                    padding: "9px 12px",
-                    borderRadius: "var(--radius-md)",
-                    border: "1px solid var(--border-medium)",
-                    fontSize: "0.85rem",
-                    outline: "none",
-                  }}
-                />
-                <button
-                  type="submit"
-                  style={{
-                    padding: "9px 16px",
-                    background: "var(--primary-dark)",
-                    color: "#FFF",
-                    borderRadius: "var(--radius-md)",
-                    fontWeight: 700,
-                    fontSize: "0.85rem",
-                  }}
+              <div className="pt-8">
+                <Link
+                  href="/shop"
+                  className="inline-flex items-center gap-2 text-xs tracking-[0.15em] uppercase text-muted-foreground hover:text-foreground transition-colors"
                 >
-                  {t.applyCoupon}
-                </button>
-              </div>
-              {couponStatus && (
-                <div style={{ fontSize: "0.75rem", marginTop: "4px", color: couponStatus.isError ? "var(--crimson)" : "var(--primary)", fontWeight: 700 }}>
-                  {couponStatus.text}
-                </div>
-              )}
-              {appliedCoupon && (
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "var(--primary-light)", padding: "6px 10px", borderRadius: "var(--radius-sm)", marginTop: "8px", fontSize: "0.8rem", fontWeight: 700, color: "var(--primary-dark)" }}>
-                  <span>{appliedCoupon.code} (-{formatPrice(discount)})</span>
-                  <button onClick={removeCoupon} style={{ color: "var(--crimson)" }}>✕</button>
-                </div>
-              )}
-            </form>
-
-            {/* Breakdown List */}
-            <div style={{ display: "flex", flexDirection: "column", gap: "10px", fontSize: "0.9rem", marginBottom: "20px" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", color: "var(--text-muted)" }}>
-                <span>{t.subtotal}</span>
-                <span style={{ fontWeight: 600, color: "var(--text-main)" }}>{formatPrice(subtotal)}</span>
-              </div>
-              {discount > 0 && (
-                <div style={{ display: "flex", justifyContent: "space-between", color: "var(--primary)" }}>
-                  <span>{t.discount}</span>
-                  <span style={{ fontWeight: 700 }}>-{formatPrice(discount)}</span>
-                </div>
-              )}
-              <div style={{ display: "flex", justifyContent: "space-between", color: "var(--text-muted)" }}>
-                <span>{t.deliveryFee}</span>
-                <span style={{ fontWeight: 600, color: deliveryFee === 0 ? "var(--primary)" : "var(--text-main)" }}>
-                  {deliveryFee === 0 ? t.freeDelivery : formatPrice(deliveryFee)}
-                </span>
-              </div>
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  fontSize: "1.2rem",
-                  fontWeight: 800,
-                  color: "var(--primary-dark)",
-                  paddingTop: "10px",
-                  borderTop: "1.5px dashed var(--border-medium)",
-                }}
-              >
-                <span>{t.grandTotal}</span>
-                <span>{formatPrice(grandTotal)}</span>
+                  <ArrowRight className="w-4 h-4 rotate-180" />
+                  {locale === "bn" ? "কেনাকাটা চালিয়ে যান" : "Continue Shopping"}
+                </Link>
               </div>
             </div>
 
-            {/* Checkout Action Button */}
-            <Link
-              href="/checkout"
-              className="btn-primary"
-              style={{
-                width: "100%",
-                padding: "14px",
-                fontSize: "1.05rem",
-                borderRadius: "var(--radius-md)",
-              }}
-            >
-              <span>{t.proceedToCheckout}</span>
-              <ArrowRight size={18} />
-            </Link>
+            {/* Right 5 cols: Order Summary */}
+            <div className="lg:col-span-5 bg-linen p-8 border border-border space-y-6">
+              <h2 className="font-serif text-2xl text-foreground">
+                {locale === "bn" ? "অর্ডার সারাংশ" : "Order Summary"}
+              </h2>
 
-            {/* Guarantees */}
-            <div style={{ marginTop: "20px", display: "flex", flexDirection: "column", gap: "8px", fontSize: "0.75rem", color: "var(--text-muted)" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                <ShieldCheck size={16} color="var(--primary)" />
-                <span>100% Secure Checkout & Fresh Guarantee</span>
+              {/* Coupon Form */}
+              <div className="space-y-2">
+                {appliedCoupon ? (
+                  <div className="flex items-center justify-between text-xs bg-background p-3 border border-border">
+                    <span className="flex items-center gap-1.5 font-medium">
+                      <Tag className="w-3.5 h-3.5 text-primary" />
+                      {appliedCoupon.code}
+                      {appliedCoupon.discountPercent ? ` (-${appliedCoupon.discountPercent}%)` : ` (-৳${appliedCoupon.fixedDiscount})`}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={removeCoupon}
+                      className="text-destructive text-xs underline"
+                    >
+                      {locale === "bn" ? "মুছুন" : "Remove"}
+                    </button>
+                  </div>
+                ) : (
+                  <form onSubmit={handleCouponSubmit} className="flex gap-2">
+                    <input
+                      type="text"
+                      value={couponInput}
+                      onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
+                      placeholder="Coupon Code"
+                      className="flex-1 px-4 py-2.5 text-xs bg-background border border-border text-foreground uppercase placeholder:text-muted-foreground/60 focus:outline-none focus:border-primary"
+                    />
+                    <Button type="submit" variant="outline" className="rounded-none text-xs tracking-[0.1em] uppercase">
+                      {locale === "bn" ? "প্রয়োগ" : "Apply"}
+                    </Button>
+                  </form>
+                )}
+                {couponError && <p className="text-xs text-destructive">{couponError}</p>}
               </div>
-              <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                <Truck size={16} color="var(--accent)" />
-                <span>Express doorstep delivery in selected slot</span>
+
+              {/* Cost Breakdown */}
+              <div className="space-y-3 text-sm border-t border-border pt-4">
+                <div className="flex justify-between text-muted-foreground">
+                  <span>{locale === "bn" ? "সাবটোটাল" : "Subtotal"}</span>
+                  <span className="text-foreground font-medium">{formatPrice(subtotal)}</span>
+                </div>
+
+                {discount > 0 && (
+                  <div className="flex justify-between text-primary">
+                    <span>{locale === "bn" ? "ডিসকাউন্ট" : "Discount"}</span>
+                    <span>-{formatPrice(discount)}</span>
+                  </div>
+                )}
+
+                <div className="flex justify-between text-muted-foreground">
+                  <span>{locale === "bn" ? "ডেলিভারি চার্জ" : "Estimated Delivery"}</span>
+                  <span className="text-foreground font-medium">
+                    {deliveryFee === 0 ? (locale === "bn" ? "ফ্রি" : "Complimentary") : formatPrice(deliveryFee)}
+                  </span>
+                </div>
+
+                <div className="flex justify-between text-xl font-serif text-foreground pt-4 border-t border-border font-medium">
+                  <span>{locale === "bn" ? "সর্বমোট" : "Total"}</span>
+                  <span>{formatPrice(grandTotal)}</span>
+                </div>
+              </div>
+
+              {/* Checkout Button */}
+              <Button
+                asChild
+                className="w-full btn-premium py-6 rounded-none text-xs tracking-[0.15em] uppercase font-semibold"
+              >
+                <Link href="/checkout">
+                  {locale === "bn" ? "চেকআউট করুন" : "Proceed to Checkout"}
+                  <ArrowRight className="ml-2 w-4 h-4" />
+                </Link>
+              </Button>
+
+              <div className="pt-2 text-center text-xs text-muted-foreground flex items-center justify-center gap-1.5">
+                <ShieldCheck className="w-4 h-4 text-primary" />
+                <span>100% Quality & Freshness Guarantee</span>
               </div>
             </div>
 
           </div>
-
         </div>
-
-      </div>
+      </section>
     </div>
   );
 }

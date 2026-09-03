@@ -1,31 +1,28 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import {
   Check,
-  ChevronRight,
   ShieldCheck,
-  Lock,
-  RefreshCw,
-  ShoppingBag,
-  CreditCard,
   Truck,
   ArrowRight,
-  X,
+  CreditCard,
+  Building,
   CheckCircle2,
+  Package
 } from "lucide-react";
 import confetti from "canvas-confetti";
+import { motion } from "framer-motion";
 import { useCartStore } from "@/lib/cart-store";
 import { useLanguage } from "@/context/LanguageContext";
-import styles from "./page.module.css";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 type CheckoutStep = "details" | "payment" | "complete";
 
 export default function CheckoutPage() {
-  const router = useRouter();
-  const { formatPrice } = useLanguage();
+  const { locale, formatPrice } = useLanguage();
   const {
     items,
     getSubtotal,
@@ -34,41 +31,25 @@ export default function CheckoutPage() {
     getGrandTotal,
     clearCart,
     submitOrder,
-    applyCoupon,
   } = useCartStore();
 
-  // Current Multi-Step State
   const [currentStep, setCurrentStep] = useState<CheckoutStep>("details");
   const [isProcessing, setIsProcessing] = useState(false);
-  const [couponInput, setCouponInput] = useState("");
-  const [couponMessage, setCouponMessage] = useState<string | null>(null);
 
-  // Form State (Step 1)
+  // Form State
   const [formData, setFormData] = useState({
     fullName: "Rafiq Ahmed",
     phone: "01712-345678",
-    altPhone: "01819-876543",
     email: "rafiq.ahmed@example.com",
     city: "Dhaka",
     area: "Dhanmondi",
-    address: "House 42, Road 7/A, Flat 3B, Dhanmondi R/A",
-    landmark: "Opposite Ibn Sina Hospital",
-    deliverySlot: "morning", // morning | afternoon | evening
-    specialNote: "Please pack fish and vegetables in separate insulated boxes.",
+    address: "House 42, Road 7/A, Dhanmondi",
+    deliverySlot: "morning",
+    specialNote: "Please pack with extra ice care.",
   });
 
-  // Payment State (Step 2)
-  const [paymentMethod, setPaymentMethod] = useState<"BKASH" | "NAGAD" | "SSLCOMMERZ" | "COD">("BKASH");
-  const [agreeTerms, setAgreeTerms] = useState(true);
-
-  // Bot & Child Security Lock State
-  const [isSlideUnlocked, setIsSlideUnlocked] = useState(false);
-  const [mathAnswer, setMathAnswer] = useState("");
-  const [mathProblem] = useState({ num1: 4, num2: 3, answer: 7 });
-  const [securityVerified, setSecurityVerified] = useState(false);
-  const [securityError, setSecurityError] = useState<string | null>(null);
-
-  // Order Complete Receipt
+  // Payment Method
+  const [paymentMethod, setPaymentMethod] = useState<"BKASH" | "NAGAD" | "COD">("BKASH");
   const [placedOrder, setPlacedOrder] = useState<any | null>(null);
 
   const subtotal = getSubtotal();
@@ -76,663 +57,390 @@ export default function CheckoutPage() {
   const deliveryFee = getDeliveryFee();
   const grandTotal = getGrandTotal();
 
-  useEffect(() => {
-    if (parseInt(mathAnswer.trim(), 10) === mathProblem.answer) {
-      setSecurityVerified(true);
-      setSecurityError(null);
-    } else if (mathAnswer.trim().length > 0) {
-      setSecurityVerified(false);
-    }
-  }, [mathAnswer, mathProblem.answer]);
-
-  const handleApplyCoupon = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!couponInput.trim()) return;
-    const res = applyCoupon(couponInput.trim());
-    setCouponMessage(res.message);
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleDetailsSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.fullName || !formData.phone || !formData.address) {
-      alert("Please enter your name, phone number, and delivery address.");
-      return;
-    }
     setCurrentStep("payment");
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const handleSlideToggle = () => {
-    setIsSlideUnlocked(true);
-    setSecurityVerified(true);
-    setSecurityError(null);
-  };
-
-  const handleFinalOrderSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!isSlideUnlocked && !securityVerified) {
-      setSecurityError("Please slide to unlock or answer the verification question.");
-      return;
-    }
-
-    if (!agreeTerms) {
-      alert("Please agree to the terms and conditions.");
-      return;
-    }
-
+  const handleFinalOrder = async () => {
     setIsProcessing(true);
-
     try {
       const orderPayload = {
-        customerName: formData.fullName,
-        customerPhone: formData.phone,
-        customerEmail: formData.email,
-        customerAddress: `${formData.address}${formData.landmark ? ` (${formData.landmark})` : ""}`,
-        deliveryArea: formData.area,
-        deliverySlot: formData.deliverySlot === "morning"
-          ? "Morning (07:00 - 09:30 AM)"
-          : formData.deliverySlot === "afternoon"
-          ? "Midday (01:00 - 03:30 PM)"
-          : "Evening (06:30 - 09:00 PM)",
+        customer: formData,
         paymentMethod,
-        items: items.map(it => ({
-          productId: it.product.id,
-          name: it.product.nameEn || it.product.nameBn,
-          price: it.totalPrice,
-          quantity: it.quantity,
-          unit: it.selectedUnit,
-          vendorId: it.product.vendorId || "default-vendor",
-        })),
-        totalAmount: grandTotal,
-        deliveryFee,
+        items,
+        subtotal,
         discount,
-        internalNotes: formData.specialNote,
+        deliveryFee,
+        grandTotal,
+        date: new Date().toISOString(),
       };
 
-      const result = await submitOrder(orderPayload);
-
-      setPlacedOrder({
-        orderNumber: result?.orderNumber || "TB-" + Math.floor(1000000 + Math.random() * 9000000),
-        total: grandTotal,
-        paymentMethod,
-        deliverySlot: orderPayload.deliverySlot,
-        date: new Date().toLocaleDateString("en-US"),
-      });
-
-      clearCart();
-      setCurrentStep("complete");
-      window.scrollTo({ top: 0, behavior: "smooth" });
-
-      try {
+      const res = await submitOrder(orderPayload);
+      if (res.success) {
+        setPlacedOrder({
+          orderNumber: res.orderNumber,
+          ...orderPayload,
+        });
+        setCurrentStep("complete");
+        clearCart();
         confetti({
-          particleCount: 120,
-          spread: 80,
+          particleCount: 100,
+          spread: 70,
           origin: { y: 0.6 },
         });
-      } catch (err) {
-        // ignore
       }
     } catch (err) {
-      alert("There was an issue processing your order. Please try again.");
+      console.error(err);
     } finally {
       setIsProcessing(false);
     }
   };
 
-  return (
-    <div className={styles.checkoutPage}>
-      <div className={styles.container}>
+  if (currentStep === "complete" && placedOrder) {
+    return (
+      <div className="container-narrow py-20 text-center">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="bg-linen p-10 md:p-14 border border-border space-y-6 max-w-xl mx-auto"
+        >
+          <div className="w-16 h-16 bg-primary/10 text-primary flex items-center justify-center rounded-full mx-auto">
+            <CheckCircle2 className="w-10 h-10 stroke-1" />
+          </div>
 
-        {/* ── Top Header ── */}
-        <div className={styles.topNav}>
-          <Link href="/" className={styles.brandLogo}>
-            <div className={styles.brandLogoIcon}>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3">
-                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
-              </svg>
+          <p className="text-[10px] font-semibold tracking-[0.3em] uppercase text-primary">
+            {locale === "bn" ? "অর্ডার নিশ্চিতকরণ" : "Order Confirmed"}
+          </p>
+
+          <h1 className="font-serif text-3xl md:text-4xl text-foreground">
+            {locale === "bn" ? "ধন্যবাদ, আপনার অর্ডার গৃহীত হয়েছে" : "Thank You For Your Order"}
+          </h1>
+
+          <p className="text-sm text-muted-foreground leading-relaxed">
+            {locale === "bn"
+              ? `অর্ডার নম্বর #${placedOrder.orderNumber}। আমাদের ডেলিভারি প্রতিনিধি শীঘ্রই যোগাযোগ করবেন।`
+              : `Order #${placedOrder.orderNumber}. A confirmation has been recorded. Our cold-chain team is preparing your pieces with care.`}
+          </p>
+
+          <div className="border-t border-border pt-6 text-left text-xs space-y-2 text-muted-foreground">
+            <div className="flex justify-between">
+              <span>{locale === "bn" ? "প্রাপক:" : "Recipient:"}</span>
+              <span className="text-foreground font-medium">{placedOrder.customer.fullName}</span>
             </div>
-            <span>Tatka Bazar</span>
-          </Link>
-
-          {currentStep !== "complete" && (
-            <Link href="/cart" className={styles.cancelLink}>
-              <X size={15} />
-              <span>Cancel & Return to Cart</span>
-            </Link>
-          )}
-        </div>
-
-        {/* ── Progress Stepper Bar ── */}
-        {currentStep !== "complete" && (
-          <div className={styles.stepperWrapper}>
-            <div
-              className={`${styles.stepItem} ${currentStep === "details" ? styles.stepItemActive : styles.stepItemCompleted}`}
-              onClick={() => setCurrentStep("details")}
-            >
-              <div className={`${styles.stepCircle} ${currentStep === "details" ? styles.stepCircleActive : styles.stepCircleCompleted}`}>
-                {currentStep === "payment" ? <Check size={14} /> : "1"}
-              </div>
-              <span>Personal details</span>
+            <div className="flex justify-between">
+              <span>{locale === "bn" ? "ঠিকানা:" : "Address:"}</span>
+              <span className="text-foreground font-medium">{placedOrder.customer.address}, {placedOrder.customer.city}</span>
             </div>
-
-            <div className={`${styles.stepLine} ${currentStep === "payment" ? styles.stepLineActive : ""}`} />
-
-            <div className={`${styles.stepItem} ${currentStep === "payment" ? styles.stepItemActive : ""}`}>
-              <div className={`${styles.stepCircle} ${currentStep === "payment" ? styles.stepCircleActive : ""}`}>
-                2
-              </div>
-              <span>Payment</span>
+            <div className="flex justify-between">
+              <span>{locale === "bn" ? "পদ্ধতি:" : "Payment:"}</span>
+              <span className="text-foreground font-medium">{placedOrder.paymentMethod}</span>
             </div>
-
-            <div className={styles.stepLine} />
-
-            <div className={styles.stepItem}>
-              <div className={styles.stepCircle}>
-                3
-              </div>
-              <span>Complete</span>
+            <div className="flex justify-between text-base font-serif text-foreground pt-3 border-t border-border">
+              <span>{locale === "bn" ? "পরিশোধিত মূল্য:" : "Total:"}</span>
+              <span>{formatPrice(placedOrder.grandTotal)}</span>
             </div>
           </div>
-        )}
 
-        {/* ── Main Content Grid ── */}
-        {currentStep !== "complete" ? (
-          <div className={styles.layoutGrid}>
+          <Button
+            asChild
+            className="w-full btn-premium py-6 rounded-none text-xs tracking-[0.15em] uppercase font-semibold mt-4"
+          >
+            <Link href="/shop">
+              {locale === "bn" ? "আরও কেনাকাটা করুন" : "Return to Shop"}
+              <ArrowRight className="ml-2 w-4 h-4" />
+            </Link>
+          </Button>
+        </motion.div>
+      </div>
+    );
+  }
 
-            {/* ── Left Column ── */}
-            <div>
-              {/* STAGE 1: PERSONAL DETAILS */}
-              {currentStep === "details" && (
-                <div className={styles.mainCard}>
-                  <div className={styles.sectionHeader}>
-                    <h2 className={styles.sectionTitle}>Personal Details & Delivery Address</h2>
-                    <p className={styles.sectionSubtitle}>
-                      Verify your delivery location for accurate doorstep dispatch.
-                    </p>
-                  </div>
+  if (items.length === 0) {
+    return (
+      <div className="container-narrow py-28 text-center">
+        <p className="font-serif text-3xl text-foreground mb-4">
+          {locale === "bn" ? "আপনার শপিং ব্যাগ খালি" : "Your Bag is Empty"}
+        </p>
+        <Button asChild className="rounded-none btn-premium px-8 py-5 text-xs tracking-[0.15em] uppercase">
+          <Link href="/shop">{locale === "bn" ? "দোকানে ফিরে যান" : "Browse Pieces"}</Link>
+        </Button>
+      </div>
+    );
+  }
 
-                  <form onSubmit={handleDetailsSubmit}>
-                    <div className={styles.formGrid}>
-                      
-                      {/* Full Name */}
-                      <div className={styles.inputGroup}>
-                        <label className={styles.inputLabel}>
-                          <span>Customer Full Name *</span>
-                        </label>
-                        <input
-                          type="text"
-                          required
-                          value={formData.fullName}
-                          onChange={e => setFormData({ ...formData, fullName: e.target.value })}
-                          className={styles.inputControl}
-                        />
-                      </div>
+  return (
+    <div className="w-full">
+      {/* Breadcrumb */}
+      <div className="container-full py-5 border-b border-border">
+        <div className="flex items-center gap-2.5 text-xs text-muted-foreground uppercase tracking-[0.1em]">
+          <Link href="/cart" className="hover:text-foreground transition-colors">
+            {locale === "bn" ? "শপিং ব্যাগ" : "Bag"}
+          </Link>
+          <span>/</span>
+          <span className="text-foreground font-medium">
+            {locale === "bn" ? "চেকআউট" : "Checkout"}
+          </span>
+        </div>
+      </div>
 
-                      {/* Primary Phone */}
-                      <div className={styles.inputGroup}>
-                        <label className={styles.inputLabel}>
-                          <span>Primary Mobile Number *</span>
-                          <span style={{ fontSize: "0.7rem", color: "#10b981", fontWeight: 700 }}>Verified</span>
-                        </label>
-                        <input
-                          type="tel"
-                          required
-                          value={formData.phone}
-                          onChange={e => setFormData({ ...formData, phone: e.target.value })}
-                          className={styles.inputControl}
-                        />
-                      </div>
+      <section className="py-12 md:py-16">
+        <div className="container-full">
+          {/* Step Indicator */}
+          <div className="flex items-center justify-center gap-8 mb-12 text-xs tracking-[0.2em] uppercase">
+            <span className={cn(currentStep === "details" ? "text-primary font-semibold border-b-2 border-primary pb-1" : "text-muted-foreground")}>
+              1. {locale === "bn" ? "ডেলিভারি তথ্য" : "Delivery Details"}
+            </span>
+            <span className="text-border">/</span>
+            <span className={cn(currentStep === "payment" ? "text-primary font-semibold border-b-2 border-primary pb-1" : "text-muted-foreground")}>
+              2. {locale === "bn" ? "পেমেন্ট পদ্ধতি" : "Payment"}
+            </span>
+          </div>
 
-                      {/* Alternate Phone */}
-                      <div className={styles.inputGroup}>
-                        <label className={styles.inputLabel}>
-                          <span>Alternate Phone (Optional)</span>
-                        </label>
-                        <input
-                          type="tel"
-                          placeholder="01XXXXXXXXX"
-                          value={formData.altPhone}
-                          onChange={e => setFormData({ ...formData, altPhone: e.target.value })}
-                          className={styles.inputControl}
-                        />
-                      </div>
+          <div className="grid lg:grid-cols-12 gap-12 lg:gap-16 items-start">
+            {/* Left 7 cols: Form content */}
+            <div className="lg:col-span-7">
+              {currentStep === "details" ? (
+                <form onSubmit={handleDetailsSubmit} className="space-y-6">
+                  <h2 className="font-serif text-2xl md:text-3xl text-foreground mb-6">
+                    {locale === "bn" ? "ডেলিভারি ঠিকানা ও সময়" : "Shipping Destination"}
+                  </h2>
 
-                      {/* Email */}
-                      <div className={styles.inputGroup}>
-                        <label className={styles.inputLabel}>
-                          <span>Email Address</span>
-                        </label>
-                        <input
-                          type="email"
-                          value={formData.email}
-                          onChange={e => setFormData({ ...formData, email: e.target.value })}
-                          className={styles.inputControl}
-                        />
-                      </div>
-
-                      {/* Delivery Area */}
-                      <div className={styles.inputGroup}>
-                        <label className={styles.inputLabel}>
-                          <span>City / Area *</span>
-                        </label>
-                        <select
-                          value={formData.area}
-                          onChange={e => setFormData({ ...formData, area: e.target.value })}
-                          className={styles.inputControl}
-                        >
-                          <option value="Dhanmondi">Dhanmondi, Dhaka</option>
-                          <option value="Gulshan">Gulshan-1 & 2</option>
-                          <option value="Banani">Banani, Dhaka</option>
-                          <option value="Uttara">Uttara Sector 1-14</option>
-                          <option value="Mirpur">Mirpur, Dhaka</option>
-                          <option value="Mohammadpur">Mohammadpur</option>
-                        </select>
-                      </div>
-
-                      {/* Full Address */}
-                      <div className={`${styles.inputGroup} ${styles.fullWidth}`}>
-                        <label className={styles.inputLabel}>
-                          <span>Full Delivery Address (House, Road, Apartment) *</span>
-                        </label>
-                        <input
-                          type="text"
-                          required
-                          value={formData.address}
-                          onChange={e => setFormData({ ...formData, address: e.target.value })}
-                          placeholder="House 12, Road 4, Flat B2"
-                          className={styles.inputControl}
-                        />
-                      </div>
-
-                      {/* Delivery Slot */}
-                      <div className={`${styles.inputGroup} ${styles.fullWidth}`}>
-                        <label className={styles.inputLabel}>
-                          <span>Preferred Delivery Slot *</span>
-                        </label>
-                        <div className={styles.slotGrid}>
-                          <div
-                            className={`${styles.slotCard} ${formData.deliverySlot === "morning" ? styles.slotCardActive : ""}`}
-                            onClick={() => setFormData({ ...formData, deliverySlot: "morning" })}
-                          >
-                            <span className={styles.slotTitle}>🌅 Morning Slot</span>
-                            <span className={styles.slotTime}>07:00 AM - 09:30 AM</span>
-                          </div>
-
-                          <div
-                            className={`${styles.slotCard} ${formData.deliverySlot === "afternoon" ? styles.slotCardActive : ""}`}
-                            onClick={() => setFormData({ ...formData, deliverySlot: "afternoon" })}
-                          >
-                            <span className={styles.slotTitle}>☀️ Midday Express</span>
-                            <span className={styles.slotTime}>01:00 PM - 03:30 PM</span>
-                          </div>
-
-                          <div
-                            className={`${styles.slotCard} ${formData.deliverySlot === "evening" ? styles.slotCardActive : ""}`}
-                            onClick={() => setFormData({ ...formData, deliverySlot: "evening" })}
-                          >
-                            <span className={styles.slotTitle}>🌙 Evening Slot</span>
-                            <span className={styles.slotTime}>06:30 PM - 09:00 PM</span>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Special Packaging Note */}
-                      <div className={`${styles.inputGroup} ${styles.fullWidth}`}>
-                        <label className={styles.inputLabel}>
-                          <span>Special Delivery / Packaging Instructions</span>
-                        </label>
-                        <textarea
-                          rows={2}
-                          value={formData.specialNote}
-                          onChange={e => setFormData({ ...formData, specialNote: e.target.value })}
-                          placeholder="e.g. Leave package with the security guard..."
-                          className={styles.inputControl}
-                          style={{ height: "auto" }}
-                        />
-                      </div>
-
-                    </div>
-
-                    <div style={{ marginTop: "24px" }}>
-                      <button type="submit" className={styles.continueBtn}>
-                        <span>Continue to Payment</span>
-                        <ChevronRight size={17} />
-                      </button>
-                    </div>
-                  </form>
-                </div>
-              )}
-
-              {/* STAGE 2: PAYMENT & ANTI-BOT / CHILD LOCK */}
-              {currentStep === "payment" && (
-                <div className={styles.mainCard}>
-                  <div className={styles.sectionHeader}>
-                    <h2 className={styles.sectionTitle}>Select Payment Option</h2>
-                    <p className={styles.sectionSubtitle}>
-                      All transactions are 100% secure and 256-bit encrypted
-                    </p>
-                  </div>
-
-                  <form onSubmit={handleFinalOrderSubmit}>
-                    <div className={styles.paymentList}>
-                      
-                      {/* bKash */}
-                      <div
-                        className={`${styles.paymentOption} ${paymentMethod === "BKASH" ? styles.paymentOptionActive : ""}`}
-                        onClick={() => setPaymentMethod("BKASH")}
-                      >
-                        <div className={styles.paymentLeft}>
-                          <div className={`${styles.radioCircle} ${paymentMethod === "BKASH" ? styles.radioCircleActive : ""}`}>
-                            {paymentMethod === "BKASH" && <div className={styles.radioDot} />}
-                          </div>
-                          <div>
-                            <div className={styles.paymentLabel}>bKash Online Payment</div>
-                            <div className={styles.paymentDesc}>Instant payment with 10% cashback campaign</div>
-                          </div>
-                        </div>
-                        <span style={{ fontWeight: 900, color: "#e11d48", fontSize: "0.95rem" }}>bKash</span>
-                      </div>
-
-                      {/* Nagad */}
-                      <div
-                        className={`${styles.paymentOption} ${paymentMethod === "NAGAD" ? styles.paymentOptionActive : ""}`}
-                        onClick={() => setPaymentMethod("NAGAD")}
-                      >
-                        <div className={styles.paymentLeft}>
-                          <div className={`${styles.radioCircle} ${paymentMethod === "NAGAD" ? styles.radioCircleActive : ""}`}>
-                            {paymentMethod === "NAGAD" && <div className={styles.radioDot} />}
-                          </div>
-                          <div>
-                            <div className={styles.paymentLabel}>Nagad Digital Payment</div>
-                            <div className={styles.paymentDesc}>Post office digital mobile wallet</div>
-                          </div>
-                        </div>
-                        <span style={{ fontWeight: 900, color: "#ea580c", fontSize: "0.95rem" }}>Nagad</span>
-                      </div>
-
-                      {/* Credit Card / SSLCommerz */}
-                      <div
-                        className={`${styles.paymentOption} ${paymentMethod === "SSLCOMMERZ" ? styles.paymentOptionActive : ""}`}
-                        onClick={() => setPaymentMethod("SSLCOMMERZ")}
-                      >
-                        <div className={styles.paymentLeft}>
-                          <div className={`${styles.radioCircle} ${paymentMethod === "SSLCOMMERZ" ? styles.radioCircleActive : ""}`}>
-                            {paymentMethod === "SSLCOMMERZ" && <div className={styles.radioDot} />}
-                          </div>
-                          <div>
-                            <div className={styles.paymentLabel}>Credit / Debit Card & Net Banking</div>
-                            <div className={styles.paymentDesc}>Visa, MasterCard, Amex & Online Banking</div>
-                          </div>
-                        </div>
-                        <div style={{ display: "flex", gap: "6px" }}>
-                          <span style={{ fontSize: "0.75rem", background: "#1e293b", color: "#fff", padding: "2px 6px", borderRadius: "4px", fontWeight: 700 }}>VISA</span>
-                          <span style={{ fontSize: "0.75rem", background: "#dc2626", color: "#fff", padding: "2px 6px", borderRadius: "4px", fontWeight: 700 }}>MC</span>
-                        </div>
-                      </div>
-
-                      {/* Cash on Delivery */}
-                      <div
-                        className={`${styles.paymentOption} ${paymentMethod === "COD" ? styles.paymentOptionActive : ""}`}
-                        onClick={() => setPaymentMethod("COD")}
-                      >
-                        <div className={styles.paymentLeft}>
-                          <div className={`${styles.radioCircle} ${paymentMethod === "COD" ? styles.radioCircleActive : ""}`}>
-                            {paymentMethod === "COD" && <div className={styles.radioDot} />}
-                          </div>
-                          <div>
-                            <div className={styles.paymentLabel}>Cash on Delivery (COD)</div>
-                            <div className={styles.paymentDesc}>Inspect produce first, then pay in cash to the rider</div>
-                          </div>
-                        </div>
-                        <span style={{ fontSize: "1.2rem" }}>💵</span>
-                      </div>
-
-                    </div>
-
-                    {/* ── ANTI-BOT & CHILD SAFETY SECURITY SHIELD ── */}
-                    <div className={styles.securityShieldBox}>
-                      <div className={styles.shieldHeader}>
-                        <ShieldCheck size={18} color="#16a34a" />
-                        <span>Order Verification Shield (Anti-Bot & Child Protection)</span>
-                      </div>
-                      <p className={styles.shieldSub}>
-                        To prevent accidental orders, please slide the toggle or solve the verification problem below.
-                      </p>
-
-                      {/* Slide-To-Confirm */}
-                      <div
-                        className={`${styles.slideTrack} ${isSlideUnlocked ? styles.slideTrackUnlocked : ""}`}
-                        onClick={handleSlideToggle}
-                      >
-                        <div className={`${styles.slideHandle} ${isSlideUnlocked ? styles.slideHandleUnlocked : ""}`}>
-                          {isSlideUnlocked ? <Check size={18} /> : <Lock size={16} />}
-                        </div>
-                        <span className={styles.slideLabel}>
-                          {isSlideUnlocked ? "✓ Order verification complete!" : "👉 Slide to confirm order"}
-                        </span>
-                      </div>
-
-                      {/* Optional Math Verification */}
-                      <div className={styles.mathChallengeBox}>
-                        <span className={styles.mathQuestion}>
-                          Security Question: {mathProblem.num1} + {mathProblem.num2} =
-                        </span>
-                        <input
-                          type="text"
-                          maxLength={2}
-                          placeholder="?"
-                          value={mathAnswer}
-                          onChange={e => setMathAnswer(e.target.value)}
-                          className={`${styles.mathInput} ${securityVerified ? styles.mathInputVerified : ""}`}
-                        />
-                        {securityVerified && (
-                          <span style={{ fontSize: "0.78rem", color: "#16a34a", fontWeight: 700 }}>
-                            ✓ Human Verified
-                          </span>
-                        )}
-                      </div>
-
-                      {securityError && (
-                        <div style={{ color: "#dc2626", fontSize: "0.78rem", marginTop: "8px", fontWeight: 600 }}>
-                          ⚠️ {securityError}
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Submit Pay Button */}
-                    <button
-                      type="submit"
-                      disabled={isProcessing}
-                      className={styles.payBtn}
-                    >
-                      {isProcessing ? (
-                        <>
-                          <RefreshCw size={18} className="spin" />
-                          <span>Processing Order...</span>
-                        </>
-                      ) : (
-                        <>
-                          <Lock size={17} />
-                          <span>Pay | {formatPrice(grandTotal)}</span>
-                        </>
-                      )}
-                    </button>
-
-                    <div className={styles.termsRow}>
-                      <input
-                        type="checkbox"
-                        id="terms"
-                        checked={agreeTerms}
-                        onChange={e => setAgreeTerms(e.target.checked)}
-                      />
-                      <label htmlFor="terms">
-                        By placing this order, I agree to Tatka Bazar <strong>Terms & Conditions</strong> and <strong>Privacy Policy</strong>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] font-semibold tracking-[0.2em] uppercase text-muted-foreground">
+                        {locale === "bn" ? "পূর্ণ নাম" : "Full Name"}
                       </label>
+                      <input
+                        type="text"
+                        name="fullName"
+                        required
+                        value={formData.fullName}
+                        onChange={handleInputChange}
+                        className="w-full px-4 py-3 text-sm bg-background border border-border text-foreground rounded-none focus:outline-none focus:border-primary"
+                      />
                     </div>
 
-                    <div style={{ marginTop: "16px", textAlign: "center" }}>
-                      <button
-                        type="button"
-                        onClick={() => setCurrentStep("details")}
-                        style={{ background: "none", border: "none", color: "#64748b", fontSize: "0.82rem", cursor: "pointer", textDecoration: "underline" }}
-                      >
-                        ← Edit Personal Details
-                      </button>
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] font-semibold tracking-[0.2em] uppercase text-muted-foreground">
+                        {locale === "bn" ? "মোবাইল নম্বর" : "Phone Number"}
+                      </label>
+                      <input
+                        type="tel"
+                        name="phone"
+                        required
+                        value={formData.phone}
+                        onChange={handleInputChange}
+                        className="w-full px-4 py-3 text-sm bg-background border border-border text-foreground rounded-none focus:outline-none focus:border-primary"
+                      />
                     </div>
-                  </form>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] font-semibold tracking-[0.2em] uppercase text-muted-foreground">
+                        {locale === "bn" ? "শহর" : "City"}
+                      </label>
+                      <select
+                        name="city"
+                        value={formData.city}
+                        onChange={handleInputChange}
+                        className="w-full px-4 py-3 text-sm bg-background border border-border text-foreground rounded-none focus:outline-none focus:border-primary"
+                      >
+                        <option value="Dhaka">Dhaka</option>
+                        <option value="Chittagong">Chittagong</option>
+                        <option value="Sylhet">Sylhet</option>
+                      </select>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] font-semibold tracking-[0.2em] uppercase text-muted-foreground">
+                        {locale === "bn" ? "এলাকা" : "Area / Zone"}
+                      </label>
+                      <input
+                        type="text"
+                        name="area"
+                        required
+                        value={formData.area}
+                        onChange={handleInputChange}
+                        className="w-full px-4 py-3 text-sm bg-background border border-border text-foreground rounded-none focus:outline-none focus:border-primary"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-semibold tracking-[0.2em] uppercase text-muted-foreground">
+                      {locale === "bn" ? "বিস্তারিত ঠিকানা" : "Street Address"}
+                    </label>
+                    <textarea
+                      name="address"
+                      rows={2}
+                      required
+                      value={formData.address}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-3 text-sm bg-background border border-border text-foreground rounded-none focus:outline-none focus:border-primary resize-none"
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-semibold tracking-[0.2em] uppercase text-muted-foreground">
+                      {locale === "bn" ? "ডেলিভারি সময় স্লট" : "Delivery Window"}
+                    </label>
+                    <div className="grid grid-cols-3 gap-3">
+                      {[
+                        { val: "morning", labelBn: "সকাল (৮-১১ টা)", labelEn: "Morning (8-11 AM)" },
+                        { val: "afternoon", labelBn: "দুপুর (১২-৩ টা)", labelEn: "Afternoon (12-3 PM)" },
+                        { val: "evening", labelBn: "সন্ধ্যা (৪-৮ টা)", labelEn: "Evening (4-8 PM)" },
+                      ].map((slot) => (
+                        <button
+                          key={slot.val}
+                          type="button"
+                          onClick={() => setFormData((p) => ({ ...p, deliverySlot: slot.val }))}
+                          className={cn(
+                            "py-3 px-2 text-xs border text-center transition-colors rounded-none",
+                            formData.deliverySlot === slot.val
+                              ? "border-primary bg-primary/5 text-primary font-semibold"
+                              : "border-border text-muted-foreground hover:border-foreground/40"
+                          )}
+                        >
+                          {locale === "bn" ? slot.labelBn : slot.labelEn}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <Button
+                    type="submit"
+                    className="w-full btn-premium py-6 rounded-none text-xs tracking-[0.15em] uppercase font-semibold mt-4"
+                  >
+                    {locale === "bn" ? "পেমেন্ট ধাপে যান" : "Continue to Payment"}
+                    <ArrowRight className="ml-2 w-4 h-4" />
+                  </Button>
+                </form>
+              ) : (
+                <div className="space-y-6">
+                  <h2 className="font-serif text-2xl md:text-3xl text-foreground mb-6">
+                    {locale === "bn" ? "পেমেন্ট পদ্ধতি নির্বাচন করুন" : "Select Payment Method"}
+                  </h2>
+
+                  <div className="space-y-3">
+                    {[
+                      { id: "BKASH", name: "bKash Digital Payment", desc: "Instant automated 1.5% cashback" },
+                      { id: "NAGAD", name: "Nagad Gateway", desc: "Instant direct checkout" },
+                      { id: "COD", name: "Cash on Delivery (ক্যাশ অন ডেলিভারি)", desc: "Inspect items at your doorstep before payment" },
+                    ].map((m) => (
+                      <div
+                        key={m.id}
+                        onClick={() => setPaymentMethod(m.id as any)}
+                        className={cn(
+                          "p-4 border cursor-pointer transition-all flex items-center justify-between",
+                          paymentMethod === m.id
+                            ? "border-primary bg-primary/5 shadow-sm"
+                            : "border-border hover:border-foreground/30 bg-background"
+                        )}
+                      >
+                        <div>
+                          <p className="font-serif text-base text-foreground font-medium">{m.name}</p>
+                          <p className="text-xs text-muted-foreground mt-0.5">{m.desc}</p>
+                        </div>
+                        <div
+                          className={cn(
+                            "w-5 h-5 rounded-full border flex items-center justify-center",
+                            paymentMethod === m.id ? "border-primary bg-primary text-white" : "border-border"
+                          )}
+                        >
+                          {paymentMethod === m.id && <Check className="w-3 h-3" />}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="pt-4 flex gap-3">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setCurrentStep("details")}
+                      className="rounded-none py-6 text-xs tracking-[0.1em] uppercase"
+                    >
+                      {locale === "bn" ? "পূর্ববর্তী ধাপ" : "Back to Details"}
+                    </Button>
+
+                    <Button
+                      type="button"
+                      onClick={handleFinalOrder}
+                      disabled={isProcessing}
+                      className="flex-1 btn-premium py-6 rounded-none text-xs tracking-[0.15em] uppercase font-semibold"
+                    >
+                      {isProcessing ? (locale === "bn" ? "প্রক্রিয়াকরণ হচ্ছে..." : "Processing...") : (locale === "bn" ? "অর্ডার সম্পন্ন করুন" : "Place Order Now")}
+                      <ArrowRight className="ml-2 w-4 h-4" />
+                    </Button>
+                  </div>
                 </div>
               )}
             </div>
 
-            {/* ── Right Column: Your Cart & Summary ── */}
-            <div className={styles.sidebarCard}>
-              <div className={styles.sidebarTitle}>
-                <span>Your cart ({items.length})</span>
-                <Link href="/cart" style={{ fontSize: "0.78rem", color: "#6366f1", textDecoration: "none" }}>Edit</Link>
-              </div>
+            {/* Right 5 cols: Order Review */}
+            <div className="lg:col-span-5 bg-linen p-8 border border-border space-y-6">
+              <h3 className="font-serif text-2xl text-foreground">
+                {locale === "bn" ? "অর্ডার সংক্ষেপ" : "Order Summary"}
+              </h3>
 
-              {/* Items List */}
-              <div className={styles.cartItemList}>
-                {items.length > 0 ? (
-                  items.map(item => (
-                    <div key={item.id} className={styles.cartItemRow}>
-                      <img
-                        src={item.product?.images?.[0] || "https://images.unsplash.com/photo-1540420773420-3366772f4999?w=300&auto=format&fit=crop&q=80"}
-                        alt={item.product?.nameEn || item.product?.nameBn}
-                        className={styles.itemImg}
-                      />
-                      <div className={styles.itemMeta}>
-                        <h4 className={styles.itemTitle}>{item.product?.nameEn || item.product?.nameBn}</h4>
-                        <div className={styles.itemQty}>{item.selectedWeight} {item.selectedUnit} × {item.quantity} units</div>
-                      </div>
-                      <div className={styles.itemPrice}>
-                        {formatPrice(item.unitPrice * item.quantity)}
-                      </div>
+              <div className="divide-y divide-border/70 max-h-80 overflow-y-auto pr-2">
+                {items.map((it) => (
+                  <div key={it.id} className="py-3 flex gap-3 items-center">
+                    <img
+                      src={it.product.images[0]}
+                      alt={it.product.nameEn}
+                      className="w-12 h-14 object-cover bg-muted flex-shrink-0"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <p className="font-serif text-sm text-foreground truncate">
+                        {locale === "bn" ? it.product.nameBn : it.product.nameEn}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {it.quantity} × {it.selectedWeight} {it.selectedUnit}
+                      </p>
                     </div>
-                  ))
-                ) : (
-                  <div style={{ color: "#94a3b8", fontSize: "0.82rem" }}>Your cart is empty.</div>
-                )}
+                    <span className="font-serif text-sm text-foreground font-medium">
+                      {formatPrice(it.unitPrice * it.quantity)}
+                    </span>
+                  </div>
+                ))}
               </div>
 
-              {/* Apply Coupon Code */}
-              <form onSubmit={handleApplyCoupon}>
-                <div className={styles.couponBox}>
-                  <input
-                    type="text"
-                    placeholder="Apply coupon code"
-                    value={couponInput}
-                    onChange={e => setCouponInput(e.target.value)}
-                    className={styles.couponInput}
-                  />
-                  <button type="submit" className={styles.couponBtn}>
-                    Apply
-                  </button>
-                </div>
-                {couponMessage && (
-                  <div style={{ fontSize: "0.75rem", color: "#16a34a", marginTop: "6px" }}>
-                    {couponMessage}
-                  </div>
-                )}
-              </form>
-
-              {/* Order Summary Table */}
-              <div className={styles.summaryTable}>
-                <div className={styles.summaryRow}>
-                  <span>Subtotal</span>
-                  <span>{formatPrice(subtotal)}</span>
-                </div>
-                <div className={styles.summaryRow}>
-                  <span>Shipping / Delivery</span>
-                  <span>{deliveryFee === 0 ? "Free" : formatPrice(deliveryFee)}</span>
+              <div className="space-y-2 text-xs border-t border-border pt-4 text-muted-foreground">
+                <div className="flex justify-between">
+                  <span>{locale === "bn" ? "সাবটোটাল" : "Subtotal"}</span>
+                  <span className="text-foreground font-medium">{formatPrice(subtotal)}</span>
                 </div>
                 {discount > 0 && (
-                  <div className={styles.summaryRow} style={{ color: "#16a34a" }}>
-                    <span>Discount</span>
+                  <div className="flex justify-between text-primary">
+                    <span>{locale === "bn" ? "ডিসকাউন্ট" : "Discount"}</span>
                     <span>-{formatPrice(discount)}</span>
                   </div>
                 )}
-                <div className={styles.summaryRow}>
-                  <span>VAT / Tax</span>
-                  <span>৳0.00</span>
+                <div className="flex justify-between">
+                  <span>{locale === "bn" ? "ডেলিভারি" : "Delivery"}</span>
+                  <span className="text-foreground font-medium">
+                    {deliveryFee === 0 ? (locale === "bn" ? "ফ্রি" : "Complimentary") : formatPrice(deliveryFee)}
+                  </span>
                 </div>
-                <div className={styles.summaryRowTotal}>
-                  <span>Total</span>
+                <div className="flex justify-between text-xl font-serif text-foreground pt-4 border-t border-border font-medium">
+                  <span>{locale === "bn" ? "সর্বমোট" : "Total"}</span>
                   <span>{formatPrice(grandTotal)}</span>
                 </div>
               </div>
             </div>
 
           </div>
-        ) : (
-          /* ── STAGE 3: ORDER COMPLETE CELEBRATION ── */
-          <div className={styles.completeCard}>
-            <div className={styles.completeIconBox}>
-              <CheckCircle2 size={40} />
-            </div>
-
-            <h1 className={styles.completeTitle}>Order Placed Successfully! 🎉</h1>
-            <p className={styles.completeSub}>
-              Thank you <strong>{formData.fullName}</strong>! We have started preparing your fresh items.
-            </p>
-
-            <div className={styles.orderReceiptBox}>
-              <div className={styles.receiptRow}>
-                <span>Order ID:</span>
-                <strong>#{placedOrder?.orderNumber}</strong>
-              </div>
-              <div className={styles.receiptRow}>
-                <span>Total Amount:</span>
-                <strong>{formatPrice(placedOrder?.total)}</strong>
-              </div>
-              <div className={styles.receiptRow}>
-                <span>Payment Method:</span>
-                <strong>{placedOrder?.paymentMethod}</strong>
-              </div>
-              <div className={styles.receiptRow}>
-                <span>Delivery Slot:</span>
-                <strong>{placedOrder?.deliverySlot}</strong>
-              </div>
-              <div className={styles.receiptRow}>
-                <span>Delivery Address:</span>
-                <span>{formData.address}, {formData.area}</span>
-              </div>
-            </div>
-
-            <div style={{ display: "flex", gap: "12px", justifyContent: "center", flexWrap: "wrap" }}>
-              <Link
-                href={`/track/${placedOrder?.orderNumber}`}
-                className={styles.payBtn}
-                style={{ width: "auto", padding: "12px 28px", textDecoration: "none" }}
-              >
-                <span>Track Order Live ↗</span>
-              </Link>
-              <Link
-                href="/"
-                className={styles.couponBtn}
-                style={{ padding: "12px 24px", fontSize: "0.92rem", textDecoration: "none", display: "inline-flex", alignItems: "center" }}
-              >
-                Back to Home
-              </Link>
-            </div>
-          </div>
-        )}
-
-        {/* ── Bottom Freshness & Cancellation Policy Card ── */}
-        <div className={styles.policyCard}>
-          <div>
-            <h4 className={styles.policyTitle}>Cancellation & Freshness Policy</h4>
-            <p className={styles.policyText}>
-              Every item on Tatka Bazar undergoes quality inspection upon harvest. If you are unsatisfied with freshness upon delivery, you can instantly return the item with zero extra fees at your doorstep.
-            </p>
-          </div>
-          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-            <ShieldCheck size={32} color="#10D876" />
-          </div>
         </div>
-
-      </div>
+      </section>
     </div>
   );
 }

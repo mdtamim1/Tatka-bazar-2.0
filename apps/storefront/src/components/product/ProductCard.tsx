@@ -2,274 +2,191 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { Heart, ShoppingBag, Zap, Star, Scale, ChevronDown } from "lucide-react";
+import { Heart, ShoppingBag, Check } from "lucide-react";
+import { motion } from "framer-motion";
 import { useLanguage } from "@/context/LanguageContext";
 import { useCartStore } from "@/lib/cart-store";
 import type { Product } from "@/types";
-import styles from "./ProductCard.module.css";
+import { cn } from "@/lib/utils";
 
 interface ProductCardProps {
   product: Product;
+  index?: number;
+  variant?: "default" | "large";
 }
 
-export function ProductCard({ product }: ProductCardProps) {
-  const router = useRouter();
+export const ProductCard: React.FC<ProductCardProps> = ({
+  product,
+  index = 0,
+  variant = "default",
+}) => {
   const { locale, formatPrice } = useLanguage();
   const { addItem, wishlistIds, toggleWishlist, openCart } = useCartStore();
-
-  const [selectedWeightIdx, setSelectedWeightIdx] = useState(0);
-  const [isPortionPickerOpen, setIsPortionPickerOpen] = useState(false);
-  const [isAdded, setIsAdded] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [addedAnim, setAddedAnim] = useState(false);
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  // Weight / Portion Options from Product or standard defaults
-  const weightOptions =
-    product.weightOptions && product.weightOptions.length > 0
-      ? product.weightOptions
-      : [
-          { value: 0.5, unit: product.baseUnit || "kg", labelBn: "500g", labelEn: "500g", multiplier: 0.5 },
-          { value: 1, unit: product.baseUnit || "kg", labelBn: "1 kg", labelEn: "1 kg", multiplier: 1, popular: true },
-          { value: 2, unit: product.baseUnit || "kg", labelBn: "2 kg", labelEn: "2 kg", multiplier: 2 },
-          { value: 5, unit: product.baseUnit || "kg", labelBn: "5 kg", labelEn: "5 kg", multiplier: 4.8 },
-        ];
+  const inWishlist = mounted ? wishlistIds.includes(product.id) : false;
+  const hasSecondImage = product.images && product.images.length > 1;
 
-  const activeWeightOpt = weightOptions[selectedWeightIdx] || weightOptions[0]!;
+  const handleWishlistToggle = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    toggleWishlist(product.id);
+  };
 
-  const currentPrice = Math.max(1, Math.round(product.basePrice * (activeWeightOpt.multiplier || 1)));
-  const comparePrice = product.comparePrice
-    ? Math.round(product.comparePrice * (activeWeightOpt.multiplier || 1))
-    : null;
-
-  const discount =
-    comparePrice && comparePrice > currentPrice
-      ? Math.round((1 - currentPrice / comparePrice) * 100)
-      : product.flashDiscount || null;
-
-  const isFav = mounted ? wishlistIds.includes(product.id) : false;
-
-  const handleAddToCart = (e: React.MouseEvent) => {
+  const handleQuickAdd = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     addItem(
       product,
-      activeWeightOpt.value,
-      (activeWeightOpt.unit || product.baseUnit || "kg") as any,
-      currentPrice,
+      1,
+      product.baseUnit || "kg",
+      product.basePrice,
       1
     );
-    setIsAdded(true);
+    setAddedAnim(true);
     openCart();
-    setTimeout(() => setIsAdded(false), 2000);
+    setTimeout(() => setAddedAnim(false), 1500);
   };
-
-  const handleBuyNow = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    addItem(
-      product,
-      activeWeightOpt.value,
-      (activeWeightOpt.unit || product.baseUnit || "kg") as any,
-      currentPrice,
-      1
-    );
-    router.push("/checkout");
-  };
-
-  // Vendor brand name
-  const vendorName = product.vendorNameEn || product.vendorNameBn || "TATKA BAZAR";
-  const [imgSrc, setImgSrc] = useState(product.images?.[0] || "https://images.unsplash.com/photo-1542838132-92c53300491e?w=800&auto=format&fit=crop&q=80");
-
-  useEffect(() => {
-    if (product.images?.[0]) {
-      setImgSrc(product.images[0]);
-    }
-  }, [product.images]);
 
   return (
-    <div className={styles.cardContainer}>
-      {/* ── 1. Top Image Frame with Overlay Badges and Pinned Action Bar ── */}
-      <div className={styles.imageFrame}>
-        <Link
-          href={`/product/${product.slug}`}
-          style={{ width: "100%", height: "100%", display: "block" }}
-        >
-          <img
-            src={imgSrc}
-            alt={product.nameEn || product.nameBn}
-            loading="lazy"
-            className={styles.productImg}
-            onError={() => {
-              setImgSrc("https://images.unsplash.com/photo-1542838132-92c53300491e?w=800&auto=format&fit=crop&q=80");
-            }}
-          />
-        </Link>
-
-        {/* Top-Left Badges Stack (★ BEST / NEW / ORGANIC) */}
-        <div className={styles.topBadgesStack}>
-          <span className={styles.badgeBest}>★ BEST</span>
-          {product.isOrganic ? (
-            <span className={styles.badgeNew}>ORGANIC</span>
-          ) : (
-            <span className={styles.badgeNew}>FRESH</span>
+    <motion.article
+      initial={{ opacity: 0, y: 30 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-40px" }}
+      transition={{ duration: 0.7, delay: (index % 4) * 0.08, ease: [0.25, 0.46, 0.45, 0.94] }}
+      className="group"
+    >
+      <Link href={`/product/${product.slug}`} className="block">
+        {/* Image Container with editorial aspect ratio */}
+        <div
+          className={cn(
+            "relative overflow-hidden bg-muted/40 mb-4 select-none",
+            variant === "large" ? "aspect-[3/4]" : "aspect-[4/5]"
           )}
-        </div>
-
-        {/* Top-Right Discount Badge */}
-        {discount ? (
-          <span className={styles.badgeDiscount}>-{discount}%</span>
-        ) : null}
-
-        {/* Wishlist Heart Icon (Top-Right) */}
-        <button
-          type="button"
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            toggleWishlist(product.id);
-          }}
-          className={`${styles.wishlistBtn} ${isFav ? styles.wishlistBtnActive : ""}`}
-          aria-label="Save to Wishlist"
-          title="Save to Wishlist"
         >
-          <Heart size={12} fill={isFav ? "#ef4444" : "none"} color={isFav ? "#ef4444" : "#64748b"} />
-        </button>
+          {/* Primary Image */}
+          <img
+            src={product.images[0]}
+            alt={locale === "bn" ? product.nameBn : product.nameEn}
+            className={cn(
+              "w-full h-full object-cover transition-all duration-[1s] ease-out",
+              hasSecondImage
+                ? "group-hover:opacity-0 group-hover:scale-105"
+                : "group-hover:scale-105"
+            )}
+          />
 
-        {/* Pinned Bottom Action Bar on Image (ADD | BUY NOW) */}
-        <div className={styles.imageActionBar}>
+          {/* Secondary Image (Crossfade on hover) */}
+          {hasSecondImage && (
+            <img
+              src={product.images[1]}
+              alt={`${product.nameEn} alternate view`}
+              className="absolute inset-0 w-full h-full object-cover opacity-0 scale-105 transition-all duration-[1s] ease-out group-hover:opacity-100 group-hover:scale-100"
+            />
+          )}
+
+          {/* Gradient Overlay on Hover */}
+          <div className="absolute inset-0 bg-gradient-to-t from-charcoal/25 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+
+          {/* Wishlist toggle button */}
           <button
             type="button"
-            onClick={handleAddToCart}
-            className={`${styles.actionAddBtn} ${isAdded ? styles.addedState : ""}`}
-            title="Add to Cart"
+            onClick={handleWishlistToggle}
+            aria-label="Toggle wishlist"
+            className={cn(
+              "absolute top-4 right-4 p-2.5 rounded-full transition-all duration-500",
+              "bg-background/90 backdrop-blur-md hover:bg-background shadow-sm",
+              "opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0",
+              inWishlist && "opacity-100 translate-y-0"
+            )}
           >
-            <ShoppingBag size={10} />
-            <span>{isAdded ? "ADDED ✓" : "ADD"}</span>
+            <Heart
+              className={cn(
+                "w-4 h-4 transition-all duration-300",
+                inWishlist ? "fill-primary text-primary scale-110" : "text-foreground"
+              )}
+            />
           </button>
 
-          <div className={styles.actionBarDivider} />
-
-          <button
-            type="button"
-            onClick={handleBuyNow}
-            className={styles.actionBuyBtn}
-            title="Buy Now"
-          >
-            <Zap size={10} />
-            <span>BUY NOW</span>
-          </button>
-        </div>
-      </div>
-
-      {/* ── 2. Card Body ── */}
-      <div className={styles.bodyContent}>
-        {/* Brand / Quality Badge & Star Rating Row */}
-        <div className={styles.brandRatingRow}>
-          <span className={styles.brandName}>
-            {product.isOrganic ? "🌿 100% ORGANIC" : "✨ TATKA FRESH"}
-          </span>
-
-          <div className={styles.ratingGroup}>
-            <Star size={10} className={styles.starIcon} fill="#d49567" />
-            <span>{product.rating || 5}</span>
-          </div>
-        </div>
-
-        {/* Product Title (2 lines max) */}
-        <Link href={`/product/${product.slug}`} className={styles.productTitle}>
-          {product.nameEn || product.nameBn}
-        </Link>
-
-        {/* ── 3. Bottom Price & Interactive Weight Dropdown Row ── */}
-        <div className={styles.priceWeightRow}>
-          <div className={styles.priceGroup}>
-            <span className={styles.currentPrice}>
-              {formatPrice(currentPrice)}
-            </span>
-            {comparePrice && comparePrice > currentPrice && (
-              <span className={styles.comparePrice}>
-                {formatPrice(comparePrice)}
+          {/* Editorial Badges */}
+          <div className="absolute top-4 left-4 flex flex-col gap-1.5">
+            {product.isOrganic && (
+              <span className="px-2.5 py-1 text-[9px] font-semibold tracking-[0.2em] uppercase bg-foreground text-background">
+                {locale === "bn" ? "অর্গানিক" : "Organic"}
+              </span>
+            )}
+            {product.isFeatured && (
+              <span className="px-2.5 py-1 text-[9px] font-semibold tracking-[0.2em] uppercase bg-primary text-primary-foreground">
+                {locale === "bn" ? "সেরা পছন্দ" : "Featured"}
+              </span>
+            )}
+            {product.isDailyBazar && (
+              <span className="px-2.5 py-1 text-[9px] font-semibold tracking-[0.2em] uppercase bg-amber-700 text-white">
+                {locale === "bn" ? "তাজা সকাল" : "Daily Fresh"}
               </span>
             )}
           </div>
 
-          {/* Interactive Weight / Portion Dropdown Trigger */}
-          <div className={styles.weightPickerWrapper}>
+          {/* Quick Add Bar sliding up on hover */}
+          <div className="absolute bottom-0 left-0 right-0 flex items-center justify-center pb-4 px-4 opacity-0 translate-y-3 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-500">
             <button
               type="button"
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                setIsPortionPickerOpen((prev) => !prev);
-              }}
-              className={`${styles.weightPillBtn} ${isPortionPickerOpen ? styles.weightPillBtnActive : ""}`}
-              aria-label="Change Weight Portion"
-              title="Click to select weight / portion"
+              onClick={handleQuickAdd}
+              className="w-full py-2.5 px-4 text-xs font-medium tracking-[0.15em] uppercase bg-background/95 backdrop-blur-md text-foreground shadow-md hover:bg-primary hover:text-primary-foreground transition-all duration-300 flex items-center justify-center gap-2 rounded-none"
             >
-              <Scale size={10} className={styles.scaleIcon} />
-              <span className={styles.weightPillLabel}>{activeWeightOpt.labelEn}</span>
-              <ChevronDown size={10} className={`${styles.chevronIcon} ${isPortionPickerOpen ? styles.chevronRotated : ""}`} />
+              {addedAnim ? (
+                <>
+                  <Check className="w-3.5 h-3.5" />
+                  <span>{locale === "bn" ? "যোগ হয়েছে" : "Added"}</span>
+                </>
+              ) : (
+                <>
+                  <ShoppingBag className="w-3.5 h-3.5" />
+                  <span>{locale === "bn" ? "+ ব্যাগে যোগ" : "+ Add to Bag"}</span>
+                </>
+              )}
             </button>
+          </div>
+        </div>
 
-            {/* Floating Luxury Portion Selector Menu */}
-            {isPortionPickerOpen && (
-              <>
-                <div
-                  className={styles.pickerBackdrop}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    setIsPortionPickerOpen(false);
-                  }}
-                />
-                <div
-                  className={styles.portionDropdown}
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <div className={styles.portionDropdownHeader}>
-                    <Scale size={12} color="#15803d" />
-                    <span>Select Portion</span>
-                  </div>
+        {/* Product Information */}
+        <div className="space-y-1.5">
+          {/* Category label */}
+          <p className="text-[10px] font-semibold tracking-[0.2em] uppercase text-muted-foreground/70 transition-colors duration-300 group-hover:text-primary">
+            {locale === "bn" ? product.categoryNameBn : product.categoryNameEn}
+          </p>
 
-                  <div className={styles.portionOptionList}>
-                    {weightOptions.map((opt, idx) => {
-                      const isSelected = selectedWeightIdx === idx;
-                      const optPrice = Math.max(1, Math.round(product.basePrice * (opt.multiplier || 1)));
-                      return (
-                        <button
-                          key={idx}
-                          type="button"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            setSelectedWeightIdx(idx);
-                            setIsPortionPickerOpen(false);
-                          }}
-                          className={`${styles.portionOptionBtn} ${isSelected ? styles.portionOptionSelected : ""}`}
-                        >
-                          <div className={styles.portionOptionLabel}>
-                            <span className={`${styles.optionRadioDot} ${isSelected ? styles.optionRadioDotActive : ""}`} />
-                            <span className={styles.optionWeightName}>
-                              {opt.labelEn}
-                            </span>
-                          </div>
-                          <span className={styles.optionPriceTag}>
-                            {formatPrice(optPrice)}
-                          </span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              </>
+          {/* Product Title */}
+          <h3 className="font-serif text-lg md:text-xl text-foreground transition-colors duration-300 group-hover:text-primary leading-snug line-clamp-1">
+            {locale === "bn" ? product.nameBn : product.nameEn}
+          </h3>
+
+          {/* Origin / Quality line */}
+          <p className="text-xs text-muted-foreground line-clamp-1">
+            {locale === "bn" ? product.originBn : product.originEn}
+          </p>
+
+          {/* Price & Unit */}
+          <div className="flex items-center gap-2 pt-0.5">
+            <p className="font-serif text-base font-medium text-foreground tracking-wide">
+              {formatPrice(product.basePrice)}
+            </p>
+            <span className="text-xs text-muted-foreground/70">
+              / {product.baseUnit || "kg"}
+            </span>
+            {product.comparePrice && product.comparePrice > product.basePrice && (
+              <span className="text-xs text-muted-foreground/50 line-through">
+                {formatPrice(product.comparePrice)}
+              </span>
             )}
           </div>
         </div>
-      </div>
-    </div>
+      </Link>
+    </motion.article>
   );
-}
+};
