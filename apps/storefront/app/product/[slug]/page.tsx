@@ -76,6 +76,10 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
   const [selectedWeightIdx, setSelectedWeightIdx] = useState(
     Math.max(0, weightOptions.findIndex((w) => w.popular))
   );
+  const [isCustomWeight, setIsCustomWeight] = useState(false);
+  const [customWeightInput, setCustomWeightInput] = useState("1.5");
+  const [customUnit, setCustomUnit] = useState<string>(product.baseUnit === "g" ? "g" : "kg");
+
   const defaultWeightOpt = {
     value: 1,
     unit: product.baseUnit || ("kg" as const),
@@ -83,7 +87,27 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
     labelEn: "1 unit",
     multiplier: 1,
   };
-  const activeWeight = weightOptions[selectedWeightIdx] || weightOptions[0] || defaultWeightOpt;
+
+  // Calculate custom weight properties dynamically
+  const parsedCustomNum = Math.max(0.05, parseFloat(customWeightInput) || 1);
+  const effectiveCustomMultiplier =
+    customUnit === "g" && (product.baseUnit || "kg") === "kg"
+      ? parsedCustomNum / 1000
+      : customUnit === "kg" && product.baseUnit === "g"
+      ? parsedCustomNum * 1000
+      : parsedCustomNum;
+
+  const customWeightOpt = {
+    value: parsedCustomNum,
+    unit: (customUnit || product.baseUnit || "kg") as any,
+    labelBn: `${parsedCustomNum} ${customUnit}`,
+    labelEn: `${parsedCustomNum} ${customUnit}`,
+    multiplier: effectiveCustomMultiplier,
+  };
+
+  const activeWeight = isCustomWeight
+    ? customWeightOpt
+    : weightOptions[selectedWeightIdx] || weightOptions[0] || defaultWeightOpt;
 
   // Cutting & Preparation Preference (for fish & meat)
   const isFishOrMeat =
@@ -532,8 +556,11 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
                       <button
                         key={idx}
                         type="button"
-                        onClick={() => setSelectedWeightIdx(idx)}
-                        className={`tb-weight-chip ${selectedWeightIdx === idx ? "tb-weight-chip--active" : ""}`}
+                        onClick={() => {
+                          setIsCustomWeight(false);
+                          setSelectedWeightIdx(idx);
+                        }}
+                        className={`tb-weight-chip ${!isCustomWeight && selectedWeightIdx === idx ? "tb-weight-chip--active" : ""}`}
                       >
                         <span className="tb-chip-label">{opt.labelEn}</span>
                         <span className="tb-chip-price">
@@ -542,7 +569,144 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
                         {opt.popular && <span className="tb-chip-popular">Popular</span>}
                       </button>
                     ))}
+
+                    {/* Custom Quantity Option Button */}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsCustomWeight(true);
+                        setSelectedWeightIdx(-1);
+                      }}
+                      className={`tb-weight-chip tb-weight-chip--custom ${isCustomWeight ? "tb-weight-chip--active" : ""}`}
+                    >
+                      <span className="tb-chip-label tb-chip-label--custom">
+                        <Sparkles size={12} className="tb-custom-sparkle" /> Custom
+                      </span>
+                      <span className="tb-chip-price">
+                        {isCustomWeight ? `৳${unitPrice.toLocaleString()}` : "Any Amount"}
+                      </span>
+                      <span className="tb-chip-badge-custom">Flexible</span>
+                    </button>
                   </div>
+
+                  {/* Interactive Custom Quantity Adjuster Panel */}
+                  {isCustomWeight && (
+                    <div className="tb-custom-input-panel">
+                      <div className="tb-custom-panel-top">
+                        <div className="tb-custom-panel-title">
+                          <Scale size={14} className="tb-custom-icon" />
+                          <span>Enter Desired Weight / Quantity:</span>
+                        </div>
+                        <span className="tb-custom-unit-rate">
+                          Base Rate: ৳{product.basePrice} / {product.baseUnit || "kg"}
+                        </span>
+                      </div>
+
+                      <div className="tb-custom-controls">
+                        <div className="tb-custom-stepper">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const current = parseFloat(customWeightInput) || 1;
+                              const step = customUnit === "g" ? 100 : 0.5;
+                              const nextVal = Math.max(customUnit === "g" ? 50 : 0.1, current - step);
+                              setCustomWeightInput(customUnit === "g" ? Math.round(nextVal).toString() : nextVal.toFixed(2).replace(/\.?0+$/, ""));
+                            }}
+                            className="tb-custom-step-btn"
+                            aria-label="Decrease custom weight"
+                          >
+                            <Minus size={14} />
+                          </button>
+
+                          <div className="tb-custom-input-wrap">
+                            <input
+                              type="number"
+                              step={customUnit === "g" ? "50" : "0.1"}
+                              min={customUnit === "g" ? "50" : "0.1"}
+                              max="500"
+                              value={customWeightInput}
+                              onChange={(e) => setCustomWeightInput(e.target.value)}
+                              className="tb-custom-number-input"
+                              placeholder="1.0"
+                            />
+                          </div>
+
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const current = parseFloat(customWeightInput) || 1;
+                              const step = customUnit === "g" ? 100 : 0.5;
+                              const nextVal = current + step;
+                              setCustomWeightInput(customUnit === "g" ? Math.round(nextVal).toString() : nextVal.toFixed(2).replace(/\.?0+$/, ""));
+                            }}
+                            className="tb-custom-step-btn"
+                            aria-label="Increase custom weight"
+                          >
+                            <Plus size={14} />
+                          </button>
+                        </div>
+
+                        {/* Unit Selector */}
+                        <div className="tb-custom-unit-pills">
+                          {["kg", "g"].includes(product.baseUnit || "kg") ? (
+                            <>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  if (customUnit !== "kg") {
+                                    const gVal = parseFloat(customWeightInput) || 1000;
+                                    setCustomWeightInput((gVal / 1000).toFixed(2).replace(/\.?0+$/, ""));
+                                    setCustomUnit("kg");
+                                  }
+                                }}
+                                className={`tb-custom-unit-btn ${customUnit === "kg" ? "tb-custom-unit-btn--active" : ""}`}
+                              >
+                                kg
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  if (customUnit !== "g") {
+                                    const kgVal = parseFloat(customWeightInput) || 1;
+                                    setCustomWeightInput(Math.round(kgVal * 1000).toString());
+                                    setCustomUnit("g");
+                                  }
+                                }}
+                                className={`tb-custom-unit-btn ${customUnit === "g" ? "tb-custom-unit-btn--active" : ""}`}
+                              >
+                                gm
+                              </button>
+                            </>
+                          ) : (
+                            <span className="tb-custom-unit-fixed">{product.baseUnit || "Unit"}</span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Quick Preset Pills */}
+                      <div className="tb-custom-presets">
+                        <span className="tb-presets-label">Quick Pick:</span>
+                        {(customUnit === "g"
+                          ? [250, 500, 750, 1000, 1500, 2000]
+                          : [0.5, 1.5, 2.5, 3.5, 7.5, 10]
+                        ).map((val) => (
+                          <button
+                            key={val}
+                            type="button"
+                            onClick={() => setCustomWeightInput(val.toString())}
+                            className={`tb-preset-chip ${parseFloat(customWeightInput) === val ? "tb-preset-chip--active" : ""}`}
+                          >
+                            {val} {customUnit}
+                          </button>
+                        ))}
+                      </div>
+
+                      <div className="tb-custom-summary-row">
+                        <span>Pack Calculation: <strong>{activeWeight.labelEn}</strong> = <span className="tb-calc-price">৳{unitPrice.toLocaleString()}</span></span>
+                        <span className="tb-custom-badge-free">Freshly Weighed & Packed</span>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* ── Quantity Stepper & Action Buttons ────────────── */}
@@ -576,17 +740,17 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
                   </div>
 
                   <div className="tb-button-group">
-                    {/* Instant Buy Now */}
+                    {/* Instant Buy Now -> ORDER NOW */}
                     <button
                       type="button"
                       onClick={handleBuyNow}
                       className="tb-btn tb-btn--order"
                     >
                       <Zap size={16} />
-                      <span>Instant Order Now — ৳{totalPrice.toLocaleString()}</span>
+                      <span>ORDER NOW</span>
                     </button>
 
-                    {/* Add to Bag + Wishlist + Share */}
+                    {/* Add to Cart + Wishlist + Share -> ADD TO CART */}
                     <div className="tb-secondary-btns">
                       <button
                         type="button"
@@ -594,7 +758,7 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
                         className={`tb-btn tb-btn--bag ${addedAnimation ? "tb-btn--added" : ""}`}
                       >
                         {addedAnimation ? <Check size={16} /> : <ShoppingBag size={16} />}
-                        <span>{addedAnimation ? "Added to Bag!" : "Add to Bag"}</span>
+                        <span>{addedAnimation ? "ADDED TO CART!" : "ADD TO CART"}</span>
                       </button>
 
                       <button
@@ -1363,7 +1527,7 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
         .tb-main-image-card {
           position: relative;
           aspect-ratio: 1 / 1;
-          border-radius: 20px;
+          border-radius: 0px !important;
           overflow: hidden;
           background: #0E1117;
           border: 1px solid rgba(255, 255, 255, 0.08);
@@ -1776,6 +1940,245 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
           border-radius: 999px;
         }
 
+        .tb-chip-badge-custom {
+          position: absolute;
+          top: -7px;
+          right: 8px;
+          background: linear-gradient(135deg, #10D876 0%, #059E57 100%);
+          color: #08090B;
+          font-size: 0.62rem;
+          font-weight: 900;
+          text-transform: uppercase;
+          padding: 1px 6px;
+          border-radius: 999px;
+          letter-spacing: 0.02em;
+        }
+
+        .tb-weight-chip--custom {
+          border-style: dashed;
+        }
+
+        .tb-weight-chip--custom:hover {
+          border-style: solid;
+        }
+
+        .tb-chip-label--custom {
+          display: flex;
+          align-items: center;
+          gap: 4px;
+        }
+
+        .tb-custom-sparkle {
+          color: #10D876;
+        }
+
+        /* ── Custom Quantity Adjuster Panel ── */
+        .tb-custom-input-panel {
+          margin-top: 14px;
+          background: #11151F;
+          border: 1.5px solid rgba(16, 216, 118, 0.35);
+          border-radius: 14px;
+          padding: 16px;
+          display: flex;
+          flex-direction: column;
+          gap: 14px;
+          box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+          animation: tbFadeInDown 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes tbFadeInDown {
+          from {
+            opacity: 0;
+            transform: translateY(-8px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        .tb-custom-panel-top {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          flex-wrap: wrap;
+          gap: 8px;
+        }
+
+        .tb-custom-panel-title {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          font-size: 0.84rem;
+          font-weight: 700;
+          color: #F0F2F7;
+        }
+
+        .tb-custom-icon {
+          color: #10D876;
+        }
+
+        .tb-custom-unit-rate {
+          font-size: 0.76rem;
+          color: #94A3B8;
+          font-weight: 600;
+        }
+
+        .tb-custom-controls {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          flex-wrap: wrap;
+        }
+
+        .tb-custom-stepper {
+          display: flex;
+          align-items: center;
+          background: #0B0E14;
+          border: 1.5px solid rgba(255, 255, 255, 0.12);
+          border-radius: 10px;
+          padding: 3px;
+          flex: 1;
+          min-width: 170px;
+        }
+
+        .tb-custom-step-btn {
+          width: 36px;
+          height: 36px;
+          border-radius: 8px;
+          background: rgba(255, 255, 255, 0.05);
+          border: none;
+          color: #F0F2F7;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          transition: all 0.15s ease;
+        }
+
+        .tb-custom-step-btn:hover {
+          background: #10D876;
+          color: #08090B;
+        }
+
+        .tb-custom-input-wrap {
+          flex: 1;
+        }
+
+        .tb-custom-number-input {
+          width: 100%;
+          background: transparent;
+          border: none;
+          color: #10D876;
+          font-size: 1.15rem;
+          font-weight: 800;
+          text-align: center;
+          outline: none;
+          padding: 4px 8px;
+          font-family: inherit;
+        }
+
+        .tb-custom-number-input::-webkit-inner-spin-button,
+        .tb-custom-number-input::-webkit-outer-spin-button {
+          -webkit-appearance: none;
+          margin: 0;
+        }
+
+        .tb-custom-unit-pills {
+          display: flex;
+          gap: 6px;
+        }
+
+        .tb-custom-unit-btn {
+          padding: 8px 14px;
+          border-radius: 8px;
+          background: #0B0E14;
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          color: #94A3B8;
+          font-size: 0.78rem;
+          font-weight: 700;
+          cursor: pointer;
+          transition: all 0.15s ease;
+        }
+
+        .tb-custom-unit-btn--active {
+          background: rgba(16, 216, 118, 0.15) !important;
+          border-color: #10D876 !important;
+          color: #10D876 !important;
+        }
+
+        .tb-custom-unit-fixed {
+          padding: 8px 14px;
+          border-radius: 8px;
+          background: rgba(16, 216, 118, 0.1);
+          color: #10D876;
+          font-size: 0.78rem;
+          font-weight: 700;
+        }
+
+        .tb-custom-presets {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          flex-wrap: wrap;
+        }
+
+        .tb-presets-label {
+          font-size: 0.75rem;
+          font-weight: 700;
+          color: #7E8899;
+        }
+
+        .tb-preset-chip {
+          padding: 4px 10px;
+          border-radius: 999px;
+          background: rgba(255, 255, 255, 0.04);
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          color: #CBD5E1;
+          font-size: 0.74rem;
+          font-weight: 700;
+          cursor: pointer;
+          transition: all 0.15s ease;
+        }
+
+        .tb-preset-chip:hover {
+          border-color: #10D876;
+          color: #10D876;
+        }
+
+        .tb-preset-chip--active {
+          background: #10D876 !important;
+          color: #08090B !important;
+          border-color: #10D876 !important;
+        }
+
+        .tb-custom-summary-row {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding-top: 10px;
+          border-top: 1px solid rgba(255, 255, 255, 0.06);
+          font-size: 0.8rem;
+          color: #94A3B8;
+          flex-wrap: wrap;
+          gap: 6px;
+        }
+
+        .tb-calc-price {
+          color: #10D876;
+          font-weight: 800;
+          font-size: 0.95rem;
+        }
+
+        .tb-custom-badge-free {
+          font-size: 0.7rem;
+          background: rgba(16, 216, 118, 0.1);
+          color: #10D876;
+          padding: 2px 8px;
+          border-radius: 999px;
+          font-weight: 700;
+        }
+
         /* ── Cutting Options ── */
         .tb-cut-options {
           display: grid;
@@ -1922,34 +2325,46 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
         .tb-button-group {
           display: flex;
           flex-direction: column;
-          gap: 10px;
+          gap: 12px;
         }
 
+        /* ── Premium 3D Action Buttons ── */
         .tb-btn {
           display: flex;
           align-items: center;
           justify-content: center;
           gap: 8px;
-          height: 50px;
+          height: 52px;
           border-radius: 12px;
-          font-size: 0.92rem;
+          font-size: 0.94rem;
           font-weight: 800;
           text-transform: uppercase;
           letter-spacing: 0.04em;
           border: none;
           cursor: pointer;
-          transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+          position: relative;
+          user-select: none;
+          transition: transform 0.12s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.12s ease, background 0.2s ease;
         }
 
+        /* 3D Order Now Button */
         .tb-btn--order {
           background: linear-gradient(135deg, #10D876 0%, #059E57 100%);
           color: #08090B;
-          box-shadow: 0 6px 20px rgba(16, 216, 118, 0.35);
+          border-bottom: 4px solid #036b3b;
+          box-shadow: 0 6px 0 #024e2b, 0 10px 22px rgba(16, 216, 118, 0.35);
+          transform: translateY(0);
         }
 
         .tb-btn--order:hover {
           transform: translateY(-2px);
-          box-shadow: 0 10px 28px rgba(16, 216, 118, 0.5);
+          box-shadow: 0 8px 0 #024e2b, 0 14px 28px rgba(16, 216, 118, 0.45);
+        }
+
+        .tb-btn--order:active {
+          transform: translateY(4px) !important;
+          border-bottom-width: 1px !important;
+          box-shadow: 0 2px 0 #024e2b, 0 4px 10px rgba(16, 216, 118, 0.2) !important;
         }
 
         .tb-secondary-btns {
@@ -1957,48 +2372,81 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
           gap: 10px;
         }
 
+        /* 3D Add to Cart Button */
         .tb-btn--bag {
           flex: 1;
-          background: #131720;
+          background: #141923;
           border: 1.5px solid rgba(255, 255, 255, 0.15);
+          border-bottom: 4px solid #0B0E14;
           color: #F0F2F7;
+          box-shadow: 0 5px 0 #07090D, 0 8px 18px rgba(0, 0, 0, 0.4);
+          transform: translateY(0);
         }
 
         .tb-btn--bag:hover {
-          background: #1A2030;
+          background: #1B2230;
           border-color: #10D876;
           color: #10D876;
+          transform: translateY(-2px);
+          box-shadow: 0 7px 0 #07090D, 0 12px 22px rgba(16, 216, 118, 0.15);
+        }
+
+        .tb-btn--bag:active {
+          transform: translateY(4px) !important;
+          border-bottom-width: 1px !important;
+          box-shadow: 0 1px 0 #07090D, 0 3px 8px rgba(0, 0, 0, 0.3) !important;
         }
 
         .tb-btn--added {
-          background: rgba(16, 216, 118, 0.15) !important;
+          background: rgba(16, 216, 118, 0.18) !important;
           border-color: #10D876 !important;
+          border-bottom-color: #059E57 !important;
           color: #10D876 !important;
+          animation: tbPopScale 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
 
+        @keyframes tbPopScale {
+          0% { transform: scale(0.95); }
+          50% { transform: scale(1.04); }
+          100% { transform: scale(1); }
+        }
+
+        /* 3D Icon Buttons (Wishlist, Share) */
         .tb-icon-btn {
-          width: 50px;
-          height: 50px;
+          width: 52px;
+          height: 52px;
           border-radius: 12px;
-          background: #131720;
+          background: #141923;
           border: 1.5px solid rgba(255, 255, 255, 0.15);
+          border-bottom: 4px solid #0B0E14;
           color: #94A3B8;
           display: flex;
           align-items: center;
           justify-content: center;
           cursor: pointer;
-          transition: all 0.15s ease;
+          box-shadow: 0 5px 0 #07090D, 0 8px 16px rgba(0, 0, 0, 0.35);
+          transition: transform 0.12s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.12s ease, border-color 0.2s ease, color 0.2s ease;
           flex-shrink: 0;
+          transform: translateY(0);
         }
 
         .tb-icon-btn:hover {
           border-color: #10D876;
           color: #10D876;
+          transform: translateY(-2px);
+          box-shadow: 0 7px 0 #07090D, 0 10px 20px rgba(0, 0, 0, 0.4);
+        }
+
+        .tb-icon-btn:active {
+          transform: translateY(4px) !important;
+          border-bottom-width: 1px !important;
+          box-shadow: 0 1px 0 #07090D, 0 2px 6px rgba(0, 0, 0, 0.3) !important;
         }
 
         .tb-icon-btn--fav {
-          border-color: rgba(239, 68, 68, 0.4) !important;
-          background: rgba(239, 68, 68, 0.08) !important;
+          border-color: rgba(239, 68, 68, 0.5) !important;
+          background: rgba(239, 68, 68, 0.1) !important;
+          border-bottom-color: rgba(239, 68, 68, 0.7) !important;
         }
 
         /* ── Trust Grid ── */
