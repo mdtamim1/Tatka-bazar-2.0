@@ -78,11 +78,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({
       className="group"
     >
       <Link href={`/product/${product.slug}`} className="block">
-        {/* Image Container with editorial aspect ratio */}
+        {/* Image Container with compact aspect ratio matching user yellow line mark */}
         <div
           className={cn(
-            "relative overflow-hidden bg-muted/40 mb-2 sm:mb-3.5 select-none",
-            variant === "large" ? "aspect-[3/4]" : "aspect-[4/5]"
+            "relative overflow-hidden bg-muted/40 mb-2 sm:mb-3 select-none",
+            variant === "large" ? "aspect-[4/3] sm:aspect-[1/1]" : "aspect-square"
           )}
         >
           {/* Primary Image */}
