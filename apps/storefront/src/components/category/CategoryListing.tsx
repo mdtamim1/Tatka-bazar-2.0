@@ -249,7 +249,7 @@ export function CategoryListing({ initialSlug = "all" }: CategoryListingProps) {
                 className={cn(
                   "rounded-none h-8 px-3.5 whitespace-nowrap text-[11px] tracking-[0.08em] uppercase transition-all",
                   selectedCategory === "all"
-                    ? "bg-foreground text-background hover:bg-foreground/90 hover:text-background font-semibold"
+                    ? "bg-[#581c87] text-white hover:bg-[#6b21a8] hover:text-white font-semibold shadow-sm"
                     : "text-muted-foreground hover:text-foreground"
                 )}
               >
@@ -265,8 +265,8 @@ export function CategoryListing({ initialSlug = "all" }: CategoryListingProps) {
                   className={cn(
                     "rounded-none h-8 px-3 whitespace-nowrap text-[11px] tracking-[0.08em] uppercase transition-all",
                     selectedCategory === cat.slug
-                      ? "bg-foreground text-background hover:bg-foreground/90 hover:text-background font-semibold"
-                    : "text-muted-foreground hover:text-foreground"
+                      ? "bg-[#581c87] text-white hover:bg-[#6b21a8] hover:text-white font-semibold shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
                   )}
                 >
                   {locale === "bn" ? cat.nameBn : cat.nameEn}
@@ -284,9 +284,9 @@ export function CategoryListing({ initialSlug = "all" }: CategoryListingProps) {
               </span>
 
               {selectedCategory !== "all" && (
-                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-muted text-[11px] font-medium border border-border">
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-purple-100 text-[#581c87] text-[11px] font-medium border border-purple-200">
                   {currentCategory ? (locale === "bn" ? currentCategory.nameBn : currentCategory.nameEn) : selectedCategory}
-                  <button type="button" onClick={() => setSelectedCategory("all")} className="hover:text-primary">
+                  <button type="button" onClick={() => setSelectedCategory("all")} className="hover:text-[#6b21a8]">
                     <X className="w-3 h-3" />
                   </button>
                 </span>
@@ -427,7 +427,7 @@ export function CategoryListing({ initialSlug = "all" }: CategoryListingProps) {
                       className={cn(
                         "p-2.5 text-xs text-left border rounded-none transition-all flex items-center justify-between",
                         selectedCategory === "all"
-                          ? "bg-foreground text-background border-foreground font-semibold"
+                          ? "bg-[#581c87] text-white border-[#581c87] font-semibold"
                           : "bg-background text-foreground border-border hover:border-foreground/40"
                       )}
                     >
@@ -443,7 +443,7 @@ export function CategoryListing({ initialSlug = "all" }: CategoryListingProps) {
                         className={cn(
                           "p-2.5 text-xs text-left border rounded-none transition-all flex items-center justify-between truncate",
                           selectedCategory === cat.slug
-                            ? "bg-foreground text-background border-foreground font-semibold"
+                            ? "bg-[#581c87] text-white border-[#581c87] font-semibold"
                             : "bg-background text-foreground border-border hover:border-foreground/40"
                         )}
                       >

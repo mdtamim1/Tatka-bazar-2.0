@@ -53,23 +53,6 @@ const BANGLADESH_DISTRICTS = [
   { id: "Manikganj", bn: "মানিকগঞ্জ", en: "Manikganj" },
 ];
 
-interface TimeSlotDef {
-  val: string;
-  labelBn: string;
-  labelEn: string;
-  startHour: number;
-}
-
-const ALL_TIME_SLOTS: TimeSlotDef[] = [
-  { val: "08:00 AM - 10:00 AM", labelBn: "সকাল (৮-১০ টা)", labelEn: "Morning (8-10 AM)", startHour: 8 },
-  { val: "10:00 AM - 12:00 PM", labelBn: "সকাল (১০-১২ টা)", labelEn: "Mid-Day (10-12 PM)", startHour: 10 },
-  { val: "12:00 PM - 02:00 PM", labelBn: "দুপুর (১২-২ টা)", labelEn: "Noon (12-2 PM)", startHour: 12 },
-  { val: "02:00 PM - 04:00 PM", labelBn: "দুপুর (২-৪ টা)", labelEn: "Afternoon (2-4 PM)", startHour: 14 },
-  { val: "04:00 PM - 06:00 PM", labelBn: "বিকেল (৪-৬ টা)", labelEn: "Late Afternoon (4-6 PM)", startHour: 16 },
-  { val: "06:00 PM - 08:00 PM", labelBn: "সন্ধ্যা (৬-৮ টা)", labelEn: "Evening (6-8 PM)", startHour: 18 },
-  { val: "08:00 PM - 10:00 PM", labelBn: "রাত (৮-১০ টা)", labelEn: "Night (8-10 PM)", startHour: 20 },
-];
-
 export default function CheckoutPage() {
   const { locale, formatPrice } = useLanguage();
   const {
@@ -85,19 +68,11 @@ export default function CheckoutPage() {
   const [currentStep, setCurrentStep] = useState<CheckoutStep>("details");
   const [isProcessing, setIsProcessing] = useState(false);
 
-  // Dynamic 1-2 Hours Minimum Delivery Slot Calculation
-  const [currentHour] = useState(() => new Date().getHours());
-  const [currentMinute] = useState(() => new Date().getMinutes());
+  // Optional Pre-order / Scheduled Delivery
+  const [isPreOrder, setIsPreOrder] = useState(false);
 
-  // Rule: Delivery takes 1-2 hours, so slot must start at least 1.5 - 2 hours from now
-  const minStartHourToday = currentMinute > 15 ? currentHour + 2 : currentHour + 1;
-
-  const availableSlotsToday = ALL_TIME_SLOTS.filter((s) => s.startHour >= minStartHourToday);
-  const availableSlotsTomorrow = ALL_TIME_SLOTS;
-
-  // Determine initial day & slot based on current time
-  const defaultDate = availableSlotsToday.length > 0 ? "today" : "tomorrow";
-  const defaultSlot = availableSlotsToday[0]?.val || availableSlotsTomorrow[0]?.val || "08:00 AM - 10:00 AM";
+  // Today's date string YYYY-MM-DD for min attribute
+  const todayStr = new Date().toISOString().split("T")[0];
 
   // Form State
   const [formData, setFormData] = useState({
@@ -110,13 +85,11 @@ export default function CheckoutPage() {
     address: "House 42, Road 7/A",
     city: "Dhaka", // compat
     area: "Dhanmondi", // compat
-    deliveryDate: defaultDate,
-    deliverySlot: defaultSlot,
-    customDeliveryTime: "",
+    preferredDate: "",
+    preferredTime: "",
+    deliveryNote: "",
     specialNote: "Please pack with extra ice care.",
   });
-
-  const activeSlots = formData.deliveryDate === "today" ? availableSlotsToday : availableSlotsTomorrow;
 
   // Payment Method
   const [paymentMethod, setPaymentMethod] = useState<"BKASH" | "NAGAD" | "COD">("BKASH");
@@ -213,16 +186,21 @@ export default function CheckoutPage() {
                 {placedOrder.customer.district ? `, ${placedOrder.customer.district}` : `, ${placedOrder.customer.city}`}
               </span>
             </div>
-            <div className="flex justify-between">
-              <span>{locale === "bn" ? "ডেলিভারি সময়:" : "Delivery Time:"}</span>
-              <span className="text-primary font-medium text-right">
-                {placedOrder.customer.deliveryDate === "tomorrow"
-                  ? (locale === "bn" ? "আগামীকাল: " : "Tomorrow: ")
-                  : (locale === "bn" ? "আজ: " : "Today: ")}
-                {placedOrder.customer.deliverySlot}
-                {placedOrder.customer.customDeliveryTime ? ` (${placedOrder.customer.customDeliveryTime})` : ""}
-              </span>
-            </div>
+            {placedOrder.customer.preferredDate ? (
+              <div className="flex justify-between">
+                <span>{locale === "bn" ? "প্রি-অর্ডার শিডিউল:" : "Scheduled Delivery:"}</span>
+                <span className="text-primary font-medium text-right">
+                  {placedOrder.customer.preferredDate} {placedOrder.customer.preferredTime ? `• ${placedOrder.customer.preferredTime}` : ""}
+                </span>
+              </div>
+            ) : (
+              <div className="flex justify-between">
+                <span>{locale === "bn" ? "ডেলিভারি ধরন:" : "Delivery:"}</span>
+                <span className="text-primary font-medium text-right">
+                  {locale === "bn" ? "রেগুলার দ্রুত ডেলিভারি" : "Standard Express"}
+                </span>
+              </div>
+            )}
             <div className="flex justify-between">
               <span>{locale === "bn" ? "পদ্ধতি:" : "Payment:"}</span>
               <span className="text-foreground font-medium">{placedOrder.paymentMethod}</span>
@@ -395,139 +373,129 @@ export default function CheckoutPage() {
                     />
                   </div>
 
-                  {/* ── Custom Delivery Time Scheduler (Minimum 1-2 Hours Rule) ── */}
-                  <div className="space-y-3 pt-3 border-t border-border">
-                    <div className="flex items-center justify-between">
-                      <label className="text-[10px] font-semibold tracking-[0.2em] uppercase text-muted-foreground flex items-center gap-1.5">
-                        <Clock className="w-3.5 h-3.5 text-primary" />
-                        {locale === "bn" ? "কখন ডেলিভারি নিতে চান?" : "When would you like delivery?"}
-                      </label>
-                      <span className="text-[10px] text-primary/90 font-medium tracking-wide">
-                        {locale === "bn" ? "১-২ ঘণ্টা প্রস্তুতি সময়" : "1-2 hrs prep time required"}
-                      </span>
-                    </div>
-
-                    {/* Notice Banner */}
-                    <div className="bg-primary/5 border border-primary/20 px-3.5 py-2.5 flex items-start gap-2.5 text-xs text-foreground/85">
-                      <Info className="w-4 h-4 text-primary shrink-0 mt-0.5" />
-                      <p className="leading-relaxed text-[11px]">
-                        {locale === "bn"
-                          ? "আমাদের পণ্যগুলো খামার ও আড়ত থেকে তাজা প্যাক করে আপনার ঠিকানায় পৌঁছাতে ১-২ ঘণ্টা সময় লাগে। তাই বর্তমান সময় থেকে অন্তত ২ ঘণ্টা পরের যেকোনো সময় বেছে নিন।"
-                          : "Orders require 1-2 hours minimum to harvest fresh, cold-pack, and deliver to your doorstep. Please select a time at least 2 hours from now."}
-                      </p>
-                    </div>
-
-                    {/* Day Selection Tabs: Today vs Tomorrow */}
-                    <div className="flex gap-2">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setFormData((p) => ({
-                            ...p,
-                            deliveryDate: "today",
-                            deliverySlot: availableSlotsToday[0]?.val || "tomorrow-morning",
-                          }));
-                        }}
-                        disabled={availableSlotsToday.length === 0}
-                        className={cn(
-                          "flex-1 py-2.5 px-3 text-xs tracking-[0.08em] uppercase transition-all flex items-center justify-center gap-1.5 border rounded-none",
-                          formData.deliveryDate === "today" && availableSlotsToday.length > 0
-                            ? "bg-foreground text-background border-foreground font-semibold"
-                            : availableSlotsToday.length === 0
-                            ? "opacity-40 cursor-not-allowed border-border text-muted-foreground bg-muted/40"
-                            : "border-border text-muted-foreground hover:text-foreground hover:border-foreground/50"
-                        )}
-                      >
-                        <Calendar className="w-3.5 h-3.5" />
-                        <span>{locale === "bn" ? "আজ (Today)" : "Today"}</span>
-                        {availableSlotsToday.length === 0 && (
-                          <span className="text-[9px] text-rose-500 font-normal">
-                            ({locale === "bn" ? "সময় শেষ" : "Closed"})
-                          </span>
-                        )}
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setFormData((p) => ({
-                            ...p,
-                            deliveryDate: "tomorrow",
-                            deliverySlot: "08:00 AM - 10:00 AM",
-                          }));
-                        }}
-                        className={cn(
-                          "flex-1 py-2.5 px-3 text-xs tracking-[0.08em] uppercase transition-all flex items-center justify-center gap-1.5 border rounded-none",
-                          formData.deliveryDate === "tomorrow"
-                            ? "bg-foreground text-background border-foreground font-semibold"
-                            : "border-border text-muted-foreground hover:text-foreground hover:border-foreground/50"
-                        )}
-                      >
-                        <Calendar className="w-3.5 h-3.5" />
-                        <span>{locale === "bn" ? "আগামীকাল (Tomorrow)" : "Tomorrow"}</span>
-                      </button>
-                    </div>
-
-                    {/* Available Time Slots Grid */}
-                    <div className="space-y-1.5 pt-1">
-                      <span className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground font-semibold block">
-                        {locale === "bn" ? "ডেলিভারি সময় স্লট বেছে নিন:" : "Select Delivery Time Slot:"}
-                      </span>
-                      
-                      {activeSlots.length === 0 ? (
-                        <div className="p-4 bg-muted/30 border border-border text-center text-xs text-muted-foreground">
-                          {locale === "bn"
-                            ? "আজকের দিনের সকল ডেলিভারি স্লট পূর্ণ বা ২ ঘণ্টার চেয়ে কম সময় অবশিষ্ট রয়েছে। অনুগ্রহ করে উপরের 'আগামীকাল' অপশনটি বেছে নিন।"
-                            : "All delivery slots for today have passed or are within the 2-hour prep window. Please select Tomorrow above."}
-                        </div>
-                      ) : (
-                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
-                          {activeSlots.map((slot) => {
-                            const isSelected = formData.deliverySlot === slot.val;
-                            return (
-                              <button
-                                key={slot.val}
-                                type="button"
-                                onClick={() => setFormData((p) => ({ ...p, deliverySlot: slot.val }))}
-                                className={cn(
-                                  "py-3 px-2 text-xs border text-center transition-all duration-200 rounded-none flex flex-col items-center justify-center gap-1",
-                                  isSelected
-                                    ? "border-primary bg-primary/10 text-primary font-semibold shadow-sm"
-                                    : "border-border text-foreground hover:border-primary/50 bg-background"
-                                )}
-                              >
-                                <span className="font-medium tracking-wide">{slot.val}</span>
-                                <span className="text-[9px] text-muted-foreground">
-                                  {locale === "bn" ? slot.labelBn : slot.labelEn}
-                                </span>
-                              </button>
-                            );
-                          })}
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Customer Specific Exact Time / Custom Instruction */}
-                    <div className="space-y-1.5 pt-2">
-                      <label className="text-[10px] font-semibold tracking-[0.2em] uppercase text-muted-foreground flex items-center justify-between">
-                        <span>{locale === "bn" ? "নির্দিষ্ট সময় বা ডেলিভারি নির্দেশনা (ঐচ্ছিক)" : "Specific Time or Note (Optional)"}</span>
-                        <span className="text-[9px] text-muted-foreground font-normal">
-                          {locale === "bn" ? "যেমন: ঠিক ৭:৩০ এ কল করবেন" : "e.g. Call at 7:30 PM"}
-                        </span>
-                      </label>
-                      <input
-                        type="text"
-                        name="customDeliveryTime"
-                        placeholder={
-                          locale === "bn"
-                            ? "কোনো নির্দিষ্ট মিনিট বা সময়ে পেতে চাইলে লিখে দিন (যেমন: 'সন্ধ্যা ৭:৩০ এ দিন')"
-                            : "Specific preferred minute or instructions (e.g. 'Deliver exactly at 7:30 PM')"
+                  {/* Pre-Order / Delivery Scheduling Option */}
+                  <div className="pt-3 border-t border-border space-y-3">
+                    <div
+                      onClick={() => {
+                        const nextState = !isPreOrder;
+                        setIsPreOrder(nextState);
+                        if (!nextState) {
+                          setFormData((p) => ({ ...p, preferredDate: "", preferredTime: "", deliveryNote: "" }));
                         }
-                        value={formData.customDeliveryTime}
-                        onChange={handleInputChange}
-                        className="w-full px-4 py-2.5 text-xs bg-background border border-border text-foreground rounded-none focus:outline-none focus:border-primary"
-                      />
+                      }}
+                      className={cn(
+                        "p-3.5 sm:p-4 border cursor-pointer transition-all duration-300 flex items-start gap-3 select-none",
+                        isPreOrder
+                          ? "border-primary bg-primary/5 shadow-sm"
+                          : "border-border hover:border-foreground/30 bg-background"
+                      )}
+                    >
+                      <div className="pt-0.5">
+                        <input
+                          type="checkbox"
+                          checked={isPreOrder}
+                          onChange={(e) => {
+                            e.stopPropagation();
+                            const checked = e.target.checked;
+                            setIsPreOrder(checked);
+                            if (!checked) {
+                              setFormData((p) => ({ ...p, preferredDate: "", preferredTime: "", deliveryNote: "" }));
+                            }
+                          }}
+                          className="w-4 h-4 accent-primary rounded-none cursor-pointer"
+                        />
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <Clock className="w-4 h-4 text-primary shrink-0" />
+                          <span className="text-xs sm:text-sm font-semibold text-foreground">
+                            {locale === "bn" ? "আমি প্রি-অর্ডার করতে চাই (I want to pre order)" : "I want to pre order"}
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-muted-foreground mt-0.5">
+                          {locale === "bn"
+                            ? "ক্যালেন্ডার ও ঘড়ি থেকে আপনার সুবিধাজনক তারিখ ও সময় নির্বাচন করুন।"
+                            : "Click to select a calendar date and clock time for when you want your parcel."}
+                        </p>
+                      </div>
                     </div>
+
+                    {isPreOrder && (
+                      <div className="p-4 bg-muted/20 border border-border space-y-4 animate-in fade-in-50 duration-200">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          {/* Calendar (Date Picker) */}
+                          <div className="space-y-1.5">
+                            <label className="text-[10px] font-semibold tracking-[0.15em] uppercase text-foreground flex items-center gap-1.5">
+                              <Calendar className="w-3.5 h-3.5 text-primary" />
+                              <span>{locale === "bn" ? "ডেলিভারির তারিখ (Calendar)" : "Delivery Date (Calendar)"}</span>
+                              <span className="text-primary">*</span>
+                            </label>
+                            <input
+                              type="date"
+                              name="preferredDate"
+                              min={todayStr}
+                              required={isPreOrder}
+                              value={formData.preferredDate}
+                              onChange={handleInputChange}
+                              className="w-full px-4 py-2.5 text-xs bg-background border border-border text-foreground rounded-none focus:outline-none focus:border-primary shadow-sm"
+                            />
+                            <p className="text-[10px] text-muted-foreground">
+                              {locale === "bn" ? "ক্যালেন্ডার থেকে পার্সেল নেওয়ার দিন বেছে নিন" : "Select date from the calendar"}
+                            </p>
+                          </div>
+
+                          {/* Clock (Time Picker) */}
+                          <div className="space-y-1.5">
+                            <label className="text-[10px] font-semibold tracking-[0.15em] uppercase text-foreground flex items-center gap-1.5">
+                              <Clock className="w-3.5 h-3.5 text-primary" />
+                              <span>{locale === "bn" ? "পার্সেল গ্রহণের সময় (Clock)" : "Delivery Time (Clock)"}</span>
+                              <span className="text-primary">*</span>
+                            </label>
+                            <input
+                              type="time"
+                              name="preferredTime"
+                              required={isPreOrder}
+                              value={formData.preferredTime}
+                              onChange={handleInputChange}
+                              className="w-full px-4 py-2.5 text-xs bg-background border border-border text-foreground rounded-none focus:outline-none focus:border-primary shadow-sm"
+                            />
+                            <p className="text-[10px] text-muted-foreground">
+                              {locale === "bn" ? "ঘড়ি থেকে পার্সেল নেওয়ার নির্দিষ্ট সময় উল্লেখ করুন" : "Specify the exact time to receive parcel"}
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Optional Delivery Instruction */}
+                        <div className="space-y-1.5 pt-1 border-t border-border/50">
+                          <label className="text-[10px] font-semibold tracking-[0.15em] uppercase text-muted-foreground">
+                            {locale === "bn" ? "বিশেষ ডেলিভারি নির্দেশনা (ঐচ্ছিক)" : "Delivery Instructions (Optional)"}
+                          </label>
+                          <input
+                            type="text"
+                            name="deliveryNote"
+                            placeholder={
+                              locale === "bn"
+                                ? "যেমন: 'সন্ধ্যা ৭টার পর দিন' বা 'অফিস ছুটির পর কল করবেন'"
+                                : "e.g. 'Deliver after 7 PM' or 'Call upon arrival at gate'"
+                            }
+                            value={formData.deliveryNote}
+                            onChange={handleInputChange}
+                            className="w-full px-4 py-2 text-xs bg-background border border-border text-foreground rounded-none focus:outline-none focus:border-primary"
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    {!isPreOrder && (
+                      <div className="p-3 bg-muted/15 border border-border flex items-center gap-2 text-xs text-muted-foreground">
+                        <Truck className="w-4 h-4 text-primary shrink-0" />
+                        <span>
+                          {locale === "bn"
+                            ? "স্বাভাবিক দ্রুত ডেলিভারি — অর্ডার প্রস্তুত করে দ্রুততম সময়ে ডেলিভারি করা হবে।"
+                            : "Standard Express Delivery — will be packed fresh and delivered as soon as possible."}
+                        </span>
+                      </div>
+                    )}
                   </div>
 
                   <Button

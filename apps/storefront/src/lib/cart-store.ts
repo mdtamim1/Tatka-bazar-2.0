@@ -37,7 +37,7 @@ interface CartState {
   setSelectedHub: (hub: string) => void;
 
   // Cart operations
-  addItem: (product: Product, weight: number, unit: WeightUnit, unitPrice: number, quantity?: number) => void;
+  addItem: (product: Product, weight: number, unit: WeightUnit, unitPrice: number, quantity?: number, openDrawer?: boolean) => void;
   removeItem: (itemId: string) => void;
   updateQuantity: (itemId: string, quantity: number) => void;
   clearCart: () => void;
@@ -82,7 +82,7 @@ export const useCartStore = create<CartState>()(
 
       setSelectedHub: (hub) => set({ selectedHub: hub }),
 
-      addItem: (product, weight, unit, unitPrice, quantity = 1) => {
+      addItem: (product, weight, unit, unitPrice, quantity = 1, openDrawer = true) => {
         set((state) => {
           const itemId = `${product.id}-${weight}-${unit}`;
           const existingIndex = state.items.findIndex((item) => item.id === itemId);
@@ -114,7 +114,7 @@ export const useCartStore = create<CartState>()(
             updatedItems = [newItem, ...state.items];
           }
 
-          return { items: updatedItems, isOpen: true };
+          return { items: updatedItems, isOpen: openDrawer };
         });
       },
 

@@ -22,7 +22,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   variant = "default",
 }) => {
   const { locale, formatPrice } = useLanguage();
-  const { addItem, wishlistIds, toggleWishlist, openCart } = useCartStore();
+  const { addItem, wishlistIds, toggleWishlist, openCart, closeCart } = useCartStore();
   const [mounted, setMounted] = useState(false);
   const [addedAnim, setAddedAnim] = useState(false);
 
@@ -60,18 +60,23 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   const handleActionClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (hasMultipleWeights) {
-      router.push(`/product/${product.slug}`);
-    } else {
-      addItem(
-        product,
-        1,
-        product.baseUnit || "kg",
-        product.basePrice,
-        1
-      );
-      router.push("/checkout");
-    }
+
+    const firstOption = product.weightOptions && product.weightOptions.length > 0 ? product.weightOptions[0] : undefined;
+    const chosenWeight = firstOption ? firstOption.value : 1;
+    const chosenUnit = (firstOption ? firstOption.unit : product.baseUnit) || "kg";
+    const multiplier = firstOption?.multiplier ?? 1;
+    const chosenPrice = Math.max(1, Math.round(product.basePrice * multiplier));
+
+    addItem(
+      product,
+      chosenWeight,
+      chosenUnit as any,
+      chosenPrice,
+      1,
+      false // Do not open cart drawer
+    );
+    closeCart();
+    router.push("/checkout");
   };
 
   return (
@@ -211,28 +216,17 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             )}
           </div>
 
-          {/* Action Button: Dynamic based on weight options */}
+          {/* Action Button: Direct Order Now */}
           <div className="pt-2">
             <button
               type="button"
               onClick={handleActionClick}
               className="w-full py-1.5 sm:py-2 px-1.5 sm:px-2.5 text-[9px] sm:text-[11px] font-semibold tracking-[0.03em] sm:tracking-[0.08em] uppercase bg-primary hover:bg-primary/90 text-primary-foreground transition-all duration-300 flex items-center justify-center gap-1 sm:gap-1.5 shadow-sm active:scale-[0.98] rounded-none"
             >
-              {hasMultipleWeights ? (
-                <>
-                  <SlidersHorizontal className="w-3 h-3 flex-shrink-0" />
-                  <span className="truncate">
-                    {locale === "bn" ? "পরিমাণ বেছে অর্ডার করুন" : "Select Weight to Order"}
-                  </span>
-                </>
-              ) : (
-                <>
-                  <Zap className="w-3 h-3 fill-current flex-shrink-0" />
-                  <span className="truncate">
-                    {locale === "bn" ? "অর্ডার করুন" : "Order Now"}
-                  </span>
-                </>
-              )}
+              <Zap className="w-3 h-3 fill-current flex-shrink-0" />
+              <span className="truncate">
+                {locale === "bn" ? "অর্ডার করুন" : "Order Now"}
+              </span>
             </button>
           </div>
         </div>

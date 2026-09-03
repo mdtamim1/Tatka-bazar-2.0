@@ -98,9 +98,9 @@ export const Header = () => {
           {/* Brand Logo (Serif editorial styling) */}
           <Link
             href="/"
-            className="font-serif text-2xl md:text-3xl tracking-tight text-foreground hover:text-primary transition-colors duration-300 flex items-baseline gap-1.5"
+            className="font-serif font-bold text-2xl md:text-3xl tracking-tight text-foreground hover:text-primary transition-colors duration-300 flex items-baseline gap-1.5"
           >
-            <span>Tatka Bazar</span>
+            <span className="font-bold">Tatka Bazar</span>
           </Link>
 
           {/* Desktop Navigation Links */}

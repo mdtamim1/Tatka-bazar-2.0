@@ -55,35 +55,35 @@ export default function StorefrontHomePage() {
       <HeroCarousel />
 
       {/* ── 2. Editorial Marquee Ticker ── */}
-      <div className="bg-charcoal text-background py-4 border-y border-background/10 overflow-hidden">
+      <div className="bg-[#581c87] text-white py-4 border-y border-purple-900/40 overflow-hidden shadow-sm">
         <div className="marquee">
           <div className="marquee-content font-serif text-xs md:text-sm tracking-[0.2em] uppercase">
             <span>✦ 100% Pure & Pesticide Free</span>
-            <span className="text-primary">•</span>
+            <span className="text-purple-300">•</span>
             <span>Same-Day Express Cold Delivery</span>
-            <span className="text-primary">•</span>
+            <span className="text-purple-300">•</span>
             <span>Authentic Padma Delta Fishery</span>
-            <span className="text-primary">•</span>
+            <span className="text-purple-300">•</span>
             <span>Ethically Harvested Raw Forest Honey</span>
-            <span className="text-primary">•</span>
+            <span className="text-purple-300">•</span>
             <span>Artisan Heritage Rice & Provisions</span>
-            <span className="text-primary">•</span>
+            <span className="text-purple-300">•</span>
             <span>Considered Living & Zero Compromise</span>
-            <span className="text-primary">•</span>
+            <span className="text-purple-300">•</span>
           </div>
           <div className="marquee-content font-serif text-xs md:text-sm tracking-[0.2em] uppercase" aria-hidden="true">
             <span>✦ 100% Pure & Pesticide Free</span>
-            <span className="text-primary">•</span>
+            <span className="text-purple-300">•</span>
             <span>Same-Day Express Cold Delivery</span>
-            <span className="text-primary">•</span>
+            <span className="text-purple-300">•</span>
             <span>Authentic Padma Delta Fishery</span>
-            <span className="text-primary">•</span>
+            <span className="text-purple-300">•</span>
             <span>Ethically Harvested Raw Forest Honey</span>
-            <span className="text-primary">•</span>
+            <span className="text-purple-300">•</span>
             <span>Artisan Heritage Rice & Provisions</span>
-            <span className="text-primary">•</span>
+            <span className="text-purple-300">•</span>
             <span>Considered Living & Zero Compromise</span>
-            <span className="text-primary">•</span>
+            <span className="text-purple-300">•</span>
           </div>
         </div>
       </div>
