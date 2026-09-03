@@ -39,7 +39,7 @@ interface ProductPageProps {
 export default function ProductDetailPage({ params }: ProductPageProps) {
   const resolvedParams = use(params);
   const { locale, formatPrice } = useLanguage();
-  const { addItem, openCart, closeCart, wishlistIds, toggleWishlist } = useCartStore();
+  const { addItem, setBuyNowItem, openCart, closeCart, wishlistIds, toggleWishlist } = useCartStore();
 
   const product = PRODUCTS.find((p) => p.slug === resolvedParams.slug);
   if (!product) {
@@ -178,13 +178,12 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
   };
 
   const handleOrderNow = () => {
-    addItem(
+    setBuyNowItem(
       product,
       activeWeight.value,
       (activeWeight.unit || product.baseUnit || "kg") as any,
       currentPrice,
-      quantity,
-      false // Do not open cart drawer
+      quantity
     );
     closeCart();
     router.push("/checkout");

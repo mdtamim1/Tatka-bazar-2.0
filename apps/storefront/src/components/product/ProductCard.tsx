@@ -22,7 +22,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   variant = "default",
 }) => {
   const { locale, formatPrice } = useLanguage();
-  const { addItem, wishlistIds, toggleWishlist, openCart, closeCart } = useCartStore();
+  const { addItem, setBuyNowItem, wishlistIds, toggleWishlist, openCart, closeCart } = useCartStore();
   const [mounted, setMounted] = useState(false);
   const [addedAnim, setAddedAnim] = useState(false);
 
@@ -67,13 +67,12 @@ export const ProductCard: React.FC<ProductCardProps> = ({
     const multiplier = firstOption?.multiplier ?? 1;
     const chosenPrice = Math.max(1, Math.round(product.basePrice * multiplier));
 
-    addItem(
+    setBuyNowItem(
       product,
       chosenWeight,
       chosenUnit as any,
       chosenPrice,
-      1,
-      false // Do not open cart drawer
+      1
     );
     closeCart();
     router.push("/checkout");

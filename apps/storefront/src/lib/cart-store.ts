@@ -52,6 +52,11 @@ interface CartState {
   moveWishlistToCart: (product: Product, openCartDrawer?: boolean) => void;
   moveAllWishlistToCart: (products: Product[]) => void;
 
+  // Direct Buy Now (Isolated from Cart)
+  buyNowItem: CartItem | null;
+  setBuyNowItem: (product: Product, weight: number, unit: WeightUnit, unitPrice: number, quantity?: number) => void;
+  clearBuyNowItem: () => void;
+
   // Computed helper values
   getItemCount: () => number;
   getSubtotal: () => number;
@@ -81,6 +86,26 @@ export const useCartStore = create<CartState>()(
       toggleWishlistDrawer: () => set((state) => ({ isWishlistOpen: !state.isWishlistOpen, isOpen: false })),
 
       setSelectedHub: (hub) => set({ selectedHub: hub }),
+
+      // Direct Buy Now state and methods
+      buyNowItem: null,
+      setBuyNowItem: (product, weight, unit, unitPrice, quantity = 1) => {
+        const item: CartItem = {
+          id: `buynow-${product.id}-${weight}-${unit}`,
+          productId: product.id,
+          product,
+          selectedWeight: weight,
+          selectedUnit: unit,
+          unitPrice,
+          quantity,
+          totalPrice: unitPrice * quantity,
+          vendorId: product.vendorId || "tatka-official",
+          vendorNameBn: product.vendorNameBn,
+          vendorNameEn: product.vendorNameEn,
+        };
+        set({ buyNowItem: item, isOpen: false });
+      },
+      clearBuyNowItem: () => set({ buyNowItem: null }),
 
       addItem: (product, weight, unit, unitPrice, quantity = 1, openDrawer = true) => {
         set((state) => {
@@ -340,6 +365,7 @@ export const useCartStore = create<CartState>()(
         wishlistIds: state.wishlistIds,
         selectedHub: state.selectedHub,
         appliedCoupon: state.appliedCoupon,
+        buyNowItem: state.buyNowItem,
       }),
     }
   )

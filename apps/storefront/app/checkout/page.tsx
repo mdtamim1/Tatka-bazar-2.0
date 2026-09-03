@@ -57,6 +57,8 @@ export default function CheckoutPage() {
   const { locale, formatPrice } = useLanguage();
   const {
     items,
+    buyNowItem,
+    clearBuyNowItem,
     getSubtotal,
     getDiscountAmount,
     getDeliveryFee,
@@ -67,6 +69,10 @@ export default function CheckoutPage() {
 
   const [currentStep, setCurrentStep] = useState<CheckoutStep>("details");
   const [isProcessing, setIsProcessing] = useState(false);
+
+  // Direct Buy Now detection (isolated from persistent cart)
+  const isDirectBuy = Boolean(buyNowItem);
+  const checkoutItems = buyNowItem ? [buyNowItem] : items;
 
   // Optional Pre-order / Scheduled Delivery
   const [isPreOrder, setIsPreOrder] = useState(false);
@@ -95,10 +101,10 @@ export default function CheckoutPage() {
   const [paymentMethod, setPaymentMethod] = useState<"BKASH" | "NAGAD" | "COD">("BKASH");
   const [placedOrder, setPlacedOrder] = useState<any | null>(null);
 
-  const subtotal = getSubtotal();
-  const discount = getDiscountAmount();
-  const deliveryFee = getDeliveryFee();
-  const grandTotal = getGrandTotal();
+  const subtotal = isDirectBuy && buyNowItem ? (buyNowItem.unitPrice * buyNowItem.quantity) : getSubtotal();
+  const discount = isDirectBuy ? 0 : getDiscountAmount();
+  const deliveryFee = isDirectBuy ? (subtotal >= 1500 ? 0 : 60) : getDeliveryFee();
+  const grandTotal = Math.max(0, subtotal - discount + deliveryFee);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -117,7 +123,7 @@ export default function CheckoutPage() {
       const orderPayload = {
         customer: formData,
         paymentMethod,
-        items,
+        items: checkoutItems,
         subtotal,
         discount,
         deliveryFee,
@@ -132,7 +138,11 @@ export default function CheckoutPage() {
           ...orderPayload,
         });
         setCurrentStep("complete");
-        clearCart();
+        if (isDirectBuy) {
+          clearBuyNowItem();
+        } else {
+          clearCart();
+        }
         confetti({
           particleCount: 100,
           spread: 70,
@@ -225,7 +235,7 @@ export default function CheckoutPage() {
     );
   }
 
-  if (items.length === 0) {
+  if (checkoutItems.length === 0) {
     return (
       <div className="container-narrow py-28 text-center">
         <p className="font-serif text-3xl text-foreground mb-4">
@@ -243,13 +253,27 @@ export default function CheckoutPage() {
       {/* Breadcrumb */}
       <div className="container-full py-5 border-b border-border">
         <div className="flex items-center gap-2.5 text-xs text-muted-foreground uppercase tracking-[0.1em]">
-          <Link href="/cart" className="hover:text-foreground transition-colors">
-            {locale === "bn" ? "শপিং ব্যাগ" : "Bag"}
-          </Link>
+          {isDirectBuy ? (
+            <Link href="/shop" className="hover:text-foreground transition-colors">
+              {locale === "bn" ? "দোকান" : "Shop"}
+            </Link>
+          ) : (
+            <Link href="/cart" className="hover:text-foreground transition-colors">
+              {locale === "bn" ? "শপিং ব্যাগ" : "Bag"}
+            </Link>
+          )}
           <span>/</span>
           <span className="text-foreground font-medium">
             {locale === "bn" ? "চেকআউট" : "Checkout"}
           </span>
+          {isDirectBuy && (
+            <>
+              <span>/</span>
+              <span className="text-primary font-semibold">
+                {locale === "bn" ? "সরাসরি অর্ডার" : "Direct Order"}
+              </span>
+            </>
+          )}
         </div>
       </div>
 
@@ -570,12 +594,19 @@ export default function CheckoutPage() {
 
             {/* Right 5 cols: Order Review */}
             <div className="lg:col-span-5 bg-linen p-8 border border-border space-y-6">
-              <h3 className="font-serif text-2xl text-foreground">
-                {locale === "bn" ? "অর্ডার সংক্ষেপ" : "Order Summary"}
-              </h3>
+              <div className="flex items-center justify-between">
+                <h3 className="font-serif text-2xl text-foreground">
+                  {locale === "bn" ? "অর্ডার সংক্ষেপ" : "Order Summary"}
+                </h3>
+                {isDirectBuy && (
+                  <span className="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 bg-primary/10 text-primary border border-primary/20">
+                    {locale === "bn" ? "সরাসরি অর্ডার" : "Direct Order"}
+                  </span>
+                )}
+              </div>
 
               <div className="divide-y divide-border/70 max-h-80 overflow-y-auto pr-2">
-                {items.map((it) => (
+                {checkoutItems.map((it) => (
                   <div key={it.id} className="py-3 flex gap-3 items-center">
                     <img
                       src={it.product.images[0]}
