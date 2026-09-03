@@ -154,7 +154,7 @@ export function CategoryListing({ initialSlug = "all" }: CategoryListingProps) {
 
   const bannerImg = currentCategory
     ? currentCategory.image
-    : "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=1920&q=80";
+    : "https://images.unsplash.com/photo-1488459716781-31db52582fe9?w=1920&q=85";
 
   return (
     <div className="w-full">

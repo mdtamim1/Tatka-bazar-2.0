@@ -21,31 +21,31 @@ export default function StorefrontHomePage() {
   const secondaryCollection = CATEGORIES[2]; // Vegetables
   const displayedCollections = CATEGORIES.slice(0, 6);
 
-  // Curated Lifestyle & Sourcing Gallery Images
+  // Curated Sourcing & Fresh Bazar Gallery Images
   const galleryImages = [
     {
       url: "https://images.unsplash.com/photo-1542838132-92c53300491e?w=800&auto=format&fit=crop&q=80",
       caption: "Daily farm harvest",
     },
     {
-      url: "https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=800&auto=format&fit=crop&q=80",
-      caption: "Considered kitchen living",
+      url: "https://images.unsplash.com/photo-1534939561126-855b8675edd7?w=800&auto=format&fit=crop&q=80",
+      caption: "Padma fresh catch",
     },
     {
-      url: "https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?w=800&auto=format&fit=crop&q=80",
-      caption: "Artisan pantry objects",
+      url: "https://images.unsplash.com/photo-1540420773420-3366772f4999?w=800&auto=format&fit=crop&q=80",
+      caption: "Organic farm greens",
     },
     {
-      url: "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=800&auto=format&fit=crop&q=80",
-      caption: "Slow living sanctuary",
+      url: "https://images.unsplash.com/photo-1586201375761-83865001e31c?w=800&auto=format&fit=crop&q=80",
+      caption: "Heirloom grain harvest",
     },
     {
       url: "https://images.unsplash.com/photo-1506484381205-f7945653044d?w=800&auto=format&fit=crop&q=80",
       caption: "Padma river delta",
     },
     {
-      url: "https://images.unsplash.com/photo-1565193566173-7a0ee3dbe261?w=800&auto=format&fit=crop&q=80",
-      caption: "Earthen provisions",
+      url: "https://images.unsplash.com/photo-1587049352846-4a222e784d38?w=800&auto=format&fit=crop&q=80",
+      caption: "Sundarbans raw honey",
     },
   ];
 

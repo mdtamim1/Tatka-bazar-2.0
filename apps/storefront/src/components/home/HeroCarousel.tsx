@@ -28,7 +28,7 @@ interface SlideData {
 const SLIDES: SlideData[] = [
   {
     id: "harvest-purity",
-    image: "https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=1920&q=85",
+    image: "https://images.unsplash.com/photo-1542838132-92c53300491e?w=1920&q=85",
     eyebrowBn: "বিশুদ্ধতার অনন্য সংগ্রহ",
     eyebrowEn: "Curated for Considered Living",
     titleBn: (
@@ -52,7 +52,7 @@ const SLIDES: SlideData[] = [
   },
   {
     id: "delta-honey",
-    image: "https://images.unsplash.com/photo-1542838132-92c53300491e?w=1920&q=85",
+    image: "https://images.unsplash.com/photo-1587049352846-4a222e784d38?w=1920&q=85",
     eyebrowBn: "প্রকৃতি ও ঐতিহ্যবাহী খাদ্য",
     eyebrowEn: "Raw Forest & Estuary",
     titleBn: (
@@ -67,7 +67,7 @@ const SLIDES: SlideData[] = [
     ),
     descBn: "সুন্দরবনের খাঁটি চাকের মধু, খাঁটি গাওয়া ঘি এবং রাসায়নিকমুক্ত ঐতিহ্যবাহী খাদ্যপণ্য।",
     descEn: "Raw Sundarban mangrove honey, hand-churned dairy ghee, and unadulterated pantry essentials.",
-    primaryLink: "/category/pantry-staples",
+    primaryLink: "/category/oil-and-ghee",
     primaryTextBn: "প্যান্ট্রি সংগ্রহ",
     primaryTextEn: "Explore Pantry",
     secondaryLink: "/about",
@@ -76,7 +76,7 @@ const SLIDES: SlideData[] = [
   },
   {
     id: "organic-farms",
-    image: "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=1920&q=85",
+    image: "https://images.unsplash.com/photo-1566385101042-1a0aa0c1268c?w=1920&q=85",
     eyebrowBn: "১০০% কীটনাশকমুক্ত",
     eyebrowEn: "Direct from Eco Farms",
     titleBn: (

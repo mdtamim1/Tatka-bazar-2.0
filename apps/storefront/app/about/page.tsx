@@ -27,8 +27,8 @@ export default function AboutPage() {
       >
         <motion.div className="absolute inset-0" style={{ y: heroImageY }}>
           <img
-            src="https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=1920&q=80"
-            alt="Artisan kitchen workshop"
+            src="https://images.unsplash.com/photo-1500937386664-56d1dfef3854?w=1920&q=85"
+            alt="Organic agro landscape"
             className="w-full h-[120%] object-cover animate-ken-burns"
           />
           <div className="absolute inset-0 bg-gradient-to-b from-charcoal/40 via-charcoal/20 to-charcoal/65" />
@@ -142,8 +142,8 @@ export default function AboutPage() {
             >
               <div className="aspect-[4/5] overflow-hidden group bg-muted">
                 <img
-                  src="https://images.unsplash.com/photo-1493663284031-b7e3aefcae8e?w=1200&q=80"
-                  alt="Considered living sanctuary"
+                  src="https://images.unsplash.com/photo-1542838132-92c53300491e?w=1200&q=80"
+                  alt="Organic farm fresh harvest"
                   className="w-full h-full object-cover transition-transform duration-[1.5s] ease-out group-hover:scale-105"
                 />
               </div>
@@ -160,8 +160,8 @@ export default function AboutPage() {
           >
             <div className="relative h-[45vh] md:h-[65vh] overflow-hidden group">
               <img
-                src="https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=1920&q=80"
-                alt="Agricultural heritage"
+                src="https://images.unsplash.com/photo-1506484381205-f7945653044d?w=1920&q=80"
+                alt="River delta and agro heritage"
                 className="w-full h-full object-cover transition-transform duration-[2s] ease-out group-hover:scale-105"
               />
               <div className="absolute inset-0 bg-charcoal/25" />
