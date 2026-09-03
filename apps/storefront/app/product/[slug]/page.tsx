@@ -2,7 +2,7 @@
 
 import React, { useState, use, useEffect } from "react";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, useRouter } from "next/navigation";
 import {
   Heart,
   ChevronLeft,
@@ -10,6 +10,7 @@ import {
   ArrowRight,
   ShoppingBag,
   Check,
+  Zap,
   ShieldCheck,
   Truck,
   Leaf,
@@ -39,9 +40,12 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
     return notFound();
   }
 
+  const router = useRouter();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [selectedWeightIdx, setSelectedWeightIdx] = useState(0);
+  const [isCustomWeight, setIsCustomWeight] = useState(false);
+  const [customWeightValue, setCustomWeightValue] = useState(1.5);
   const [addedAnim, setAddedAnim] = useState(false);
   const [mounted, setMounted] = useState(false);
 
@@ -73,8 +77,19 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
           { value: 2.0, unit: product.baseUnit || "kg", labelBn: "2 kg", labelEn: "2 kg", multiplier: 2.0 },
         ];
 
-  const activeWeight = weightOptions[selectedWeightIdx] || weightOptions[0]!;
-  const currentPrice = Math.max(1, Math.round(product.basePrice * (activeWeight.multiplier || 1)));
+  const activeWeight = isCustomWeight
+    ? {
+        value: customWeightValue,
+        unit: product.baseUnit || "kg",
+        labelBn: `${customWeightValue} ${product.baseUnit || "কেজি"}`,
+        labelEn: `${customWeightValue} ${product.baseUnit || "kg"}`,
+        multiplier: customWeightValue,
+      }
+    : (weightOptions[selectedWeightIdx] || weightOptions[0]!);
+
+  const currentPrice = isCustomWeight
+    ? Math.max(1, Math.round(product.basePrice * customWeightValue))
+    : Math.max(1, Math.round(product.basePrice * (activeWeight.multiplier || 1)));
 
   // Related products
   const relatedProducts = PRODUCTS.filter(
@@ -104,6 +119,17 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
     setAddedAnim(true);
     openCart();
     setTimeout(() => setAddedAnim(false), 2000);
+  };
+
+  const handleOrderNow = () => {
+    addItem(
+      product,
+      activeWeight.value,
+      (activeWeight.unit || product.baseUnit || "kg") as any,
+      currentPrice,
+      quantity
+    );
+    router.push("/checkout");
   };
 
   return (
@@ -244,33 +270,78 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
               </p>
 
               {/* Weight / Portion Selector */}
-              {weightOptions.length > 1 && (
-                <div className="space-y-2 pt-2">
-                  <p className="text-[10px] font-semibold tracking-[0.2em] uppercase text-muted-foreground">
-                    {locale === "bn" ? "পরিমাণ / ওজন নির্বাচন করুন" : "Select Portion / Weight"}
-                  </p>
-                  <div className="flex flex-wrap gap-2">
-                    {weightOptions.map((opt, i) => (
-                      <button
-                        key={i}
-                        type="button"
-                        onClick={() => setSelectedWeightIdx(i)}
-                        className={cn(
-                          "px-4 py-2 text-xs uppercase tracking-[0.1em] border transition-all rounded-none",
-                          selectedWeightIdx === i
-                            ? "bg-foreground text-background border-foreground font-semibold"
-                            : "bg-background text-foreground border-border hover:border-foreground/50"
-                        )}
-                      >
-                        {locale === "bn" ? opt.labelBn : opt.labelEn}
-                      </button>
-                    ))}
-                  </div>
+              <div className="space-y-2 pt-2">
+                <p className="text-[10px] font-semibold tracking-[0.2em] uppercase text-muted-foreground">
+                  {locale === "bn" ? "পরিমাণ / ওজন নির্বাচন করুন" : "Select Portion / Weight"}
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {weightOptions.map((opt, i) => (
+                    <button
+                      key={i}
+                      type="button"
+                      onClick={() => {
+                        setIsCustomWeight(false);
+                        setSelectedWeightIdx(i);
+                      }}
+                      className={cn(
+                        "px-4 py-2 text-xs uppercase tracking-[0.1em] border transition-all rounded-none",
+                        !isCustomWeight && selectedWeightIdx === i
+                          ? "bg-foreground text-background border-foreground font-semibold"
+                          : "bg-background text-foreground border-border hover:border-foreground/50"
+                      )}
+                    >
+                      {locale === "bn" ? opt.labelBn : opt.labelEn}
+                    </button>
+                  ))}
+
+                  {/* Custom Weight Option Button */}
+                  <button
+                    type="button"
+                    onClick={() => setIsCustomWeight(true)}
+                    className={cn(
+                      "px-4 py-2 text-xs uppercase tracking-[0.1em] border transition-all rounded-none flex items-center gap-1.5",
+                      isCustomWeight
+                        ? "bg-foreground text-background border-foreground font-semibold"
+                        : "bg-background text-foreground border-border hover:border-foreground/50"
+                    )}
+                  >
+                    <span>+</span>
+                    <span>{locale === "bn" ? "কাস্টম পরিমাণ" : "Custom Weight"}</span>
+                  </button>
                 </div>
-              )}
+
+                {/* Custom Weight Input Box */}
+                {isCustomWeight && (
+                  <div className="pt-2 flex flex-wrap items-center gap-3 p-3 bg-muted/40 border border-border">
+                    <span className="text-xs text-muted-foreground uppercase tracking-[0.1em]">
+                      {locale === "bn" ? "কাঙ্ক্ষিত পরিমাণ লিখুন:" : "Enter Desired Weight:"}
+                    </span>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="number"
+                        min={0.1}
+                        max={100}
+                        step={0.1}
+                        value={customWeightValue}
+                        onChange={(e) => {
+                          const val = parseFloat(e.target.value);
+                          setCustomWeightValue(isNaN(val) || val <= 0 ? 0.1 : Math.round(val * 100) / 100);
+                        }}
+                        className="w-24 px-3 py-1.5 bg-background border border-border text-foreground text-sm font-semibold text-center focus:outline-none focus:border-primary"
+                      />
+                      <span className="text-xs font-semibold uppercase text-foreground">
+                        {product.baseUnit || "kg"}
+                      </span>
+                    </div>
+                    <span className="text-xs font-serif font-medium text-foreground ml-auto">
+                      {formatPrice(Math.round(product.basePrice * customWeightValue))}
+                    </span>
+                  </div>
+                )}
+              </div>
 
               {/* Quantity & Add to Bag Actions */}
-              <div className="pt-4 space-y-4">
+              <div className="pt-4 space-y-3">
                 <div className="flex items-center gap-3">
                   <QuantitySelector
                     quantity={quantity}
@@ -282,11 +353,12 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
                   <Button
                     type="button"
                     onClick={handleAddToCart}
-                    className="flex-1 btn-premium py-6 rounded-none text-xs tracking-[0.15em] uppercase font-semibold flex items-center justify-center gap-2"
+                    variant="outline"
+                    className="flex-1 py-6 rounded-none text-xs tracking-[0.15em] uppercase font-semibold flex items-center justify-center gap-2 border-foreground/30 hover:border-foreground hover:bg-foreground/5"
                   >
                     {addedAnim ? (
                       <>
-                        <Check className="w-4 h-4" />
+                        <Check className="w-4 h-4 text-primary" />
                         <span>{locale === "bn" ? "ব্যাগে যোগ হয়েছে" : "Added to Bag"}</span>
                       </>
                     ) : (
@@ -311,6 +383,16 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
                     />
                   </button>
                 </div>
+
+                {/* Direct Order Now Button */}
+                <Button
+                  type="button"
+                  onClick={handleOrderNow}
+                  className="w-full py-6 rounded-none text-xs sm:text-sm tracking-[0.15em] uppercase font-semibold flex items-center justify-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground btn-premium shadow-sm active:scale-[0.99]"
+                >
+                  <Zap className="w-4 h-4 fill-current" />
+                  <span>{locale === "bn" ? "সরাসরি অর্ডার করুন" : "Order Now"}</span>
+                </Button>
               </div>
 
               {/* Accordions (Origin, Integrity, Delivery) */}
