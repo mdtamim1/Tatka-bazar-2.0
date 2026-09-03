@@ -1,11 +1,12 @@
 "use client";
 
-import React, { useRef } from "react";
+import React from "react";
 import Link from "next/link";
-import { motion, useScroll, useTransform } from "framer-motion";
-import { ArrowRight, ArrowDown, Sparkles, ShieldCheck, Truck, Leaf } from "lucide-react";
+import { motion } from "framer-motion";
+import { ArrowRight, Sparkles, ShieldCheck, Truck, Leaf } from "lucide-react";
 import { InstagramIcon } from "@/components/ui/SocialIcons";
 import { useLanguage } from "@/context/LanguageContext";
+import { HeroCarousel } from "@/components/home/HeroCarousel";
 import { ProductCard } from "@/components/product/ProductCard";
 import { CollectionCard } from "@/components/home/CollectionCard";
 import { Button } from "@/components/ui/button";
@@ -13,15 +14,6 @@ import { PRODUCTS, CATEGORIES } from "@/lib/catalog";
 
 export default function StorefrontHomePage() {
   const { locale, t } = useLanguage();
-  const heroRef = useRef<HTMLDivElement>(null);
-
-  const { scrollYProgress } = useScroll({
-    target: heroRef,
-    offset: ["start start", "end start"],
-  });
-
-  const heroImageY = useTransform(scrollYProgress, [0, 1], ["0%", "18%"]);
-  const heroOpacity = useTransform(scrollYProgress, [0, 0.85], [1, 0]);
 
   // Featured products & collections
   const latestProducts = PRODUCTS.slice(0, 8);
@@ -59,102 +51,8 @@ export default function StorefrontHomePage() {
 
   return (
     <div className="w-full overflow-hidden">
-      {/* ── 1. Hero Section (Full Viewport with Ken Burns) ── */}
-      <section
-        ref={heroRef}
-        className="relative h-[100svh] -mt-16 md:-mt-20 overflow-hidden select-none"
-      >
-        {/* Parallax background image */}
-        <motion.div className="absolute inset-0" style={{ y: heroImageY }}>
-          <img
-            src="https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=1920&q=85"
-            alt="Considered living and pure harvest"
-            className="w-full h-[120%] object-cover animate-ken-burns"
-          />
-          <div className="absolute inset-0 bg-gradient-to-b from-charcoal/45 via-charcoal/20 to-charcoal/65" />
-        </motion.div>
-
-        {/* Hero Content */}
-        <motion.div
-          className="relative container-full h-full flex flex-col justify-end pb-20 md:pb-28 pt-16 md:pt-20"
-          style={{ opacity: heroOpacity }}
-        >
-          <motion.div
-            initial={{ opacity: 0, y: 40 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1, delay: 0.25, ease: [0.25, 0.46, 0.45, 0.94] }}
-            className="max-w-3xl"
-          >
-            <p className="text-[11px] font-semibold tracking-[0.3em] uppercase text-white/70 mb-5">
-              {locale === "bn" ? "বিশুদ্ধতার অনন্য সংগ্রহ" : "Curated for Considered Living"}
-            </p>
-
-            <h1 className="font-serif text-5xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-9xl text-white mb-6 leading-[0.92] tracking-tight">
-              {locale === "bn" ? (
-                <>
-                  প্রতিদিনের সতেজ
-                  <br />
-                  <span className="italic font-normal">খাঁটি সমাহার</span>
-                </>
-              ) : (
-                <>
-                  Harvest of
-                  <br />
-                  <span className="italic font-normal">Quiet Purity</span>
-                </>
-              )}
-            </h1>
-
-            <p className="text-base md:text-lg text-white/80 mb-8 leading-relaxed max-w-xl font-light">
-              {locale === "bn"
-                ? "পদ্মার তাজা রূপালী ইলিশ, সুন্দরবনের প্রাকৃতিক মধু ও বিষমুক্ত খামারের টাটকা শাকসবজি। প্রতিদিন সতেজ পৌঁছাবে আপনার দরজায়।"
-                : "Ethically harvested farm produce, authentic river delicacies and pantry pieces designed to bring pure nourishment and intention to everyday living."}
-            </p>
-
-            <div className="flex flex-col sm:flex-row gap-4">
-              <Button
-                asChild
-                size="lg"
-                className="rounded-none px-10 py-6 text-xs md:text-sm tracking-[0.15em] uppercase btn-premium bg-primary text-primary-foreground border-none"
-              >
-                <Link href="/shop">
-                  {locale === "bn" ? "কেনাকাটা করুন" : "Shop Collection"}
-                  <ArrowRight className="ml-3 w-4 h-4" />
-                </Link>
-              </Button>
-
-              <Button
-                asChild
-                variant="outline"
-                size="lg"
-                className="rounded-none px-8 py-6 text-xs md:text-sm tracking-[0.15em] uppercase bg-white/10 hover:bg-white/20 text-white border-white/30 backdrop-blur-sm"
-              >
-                <Link href="/recipes">
-                  {locale === "bn" ? "রেসিপি থেকে বাজার" : "Recipe Stories"}
-                </Link>
-              </Button>
-            </div>
-          </motion.div>
-
-          {/* Bouncing Scroll Indicator */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 1.2 }}
-            className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 pointer-events-none"
-          >
-            <span className="text-[10px] tracking-[0.3em] uppercase text-white/50 font-medium">
-              Scroll
-            </span>
-            <motion.div
-              animate={{ y: [0, 6, 0] }}
-              transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-            >
-              <ArrowDown className="w-4 h-4 text-white/50" />
-            </motion.div>
-          </motion.div>
-        </motion.div>
-      </section>
+      {/* ── 1. Hero Animated Carousel Banner ── */}
+      <HeroCarousel />
 
       {/* ── 2. Editorial Marquee Ticker ── */}
       <div className="bg-charcoal text-background py-4 border-y border-background/10 overflow-hidden">
