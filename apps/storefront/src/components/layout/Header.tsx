@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
-  Heart, Menu, X, Search, ChevronDown, Globe, ShoppingBag
+  Heart, Menu, X, Search, ChevronDown, ShoppingBag, Truck
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLanguage } from "@/context/LanguageContext";
@@ -16,7 +16,7 @@ import { cn } from "@/lib/utils";
 
 export const Header = () => {
   const router = useRouter();
-  const { locale, toggleLocale, t } = useLanguage();
+  const { locale, t } = useLanguage();
   const { wishlistIds, openWishlist } = useCartStore();
 
   const [scrolled, setScrolled] = useState(false);
@@ -191,16 +191,18 @@ export const Header = () => {
               <Search className="w-5 h-5 text-foreground transition-transform duration-300 group-hover:scale-110" />
             </button>
 
-            {/* Language Switcher */}
-            <button
-              type="button"
-              onClick={toggleLocale}
-              className="p-2.5 hover:bg-accent transition-colors duration-300 flex items-center gap-1.5 text-xs font-medium tracking-[0.1em] uppercase text-muted-foreground hover:text-foreground"
-              aria-label="Toggle language"
+            {/* Order Track Button */}
+            <Link
+              href="/track"
+              className="p-2 sm:px-2.5 sm:py-1.5 hover:bg-accent transition-all duration-300 flex items-center gap-1.5 text-xs font-medium tracking-[0.05em] uppercase text-muted-foreground hover:text-foreground group border border-border/50 hover:border-border rounded-none"
+              aria-label="Track Order"
+              title={locale === "bn" ? "অর্ডার ট্র্যাক করুন" : "Track Order"}
             >
-              <Globe className="w-4 h-4 text-foreground" />
-              <span className="hidden sm:inline font-sans font-semibold">{locale === "bn" ? "বাং" : "EN"}</span>
-            </button>
+              <Truck className="w-4 h-4 text-foreground transition-transform duration-300 group-hover:scale-110 shrink-0" />
+              <span className="font-sans font-semibold text-xs text-foreground hidden sm:inline whitespace-nowrap">
+                {locale === "bn" ? "ট্র্যাক অর্ডার" : "Track Order"}
+              </span>
+            </Link>
 
             {/* Wishlist Icon with Tooltip */}
             <div
@@ -338,6 +340,7 @@ export const Header = () => {
 
                 <div className="pt-4 border-t border-border space-y-1">
                   {[
+                    { href: "/track", label: locale === "bn" ? "অর্ডার ট্র্যাক" : "Track Order" },
                     { href: "/shop", label: locale === "bn" ? "সব পণ্য" : "Shop All" },
                     { href: "/recipes", label: locale === "bn" ? "রেসিপি" : "Recipes" },
                     { href: "/about", label: locale === "bn" ? "আমাদের গল্প" : "About Our Story" },
