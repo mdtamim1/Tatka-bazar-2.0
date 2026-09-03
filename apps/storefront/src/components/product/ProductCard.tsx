@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { Heart, ShoppingBag, Check } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Heart, ShoppingBag, Check, Zap } from "lucide-react";
 import { motion } from "framer-motion";
 import { useLanguage } from "@/context/LanguageContext";
 import { useCartStore } from "@/lib/cart-store";
@@ -51,6 +52,21 @@ export const ProductCard: React.FC<ProductCardProps> = ({
     setAddedAnim(true);
     openCart();
     setTimeout(() => setAddedAnim(false), 1500);
+  };
+
+  const router = useRouter();
+
+  const handleOrderNow = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    addItem(
+      product,
+      1,
+      product.baseUnit || "kg",
+      product.basePrice,
+      1
+    );
+    router.push("/checkout");
   };
 
   return (
@@ -184,6 +200,18 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                 {formatPrice(product.comparePrice)}
               </span>
             )}
+          </div>
+
+          {/* Order Now Button */}
+          <div className="pt-2">
+            <button
+              type="button"
+              onClick={handleOrderNow}
+              className="w-full py-1.5 sm:py-2 px-2.5 text-[10px] sm:text-xs font-semibold tracking-[0.1em] uppercase bg-primary hover:bg-primary/90 text-primary-foreground transition-all duration-300 flex items-center justify-center gap-1.5 shadow-sm active:scale-[0.98] rounded-none"
+            >
+              <Zap className="w-3 h-3 fill-current" />
+              <span>{locale === "bn" ? "অর্ডার করুন" : "Order Now"}</span>
+            </button>
           </div>
         </div>
       </Link>
