@@ -65,7 +65,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         {/* Image Container with editorial aspect ratio */}
         <div
           className={cn(
-            "relative overflow-hidden bg-muted/40 mb-4 select-none",
+            "relative overflow-hidden bg-muted/40 mb-2 sm:mb-3.5 select-none",
             variant === "large" ? "aspect-[3/4]" : "aspect-[4/5]"
           )}
         >
@@ -99,55 +99,55 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             onClick={handleWishlistToggle}
             aria-label="Toggle wishlist"
             className={cn(
-              "absolute top-4 right-4 p-2.5 rounded-full transition-all duration-500",
+              "absolute top-2 right-2 sm:top-3.5 sm:right-3.5 p-1.5 sm:p-2 rounded-full transition-all duration-300",
               "bg-background/90 backdrop-blur-md hover:bg-background shadow-sm",
-              "opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0",
+              "opacity-90 sm:opacity-0 sm:translate-y-1 group-hover:opacity-100 group-hover:translate-y-0",
               inWishlist && "opacity-100 translate-y-0"
             )}
           >
             <Heart
               className={cn(
-                "w-4 h-4 transition-all duration-300",
+                "w-3.5 h-3.5 sm:w-4 sm:h-4 transition-all duration-300",
                 inWishlist ? "fill-primary text-primary scale-110" : "text-foreground"
               )}
             />
           </button>
 
           {/* Editorial Badges */}
-          <div className="absolute top-4 left-4 flex flex-col gap-1.5">
+          <div className="absolute top-2 left-2 sm:top-3.5 sm:left-3.5 flex flex-col gap-1">
             {product.isOrganic && (
-              <span className="px-2.5 py-1 text-[9px] font-semibold tracking-[0.2em] uppercase bg-foreground text-background">
+              <span className="px-1.5 sm:px-2 py-0.5 text-[8px] sm:text-[9px] font-semibold tracking-[0.15em] sm:tracking-[0.2em] uppercase bg-foreground text-background">
                 {locale === "bn" ? "অর্গানিক" : "Organic"}
               </span>
             )}
             {product.isFeatured && (
-              <span className="px-2.5 py-1 text-[9px] font-semibold tracking-[0.2em] uppercase bg-primary text-primary-foreground">
-                {locale === "bn" ? "সেরা পছন্দ" : "Featured"}
+              <span className="px-1.5 sm:px-2 py-0.5 text-[8px] sm:text-[9px] font-semibold tracking-[0.15em] sm:tracking-[0.2em] uppercase bg-primary text-primary-foreground">
+                {locale === "bn" ? "সেরা" : "Featured"}
               </span>
             )}
             {product.isDailyBazar && (
-              <span className="px-2.5 py-1 text-[9px] font-semibold tracking-[0.2em] uppercase bg-amber-700 text-white">
-                {locale === "bn" ? "তাজা সকাল" : "Daily Fresh"}
+              <span className="px-1.5 sm:px-2 py-0.5 text-[8px] sm:text-[9px] font-semibold tracking-[0.15em] sm:tracking-[0.2em] uppercase bg-amber-700 text-white">
+                {locale === "bn" ? "তাজা" : "Fresh"}
               </span>
             )}
           </div>
 
-          {/* Quick Add Bar sliding up on hover */}
-          <div className="absolute bottom-0 left-0 right-0 flex items-center justify-center pb-4 px-4 opacity-0 translate-y-3 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-500">
+          {/* Quick Add Bar */}
+          <div className="absolute bottom-0 left-0 right-0 flex items-center justify-center pb-2 px-2 sm:pb-3 sm:px-3 opacity-0 group-hover:opacity-100 transition-all duration-300">
             <button
               type="button"
               onClick={handleQuickAdd}
-              className="w-full py-2.5 px-4 text-xs font-medium tracking-[0.15em] uppercase bg-background/95 backdrop-blur-md text-foreground shadow-md hover:bg-primary hover:text-primary-foreground transition-all duration-300 flex items-center justify-center gap-2 rounded-none"
+              className="w-full py-1.5 sm:py-2 px-2 sm:px-3 text-[9px] sm:text-xs font-medium tracking-[0.1em] sm:tracking-[0.15em] uppercase bg-background/95 backdrop-blur-md text-foreground shadow-md hover:bg-primary hover:text-primary-foreground transition-all duration-300 flex items-center justify-center gap-1.5 rounded-none"
             >
               {addedAnim ? (
                 <>
-                  <Check className="w-3.5 h-3.5" />
+                  <Check className="w-3 h-3" />
                   <span>{locale === "bn" ? "যোগ হয়েছে" : "Added"}</span>
                 </>
               ) : (
                 <>
-                  <ShoppingBag className="w-3.5 h-3.5" />
-                  <span>{locale === "bn" ? "+ ব্যাগে যোগ" : "+ Add to Bag"}</span>
+                  <ShoppingBag className="w-3 h-3" />
+                  <span>{locale === "bn" ? "+ ব্যাগে" : "+ Add"}</span>
                 </>
               )}
             </button>
@@ -155,32 +155,32 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         </div>
 
         {/* Product Information */}
-        <div className="space-y-1.5">
+        <div className="space-y-0.5 sm:space-y-1">
           {/* Category label */}
-          <p className="text-[10px] font-semibold tracking-[0.2em] uppercase text-muted-foreground/70 transition-colors duration-300 group-hover:text-primary">
+          <p className="text-[9px] sm:text-[10px] font-semibold tracking-[0.15em] sm:tracking-[0.2em] uppercase text-muted-foreground/70 transition-colors duration-300 group-hover:text-primary truncate">
             {locale === "bn" ? product.categoryNameBn : product.categoryNameEn}
           </p>
 
           {/* Product Title */}
-          <h3 className="font-serif text-lg md:text-xl text-foreground transition-colors duration-300 group-hover:text-primary leading-snug line-clamp-1">
+          <h3 className="font-serif text-sm sm:text-base md:text-lg text-foreground transition-colors duration-300 group-hover:text-primary leading-snug line-clamp-1">
             {locale === "bn" ? product.nameBn : product.nameEn}
           </h3>
 
-          {/* Origin / Quality line */}
-          <p className="text-xs text-muted-foreground line-clamp-1">
+          {/* Origin */}
+          <p className="text-[10px] sm:text-xs text-muted-foreground line-clamp-1">
             {locale === "bn" ? product.originBn : product.originEn}
           </p>
 
           {/* Price & Unit */}
-          <div className="flex items-center gap-2 pt-0.5">
-            <p className="font-serif text-base font-medium text-foreground tracking-wide">
+          <div className="flex items-center gap-1.5 pt-0.5">
+            <p className="font-serif text-xs sm:text-sm md:text-base font-medium text-foreground tracking-wide">
               {formatPrice(product.basePrice)}
             </p>
-            <span className="text-xs text-muted-foreground/70">
+            <span className="text-[10px] sm:text-xs text-muted-foreground/70">
               / {product.baseUnit || "kg"}
             </span>
             {product.comparePrice && product.comparePrice > product.basePrice && (
-              <span className="text-xs text-muted-foreground/50 line-through">
+              <span className="text-[10px] sm:text-xs text-muted-foreground/50 line-through">
                 {formatPrice(product.comparePrice)}
               </span>
             )}

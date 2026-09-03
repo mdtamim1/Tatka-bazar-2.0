@@ -145,19 +145,19 @@ export default function StorefrontHomePage() {
       )}
 
       {/* ── 4. Latest Arrivals / Customer Favorites (Linen Background) ── */}
-      <section className="py-20 md:py-28 bg-linen">
+      <section className="py-12 sm:py-20 md:py-28 bg-linen">
         <div className="container-full">
-          <div className="flex items-end justify-between mb-12 md:mb-16">
+          <div className="flex items-end justify-between mb-8 sm:mb-12 md:mb-16">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.6 }}
             >
-              <p className="text-[11px] font-semibold tracking-[0.3em] uppercase text-primary mb-3">
+              <p className="text-[10px] sm:text-[11px] font-semibold tracking-[0.25em] sm:tracking-[0.3em] uppercase text-primary mb-2 sm:mb-3">
                 {locale === "bn" ? "সদ্য আহরিত" : "Just Arrived"}
               </p>
-              <h2 className="font-serif text-4xl md:text-5xl text-foreground">
+              <h2 className="font-serif text-3xl sm:text-4xl md:text-5xl text-foreground">
                 {locale === "bn" ? "দৈনিক তাজা সমাহার" : "Latest Pieces"}
               </h2>
             </motion.div>
@@ -171,8 +171,8 @@ export default function StorefrontHomePage() {
             </Link>
           </div>
 
-          {/* Product Editorial Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8 md:gap-10">
+          {/* Product Editorial Grid (2 cols on mobile, 3 on md, 4 on lg) */}
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6 md:gap-8">
             {latestProducts.map((product, index) => (
               <ProductCard key={product.id} product={product} index={index} />
             ))}
