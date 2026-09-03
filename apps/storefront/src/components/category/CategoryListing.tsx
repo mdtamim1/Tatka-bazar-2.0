@@ -159,14 +159,56 @@ export function CategoryListing({ initialSlug = "all" }: CategoryListingProps) {
   return (
     <div className="w-full">
       {/* ── 1. Hero Banner ── */}
-      <section className="relative h-[25vh] sm:h-[35vh] md:h-[45vh] overflow-hidden select-none">
+      <section className="relative h-[28vh] sm:h-[38vh] md:h-[48vh] overflow-hidden select-none">
         <div className="absolute inset-0">
           <img
             src={bannerImg}
             alt={currentCategory?.nameEn || "All Products"}
             className="w-full h-full object-cover"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-charcoal/85 via-charcoal/40 to-charcoal/20" />
+          <div className="absolute inset-0 bg-gradient-to-t from-charcoal/85 via-charcoal/40 to-charcoal/30" />
+        </div>
+
+        {/* Top Controls: Filter on Top-Left (Yellow Mark) & Sort on Top-Right (Blue Mark) */}
+        <div className="absolute top-4 sm:top-6 inset-x-0 z-20">
+          <div className="container-full flex items-center justify-between">
+            {/* Yellow Mark: Top-Left Filter Button */}
+            <Button
+              type="button"
+              onClick={() => setIsFilterDrawerOpen(true)}
+              variant="outline"
+              size="sm"
+              className={cn(
+                "rounded-none h-9 px-3 sm:px-4 text-[11px] sm:text-xs tracking-[0.1em] uppercase flex items-center gap-2",
+                "bg-charcoal/70 hover:bg-charcoal/90 text-white border-white/30 backdrop-blur-md transition-all shadow-md active:scale-95",
+                activeFilterCount > 0 && "border-primary bg-primary text-primary-foreground font-semibold"
+              )}
+            >
+              <SlidersHorizontal className="w-3.5 h-3.5 text-white" />
+              <span>{locale === "bn" ? "ফিল্টার" : "Filters"}</span>
+              {activeFilterCount > 0 && (
+                <span className="w-4 h-4 rounded-full bg-white text-primary text-[10px] font-bold flex items-center justify-center">
+                  {activeFilterCount}
+                </span>
+              )}
+            </Button>
+
+            {/* Blue Mark: Top-Right Sorting Dropdown */}
+            <div className="relative inline-block">
+              <select
+                value={activeSort}
+                onChange={(e) => setActiveSort(e.target.value as SortOption)}
+                className="bg-charcoal/70 hover:bg-charcoal/90 text-white border border-white/30 backdrop-blur-md text-[11px] sm:text-xs uppercase tracking-[0.1em] px-3 sm:px-4 py-2 pr-8 h-9 rounded-none appearance-none focus:outline-none focus:border-white/60 cursor-pointer shadow-md transition-all"
+              >
+                {sortOptions.map((opt) => (
+                  <option key={opt.value} value={opt.value} className="bg-charcoal text-white">
+                    {locale === "bn" ? opt.labelBn : opt.labelEn}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown className="w-3.5 h-3.5 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-white/90" />
+            </div>
+          </div>
         </div>
 
         <div className="relative container-full h-full flex flex-col justify-end pb-8 sm:pb-12">
@@ -231,43 +273,29 @@ export function CategoryListing({ initialSlug = "all" }: CategoryListingProps) {
               ))}
             </div>
 
-            {/* Right Controls: Filter Trigger & Sort */}
-            <div className="flex items-center gap-2 flex-shrink-0">
-              {/* Premium Filter Drawer Trigger */}
+            {/* Right: Items Count & Sticky Quick Filter */}
+            <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+              <span className="text-[11px] sm:text-xs text-muted-foreground whitespace-nowrap">
+                {filteredAndSortedProducts.length} {locale === "bn" ? "টি পণ্য" : "pieces"}
+              </span>
+
               <Button
                 type="button"
                 onClick={() => setIsFilterDrawerOpen(true)}
-                variant="outline"
+                variant="ghost"
                 size="sm"
                 className={cn(
-                  "rounded-none h-8 px-3 text-[11px] tracking-[0.08em] uppercase flex items-center gap-1.5 border-border hover:border-foreground transition-all",
-                  activeFilterCount > 0 && "border-primary text-primary font-semibold"
+                  "rounded-none h-8 px-2 sm:px-2.5 text-[11px] tracking-[0.08em] uppercase flex items-center gap-1 text-muted-foreground hover:text-foreground",
+                  activeFilterCount > 0 && "text-primary font-semibold"
                 )}
               >
-                <SlidersHorizontal className="w-3.5 h-3.5 text-primary" />
-                <span>{locale === "bn" ? "ফিল্টার" : "Filters"}</span>
+                <SlidersHorizontal className="w-3.5 h-3.5" />
                 {activeFilterCount > 0 && (
                   <span className="w-4 h-4 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center">
                     {activeFilterCount}
                   </span>
                 )}
               </Button>
-
-              {/* Sorting Dropdown */}
-              <div className="relative inline-block">
-                <select
-                  value={activeSort}
-                  onChange={(e) => setActiveSort(e.target.value as SortOption)}
-                  className="bg-background border border-border text-foreground text-[11px] uppercase tracking-[0.08em] px-3 py-1.5 pr-7 h-8 rounded-none appearance-none focus:outline-none focus:border-primary cursor-pointer"
-                >
-                  {sortOptions.map((opt) => (
-                    <option key={opt.value} value={opt.value}>
-                      {locale === "bn" ? opt.labelBn : opt.labelEn}
-                    </option>
-                  ))}
-                </select>
-                <ChevronDown className="w-3 h-3 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-muted-foreground" />
-              </div>
             </div>
 
           </div>
