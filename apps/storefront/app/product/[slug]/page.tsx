@@ -1437,10 +1437,10 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
       {/* ── Scoped Styling with Tatka Bazar Design System ─────────── */}
       <style jsx global>{`
         .tb-pdp-root {
-          background: #08090B;
-          color: #F0F2F7;
+          background: #060811;
+          color: #E8ECFF;
           min-height: 100vh;
-          font-family: 'Sora', system-ui, sans-serif;
+          font-family: var(--font-body, 'Inter', system-ui, sans-serif);
         }
 
         .tb-container {
@@ -1457,7 +1457,7 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
 
         /* ── Breadcrumbs ── */
         .tb-breadcrumb-wrapper {
-          background: #0B0E14;
+          background: #0A0D18;
           border-bottom: 1px solid rgba(255, 255, 255, 0.06);
           padding: 14px 0;
         }
@@ -1467,26 +1467,26 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
           align-items: center;
           gap: 8px;
           font-size: 0.82rem;
-          color: #7E8899;
+          color: #6B79A0;
           flex-wrap: wrap;
         }
 
         .tb-crumb-link {
-          color: #A0AEC0;
+          color: #B0BAD8;
           text-decoration: none;
           transition: color 0.15s ease;
         }
 
         .tb-crumb-link:hover {
-          color: #10D876;
+          color: #7C5CFC;
         }
 
         .tb-crumb-sep {
-          color: #4A5568;
+          color: #3D4866;
         }
 
         .tb-crumb-active {
-          color: #F0F2F7;
+          color: #E8ECFF;
           font-weight: 600;
         }
 
@@ -1529,10 +1529,10 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
           aspect-ratio: 1 / 1;
           border-radius: 0px !important;
           overflow: hidden;
-          background: #0E1117;
+          background: #0F1422;
           border: 1px solid rgba(255, 255, 255, 0.08);
           cursor: zoom-in;
-          box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+          box-shadow: 0 16px 48px rgba(0, 0, 0, 0.65);
         }
 
         .tb-main-image {
@@ -1566,17 +1566,17 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
         }
 
         .tb-badge--green {
-          background: rgba(16, 216, 118, 0.9);
-          color: #08090B;
+          background: rgba(0, 208, 132, 0.9);
+          color: #060811;
         }
 
         .tb-badge--gold {
-          background: rgba(245, 200, 66, 0.95);
-          color: #08090B;
+          background: rgba(240, 180, 41, 0.95);
+          color: #060811;
         }
 
         .tb-badge--red {
-          background: rgba(255, 77, 109, 0.95);
+          background: rgba(247, 57, 90, 0.95);
           color: #ffffff;
         }
 
@@ -1587,10 +1587,10 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
           display: inline-flex;
           align-items: center;
           gap: 6px;
-          background: rgba(8, 9, 11, 0.75);
+          background: rgba(6, 8, 17, 0.8);
           backdrop-filter: blur(8px);
           border: 1px solid rgba(255, 255, 255, 0.1);
-          color: #C8CDD9;
+          color: #B0BAD8;
           padding: 4px 10px;
           border-radius: 999px;
           font-size: 0.72rem;
@@ -1609,7 +1609,7 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
           height: 76px;
           border-radius: 12px;
           overflow: hidden;
-          background: #0E1117;
+          background: #0F1422;
           border: 2px solid transparent;
           padding: 0;
           cursor: pointer;
@@ -1618,8 +1618,8 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
         }
 
         .tb-thumb-btn--active {
-          border-color: #10D876;
-          box-shadow: 0 0 16px rgba(16, 216, 118, 0.35);
+          border-color: #7C5CFC;
+          box-shadow: 0 0 16px rgba(124, 92, 252, 0.4);
         }
 
         .tb-thumb-img {
@@ -1632,15 +1632,15 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
           display: flex;
           align-items: flex-start;
           gap: 12px;
-          background: #0E1117;
+          background: #0F1422;
           border: 1px solid rgba(255, 255, 255, 0.08);
           border-radius: 14px;
           padding: 14px 16px;
         }
 
         .tb-source-icon {
-          color: #10D876;
-          background: rgba(16, 216, 118, 0.1);
+          color: #00D084;
+          background: rgba(0, 208, 132, 0.1);
           border-radius: 8px;
           padding: 6px;
           display: flex;
@@ -1652,13 +1652,13 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
         .tb-source-title {
           font-size: 0.88rem;
           font-weight: 700;
-          color: #F0F2F7;
+          color: #E8ECFF;
           margin: 0 0 4px 0;
         }
 
         .tb-source-desc {
           font-size: 0.78rem;
-          color: #94A3B8;
+          color: #6B79A0;
           line-height: 1.5;
           margin: 0;
         }
@@ -1683,16 +1683,16 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
           gap: 6px;
           padding: 4px 12px;
           border-radius: 999px;
-          background: rgba(16, 216, 118, 0.1);
-          border: 1px solid rgba(16, 216, 118, 0.25);
-          color: #10D876;
+          background: rgba(124, 92, 252, 0.1);
+          border: 1px solid rgba(124, 92, 252, 0.25);
+          color: #A78BFA;
           font-size: 0.78rem;
           font-weight: 700;
         }
 
         .tb-verified-dot {
-          background: #10D876;
-          color: #08090B;
+          background: #00D084;
+          color: #060811;
           width: 14px;
           height: 14px;
           border-radius: 50%;
@@ -1708,9 +1708,9 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
           align-items: center;
           gap: 5px;
           font-size: 0.76rem;
-          color: #F5C842;
-          background: rgba(245, 200, 66, 0.1);
-          border: 1px solid rgba(245, 200, 66, 0.2);
+          color: #F0B429;
+          background: rgba(240, 180, 41, 0.1);
+          border: 1px solid rgba(240, 180, 41, 0.2);
           padding: 4px 10px;
           border-radius: 999px;
           font-weight: 600;
@@ -1719,7 +1719,7 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
         .tb-product-title {
           font-size: clamp(1.6rem, 2.5vw, 2.25rem);
           font-weight: 800;
-          color: #F0F2F7;
+          color: #E8ECFF;
           letter-spacing: -0.02em;
           margin: 0 0 12px 0;
           line-height: 1.25;
@@ -1743,23 +1743,23 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
         }
 
         .tb-star--filled {
-          fill: #F5C842;
-          color: #F5C842;
+          fill: #F0B429;
+          color: #F0B429;
         }
 
         .tb-star--empty {
-          color: #4A5568;
+          color: #3D4866;
         }
 
         .tb-rating-text {
           font-weight: 800;
-          color: #F0F2F7;
+          color: #E8ECFF;
           margin-left: 6px;
           font-size: 0.9rem;
         }
 
         .tb-review-count {
-          color: #7E8899;
+          color: #6B79A0;
           font-size: 0.82rem;
           margin-left: 4px;
         }
@@ -1769,7 +1769,7 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
           align-items: center;
           gap: 6px;
           font-size: 0.78rem;
-          color: #10D876;
+          color: #00D084;
           font-weight: 700;
         }
 
@@ -1777,25 +1777,25 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
           width: 8px;
           height: 8px;
           border-radius: 50%;
-          background: #10D876;
-          box-shadow: 0 0 8px #10D876;
+          background: #00D084;
+          box-shadow: 0 0 8px #00D084;
         }
 
         .tb-freshness-callout {
           display: flex;
           align-items: center;
           gap: 10px;
-          background: rgba(16, 216, 118, 0.07);
-          border-left: 3px solid #10D876;
+          background: rgba(0, 208, 132, 0.06);
+          border-left: 3px solid #00D084;
           padding: 10px 14px;
           border-radius: 0 8px 8px 0;
           margin-bottom: 22px;
           font-size: 0.84rem;
-          color: #D1D5DB;
+          color: #B0BAD8;
         }
 
         .tb-callout-icon {
-          color: #10D876;
+          color: #00D084;
           flex-shrink: 0;
         }
 
@@ -1804,11 +1804,12 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
           display: flex;
           align-items: center;
           justify-content: space-between;
-          background: #0E1117;
+          background: #0F1422;
           border: 1px solid rgba(255, 255, 255, 0.08);
           border-radius: 14px;
           padding: 16px 20px;
           margin-bottom: 24px;
+          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
         }
 
         .tb-price-left {
@@ -1820,27 +1821,27 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
         .tb-main-price {
           font-size: 2.1rem;
           font-weight: 900;
-          color: #10D876;
+          color: #00D084;
           line-height: 1;
         }
 
         .tb-compare-price {
           font-size: 1.15rem;
-          color: #7E8899;
+          color: #6B79A0;
           text-decoration: line-through;
           font-weight: 500;
         }
 
         .tb-unit-reference {
           font-size: 0.85rem;
-          color: #94A3B8;
+          color: #6B79A0;
           font-weight: 600;
         }
 
         .tb-discount-badge {
-          background: rgba(255, 77, 109, 0.15);
-          border: 1px solid rgba(255, 77, 109, 0.3);
-          color: #FF4D6D;
+          background: rgba(247, 57, 90, 0.15);
+          border: 1px solid rgba(247, 57, 90, 0.3);
+          color: #F7395A;
           font-size: 0.72rem;
           font-weight: 800;
           padding: 4px 10px;
@@ -1866,18 +1867,18 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
           gap: 6px;
           font-size: 0.85rem;
           font-weight: 700;
-          color: #F0F2F7;
+          color: #E8ECFF;
         }
 
         .tb-customizer-current {
           font-size: 0.8rem;
-          color: #A0AEC0;
+          color: #B0BAD8;
         }
 
         .tb-free-tag {
           font-size: 0.7rem;
-          color: #10D876;
-          background: rgba(16, 216, 118, 0.12);
+          color: #00D084;
+          background: rgba(0, 208, 132, 0.12);
           padding: 2px 8px;
           border-radius: 999px;
           font-weight: 700;
@@ -1896,23 +1897,23 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
           align-items: center;
           padding: 10px 12px;
           border-radius: 12px;
-          background: #0E1117;
-          border: 1.5px solid rgba(255, 255, 255, 0.1);
-          color: #F0F2F7;
+          background: #0F1422;
+          border: 1.5px solid rgba(255, 255, 255, 0.08);
+          color: #E8ECFF;
           cursor: pointer;
           transition: all 0.2s ease;
           position: relative;
         }
 
         .tb-weight-chip:hover {
-          border-color: rgba(16, 216, 118, 0.4);
-          background: #131720;
+          border-color: rgba(124, 92, 252, 0.4);
+          background: #131828;
         }
 
         .tb-weight-chip--active {
-          border-color: #10D876 !important;
-          background: rgba(16, 216, 118, 0.08) !important;
-          box-shadow: 0 0 16px rgba(16, 216, 118, 0.2);
+          border-color: #00D084 !important;
+          background: rgba(0, 208, 132, 0.08) !important;
+          box-shadow: 0 0 16px rgba(0, 208, 132, 0.2);
         }
 
         .tb-chip-label {
@@ -1923,7 +1924,7 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
 
         .tb-chip-price {
           font-size: 0.78rem;
-          color: #10D876;
+          color: #00D084;
           font-weight: 700;
         }
 
@@ -1931,8 +1932,8 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
           position: absolute;
           top: -7px;
           right: 8px;
-          background: #F5C842;
-          color: #08090B;
+          background: #F0B429;
+          color: #060811;
           font-size: 0.62rem;
           font-weight: 900;
           text-transform: uppercase;
@@ -1944,8 +1945,8 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
           position: absolute;
           top: -7px;
           right: 8px;
-          background: linear-gradient(135deg, #10D876 0%, #059E57 100%);
-          color: #08090B;
+          background: linear-gradient(135deg, #7C5CFC 0%, #5A3ADA 100%);
+          color: #ffffff;
           font-size: 0.62rem;
           font-weight: 900;
           text-transform: uppercase;
@@ -1969,14 +1970,14 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
         }
 
         .tb-custom-sparkle {
-          color: #10D876;
+          color: #7C5CFC;
         }
 
         /* ── Custom Quantity Adjuster Panel ── */
         .tb-custom-input-panel {
           margin-top: 14px;
-          background: #11151F;
-          border: 1.5px solid rgba(16, 216, 118, 0.35);
+          background: #111524;
+          border: 1.5px solid rgba(124, 92, 252, 0.35);
           border-radius: 14px;
           padding: 16px;
           display: flex;
@@ -2011,16 +2012,16 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
           gap: 6px;
           font-size: 0.84rem;
           font-weight: 700;
-          color: #F0F2F7;
+          color: #E8ECFF;
         }
 
         .tb-custom-icon {
-          color: #10D876;
+          color: #7C5CFC;
         }
 
         .tb-custom-unit-rate {
           font-size: 0.76rem;
-          color: #94A3B8;
+          color: #6B79A0;
           font-weight: 600;
         }
 
@@ -2034,8 +2035,8 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
         .tb-custom-stepper {
           display: flex;
           align-items: center;
-          background: #0B0E14;
-          border: 1.5px solid rgba(255, 255, 255, 0.12);
+          background: #0A0D18;
+          border: 1.5px solid rgba(255, 255, 255, 0.1);
           border-radius: 10px;
           padding: 3px;
           flex: 1;
@@ -2048,7 +2049,7 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
           border-radius: 8px;
           background: rgba(255, 255, 255, 0.05);
           border: none;
-          color: #F0F2F7;
+          color: #E8ECFF;
           display: flex;
           align-items: center;
           justify-content: center;
@@ -2057,8 +2058,8 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
         }
 
         .tb-custom-step-btn:hover {
-          background: #10D876;
-          color: #08090B;
+          background: #7C5CFC;
+          color: #ffffff;
         }
 
         .tb-custom-input-wrap {
@@ -2069,7 +2070,7 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
           width: 100%;
           background: transparent;
           border: none;
-          color: #10D876;
+          color: #00D084;
           font-size: 1.15rem;
           font-weight: 800;
           text-align: center;
@@ -2092,9 +2093,9 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
         .tb-custom-unit-btn {
           padding: 8px 14px;
           border-radius: 8px;
-          background: #0B0E14;
+          background: #0A0D18;
           border: 1px solid rgba(255, 255, 255, 0.1);
-          color: #94A3B8;
+          color: #6B79A0;
           font-size: 0.78rem;
           font-weight: 700;
           cursor: pointer;
@@ -2102,16 +2103,16 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
         }
 
         .tb-custom-unit-btn--active {
-          background: rgba(16, 216, 118, 0.15) !important;
-          border-color: #10D876 !important;
-          color: #10D876 !important;
+          background: rgba(124, 92, 252, 0.15) !important;
+          border-color: #7C5CFC !important;
+          color: #A78BFA !important;
         }
 
         .tb-custom-unit-fixed {
           padding: 8px 14px;
           border-radius: 8px;
-          background: rgba(16, 216, 118, 0.1);
-          color: #10D876;
+          background: rgba(124, 92, 252, 0.1);
+          color: #A78BFA;
           font-size: 0.78rem;
           font-weight: 700;
         }
@@ -2126,7 +2127,7 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
         .tb-presets-label {
           font-size: 0.75rem;
           font-weight: 700;
-          color: #7E8899;
+          color: #6B79A0;
         }
 
         .tb-preset-chip {
@@ -2134,7 +2135,7 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
           border-radius: 999px;
           background: rgba(255, 255, 255, 0.04);
           border: 1px solid rgba(255, 255, 255, 0.08);
-          color: #CBD5E1;
+          color: #B0BAD8;
           font-size: 0.74rem;
           font-weight: 700;
           cursor: pointer;
@@ -2142,14 +2143,14 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
         }
 
         .tb-preset-chip:hover {
-          border-color: #10D876;
-          color: #10D876;
+          border-color: #7C5CFC;
+          color: #A78BFA;
         }
 
         .tb-preset-chip--active {
-          background: #10D876 !important;
-          color: #08090B !important;
-          border-color: #10D876 !important;
+          background: #7C5CFC !important;
+          color: #ffffff !important;
+          border-color: #7C5CFC !important;
         }
 
         .tb-custom-summary-row {
@@ -2159,21 +2160,21 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
           padding-top: 10px;
           border-top: 1px solid rgba(255, 255, 255, 0.06);
           font-size: 0.8rem;
-          color: #94A3B8;
+          color: #6B79A0;
           flex-wrap: wrap;
           gap: 6px;
         }
 
         .tb-calc-price {
-          color: #10D876;
+          color: #00D084;
           font-weight: 800;
           font-size: 0.95rem;
         }
 
         .tb-custom-badge-free {
           font-size: 0.7rem;
-          background: rgba(16, 216, 118, 0.1);
-          color: #10D876;
+          background: rgba(0, 208, 132, 0.1);
+          color: #00D084;
           padding: 2px 8px;
           border-radius: 999px;
           font-weight: 700;
@@ -2198,9 +2199,9 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
           gap: 8px;
           padding: 9px 12px;
           border-radius: 10px;
-          background: #0E1117;
+          background: #0F1422;
           border: 1px solid rgba(255, 255, 255, 0.08);
-          color: #C8CDD9;
+          color: #B0BAD8;
           font-size: 0.8rem;
           font-weight: 600;
           text-align: left;
@@ -2209,25 +2210,25 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
         }
 
         .tb-cut-btn:hover {
-          background: #131720;
+          background: #131828;
           border-color: rgba(255, 255, 255, 0.2);
         }
 
         .tb-cut-btn--active {
-          border-color: #10D876 !important;
-          background: rgba(16, 216, 118, 0.07) !important;
-          color: #10D876 !important;
+          border-color: #00D084 !important;
+          background: rgba(0, 208, 132, 0.07) !important;
+          color: #00D084 !important;
         }
 
         .tb-cut-check {
-          color: #10D876;
+          color: #00D084;
           font-weight: 800;
         }
 
         /* ── Tiered Pricing Box ── */
         .tb-tiered-box {
-          background: rgba(245, 200, 66, 0.06);
-          border: 1px dashed rgba(245, 200, 66, 0.3);
+          background: rgba(240, 180, 41, 0.06);
+          border: 1px dashed rgba(240, 180, 41, 0.3);
           border-radius: 12px;
           padding: 10px 14px;
           margin-bottom: 20px;
@@ -2242,21 +2243,22 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
           font-size: 0.72rem;
           font-weight: 800;
           text-transform: uppercase;
-          color: #F5C842;
+          color: #F0B429;
         }
 
         .tb-tiered-list {
           font-size: 0.78rem;
-          color: #E2E8F0;
+          color: #B0BAD8;
         }
 
         /* ── Actions Card ── */
         .tb-actions-card {
-          background: #0E1117;
+          background: #0F1422;
           border: 1px solid rgba(255, 255, 255, 0.1);
           border-radius: 16px;
           padding: 18px;
           margin-bottom: 24px;
+          box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
         }
 
         .tb-qty-row {
@@ -2269,7 +2271,7 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
         .tb-qty-selector {
           display: flex;
           align-items: center;
-          background: #131720;
+          background: #0A0D18;
           border: 1px solid rgba(255, 255, 255, 0.12);
           border-radius: 10px;
           padding: 4px;
@@ -2281,7 +2283,7 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
           border-radius: 8px;
           background: transparent;
           border: none;
-          color: #F0F2F7;
+          color: #E8ECFF;
           display: flex;
           align-items: center;
           justify-content: center;
@@ -2303,7 +2305,7 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
           text-align: center;
           font-weight: 800;
           font-size: 1rem;
-          color: #F0F2F7;
+          color: #E8ECFF;
         }
 
         .tb-total-preview {
@@ -2312,14 +2314,14 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
 
         .tb-total-label {
           font-size: 0.78rem;
-          color: #7E8899;
+          color: #6B79A0;
           margin-right: 6px;
         }
 
         .tb-total-amount {
           font-size: 1.35rem;
           font-weight: 900;
-          color: #10D876;
+          color: #00D084;
         }
 
         .tb-button-group {
@@ -2349,22 +2351,22 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
 
         /* 3D Order Now Button */
         .tb-btn--order {
-          background: linear-gradient(135deg, #10D876 0%, #059E57 100%);
-          color: #08090B;
-          border-bottom: 4px solid #036b3b;
-          box-shadow: 0 6px 0 #024e2b, 0 10px 22px rgba(16, 216, 118, 0.35);
+          background: linear-gradient(135deg, #7C5CFC 0%, #5A3ADA 100%);
+          color: #ffffff;
+          border-bottom: 4px solid #3E24A8;
+          box-shadow: 0 6px 0 #281577, 0 10px 22px rgba(124, 92, 252, 0.35);
           transform: translateY(0);
         }
 
         .tb-btn--order:hover {
           transform: translateY(-2px);
-          box-shadow: 0 8px 0 #024e2b, 0 14px 28px rgba(16, 216, 118, 0.45);
+          box-shadow: 0 8px 0 #281577, 0 14px 28px rgba(124, 92, 252, 0.45);
         }
 
         .tb-btn--order:active {
           transform: translateY(4px) !important;
           border-bottom-width: 1px !important;
-          box-shadow: 0 2px 0 #024e2b, 0 4px 10px rgba(16, 216, 118, 0.2) !important;
+          box-shadow: 0 2px 0 #281577, 0 4px 10px rgba(124, 92, 252, 0.2) !important;
         }
 
         .tb-secondary-btns {
@@ -2375,33 +2377,33 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
         /* 3D Add to Cart Button */
         .tb-btn--bag {
           flex: 1;
-          background: #141923;
-          border: 1.5px solid rgba(255, 255, 255, 0.15);
-          border-bottom: 4px solid #0B0E14;
-          color: #F0F2F7;
-          box-shadow: 0 5px 0 #07090D, 0 8px 18px rgba(0, 0, 0, 0.4);
+          background: #111524;
+          border: 1.5px solid rgba(255, 255, 255, 0.12);
+          border-bottom: 4px solid #070912;
+          color: #E8ECFF;
+          box-shadow: 0 5px 0 #05060C, 0 8px 18px rgba(0, 0, 0, 0.4);
           transform: translateY(0);
         }
 
         .tb-btn--bag:hover {
-          background: #1B2230;
-          border-color: #10D876;
-          color: #10D876;
+          background: #161C2E;
+          border-color: #00D084;
+          color: #00D084;
           transform: translateY(-2px);
-          box-shadow: 0 7px 0 #07090D, 0 12px 22px rgba(16, 216, 118, 0.15);
+          box-shadow: 0 7px 0 #05060C, 0 12px 22px rgba(0, 208, 132, 0.15);
         }
 
         .tb-btn--bag:active {
           transform: translateY(4px) !important;
           border-bottom-width: 1px !important;
-          box-shadow: 0 1px 0 #07090D, 0 3px 8px rgba(0, 0, 0, 0.3) !important;
+          box-shadow: 0 1px 0 #05060C, 0 3px 8px rgba(0, 0, 0, 0.3) !important;
         }
 
         .tb-btn--added {
-          background: rgba(16, 216, 118, 0.18) !important;
-          border-color: #10D876 !important;
-          border-bottom-color: #059E57 !important;
-          color: #10D876 !important;
+          background: rgba(0, 208, 132, 0.18) !important;
+          border-color: #00D084 !important;
+          border-bottom-color: #00965E !important;
+          color: #00D084 !important;
           animation: tbPopScale 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
 
@@ -2416,25 +2418,25 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
           width: 52px;
           height: 52px;
           border-radius: 12px;
-          background: #141923;
-          border: 1.5px solid rgba(255, 255, 255, 0.15);
-          border-bottom: 4px solid #0B0E14;
-          color: #94A3B8;
+          background: #111524;
+          border: 1.5px solid rgba(255, 255, 255, 0.12);
+          border-bottom: 4px solid #070912;
+          color: #6B79A0;
           display: flex;
           align-items: center;
           justify-content: center;
           cursor: pointer;
-          box-shadow: 0 5px 0 #07090D, 0 8px 16px rgba(0, 0, 0, 0.35);
+          box-shadow: 0 5px 0 #05060C, 0 8px 16px rgba(0, 0, 0, 0.35);
           transition: transform 0.12s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.12s ease, border-color 0.2s ease, color 0.2s ease;
           flex-shrink: 0;
           transform: translateY(0);
         }
 
         .tb-icon-btn:hover {
-          border-color: #10D876;
-          color: #10D876;
+          border-color: #7C5CFC;
+          color: #7C5CFC;
           transform: translateY(-2px);
-          box-shadow: 0 7px 0 #07090D, 0 10px 20px rgba(0, 0, 0, 0.4);
+          box-shadow: 0 7px 0 #05060C, 0 10px 20px rgba(124, 92, 252, 0.25);
         }
 
         .tb-icon-btn:active {
@@ -2466,7 +2468,7 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
           display: flex;
           align-items: center;
           gap: 10px;
-          background: #0E1117;
+          background: #0F1422;
           border: 1px solid rgba(255, 255, 255, 0.06);
           border-radius: 12px;
           padding: 12px 14px;
@@ -2477,38 +2479,38 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
         }
 
         .tb-trust-icon--green {
-          color: #10D876;
+          color: #00D084;
         }
 
         .tb-trust-icon--blue {
-          color: #4F9EFF;
+          color: #7C5CFC;
         }
 
         .tb-trust-icon--emerald {
-          color: #34D399;
+          color: #00D084;
         }
 
         .tb-trust-icon--gold {
-          color: #F5C842;
+          color: #F0B429;
         }
 
         .tb-trust-label {
           font-size: 0.82rem;
           font-weight: 800;
-          color: #F0F2F7;
+          color: #E8ECFF;
           margin: 0 0 2px 0;
         }
 
         .tb-trust-sub {
           font-size: 0.72rem;
-          color: #7E8899;
+          color: #6B79A0;
           margin: 0;
         }
 
         /* ── Accordions & Details ── */
         .tb-details-section {
           padding: 60px 0;
-          background: #0B0E14;
+          background: #0A0D18;
           border-top: 1px solid rgba(255, 255, 255, 0.06);
         }
 
@@ -2519,19 +2521,19 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
         .tb-section-heading {
           font-size: clamp(1.4rem, 2.2vw, 1.85rem);
           font-weight: 800;
-          color: #F0F2F7;
+          color: #E8ECFF;
           letter-spacing: -0.02em;
           margin: 0 0 6px 0;
         }
 
         .tb-section-subheading {
           font-size: 0.86rem;
-          color: #7E8899;
+          color: #6B79A0;
           margin: 0;
         }
 
         .tb-accordions-card {
-          background: #0E1117;
+          background: #0F1422;
           border: 1px solid rgba(255, 255, 255, 0.08);
           border-radius: 18px;
           overflow: hidden;
@@ -2553,7 +2555,7 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
           padding: 18px 24px;
           background: transparent;
           border: none;
-          color: #F0F2F7;
+          color: #E8ECFF;
           cursor: pointer;
           text-align: left;
           transition: background 0.15s ease;
@@ -2572,23 +2574,23 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
         }
 
         .tb-acc-icon {
-          color: #10D876;
+          color: #7C5CFC;
         }
 
         .tb-chevron {
-          color: #7E8899;
+          color: #6B79A0;
           transition: transform 0.25s ease;
         }
 
         .tb-chevron--open {
           transform: rotate(180deg);
-          color: #10D876;
+          color: #7C5CFC;
         }
 
         .tb-accordion-body {
           padding: 0 24px 22px 24px;
           font-size: 0.88rem;
-          color: #C8CDD9;
+          color: #B0BAD8;
           line-height: 1.7;
         }
 
@@ -2606,7 +2608,7 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
         }
 
         .tb-spec-point {
-          background: #131720;
+          background: #131828;
           border: 1px solid rgba(255, 255, 255, 0.06);
           border-radius: 10px;
           padding: 12px 14px;
@@ -2618,19 +2620,19 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
         .tb-point-label {
           font-size: 0.74rem;
           font-weight: 700;
-          color: #7E8899;
+          color: #6B79A0;
           text-transform: uppercase;
         }
 
         .tb-point-val {
           font-size: 0.88rem;
           font-weight: 700;
-          color: #F0F2F7;
+          color: #E8ECFF;
         }
 
         .tb-body-desc {
           font-size: 0.88rem;
-          color: #A0AEC0;
+          color: #B0BAD8;
           line-height: 1.7;
           margin: 0;
         }
@@ -2649,7 +2651,7 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
         }
 
         .tb-nutri-card {
-          background: #131720;
+          background: #131828;
           border: 1px solid rgba(255, 255, 255, 0.06);
           border-radius: 12px;
           padding: 14px;
@@ -2662,13 +2664,13 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
         .tb-nutri-val {
           font-size: 1.15rem;
           font-weight: 900;
-          color: #10D876;
+          color: #00D084;
         }
 
         .tb-nutri-name {
           font-size: 0.72rem;
           font-weight: 700;
-          color: #7E8899;
+          color: #6B79A0;
           text-transform: uppercase;
         }
 
@@ -2681,8 +2683,8 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
         }
 
         .tb-recipe-box {
-          background: rgba(16, 216, 118, 0.05);
-          border: 1px solid rgba(16, 216, 118, 0.2);
+          background: rgba(124, 92, 252, 0.06);
+          border: 1px solid rgba(124, 92, 252, 0.2);
           border-radius: 12px;
           padding: 16px 20px;
         }
@@ -2690,21 +2692,21 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
         .tb-recipe-title {
           font-size: 0.9rem;
           font-weight: 800;
-          color: #10D876;
+          color: #A78BFA;
           margin: 0 0 8px 0;
         }
 
         .tb-recipe-text {
           font-size: 0.86rem;
-          color: #E2E8F0;
+          color: #B0BAD8;
           line-height: 1.65;
           margin: 0;
         }
 
-        /* ── Customer Reviews Section (Ultra-Premium Redesign) ────── */
+        /* ── Customer Reviews Section ────── */
         .tb-reviews-section {
           padding: 72px 0;
-          background: #08090B;
+          background: #060811;
           border-top: 1px solid rgba(255, 255, 255, 0.06);
         }
 
@@ -2723,9 +2725,9 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
           gap: 6px;
           padding: 4px 14px;
           border-radius: 999px;
-          background: rgba(16, 216, 118, 0.1);
-          border: 1px solid rgba(16, 216, 118, 0.3);
-          color: #10D876;
+          background: rgba(124, 92, 252, 0.1);
+          border: 1px solid rgba(124, 92, 252, 0.3);
+          color: #A78BFA;
           font-size: 0.72rem;
           font-weight: 800;
           letter-spacing: 0.06em;
@@ -2744,14 +2746,14 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
         .tb-reviews-main-title {
           font-size: clamp(1.5rem, 2.4vw, 1.95rem);
           font-weight: 900;
-          color: #F8FAFC;
+          color: #E8ECFF;
           letter-spacing: -0.02em;
           margin: 0 0 6px 0;
         }
 
         .tb-reviews-subtitle {
           font-size: 0.9rem;
-          color: #94A3B8;
+          color: #6B79A0;
           max-width: 620px;
           line-height: 1.6;
           margin: 0;
@@ -2774,15 +2776,15 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
           padding: 7px 14px;
           font-size: 0.78rem;
           font-weight: 700;
-          color: #E2E8F0;
+          color: #B0BAD8;
         }
 
         .tb-hl-green {
-          color: #10D876;
+          color: #00D084;
         }
 
         .tb-hl-gold {
-          color: #F5C842;
+          color: #F0B429;
         }
 
         .tb-reviews-grid {
@@ -2801,15 +2803,15 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
 
         /* ── Rating Scorecard (Left Column) ── */
         .tb-rating-card {
-          background: linear-gradient(180deg, rgba(16, 23, 36, 0.88) 0%, rgba(10, 13, 20, 0.96) 100%);
+          background: linear-gradient(180deg, rgba(17, 21, 36, 0.9) 0%, rgba(10, 13, 24, 0.98) 100%);
           backdrop-filter: blur(20px);
-          border: 1px solid rgba(16, 216, 118, 0.22);
+          border: 1px solid rgba(124, 92, 252, 0.22);
           border-radius: 24px;
           padding: 28px 24px;
           display: flex;
           flex-direction: column;
           gap: 20px;
-          box-shadow: 0 20px 48px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+          box-shadow: 0 20px 48px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.06);
           position: sticky;
           top: 90px;
         }
@@ -2829,7 +2831,7 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
         .tb-card-title {
           font-size: 1.15rem;
           font-weight: 900;
-          color: #F8FAFC;
+          color: #E8ECFF;
           margin: 0;
           letter-spacing: -0.01em;
         }
@@ -2840,9 +2842,9 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
           gap: 5px;
           font-size: 0.72rem;
           font-weight: 800;
-          color: #10D876;
-          background: rgba(16, 216, 118, 0.12);
-          border: 1px solid rgba(16, 216, 118, 0.28);
+          color: #00D084;
+          background: rgba(0, 208, 132, 0.12);
+          border: 1px solid rgba(0, 208, 132, 0.28);
           border-radius: 999px;
           padding: 3px 10px;
         }
@@ -2863,10 +2865,10 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
         .tb-big-score {
           font-size: 3.6rem;
           font-weight: 900;
-          color: #F8FAFC;
+          color: #E8ECFF;
           line-height: 1;
           letter-spacing: -0.03em;
-          background: linear-gradient(135deg, #FFFFFF 40%, #10D876 100%);
+          background: linear-gradient(135deg, #FFFFFF 40%, #00D084 100%);
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;
         }
@@ -2874,7 +2876,7 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
         .tb-score-max {
           font-size: 1rem;
           font-weight: 700;
-          color: #64748B;
+          color: #6B79A0;
           margin-left: 2px;
         }
 
@@ -2890,19 +2892,19 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
         }
 
         .tb-star-glow {
-          filter: drop-shadow(0 0 6px rgba(245, 200, 66, 0.4));
+          filter: drop-shadow(0 0 6px rgba(240, 180, 41, 0.4));
         }
 
         .tb-score-sub {
           font-size: 0.78rem;
-          color: #94A3B8;
+          color: #6B79A0;
           margin: 0;
         }
 
         .tb-score-sentiment {
           font-size: 0.72rem;
           font-weight: 800;
-          color: #10D876;
+          color: #00D084;
           text-transform: uppercase;
           letter-spacing: 0.04em;
         }
@@ -2918,7 +2920,7 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
           align-items: center;
           gap: 8px;
           font-size: 0.78rem;
-          color: #94A3B8;
+          color: #6B79A0;
           background: transparent;
           border: 1px solid transparent;
           border-radius: 8px;
@@ -2934,8 +2936,8 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
         }
 
         .tb-bar-row--active {
-          background: rgba(16, 216, 118, 0.1);
-          border-color: rgba(16, 216, 118, 0.3);
+          background: rgba(124, 92, 252, 0.12);
+          border-color: rgba(124, 92, 252, 0.3);
         }
 
         .tb-bar-num {
@@ -2944,22 +2946,22 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
           gap: 3px;
           width: 32px;
           font-weight: 800;
-          color: #CBD5E1;
+          color: #B0BAD8;
         }
 
         .tb-bar-track {
           flex: 1;
           height: 7px;
-          background: rgba(255, 255, 255, 0.07);
+          background: rgba(255, 255, 255, 0.06);
           border-radius: 999px;
           overflow: hidden;
         }
 
         .tb-bar-fill {
           height: 100%;
-          background: linear-gradient(90deg, #10D876 0%, #34D399 100%);
+          background: linear-gradient(90deg, #7C5CFC 0%, #00D084 100%);
           border-radius: 999px;
-          box-shadow: 0 0 10px rgba(16, 216, 118, 0.35);
+          box-shadow: 0 0 10px rgba(124, 92, 252, 0.35);
           transition: width 0.4s ease;
         }
 
@@ -2967,13 +2969,13 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
           width: 34px;
           text-align: right;
           font-weight: 700;
-          color: #CBD5E1;
+          color: #B0BAD8;
         }
 
         .tb-bar-count {
           width: 24px;
           text-align: right;
-          color: #64748B;
+          color: #3D4866;
           font-size: 0.72rem;
         }
 
@@ -2981,8 +2983,8 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
           display: flex;
           align-items: flex-start;
           gap: 12px;
-          background: rgba(16, 216, 118, 0.08);
-          border: 1px solid rgba(16, 216, 118, 0.2);
+          background: rgba(0, 208, 132, 0.08);
+          border: 1px solid rgba(0, 208, 132, 0.2);
           border-radius: 14px;
           padding: 12px 14px;
         }
@@ -2996,13 +2998,13 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
           display: block;
           font-size: 0.82rem;
           font-weight: 800;
-          color: #10D876;
+          color: #00D084;
           margin-bottom: 2px;
         }
 
         .tb-promise-detail {
           font-size: 0.74rem;
-          color: #94A3B8;
+          color: #6B79A0;
           line-height: 1.45;
           margin: 0;
         }
@@ -3015,7 +3017,7 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
           gap: 8px;
           background: rgba(255, 255, 255, 0.04);
           border: 1px solid rgba(255, 255, 255, 0.1);
-          color: #F8FAFC;
+          color: #E8ECFF;
           border-radius: 12px;
           height: 42px;
           font-size: 0.82rem;
@@ -3025,9 +3027,9 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
         }
 
         .tb-card-cta-btn:hover {
-          background: rgba(16, 216, 118, 0.15);
-          border-color: #10D876;
-          color: #10D876;
+          background: rgba(124, 92, 252, 0.15);
+          border-color: #7C5CFC;
+          color: #A78BFA;
         }
 
         /* ── Reviews List (Right Column) ── */
@@ -3054,7 +3056,7 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
         .tb-filter-tab {
           background: rgba(255, 255, 255, 0.04);
           border: 1px solid rgba(255, 255, 255, 0.08);
-          color: #94A3B8;
+          color: #6B79A0;
           border-radius: 999px;
           padding: 6px 14px;
           font-size: 0.78rem;
@@ -3065,23 +3067,23 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
 
         .tb-filter-tab:hover {
           background: rgba(255, 255, 255, 0.08);
-          color: #F8FAFC;
+          color: #E8ECFF;
         }
 
         .tb-filter-tab--active {
-          background: #10D876;
-          color: #08090B;
-          border-color: #10D876;
-          box-shadow: 0 0 14px rgba(16, 216, 118, 0.4);
+          background: #7C5CFC;
+          color: #ffffff;
+          border-color: #7C5CFC;
+          box-shadow: 0 0 14px rgba(124, 92, 252, 0.4);
         }
 
         .tb-filter-counter {
           font-size: 0.78rem;
-          color: #64748B;
+          color: #3D4866;
         }
 
         .tb-filter-counter strong {
-          color: #CBD5E1;
+          color: #B0BAD8;
         }
 
         .tb-reviews-container {
@@ -3092,19 +3094,19 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
         }
 
         .tb-no-reviews-box {
-          background: #0E1117;
+          background: #0F1422;
           border: 1px dashed rgba(255, 255, 255, 0.12);
           border-radius: 16px;
           padding: 40px 20px;
           text-align: center;
-          color: #94A3B8;
+          color: #6B79A0;
         }
 
         .tb-reset-filter-btn {
           margin-top: 10px;
-          background: rgba(16, 216, 118, 0.12);
-          border: 1px solid rgba(16, 216, 118, 0.3);
-          color: #10D876;
+          background: rgba(124, 92, 252, 0.12);
+          border: 1px solid rgba(124, 92, 252, 0.3);
+          color: #A78BFA;
           padding: 6px 14px;
           border-radius: 999px;
           font-size: 0.78rem;
@@ -3114,7 +3116,7 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
 
         /* ── Individual Review Item Card ── */
         .tb-review-item {
-          background: linear-gradient(180deg, rgba(17, 23, 35, 0.75) 0%, rgba(10, 13, 20, 0.9) 100%);
+          background: linear-gradient(180deg, rgba(17, 21, 36, 0.75) 0%, rgba(10, 13, 24, 0.9) 100%);
           backdrop-filter: blur(16px);
           border: 1px solid rgba(255, 255, 255, 0.07);
           border-radius: 20px;
@@ -3124,7 +3126,7 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
         }
 
         .tb-review-item:hover {
-          border-color: rgba(16, 216, 118, 0.35);
+          border-color: rgba(124, 92, 252, 0.35);
           transform: translateY(-2px);
           box-shadow: 0 16px 36px rgba(0, 0, 0, 0.45);
         }
@@ -3153,7 +3155,7 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
           justify-content: center;
           font-weight: 800;
           font-size: 0.92rem;
-          color: #08090B;
+          color: #060811;
           flex-shrink: 0;
           box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
         }
@@ -3169,7 +3171,7 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
         .tb-reviewer-name {
           font-size: 0.95rem;
           font-weight: 800;
-          color: #F8FAFC;
+          color: #E8ECFF;
           margin: 0;
         }
 
@@ -3179,16 +3181,16 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
           gap: 4px;
           font-size: 0.68rem;
           font-weight: 800;
-          color: #10D876;
-          background: rgba(16, 216, 118, 0.12);
-          border: 1px solid rgba(16, 216, 118, 0.25);
+          color: #00D084;
+          background: rgba(0, 208, 132, 0.12);
+          border: 1px solid rgba(0, 208, 132, 0.25);
           padding: 2px 8px;
           border-radius: 999px;
         }
 
         .tb-review-meta {
           font-size: 0.74rem;
-          color: #64748B;
+          color: #6B79A0;
         }
 
         .tb-review-rating-box {
@@ -3203,9 +3205,9 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
         }
 
         .tb-rating-score-tag {
-          background: rgba(245, 200, 66, 0.12);
-          border: 1px solid rgba(245, 200, 66, 0.25);
-          color: #F5C842;
+          background: rgba(240, 180, 41, 0.12);
+          border: 1px solid rgba(240, 180, 41, 0.25);
+          color: #F0B429;
           font-size: 0.74rem;
           font-weight: 800;
           padding: 2px 7px;
@@ -3227,9 +3229,9 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
           font-weight: 700;
           padding: 3px 10px;
           border-radius: 999px;
-          background: rgba(16, 216, 118, 0.08);
-          border: 1px solid rgba(16, 216, 118, 0.2);
-          color: #10D876;
+          background: rgba(0, 208, 132, 0.08);
+          border: 1px solid rgba(0, 208, 132, 0.2);
+          color: #00D084;
         }
 
         .tb-review-tag--cold {
@@ -3240,7 +3242,7 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
 
         .tb-review-text {
           font-size: 0.92rem;
-          color: #CBD5E1;
+          color: #B0BAD8;
           line-height: 1.7;
           margin: 0 0 16px 0;
           font-style: italic;
@@ -3262,7 +3264,7 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
           gap: 6px;
           background: rgba(255, 255, 255, 0.03);
           border: 1px solid rgba(255, 255, 255, 0.08);
-          color: #94A3B8;
+          color: #6B79A0;
           border-radius: 8px;
           padding: 5px 12px;
           font-size: 0.76rem;
@@ -3272,23 +3274,23 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
         }
 
         .tb-helpful-btn:hover {
-          background: rgba(16, 216, 118, 0.1);
-          border-color: rgba(16, 216, 118, 0.25);
-          color: #10D876;
+          background: rgba(0, 208, 132, 0.1);
+          border-color: rgba(0, 208, 132, 0.25);
+          color: #00D084;
         }
 
         .tb-helpful-btn--voted {
-          background: rgba(16, 216, 118, 0.15);
-          border-color: rgba(16, 216, 118, 0.4);
-          color: #10D876;
+          background: rgba(0, 208, 132, 0.15);
+          border-color: rgba(0, 208, 132, 0.4);
+          color: #00D084;
         }
 
         .tb-helpful-count {
-          color: #64748B;
+          color: #3D4866;
         }
 
         .tb-helpful-btn--voted .tb-helpful-count {
-          color: #10D876;
+          color: #00D084;
         }
 
         .tb-doorstep-check {
@@ -3297,14 +3299,14 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
           gap: 5px;
           font-size: 0.72rem;
           font-weight: 700;
-          color: #94A3B8;
+          color: #6B79A0;
         }
 
         /* ── Write Review Card ── */
         .tb-write-card {
-          background: linear-gradient(180deg, rgba(16, 23, 36, 0.88) 0%, rgba(9, 12, 19, 0.96) 100%);
+          background: linear-gradient(180deg, rgba(17, 21, 36, 0.9) 0%, rgba(10, 13, 24, 0.98) 100%);
           backdrop-filter: blur(20px);
-          border: 1px solid rgba(16, 216, 118, 0.24);
+          border: 1px solid rgba(124, 92, 252, 0.24);
           border-radius: 24px;
           padding: 30px;
           box-shadow: 0 20px 50px rgba(0, 0, 0, 0.55);
@@ -3320,7 +3322,7 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
           gap: 5px;
           font-size: 0.7rem;
           font-weight: 800;
-          color: #10D876;
+          color: #7C5CFC;
           letter-spacing: 0.05em;
           margin-bottom: 6px;
         }
@@ -3328,14 +3330,14 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
         .tb-write-title {
           font-size: 1.15rem;
           font-weight: 900;
-          color: #F8FAFC;
+          color: #E8ECFF;
           margin: 0 0 6px 0;
           letter-spacing: -0.01em;
         }
 
         .tb-write-desc {
           font-size: 0.82rem;
-          color: #94A3B8;
+          color: #6B79A0;
           margin: 0;
           line-height: 1.5;
         }
@@ -3352,7 +3354,7 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
           display: block;
           font-size: 0.78rem;
           font-weight: 800;
-          color: #CBD5E1;
+          color: #B0BAD8;
           margin-bottom: 8px;
         }
 
@@ -3384,7 +3386,7 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
         .tb-selected-rating-label {
           font-size: 0.82rem;
           font-weight: 800;
-          color: #F5C842;
+          color: #F0B429;
         }
 
         .tb-quick-tags-wrap {
@@ -3395,7 +3397,7 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
           display: block;
           font-size: 0.74rem;
           font-weight: 700;
-          color: #64748B;
+          color: #6B79A0;
           margin-bottom: 6px;
         }
 
@@ -3412,15 +3414,15 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
           padding: 4px 11px;
           font-size: 0.72rem;
           font-weight: 700;
-          color: #94A3B8;
+          color: #6B79A0;
           cursor: pointer;
           transition: all 0.15s ease;
         }
 
         .tb-quick-chip:hover {
-          background: rgba(16, 216, 118, 0.12);
-          border-color: rgba(16, 216, 118, 0.3);
-          color: #10D876;
+          background: rgba(124, 92, 252, 0.12);
+          border-color: rgba(124, 92, 252, 0.3);
+          color: #A78BFA;
           transform: translateY(-1px);
         }
 
@@ -3447,32 +3449,32 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
         .tb-input-label {
           font-size: 0.78rem;
           font-weight: 800;
-          color: #CBD5E1;
+          color: #B0BAD8;
         }
 
         .tb-input {
           width: 100%;
-          background: rgba(15, 20, 30, 0.85);
+          background: rgba(15, 20, 34, 0.85);
           border: 1px solid rgba(255, 255, 255, 0.1);
           border-radius: 12px;
           padding: 12px 16px;
           font-size: 0.86rem;
-          color: #F8FAFC;
+          color: #E8ECFF;
           font-family: inherit;
           outline: none;
           transition: all 0.2s ease;
         }
 
         .tb-input:focus {
-          border-color: #10D876;
-          box-shadow: 0 0 0 3px rgba(16, 216, 118, 0.18);
-          background: rgba(18, 24, 36, 0.95);
+          border-color: #7C5CFC;
+          box-shadow: 0 0 0 3px rgba(124, 92, 252, 0.18);
+          background: rgba(19, 24, 40, 0.95);
         }
 
         .tb-input--readonly {
           opacity: 0.75;
           cursor: not-allowed;
-          background: rgba(10, 13, 20, 0.6);
+          background: rgba(10, 13, 24, 0.6);
         }
 
         .tb-textarea {
@@ -3494,8 +3496,8 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
           display: inline-flex;
           align-items: center;
           gap: 8px;
-          background: linear-gradient(135deg, #10D876 0%, #059669 100%);
-          color: #08090B;
+          background: linear-gradient(135deg, #7C5CFC 0%, #5A3ADA 100%);
+          color: #ffffff;
           padding: 0 28px;
           height: 46px;
           font-size: 0.86rem;
@@ -3503,27 +3505,27 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
           border-radius: 12px;
           border: none;
           cursor: pointer;
-          box-shadow: 0 8px 24px rgba(16, 216, 118, 0.35);
+          box-shadow: 0 8px 24px rgba(124, 92, 252, 0.35);
           transition: all 0.2s ease;
         }
 
         .tb-btn--submit:hover {
-          box-shadow: 0 12px 30px rgba(16, 216, 118, 0.5);
+          box-shadow: 0 12px 30px rgba(124, 92, 252, 0.5);
           transform: translateY(-1px);
         }
 
         .tb-submit-hint {
           font-size: 0.74rem;
-          color: #64748B;
+          color: #3D4866;
         }
 
         .tb-success-msg {
           display: flex;
           align-items: center;
           gap: 10px;
-          background: rgba(16, 216, 118, 0.12);
-          border: 1px solid rgba(16, 216, 118, 0.35);
-          color: #10D876;
+          background: rgba(0, 208, 132, 0.12);
+          border: 1px solid rgba(0, 208, 132, 0.35);
+          color: #00D084;
           padding: 12px 16px;
           border-radius: 12px;
           font-size: 0.82rem;
@@ -3534,7 +3536,7 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
         /* ── Q&A ── */
         .tb-qa-section {
           padding: 60px 0;
-          background: #0B0E14;
+          background: #0A0D18;
           border-top: 1px solid rgba(255, 255, 255, 0.06);
         }
 
@@ -3552,7 +3554,7 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
         }
 
         .tb-ask-card {
-          background: #0E1117;
+          background: #0F1422;
           border: 1px solid rgba(255, 255, 255, 0.08);
           border-radius: 16px;
           padding: 22px;
@@ -3562,7 +3564,7 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
         .tb-ask-title {
           font-size: 1.05rem;
           font-weight: 800;
-          color: #F0F2F7;
+          color: #E8ECFF;
           margin: 0 0 14px 0;
         }
 
@@ -3579,7 +3581,7 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
         }
 
         .tb-qa-card {
-          background: #0E1117;
+          background: #0F1422;
           border: 1px solid rgba(255, 255, 255, 0.08);
           border-radius: 14px;
           padding: 20px;
@@ -3594,26 +3596,26 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
 
         .tb-qa-badge {
           font-weight: 900;
-          color: #10D876;
+          color: #7C5CFC;
           font-size: 0.95rem;
         }
 
         .tb-qa-question {
           font-size: 0.95rem;
           font-weight: 800;
-          color: #F0F2F7;
+          color: #E8ECFF;
           margin: 0;
         }
 
         .tb-qa-meta {
           font-size: 0.74rem;
-          color: #7E8899;
+          color: #6B79A0;
           margin: 0 0 12px 24px;
         }
 
         .tb-qa-answer-box {
-          background: #131720;
-          border-left: 3px solid #10D876;
+          background: #131828;
+          border-left: 3px solid #00D084;
           border-radius: 0 10px 10px 0;
           padding: 12px 16px;
           margin-left: 24px;
@@ -3628,27 +3630,27 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
 
         .tb-qa-ans-badge {
           font-weight: 900;
-          color: #10D876;
+          color: #00D084;
           font-size: 0.9rem;
         }
 
         .tb-qa-answer {
           font-size: 0.85rem;
-          color: #C8CDD9;
+          color: #B0BAD8;
           line-height: 1.6;
           margin: 0;
         }
 
         .tb-qa-expert {
           font-size: 0.74rem;
-          color: #10D876;
+          color: #00D084;
           font-weight: 700;
         }
 
         .tb-qa-pending {
           margin-left: 24px;
           font-size: 0.8rem;
-          color: #7E8899;
+          color: #6B79A0;
           font-style: italic;
         }
 
@@ -3671,19 +3673,19 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
           display: inline-flex;
           align-items: center;
           gap: 6px;
-          color: #10D876;
+          color: #00D084;
           font-size: 0.84rem;
           font-weight: 700;
           text-decoration: none;
           padding: 6px 14px;
           border-radius: 999px;
-          background: rgba(16, 216, 118, 0.08);
-          border: 1px solid rgba(16, 216, 118, 0.2);
+          background: rgba(0, 208, 132, 0.08);
+          border: 1px solid rgba(0, 208, 132, 0.2);
           transition: all 0.2s ease;
         }
 
         .tb-view-all-link:hover {
-          background: rgba(16, 216, 118, 0.16);
+          background: rgba(0, 208, 132, 0.16);
           transform: translateX(2px);
         }
 

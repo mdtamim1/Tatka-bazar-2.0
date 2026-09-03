@@ -41,9 +41,9 @@ export function CartDrawer() {
         style={{
           position: "absolute",
           inset: 0,
-          background: "rgba(0, 0, 0, 0.65)",
-          backdropFilter: "blur(6px)",
-          WebkitBackdropFilter: "blur(6px)",
+          background: "rgba(0, 0, 0, 0.75)",
+          backdropFilter: "blur(8px)",
+          WebkitBackdropFilter: "blur(8px)",
         }}
       />
 
@@ -54,32 +54,35 @@ export function CartDrawer() {
           width: "100%",
           maxWidth: "460px",
           height: "100%",
-          background: "#ffffff",
-          color: "#0f172a",
+          background: "rgba(10, 13, 24, 0.98)",
+          backdropFilter: "blur(32px) saturate(1.8)",
+          WebkitBackdropFilter: "blur(32px) saturate(1.8)",
+          color: "#E8ECFF",
           display: "flex",
           flexDirection: "column",
-          boxShadow: "-8px 0 32px rgba(0, 0, 0, 0.25)",
+          boxShadow: "-12px 0 48px rgba(0, 0, 0, 0.7)",
+          borderLeft: "1px solid rgba(124, 92, 252, 0.15)",
           zIndex: 10000,
           animation: "slideInRight 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
-          fontFamily: "var(--font-body, system-ui, -apple-system, sans-serif)",
+          fontFamily: "var(--font-body, 'Inter', system-ui, sans-serif)",
         }}
       >
         {/* ── Header ── */}
         <div
           style={{
             padding: "20px 24px",
-            borderBottom: "1px solid #e2e8f0",
+            borderBottom: "1px solid rgba(255, 255, 255, 0.06)",
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
-            background: "#ffffff",
+            background: "rgba(15, 20, 34, 0.6)",
           }}
         >
           <h2
             style={{
               fontSize: "1.35rem",
               fontWeight: 800,
-              color: "#0f172a",
+              color: "#E8ECFF",
               letterSpacing: "-0.02em",
               margin: 0,
             }}
@@ -93,18 +96,26 @@ export function CartDrawer() {
             style={{
               width: "32px",
               height: "32px",
-              borderRadius: "6px",
-              background: "#0f172a",
-              border: "none",
-              color: "#ffffff",
+              borderRadius: "8px",
+              background: "rgba(255, 255, 255, 0.06)",
+              border: "1px solid rgba(255, 255, 255, 0.08)",
+              color: "#B0BAD8",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               cursor: "pointer",
-              transition: "transform 0.15s ease",
+              transition: "all 0.15s ease",
             }}
-            onMouseEnter={e => { e.currentTarget.style.transform = "scale(1.05)"; }}
-            onMouseLeave={e => { e.currentTarget.style.transform = "scale(1)"; }}
+            onMouseEnter={e => {
+              e.currentTarget.style.background = "rgba(247, 57, 90, 0.15)";
+              e.currentTarget.style.color = "#F7395A";
+              e.currentTarget.style.borderColor = "rgba(247, 57, 90, 0.3)";
+            }}
+            onMouseLeave={e => {
+              e.currentTarget.style.background = "rgba(255, 255, 255, 0.06)";
+              e.currentTarget.style.color = "#B0BAD8";
+              e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.08)";
+            }}
           >
             <X size={16} />
           </button>
@@ -118,8 +129,8 @@ export function CartDrawer() {
             padding: "20px 24px",
             display: "flex",
             flexDirection: "column",
-            gap: "16px",
-            background: "#f8fafc",
+            gap: "14px",
+            background: "transparent",
           }}
         >
           {items.length === 0 ? (
@@ -132,7 +143,7 @@ export function CartDrawer() {
                 alignItems: "center",
                 justifyContent: "center",
                 height: "100%",
-                color: "#64748b",
+                color: "#6B79A0",
               }}
             >
               <div
@@ -140,33 +151,35 @@ export function CartDrawer() {
                   width: "64px",
                   height: "64px",
                   borderRadius: "50%",
-                  background: "#e2e8f0",
+                  background: "rgba(124, 92, 252, 0.1)",
+                  border: "1px solid rgba(124, 92, 252, 0.2)",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
                   marginBottom: "16px",
-                  color: "#0f172a",
+                  color: "#7C5CFC",
                 }}
               >
                 <ShoppingBag size={28} />
               </div>
-              <h3 style={{ fontSize: "1.1rem", fontWeight: 700, color: "#0f172a", margin: "0 0 6px 0" }}>
+              <h3 style={{ fontSize: "1.1rem", fontWeight: 700, color: "#E8ECFF", margin: "0 0 6px 0" }}>
                 Your cart is empty
               </h3>
-              <p style={{ fontSize: "0.85rem", color: "#64748b", margin: "0 0 20px 0" }}>
+              <p style={{ fontSize: "0.85rem", color: "#6B79A0", margin: "0 0 20px 0" }}>
                 Add farm-fresh groceries, fish, and produce to get started.
               </p>
               <button
                 onClick={closeCart}
                 style={{
                   padding: "10px 24px",
-                  background: "#0f172a",
+                  background: "linear-gradient(135deg, #7C5CFC, #5A3ADA)",
                   color: "#ffffff",
                   borderRadius: "8px",
                   fontWeight: 700,
                   fontSize: "0.88rem",
                   border: "none",
                   cursor: "pointer",
+                  boxShadow: "0 4px 16px rgba(124, 92, 252, 0.35)",
                 }}
               >
                 Start Shopping
@@ -177,11 +190,11 @@ export function CartDrawer() {
               <div
                 key={item.id}
                 style={{
-                  background: "#ffffff",
-                  border: "1px solid #e2e8f0",
+                  background: "rgba(15, 20, 34, 0.7)",
+                  border: "1px solid rgba(255, 255, 255, 0.06)",
                   borderRadius: "14px",
-                  padding: "16px",
-                  boxShadow: "0 2px 8px rgba(0, 0, 0, 0.04)",
+                  padding: "14px",
+                  boxShadow: "0 4px 16px rgba(0, 0, 0, 0.4)",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "space-between",
@@ -198,17 +211,17 @@ export function CartDrawer() {
                       height: "74px",
                       borderRadius: "10px",
                       objectFit: "cover",
-                      backgroundColor: "#f1f5f9",
-                      border: "1px solid #e2e8f0",
+                      backgroundColor: "rgba(255, 255, 255, 0.03)",
+                      border: "1px solid rgba(255, 255, 255, 0.08)",
                       flexShrink: 0,
                     }}
                   />
                   <div style={{ minWidth: 0, flex: 1 }}>
                     <h4
                       style={{
-                        fontSize: "0.95rem",
+                        fontSize: "0.92rem",
                         fontWeight: 700,
-                        color: "#0f172a",
+                        color: "#E8ECFF",
                         margin: "0 0 3px 0",
                         whiteSpace: "nowrap",
                         overflow: "hidden",
@@ -219,8 +232,8 @@ export function CartDrawer() {
                     </h4>
                     <p
                       style={{
-                        fontSize: "0.78rem",
-                        color: "#64748b",
+                        fontSize: "0.75rem",
+                        color: "#6B79A0",
                         margin: "0 0 6px 0",
                       }}
                     >
@@ -229,9 +242,9 @@ export function CartDrawer() {
                     <div style={{ display: "flex", alignItems: "baseline", gap: "8px" }}>
                       <span
                         style={{
-                          fontSize: "1.05rem",
+                          fontSize: "1.02rem",
                           fontWeight: 800,
-                          color: "#e11d48",
+                          color: "#00D084",
                         }}
                       >
                         {formatPrice(item.unitPrice * item.quantity)}
@@ -239,8 +252,8 @@ export function CartDrawer() {
                       {item.product?.comparePrice && (
                         <span
                           style={{
-                            fontSize: "0.78rem",
-                            color: "#94a3b8",
+                            fontSize: "0.76rem",
+                            color: "#6B79A0",
                             textDecoration: "line-through",
                           }}
                         >
@@ -257,11 +270,11 @@ export function CartDrawer() {
                     style={{
                       display: "flex",
                       alignItems: "center",
-                      border: "1px solid #cbd5e1",
+                      border: "1px solid rgba(255, 255, 255, 0.08)",
                       borderRadius: "6px",
                       padding: "3px 8px",
                       gap: "10px",
-                      background: "#ffffff",
+                      background: "rgba(255, 255, 255, 0.04)",
                     }}
                   >
                     <button
@@ -269,7 +282,7 @@ export function CartDrawer() {
                       style={{
                         background: "none",
                         border: "none",
-                        color: "#0f172a",
+                        color: "#B0BAD8",
                         cursor: "pointer",
                         display: "flex",
                         alignItems: "center",
@@ -279,7 +292,7 @@ export function CartDrawer() {
                     >
                       <Minus size={13} />
                     </button>
-                    <span style={{ fontSize: "0.9rem", fontWeight: 700, color: "#0f172a", minWidth: "16px", textAlign: "center" }}>
+                    <span style={{ fontSize: "0.9rem", fontWeight: 700, color: "#E8ECFF", minWidth: "16px", textAlign: "center" }}>
                       {item.quantity}
                     </span>
                     <button
@@ -287,7 +300,7 @@ export function CartDrawer() {
                       style={{
                         background: "none",
                         border: "none",
-                        color: "#0f172a",
+                        color: "#B0BAD8",
                         cursor: "pointer",
                         display: "flex",
                         alignItems: "center",
@@ -304,10 +317,9 @@ export function CartDrawer() {
                     style={{
                       background: "none",
                       border: "none",
-                      color: "#e11d48",
-                      fontSize: "0.78rem",
+                      color: "#F7395A",
+                      fontSize: "0.76rem",
                       fontWeight: 600,
-                      textDecoration: "underline",
                       cursor: "pointer",
                       padding: "2px",
                     }}
@@ -325,34 +337,36 @@ export function CartDrawer() {
           <div
             style={{
               padding: "20px 24px",
-              background: "#ffffff",
-              borderTop: "1px solid #e2e8f0",
+              background: "rgba(15, 20, 34, 0.9)",
+              borderTop: "1px solid rgba(255, 255, 255, 0.06)",
               display: "flex",
               flexDirection: "column",
               gap: "16px",
             }}
           >
-            {/* TOTAL Card (Dark High-Contrast Box) */}
+            {/* TOTAL Card */}
             <div
               style={{
-                background: "#0f172a",
+                background: "linear-gradient(135deg, #131828 0%, #0A0D18 100%)",
+                border: "1px solid rgba(124, 92, 252, 0.2)",
                 borderRadius: "14px",
                 padding: "18px 22px",
                 color: "#ffffff",
+                boxShadow: "0 6px 24px rgba(0, 0, 0, 0.4)",
               }}
             >
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                <span style={{ fontSize: "1.1rem", fontWeight: 800, letterSpacing: "0.02em" }}>
+                <span style={{ fontSize: "1.05rem", fontWeight: 800, letterSpacing: "0.04em", color: "#B0BAD8" }}>
                   TOTAL
                 </span>
-                <span style={{ fontSize: "1.45rem", fontWeight: 900 }}>
+                <span style={{ fontSize: "1.45rem", fontWeight: 900, color: "#00D084" }}>
                   {formatPrice(grandTotal)}
                 </span>
               </div>
               <p
                 style={{
-                  fontSize: "0.74rem",
-                  color: "#94a3b8",
+                  fontSize: "0.72rem",
+                  color: "#6B79A0",
                   margin: "6px 0 0 0",
                   lineHeight: 1.4,
                 }}
@@ -372,11 +386,11 @@ export function CartDrawer() {
                   border: "none",
                   padding: "0",
                   textAlign: "left",
-                  fontSize: "0.82rem",
+                  fontSize: "0.8rem",
                   fontWeight: 700,
-                  color: "#0f172a",
+                  color: "#B0BAD8",
                   textTransform: "uppercase",
-                  letterSpacing: "0.05em",
+                  letterSpacing: "0.06em",
                   cursor: "pointer",
                   display: "flex",
                   alignItems: "center",
@@ -384,7 +398,7 @@ export function CartDrawer() {
                 }}
               >
                 <span>ORDER SPECIAL INSTRUCTIONS</span>
-                <span style={{ fontSize: "1.1rem", color: "#64748b" }}>{showInstructions ? "−" : "+"}</span>
+                <span style={{ fontSize: "1.1rem", color: "#6B79A0" }}>{showInstructions ? "−" : "+"}</span>
               </button>
 
               {showInstructions && (
@@ -398,9 +412,10 @@ export function CartDrawer() {
                     marginTop: "8px",
                     padding: "10px 12px",
                     borderRadius: "8px",
-                    border: "1px solid #cbd5e1",
+                    border: "1px solid rgba(255, 255, 255, 0.08)",
+                    background: "rgba(255, 255, 255, 0.04)",
                     fontSize: "0.82rem",
-                    color: "#0f172a",
+                    color: "#E8ECFF",
                     outline: "none",
                     fontFamily: "inherit",
                     resize: "none",
@@ -409,7 +424,7 @@ export function CartDrawer() {
               )}
             </div>
 
-            {/* Bottom Action Buttons (Checkout & View Cart) */}
+            {/* Bottom Action Buttons */}
             <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
               <Link
                 href="/checkout"
@@ -417,7 +432,7 @@ export function CartDrawer() {
                 style={{
                   flex: 1,
                   height: "46px",
-                  background: "#0f172a",
+                  background: "linear-gradient(135deg, #7C5CFC, #5A3ADA)",
                   color: "#ffffff",
                   borderRadius: "8px",
                   fontWeight: 700,
@@ -426,11 +441,9 @@ export function CartDrawer() {
                   alignItems: "center",
                   justifyContent: "center",
                   textDecoration: "none",
-                  transition: "background 0.2s ease, transform 0.1s ease",
-                  boxShadow: "0 4px 12px rgba(15, 23, 42, 0.2)",
+                  boxShadow: "0 4px 16px rgba(124, 92, 252, 0.35)",
+                  transition: "all 0.2s ease",
                 }}
-                onMouseEnter={e => { e.currentTarget.style.background = "#1e293b"; }}
-                onMouseLeave={e => { e.currentTarget.style.background = "#0f172a"; }}
               >
                 Checkout
               </Link>
@@ -441,9 +454,9 @@ export function CartDrawer() {
                 style={{
                   flex: 1,
                   height: "46px",
-                  background: "#ffffff",
-                  border: "1.5px solid #cbd5e1",
-                  color: "#0f172a",
+                  background: "rgba(255, 255, 255, 0.04)",
+                  border: "1.5px solid rgba(255, 255, 255, 0.08)",
+                  color: "#E8ECFF",
                   borderRadius: "8px",
                   fontWeight: 700,
                   fontSize: "0.92rem",
@@ -451,10 +464,8 @@ export function CartDrawer() {
                   alignItems: "center",
                   justifyContent: "center",
                   textDecoration: "none",
-                  transition: "background 0.2s ease, border-color 0.2s ease",
+                  transition: "all 0.2s ease",
                 }}
-                onMouseEnter={e => { e.currentTarget.style.background = "#f8fafc"; e.currentTarget.style.borderColor = "#94a3b8"; }}
-                onMouseLeave={e => { e.currentTarget.style.background = "#ffffff"; e.currentTarget.style.borderColor = "#cbd5e1"; }}
               >
                 View Cart
               </Link>

@@ -1,15 +1,15 @@
 /* =============================================================================
-   Shadcnblocks "Wishlist List with Sort and Share" Drawer
-   Aesthetic: Clean luxury off-white/white, sharp typography, precise layout
+   TATKA BAZAR — "OBSIDIAN EMPIRE" Wishlist Drawer
+   Ultra-Premium Dark Navy Drawer
    ============================================================================= */
 
 .drawerBackdrop {
   position: fixed;
   inset: 0;
   z-index: 9999;
-  background: rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   display: flex;
   justify-content: flex-end;
   animation: fadeIn 0.2s ease-out;
@@ -20,14 +20,17 @@
   width: 100%;
   max-width: 520px;
   height: 100%;
-  background: #ffffff;
-  color: #0f172a;
+  background: rgba(10, 13, 24, 0.98);
+  backdrop-filter: blur(32px) saturate(1.8);
+  -webkit-backdrop-filter: blur(32px) saturate(1.8);
+  color: #E8ECFF;
   display: flex;
   flex-direction: column;
-  box-shadow: -8px 0 32px rgba(0, 0, 0, 0.2);
+  box-shadow: -12px 0 48px rgba(0, 0, 0, 0.7);
+  border-left: 1px solid rgba(124, 92, 252, 0.15);
   z-index: 10000;
   animation: slideInRight 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-  font-family: var(--font-body, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif);
+  font-family: var(--font-body, 'Inter', system-ui, sans-serif);
 }
 
 @media (max-width: 640px) {
@@ -39,11 +42,11 @@
 /* ── HEADER ── */
 .drawerHeader {
   padding: 20px 24px;
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
   display: flex;
   flex-direction: column;
   gap: 12px;
-  background: #ffffff;
+  background: rgba(15, 20, 34, 0.6);
 }
 
 .headerTopRow {
@@ -56,23 +59,23 @@
   font-size: 1.35rem;
   font-weight: 800;
   letter-spacing: -0.02em;
-  color: #0f172a;
+  color: #E8ECFF;
   margin: 0;
 }
 
 .drawerSubtitle {
-  font-size: 0.85rem;
-  color: #64748b;
+  font-size: 0.82rem;
+  color: #6B79A0;
   margin: 2px 0 0 0;
 }
 
 .closeBtn {
-  background: #f1f5f9;
-  border: none;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   width: 34px;
   height: 34px;
   border-radius: 50%;
-  color: #475569;
+  color: #B0BAD8;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -81,8 +84,9 @@
 }
 
 .closeBtn:hover {
-  background: #e2e8f0;
-  color: #0f172a;
+  background: rgba(247, 57, 90, 0.15);
+  color: #F7395A;
+  border-color: rgba(247, 57, 90, 0.3);
 }
 
 .headerActionsRow {
@@ -99,9 +103,9 @@
   gap: 6px;
   padding: 6px 14px;
   border-radius: 8px;
-  border: 1px solid #e2e8f0;
-  background: #ffffff;
-  color: #334155;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.04);
+  color: #B0BAD8;
   font-size: 0.78rem;
   font-weight: 700;
   cursor: pointer;
@@ -109,17 +113,17 @@
 }
 
 .actionPillBtn:hover {
-  background: #f8fafc;
-  border-color: #cbd5e1;
-  color: #0f172a;
+  background: rgba(124, 92, 252, 0.12);
+  border-color: rgba(124, 92, 252, 0.3);
+  color: #E8ECFF;
 }
 
 .sortSelect {
   padding: 6px 12px;
   border-radius: 8px;
-  border: 1px solid #e2e8f0;
-  background: #ffffff;
-  color: #334155;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: #0F1422;
+  color: #B0BAD8;
   font-size: 0.78rem;
   font-weight: 700;
   cursor: pointer;
@@ -141,16 +145,17 @@
   align-items: center;
   gap: 16px;
   padding: 16px;
-  border: 1px solid #f1f5f9;
-  border-radius: 12px;
-  background: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 14px;
+  background: rgba(15, 20, 34, 0.6);
   transition: all 0.2s ease;
   position: relative;
 }
 
 .wishlistItemRow:hover {
-  border-color: #e2e8f0;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+  border-color: rgba(124, 92, 252, 0.25);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+  background: rgba(15, 20, 34, 0.85);
 }
 
 .itemThumbWrapper {
@@ -158,9 +163,9 @@
   height: 76px;
   border-radius: 10px;
   overflow: hidden;
-  background: #f8fafc;
+  background: rgba(255, 255, 255, 0.02);
   flex-shrink: 0;
-  border: 1px solid #f1f5f9;
+  border: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .itemThumbImg {
@@ -185,7 +190,7 @@
 .itemTitle {
   font-size: 0.92rem;
   font-weight: 700;
-  color: #0f172a;
+  color: #E8ECFF;
   text-decoration: none;
   line-height: 1.3;
   display: -webkit-box;
@@ -196,12 +201,12 @@
 }
 
 .itemTitle:hover {
-  color: #3056d3;
+  color: #7C5CFC;
 }
 
 .itemCategory {
   font-size: 0.75rem;
-  color: #64748b;
+  color: #6B79A0;
   font-weight: 500;
 }
 
@@ -215,12 +220,12 @@
 .currentPrice {
   font-size: 0.95rem;
   font-weight: 800;
-  color: #0f172a;
+  color: #E8ECFF;
 }
 
 .comparePrice {
   font-size: 0.78rem;
-  color: #94a3b8;
+  color: #6B79A0;
   text-decoration: line-through;
 }
 
@@ -228,8 +233,9 @@
   display: inline-block;
   font-size: 0.68rem;
   font-weight: 700;
-  color: #15803d;
-  background: #dcfce7;
+  color: #00D084;
+  background: rgba(0, 208, 132, 0.1);
+  border: 1px solid rgba(0, 208, 132, 0.25);
   padding: 1px 7px;
   border-radius: 4px;
 }
@@ -238,19 +244,19 @@
   display: inline-block;
   font-size: 0.68rem;
   font-weight: 700;
-  color: #b91c1c;
-  background: #fee2e2;
+  color: #F7395A;
+  background: rgba(247, 57, 90, 0.1);
+  border: 1px solid rgba(247, 57, 90, 0.25);
   padding: 1px 7px;
   border-radius: 4px;
 }
 
 .addedDate {
   font-size: 0.68rem;
-  color: #94a3b8;
+  color: #6B79A0;
   margin-top: 2px;
 }
 
-/* Right Side Actions for each item */
 .itemActionColumn {
   display: flex;
   flex-direction: column;
@@ -264,7 +270,7 @@
 .removeSingleBtn {
   background: none;
   border: none;
-  color: #94a3b8;
+  color: #6B79A0;
   cursor: pointer;
   padding: 4px;
   display: flex;
@@ -274,7 +280,7 @@
 }
 
 .removeSingleBtn:hover {
-  color: #ef4444;
+  color: #F7395A;
 }
 
 .addToCartPillBtn {
@@ -283,7 +289,7 @@
   gap: 6px;
   padding: 8px 14px;
   border-radius: 8px;
-  background: #0f172a;
+  background: linear-gradient(135deg, #7C5CFC, #5A3ADA);
   color: #ffffff;
   border: none;
   font-size: 0.78rem;
@@ -291,13 +297,12 @@
   cursor: pointer;
   white-space: nowrap;
   transition: all 0.15s ease;
-  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.15);
+  box-shadow: 0 2px 10px rgba(124, 92, 252, 0.35);
 }
 
 .addToCartPillBtn:hover {
-  background: #1e293b;
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.25);
+  box-shadow: 0 4px 16px rgba(124, 92, 252, 0.5);
 }
 
 .soldOutBtn {
@@ -306,9 +311,9 @@
   gap: 6px;
   padding: 8px 14px;
   border-radius: 8px;
-  background: #f1f5f9;
-  color: #94a3b8;
-  border: 1px solid #e2e8f0;
+  background: rgba(255, 255, 255, 0.04);
+  color: #6B79A0;
+  border: 1px solid rgba(255, 255, 255, 0.06);
   font-size: 0.78rem;
   font-weight: 700;
   cursor: not-allowed;
@@ -330,8 +335,9 @@
   width: 72px;
   height: 72px;
   border-radius: 50%;
-  background: #fef2f2;
-  color: #ef4444;
+  background: rgba(247, 57, 90, 0.1);
+  border: 1px solid rgba(247, 57, 90, 0.25);
+  color: #F7395A;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -341,13 +347,13 @@
 .emptyTitle {
   font-size: 1.15rem;
   font-weight: 800;
-  color: #0f172a;
+  color: #E8ECFF;
   margin: 0 0 6px 0;
 }
 
 .emptySubtitle {
   font-size: 0.85rem;
-  color: #64748b;
+  color: #6B79A0;
   max-width: 280px;
   line-height: 1.5;
   margin: 0 0 20px 0;
@@ -359,24 +365,25 @@
   gap: 8px;
   padding: 12px 24px;
   border-radius: 999px;
-  background: #0f172a;
+  background: linear-gradient(135deg, #7C5CFC, #5A3ADA);
   color: #ffffff;
   font-size: 0.88rem;
   font-weight: 700;
   text-decoration: none;
   transition: all 0.2s ease;
+  box-shadow: 0 4px 16px rgba(124, 92, 252, 0.35);
 }
 
 .emptyShopBtn:hover {
-  background: #1e293b;
   transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(124, 92, 252, 0.5);
 }
 
 /* ── FOOTER ── */
 .drawerFooter {
   padding: 18px 24px;
-  border-top: 1px solid #e2e8f0;
-  background: #f8fafc;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(15, 20, 34, 0.8);
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -386,8 +393,8 @@
   width: 100%;
   padding: 13px;
   border-radius: 10px;
-  background: #0f172a;
-  color: #ffffff;
+  background: linear-gradient(135deg, #00D084, #00965E);
+  color: #060811;
   border: none;
   font-size: 0.92rem;
   font-weight: 800;
@@ -397,12 +404,12 @@
   gap: 8px;
   cursor: pointer;
   transition: all 0.2s ease;
-  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.2);
+  box-shadow: 0 4px 14px rgba(0, 208, 132, 0.35);
 }
 
 .moveAllBtn:hover {
-  background: #1e293b;
   transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(0, 208, 132, 0.5);
 }
 
 .shareToast {
@@ -410,8 +417,9 @@
   top: 70px;
   left: 50%;
   transform: translateX(-50%);
-  background: #0f172a;
-  color: #ffffff;
+  background: #161C2E;
+  border: 1px solid rgba(124, 92, 252, 0.3);
+  color: #E8ECFF;
   padding: 8px 16px;
   border-radius: 999px;
   font-size: 0.8rem;
@@ -420,7 +428,7 @@
   align-items: center;
   gap: 6px;
   z-index: 10001;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
   animation: fadeIn 0.2s ease;
 }
 
