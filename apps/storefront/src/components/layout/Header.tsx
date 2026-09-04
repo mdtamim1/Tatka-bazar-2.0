@@ -194,12 +194,12 @@ export const Header = () => {
             {/* Order Track Button */}
             <Link
               href="/track"
-              className="p-2 sm:px-2.5 sm:py-1.5 hover:bg-accent transition-all duration-300 flex items-center gap-1.5 text-xs font-medium tracking-[0.05em] uppercase text-muted-foreground hover:text-foreground group border border-border/50 hover:border-border rounded-none"
+              className="px-2 py-0.5 sm:px-2.5 sm:py-1 hover:bg-accent/80 transition-all duration-300 flex items-center gap-1 text-[10.5px] font-medium tracking-wide uppercase text-muted-foreground hover:text-foreground group border border-border/60 hover:border-foreground/30 rounded-full"
               aria-label="Track Order"
               title={locale === "bn" ? "অর্ডার ট্র্যাক করুন" : "Track Order"}
             >
-              <Truck className="w-4 h-4 text-foreground transition-transform duration-300 group-hover:scale-110 shrink-0" />
-              <span className="font-sans font-semibold text-xs text-foreground hidden sm:inline whitespace-nowrap">
+              <Truck className="w-3.5 h-3.5 text-foreground transition-transform duration-300 group-hover:scale-110 shrink-0" />
+              <span className="font-sans font-medium text-[10.5px] text-foreground hidden sm:inline whitespace-nowrap">
                 {locale === "bn" ? "ট্র্যাক অর্ডার" : "Track Order"}
               </span>
             </Link>
