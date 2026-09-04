@@ -45,9 +45,9 @@ export async function login(email: string, password: string) {
 export async function registerRider(data: {
   name: string;
   phone: string;
-  email?: string;
+  email?: string | undefined;
   password: string;
-  vehicleType?: "BICYCLE" | "MOTORCYCLE" | "VAN";
+  vehicleType?: "BICYCLE" | "MOTORCYCLE" | "VAN" | undefined;
 }) {
   const res = await apiFetch<{ accessToken: string; user: RiderUser }>("/auth/rider/register", {
     method: "POST",

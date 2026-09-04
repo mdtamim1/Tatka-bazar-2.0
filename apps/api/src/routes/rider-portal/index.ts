@@ -1,7 +1,7 @@
 import type { FastifyInstance } from "fastify";
 import { prisma } from "@tatka-bazar/database";
 
-// Rider Portal Routes — all protected with JWT role:rider
+// Rider Portal Routes Â— all protected with JWT role:rider
 export async function riderPortalRoutes(fastify: FastifyInstance) {
 
   // Auth Middleware
@@ -59,11 +59,11 @@ export async function riderPortalRoutes(fastify: FastifyInstance) {
       const updated = await prisma.deliveryRider.update({
         where: { id: riderId },
         data: {
-          fatherName: body.fatherName, motherName: body.motherName,
-          dateOfBirth: body.dateOfBirth ? new Date(body.dateOfBirth) : undefined,
-          presentAddress: body.presentAddress, permanentAddress: body.permanentAddress,
-          nidNumber: body.nidNumber, nidFrontUrl: body.nidFrontUrl,
-          nidBackUrl: body.nidBackUrl, photoUrl: body.photoUrl,
+          fatherName: body.fatherName ?? null, motherName: body.motherName ?? null,
+          dateOfBirth: body.dateOfBirth ? new Date(body.dateOfBirth) : null,
+          presentAddress: body.presentAddress ?? null, permanentAddress: body.permanentAddress ?? null,
+          nidNumber: body.nidNumber ?? null, nidFrontUrl: body.nidFrontUrl ?? null,
+          nidBackUrl: body.nidBackUrl ?? null, photoUrl: body.photoUrl ?? null,
           kycStatus: "SUBMITTED", kycSubmittedAt: new Date(),
         },
         select: { id: true, kycStatus: true, kycSubmittedAt: true },
@@ -104,7 +104,7 @@ export async function riderPortalRoutes(fastify: FastifyInstance) {
     }
   });
 
-  // GET /rider-portal/tasks — available orders
+  // GET /rider-portal/tasks Â— available orders
   fastify.get("/tasks", async (_request, reply) => {
     try {
       const orders = await prisma.order.findMany({
@@ -214,7 +214,7 @@ export async function riderPortalRoutes(fastify: FastifyInstance) {
         }),
         prisma.riderEarning.create({
           data: { riderId, orderId: assignment.orderId, amount: earning,
-            description: `???????? ??????? — ?????? #${assignment.order.orderNumber}`, type: "DELIVERY" },
+            description: `???????? ??????? Â— ?????? #${assignment.order.orderNumber}`, type: "DELIVERY" },
         }),
       ]);
       return reply.send({ success: true, data: { earning, earningRecord } });
@@ -247,7 +247,7 @@ export async function riderPortalRoutes(fastify: FastifyInstance) {
       const merged = [
         ...earnings.map(e => ({ id: e.id, type: "income" as const, amount: e.amount, description: e.description, createdAt: e.createdAt })),
         ...withdrawals.map(w => ({ id: w.id, type: "withdrawal" as const, amount: w.amount,
-          description: `?????? — ${w.paymentMethod} (${w.paymentAccount})`, status: w.status, createdAt: w.createdAt })),
+          description: `?????? Â— ${w.paymentMethod} (${w.paymentAccount})`, status: w.status, createdAt: w.createdAt })),
       ].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
       return reply.send({ success: true, data: merged });
@@ -296,7 +296,7 @@ export async function riderPortalRoutes(fastify: FastifyInstance) {
     }
   });
 
-  // GET /rider-portal/tasks/stream — SSE real-time
+  // GET /rider-portal/tasks/stream Â— SSE real-time
   fastify.get("/tasks/stream", async (request, reply) => {
     reply.raw.setHeader("Content-Type", "text/event-stream");
     reply.raw.setHeader("Cache-Control", "no-cache");
@@ -313,4 +313,4 @@ export async function riderPortalRoutes(fastify: FastifyInstance) {
     }, 10000);
     request.raw.on("close", () => { clearInterval(interval); reply.raw.end(); });
   });
-}
+}

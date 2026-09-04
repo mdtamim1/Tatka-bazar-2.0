@@ -121,7 +121,7 @@ export async function riderRoutes(fastify: FastifyInstance) {
     const query = request.query as { status?: string };
     try {
       const withdrawals = await prisma.riderWithdrawal.findMany({
-        where: query.status && query.status !== "all" ? { status: query.status as any } : undefined,
+        where: query.status && query.status !== "all" ? { status: query.status as any } : {},
         include: { rider: { select: { id: true, name: true, phone: true } } },
         orderBy: { createdAt: "desc" },
         take: 100,
@@ -153,8 +153,8 @@ export async function riderRoutes(fastify: FastifyInstance) {
           where: { id },
           data: {
             status: body.status,
-            processedAt: body.status === "COMPLETED" ? new Date() : undefined,
-            adminNote: body.adminNote,
+            processedAt: body.status === "COMPLETED" ? new Date() : null,
+            adminNote: body.adminNote ?? null,
           },
         });
         // Deduct from rider balance on completion
@@ -197,7 +197,7 @@ export async function riderRoutes(fastify: FastifyInstance) {
       // Deactivate old rates
       await prisma.deliveryRate.updateMany({ where: { isActive: true }, data: { isActive: false } });
       const rate = await prisma.deliveryRate.create({
-        data: { amount: body.amount, note: body.note, isActive: true },
+        data: { amount: body.amount, note: body.note ?? null, isActive: true },
       });
       return reply.status(201).send({ success: true, data: rate });
     } catch (err: any) {

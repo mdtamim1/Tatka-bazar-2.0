@@ -34,13 +34,22 @@ export default function RegisterPage() {
     setError("");
 
     try {
-      const res = await registerRider({
+      const payload: {
+        name: string;
+        phone: string;
+        password: string;
+        email?: string;
+        vehicleType?: "BICYCLE" | "MOTORCYCLE" | "VAN";
+      } = {
         name: name.trim(),
         phone: phone.trim(),
-        email: email.trim() || undefined,
         password,
         vehicleType,
-      });
+      };
+      if (email.trim().length > 0) {
+        payload.email = email.trim();
+      }
+      const res = await registerRider(payload);
 
       if (res.success) {
         router.replace("/profile?registered=1");
