@@ -3,8 +3,13 @@ import React, { useEffect, useState } from "react";
 import { apiFetch, type HistoryItem } from "@/lib/api";
 
 function fmt(date: string) {
-  const d = new Date(date);
-  return d.toLocaleDateString("bn-BD", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
+  try {
+    const d = new Date(date);
+    if (isNaN(d.getTime())) return "";
+    return d.toLocaleDateString("bn-BD", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
+  } catch {
+    return date || "";
+  }
 }
 
 export default function HistoryPage() {
@@ -16,13 +21,23 @@ export default function HistoryPage() {
     setLoading(true);
     apiFetch<HistoryItem[]>(`/rider-portal/history?type=${filter}&limit=50`)
       .then(r => {
-        if (r.success && r.data) setItems(r.data as HistoryItem[]);
+        if (r.success && Array.isArray(r.data)) {
+          setItems(r.data);
+        } else {
+          setItems([]);
+        }
+      })
+      .catch(() => {
+        setItems([]);
+      })
+      .finally(() => {
         setLoading(false);
       });
   }, [filter]);
 
-  const totalIncome = items.filter(i => i.type === "income").reduce((s, i) => s + Number(i.amount), 0);
-  const totalWithdraw = items.filter(i => i.type === "withdrawal").reduce((s, i) => s + Number(i.amount), 0);
+  const safeItems = Array.isArray(items) ? items : [];
+  const totalIncome = safeItems.filter(i => i.type === "income").reduce((s, i) => s + Number(i.amount || 0), 0);
+  const totalWithdraw = safeItems.filter(i => i.type === "withdrawal").reduce((s, i) => s + Number(i.amount || 0), 0);
 
   return (
     <div className="page-content">
@@ -48,7 +63,7 @@ export default function HistoryPage() {
 
       {loading ? (
         <div className="loading-center"><div className="spinner" /></div>
-      ) : items.length === 0 ? (
+      ) : safeItems.length === 0 ? (
         <div className="empty-state">
           <div className="empty-state-icon">📋</div>
           <div className="empty-state-title">কোন রেকর্ড নেই</div>
@@ -56,7 +71,7 @@ export default function HistoryPage() {
         </div>
       ) : (
         <div className="history-list">
-          {items.map((item, i) => (
+          {safeItems.map((item, i) => (
             <div key={item.id} className="history-item" style={{ animationDelay: `${i * 0.05}s` }}>
               <div className={`history-item-icon ${item.type}`}>
                 {item.type === "income" ? "✅" : "💸"}
@@ -67,7 +82,7 @@ export default function HistoryPage() {
                 {item.status && <span className={`badge badge-${item.status.toLowerCase()}`}>{item.status === "PENDING" ? "অপেক্ষারত" : item.status === "COMPLETED" ? "সম্পন্ন" : item.status === "REJECTED" ? "বাতিল" : item.status}</span>}
               </div>
               <div className={`history-item-amount ${item.type}`}>
-                {item.type === "income" ? "+" : "−"}৳ {Number(item.amount).toLocaleString()}
+                {item.type === "income" ? "+" : "−"}৳ {Number(item.amount || 0).toLocaleString()}
               </div>
             </div>
           ))}

@@ -11,13 +11,20 @@ export default function TasksPage() {
   const [accepting, setAccepting] = useState<string | null>(null);
 
   const fetchData = useCallback(async () => {
-    const [t, a] = await Promise.all([
-      apiFetch<Task[]>("/rider-portal/tasks"),
-      apiFetch<ActiveTask[]>("/rider-portal/tasks/active"),
-    ]);
-    if (t.success && t.data) setTasks(t.data as Task[]);
-    if (a.success && a.data) setActive(a.data as ActiveTask[]);
-    setLoading(false);
+    try {
+      const [t, a] = await Promise.all([
+        apiFetch<Task[]>("/rider-portal/tasks"),
+        apiFetch<ActiveTask[]>("/rider-portal/tasks/active"),
+      ]);
+      if (t.success && Array.isArray(t.data)) setTasks(t.data);
+      else if (t.success && !t.data) setTasks([]);
+      if (a.success && Array.isArray(a.data)) setActive(a.data);
+      else if (a.success && !a.data) setActive([]);
+    } catch {
+      // keep current state
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
   useEffect(() => {

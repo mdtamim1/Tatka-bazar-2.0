@@ -107,9 +107,12 @@ function setLocalStore(key: string, val: any) {
 
 function handleMockFallback<T>(path: string, options: RequestInit): { success: boolean; data?: T; error?: string } {
   const method = (options.method || "GET").toUpperCase();
+  const cleanPath = path.split("?")[0] || "";
+  const queryString = path.includes("?") ? (path.split("?")[1] || "") : "";
+  const params = new URLSearchParams(queryString);
 
   // 1. Login
-  if (path === "/auth/rider/login" && method === "POST") {
+  if (cleanPath === "/auth/rider/login" && method === "POST") {
     let body: any = {};
     try { body = JSON.parse(options.body as string); } catch {}
     const identifier = body.email || body.phone || "01700000001";
@@ -126,7 +129,7 @@ function handleMockFallback<T>(path: string, options: RequestInit): { success: b
   }
 
   // 2. Register
-  if (path === "/auth/rider/register" && method === "POST") {
+  if (cleanPath === "/auth/rider/register" && method === "POST") {
     let body: any = {};
     try { body = JSON.parse(options.body as string); } catch {}
     const user: RiderUser = {
@@ -142,7 +145,7 @@ function handleMockFallback<T>(path: string, options: RequestInit): { success: b
   }
 
   // 3. Balance
-  if (path === "/rider-portal/balance") {
+  if (cleanPath === "/rider-portal/balance") {
     const profile = getLocalStore("profile", DEFAULT_PROFILE);
     return {
       success: true,
@@ -157,20 +160,20 @@ function handleMockFallback<T>(path: string, options: RequestInit): { success: b
   }
 
   // 4. Available Tasks
-  if (path === "/rider-portal/tasks" && method === "GET") {
+  if (cleanPath === "/rider-portal/tasks" && method === "GET") {
     const tasks = getLocalStore("available_tasks", SAMPLE_AVAILABLE_TASKS);
     return { success: true, data: tasks as any };
   }
 
   // 5. Active Tasks
-  if (path === "/rider-portal/tasks/active") {
+  if (cleanPath === "/rider-portal/tasks/active") {
     const activeTasks = getLocalStore<ActiveTask[]>("active_tasks", []);
     return { success: true, data: activeTasks as any };
   }
 
   // 6. Single Task Detail
-  if (path.startsWith("/rider-portal/tasks/") && !path.includes("/accept") && !path.includes("/pickup") && !path.includes("/deliver")) {
-    const taskId = path.split("/").pop();
+  if (cleanPath.startsWith("/rider-portal/tasks/") && !cleanPath.includes("/accept") && !cleanPath.includes("/pickup") && !cleanPath.includes("/deliver")) {
+    const taskId = cleanPath.split("/").pop();
     const available = getLocalStore("available_tasks", SAMPLE_AVAILABLE_TASKS);
     const task = available.find((t) => t.id === taskId) || SAMPLE_AVAILABLE_TASKS[0];
     return {
@@ -194,8 +197,8 @@ function handleMockFallback<T>(path: string, options: RequestInit): { success: b
   }
 
   // 7. Accept Task
-  if (path.includes("/accept") && method === "POST") {
-    const taskId = path.split("/")[3];
+  if (cleanPath.includes("/accept") && method === "POST") {
+    const taskId = cleanPath.split("/")[3];
     const available = getLocalStore("available_tasks", SAMPLE_AVAILABLE_TASKS);
     const accepted = available.find((t) => t.id === taskId) || SAMPLE_AVAILABLE_TASKS[0];
     if (accepted) {
@@ -227,24 +230,25 @@ function handleMockFallback<T>(path: string, options: RequestInit): { success: b
   }
 
   // 8. Pickup / Deliver Task
-  if ((path.includes("/pickup") || path.includes("/deliver")) && method === "POST") {
-    const isDeliver = path.includes("/deliver");
+  if ((cleanPath.includes("/pickup") || cleanPath.includes("/deliver")) && method === "POST") {
+    const isDeliver = cleanPath.includes("/deliver");
     const active = getLocalStore<ActiveTask[]>("active_tasks", []);
+    let earned = 80;
     if (isDeliver && active.length > 0) {
       const done = active.shift();
       setLocalStore("active_tasks", active);
       // update profile balance
       const profile = getLocalStore("profile", DEFAULT_PROFILE);
-      const earned = done?.order.earnings || 80;
+      earned = done?.order.earnings || 80;
       profile.balance += earned;
       profile.totalEarned += earned;
       setLocalStore("profile", profile);
     }
-    return { success: true, data: { message: "Status updated" } as any };
+    return { success: true, data: { earning: earned, message: "Status updated" } as any };
   }
 
   // 9. Profile / Me
-  if (path === "/rider-portal/me" && method === "GET") {
+  if (cleanPath === "/rider-portal/me" && method === "GET") {
     const profile = getLocalStore("profile", DEFAULT_PROFILE);
     const user = getLocalStore<RiderUser>("user", DEFAULT_USER);
     profile.name = user.name || profile.name;
@@ -254,7 +258,7 @@ function handleMockFallback<T>(path: string, options: RequestInit): { success: b
   }
 
   // 10. KYC Submit
-  if (path === "/rider-portal/kyc" && method === "POST") {
+  if (cleanPath === "/rider-portal/kyc" && method === "POST") {
     let body: any = {};
     try { body = JSON.parse(options.body as string); } catch {}
     const profile = getLocalStore("profile", DEFAULT_PROFILE);
@@ -264,7 +268,7 @@ function handleMockFallback<T>(path: string, options: RequestInit): { success: b
   }
 
   // 11. Payment Account
-  if (path === "/rider-portal/payment-account" && method === "POST") {
+  if (cleanPath === "/rider-portal/payment-account" && method === "POST") {
     let body: any = {};
     try { body = JSON.parse(options.body as string); } catch {}
     const profile = getLocalStore("profile", DEFAULT_PROFILE);
@@ -276,18 +280,20 @@ function handleMockFallback<T>(path: string, options: RequestInit): { success: b
   }
 
   // 12. History
-  if (path === "/rider-portal/history") {
-    const history: HistoryItem[] = [
+  if (cleanPath === "/rider-portal/history") {
+    const filterType = params.get("type") || "all";
+    const allHistory: HistoryItem[] = [
       { id: "h-1", type: "income", amount: 80, description: "অর্ডার #TB-8940 সফল ডেলিভারি", createdAt: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString() },
       { id: "h-2", type: "income", amount: 110, description: "অর্ডার #TB-8935 সফল ডেলিভারি", createdAt: new Date(Date.now() - 1000 * 60 * 60 * 5).toISOString() },
       { id: "h-3", type: "withdrawal", amount: 1000, description: "bKash উইথড্রয়াল সম্পন্ন", status: "COMPLETED", createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString() },
       { id: "h-4", type: "income", amount: 95, description: "অর্ডার #TB-8921 সফল ডেলিভারি", createdAt: new Date(Date.now() - 1000 * 60 * 60 * 28).toISOString() },
     ];
-    return { success: true, data: history as any };
+    const filtered = filterType === "all" ? allHistory : allHistory.filter((h) => h.type === filterType);
+    return { success: true, data: filtered as any };
   }
 
   // 13. Withdraw Request
-  if (path === "/rider-portal/withdraw" && method === "POST") {
+  if (cleanPath === "/rider-portal/withdraw" && method === "POST") {
     let body: any = {};
     try { body = JSON.parse(options.body as string); } catch {}
     const profile = getLocalStore("profile", DEFAULT_PROFILE);
@@ -297,6 +303,10 @@ function handleMockFallback<T>(path: string, options: RequestInit): { success: b
       setLocalStore("profile", profile);
     }
     return { success: true, data: { message: "উইথড্রয়াল রিকোয়েস্ট জমা হয়েছে" } as any };
+  }
+
+  if (cleanPath.includes("tasks") || cleanPath.includes("history")) {
+    return { success: true, data: [] as any };
   }
 
   return { success: true, data: {} as any };
