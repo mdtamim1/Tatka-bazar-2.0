@@ -49,9 +49,10 @@ model AdminUser {
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 
-  auditLogs    AuditLog[]
-  vendorApprovals Vendor[] @relation("ApprovedBy")
+  auditLogs       AuditLog[]
+  vendorApprovals Vendor[]        @relation("ApprovedBy")
   riderApprovals  DeliveryRider[] @relation("ApprovedBy")
+  riderKycApprovals DeliveryRider[] @relation("RiderKycApproval")
 
   @@index([email])
   @@map("admin_users")
@@ -91,26 +92,53 @@ model Vendor {
 }
 
 model DeliveryRider {
-  id             String      @id @default(uuid())
-  email          String      @unique
-  phone          String      @unique
-  name           String
-  passwordHash   String
-  vehicleType    VehicleType @default(BICYCLE)
-  vehicleNumber  String?
-  nidNumber      String?
-  status         RiderStatus @default(OFFLINE)
-  isActive       Boolean     @default(true)
-  approvedById   String?
-  approvedAt     DateTime?
-  createdAt      DateTime    @default(now())
-  updatedAt      DateTime    @updatedAt
+  id               String              @id @default(uuid())
+  email            String              @unique
+  phone            String              @unique
+  name             String
+  passwordHash     String
+  vehicleType      VehicleType         @default(BICYCLE)
+  vehicleNumber    String?
+  nidNumber        String?
+  status           RiderStatus         @default(OFFLINE)
+  isActive         Boolean             @default(true)
+  approvedById     String?
+  approvedAt       DateTime?
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
 
-  approvedBy     AdminUser?  @relation("ApprovedBy", fields: [approvedById], references: [id])
-  assignments    DeliveryAssignment[]
+  // KYC Extended Fields
+  fatherName       String?
+  motherName       String?
+  dateOfBirth      DateTime?
+  presentAddress   String?
+  permanentAddress String?
+  nidFrontUrl      String?
+  nidBackUrl       String?
+  photoUrl         String?
+  kycStatus        KycStatus           @default(PENDING)
+  kycSubmittedAt   DateTime?
+  kycApprovedAt    DateTime?
+  kycApprovedById  String?
+
+  // Balance & Earnings
+  balance          Decimal             @default(0) @db.Decimal(10, 2)
+  totalEarned      Decimal             @default(0) @db.Decimal(10, 2)
+
+  // Payment Account (locked after first submit)
+  paymentMethod    PaymentAccountType?
+  paymentAccount   String?
+  paymentAccountLocked Boolean         @default(false)
+
+  approvedBy       AdminUser?          @relation("ApprovedBy", fields: [approvedById], references: [id])
+  kycApprovedBy    AdminUser?          @relation("RiderKycApproval", fields: [kycApprovedById], references: [id])
+  assignments      DeliveryAssignment[]
+  earningHistory   RiderEarning[]
+  withdrawRequests RiderWithdrawal[]
 
   @@index([email])
   @@index([status])
+  @@index([kycStatus])
   @@map("delivery_riders")
 }
 
@@ -276,6 +304,7 @@ model Order {
   deliveryAssignment DeliveryAssignment?
   commissions     Commission[]
   invoice         Invoice?
+  riderEarnings   RiderEarning[]
 
   @@index([userId])
   @@index([status])
@@ -367,6 +396,60 @@ model VendorPayout {
 }
 
 // =============================================================================
+// RIDER PORTAL — EARNINGS, WITHDRAWALS, RATES
+// =============================================================================
+
+model RiderEarning {
+  id          String        @id @default(uuid())
+  riderId     String
+  orderId     String?
+  amount      Decimal       @db.Decimal(10, 2)
+  description String?
+  type        EarningType   @default(DELIVERY)
+  createdAt   DateTime      @default(now())
+
+  rider       DeliveryRider @relation(fields: [riderId], references: [id])
+  order       Order?        @relation(fields: [orderId], references: [id])
+
+  @@index([riderId])
+  @@index([riderId, createdAt(sort: Desc)])
+  @@map("rider_earnings")
+}
+
+model RiderWithdrawal {
+  id             String             @id @default(uuid())
+  riderId        String
+  amount         Decimal            @db.Decimal(10, 2)
+  paymentMethod  PaymentAccountType
+  paymentAccount String
+  status         WithdrawalStatus   @default(PENDING)
+  adminNote      String?
+  processedById  String?
+  processedAt    DateTime?
+  proofUrl       String?
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+
+  rider          DeliveryRider      @relation(fields: [riderId], references: [id])
+
+  @@index([riderId])
+  @@index([status])
+  @@map("rider_withdrawals")
+}
+
+model DeliveryRate {
+  id        String   @id @default(uuid())
+  amount    Decimal  @db.Decimal(10, 2)
+  note      String?
+  isActive  Boolean  @default(true)
+  setById   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("delivery_rates")
+}
+
+// =============================================================================
 // DELIVERY
 // =============================================================================
 
@@ -423,6 +506,7 @@ model DeliveryAssignment {
   @@index([status])
   @@map("delivery_assignments")
 }
+
 
 // =============================================================================
 // B2B & ENTERPRISE
@@ -612,6 +696,32 @@ enum AssignmentStatus {
   PICKED_UP
   DELIVERED
   CANCELLED
+}
+
+enum KycStatus {
+  PENDING
+  SUBMITTED
+  APPROVED
+  REJECTED
+}
+
+enum EarningType {
+  DELIVERY
+  BONUS
+  ADJUSTMENT
+}
+
+enum WithdrawalStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  REJECTED
+}
+
+enum PaymentAccountType {
+  BKASH
+  NAGAD
+  BANK
 }
 
 enum NotificationType {

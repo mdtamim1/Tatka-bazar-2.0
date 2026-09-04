@@ -10,12 +10,12 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: {
-    default: "Tatka Bazar — Considered Living & Premium Fresh Harvest",
+    default: "Tatka Bazar — Bangladesh's Premium Fresh Marketplace",
     template: "%s | Tatka Bazar",
   },
   description:
-    "Curated organic farm produce, authentic Padma Hilsa, seasonal artisan provisions, and pantry staples. Considered living, delivered with intention across Bangladesh.",
-  keywords: ["online grocery", "Bangladeshi artisan food", "Padma Ilish", "organic vegetables", "Tatka Bazar", "Dhaka delivery"],
+    "Shop daily fresh Padma Hilsa, farm organic vegetables, premium Kataribhog rice and pure groceries. 60-minute express delivery across Bangladesh.",
+  keywords: ["online grocery", "Bangladeshi bazar", "Padma Ilish", "organic vegetables", "Tatka Bazar", "Dhaka delivery", "Recipe to Cart"],
   openGraph: {
     siteName: "Tatka Bazar",
     locale: "en_US",
@@ -29,18 +29,20 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className="scroll-smooth">
+    <html lang="en">
       <head>
         <OrganizationJsonLd />
       </head>
-      <body className="bg-background text-foreground font-sans antialiased min-h-screen flex flex-col selection:bg-terracotta/20">
+      <body>
         <LanguageProvider>
-          <Header />
-          <main className="flex-1 w-full">{children}</main>
-          <CartDrawer />
-          <WishlistDrawer />
-          <Footer />
-          <LiveSupportWidget />
+          <div style={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
+            <Header />
+            <div style={{ flex: 1 }}>{children}</div>
+            <CartDrawer />
+            <WishlistDrawer />
+            <Footer />
+            <LiveSupportWidget />
+          </div>
         </LanguageProvider>
       </body>
     </html>

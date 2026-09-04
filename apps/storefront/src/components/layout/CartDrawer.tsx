@@ -2,12 +2,9 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { X, Trash2, ShoppingBag, ArrowRight, Tag } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { X, Plus, Minus, ShoppingBag } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 import { useCartStore } from "@/lib/cart-store";
-import { QuantitySelector } from "@/components/ui/QuantitySelector";
-import { Button } from "@/components/ui/button";
 
 export function CartDrawer() {
   const { locale, formatPrice } = useLanguage();
@@ -15,253 +12,467 @@ export function CartDrawer() {
     items,
     isOpen,
     closeCart,
-    clearBuyNowItem,
     updateQuantity,
     removeItem,
-    appliedCoupon,
-    applyCoupon,
-    removeCoupon,
-    getSubtotal,
-    getDiscountAmount,
-    getDeliveryFee,
     getGrandTotal,
   } = useCartStore();
 
-  const [couponInput, setCouponInput] = useState("");
-  const [couponError, setCouponError] = useState("");
+  const [orderInstructions, setOrderInstructions] = useState("");
+  const [showInstructions, setShowInstructions] = useState(false);
 
   if (!isOpen) return null;
 
-  const subtotal = getSubtotal();
-  const discount = getDiscountAmount();
-  const deliveryFee = getDeliveryFee();
   const grandTotal = getGrandTotal();
 
-  const handleApplyCoupon = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!couponInput.trim()) return;
-    const res = applyCoupon(couponInput.trim());
-    if (!res.success) {
-      setCouponError(res.message);
-    } else {
-      setCouponError("");
-      setCouponInput("");
-    }
-  };
-
   return (
-    <div className="fixed inset-0 z-50 flex justify-end">
+    <div
+      style={{
+        position: "fixed",
+        inset: 0,
+        zIndex: 9999,
+        display: "flex",
+        justifyContent: "flex-end",
+        animation: "fadeIn 0.2s ease-out",
+      }}
+    >
       {/* Backdrop */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
+      <div
         onClick={closeCart}
-        className="fixed inset-0 bg-charcoal/50 backdrop-blur-sm"
+        style={{
+          position: "absolute",
+          inset: 0,
+          background: "rgba(0, 0, 0, 0.75)",
+          backdropFilter: "blur(8px)",
+          WebkitBackdropFilter: "blur(8px)",
+        }}
       />
 
-      {/* Slide-out Drawer */}
-      <motion.div
-        initial={{ x: "100%" }}
-        animate={{ x: 0 }}
-        exit={{ x: "100%" }}
-        transition={{ type: "spring", damping: 25, stiffness: 200 }}
-        className="relative w-full max-w-md h-full bg-background border-l border-border shadow-2xl flex flex-col z-10"
+      {/* Drawer Container */}
+      <div
+        style={{
+          position: "relative",
+          width: "100%",
+          maxWidth: "460px",
+          height: "100%",
+          background: "rgba(10, 13, 24, 0.98)",
+          backdropFilter: "blur(32px) saturate(1.8)",
+          WebkitBackdropFilter: "blur(32px) saturate(1.8)",
+          color: "#E8ECFF",
+          display: "flex",
+          flexDirection: "column",
+          boxShadow: "-12px 0 48px rgba(0, 0, 0, 0.7)",
+          borderLeft: "1px solid rgba(124, 92, 252, 0.15)",
+          zIndex: 10000,
+          animation: "slideInRight 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
+          fontFamily: "var(--font-body, 'Inter', system-ui, sans-serif)",
+        }}
       >
-        {/* Header */}
-        <div className="p-6 border-b border-border flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <h2 className="font-serif text-2xl tracking-tight text-foreground">
-              {locale === "bn" ? "আপনার শপিং ব্যাগ" : "Shopping Bag"}
-            </h2>
-            <span className="text-xs text-muted-foreground">
-              ({items.reduce((acc, it) => acc + it.quantity, 0)})
-            </span>
-          </div>
+        {/* ── Header ── */}
+        <div
+          style={{
+            padding: "20px 24px",
+            borderBottom: "1px solid rgba(255, 255, 255, 0.06)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            background: "rgba(15, 20, 34, 0.6)",
+          }}
+        >
+          <h2
+            style={{
+              fontSize: "1.35rem",
+              fontWeight: 800,
+              color: "#E8ECFF",
+              letterSpacing: "-0.02em",
+              margin: 0,
+            }}
+          >
+            Shopping Cart
+          </h2>
 
           <button
-            type="button"
             onClick={closeCart}
-            className="p-2 hover:bg-accent transition-colors text-muted-foreground hover:text-foreground"
-            aria-label="Close cart"
+            aria-label="Close Cart"
+            style={{
+              width: "32px",
+              height: "32px",
+              borderRadius: "8px",
+              background: "rgba(255, 255, 255, 0.06)",
+              border: "1px solid rgba(255, 255, 255, 0.08)",
+              color: "#B0BAD8",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              cursor: "pointer",
+              transition: "all 0.15s ease",
+            }}
+            onMouseEnter={e => {
+              e.currentTarget.style.background = "rgba(247, 57, 90, 0.15)";
+              e.currentTarget.style.color = "#F7395A";
+              e.currentTarget.style.borderColor = "rgba(247, 57, 90, 0.3)";
+            }}
+            onMouseLeave={e => {
+              e.currentTarget.style.background = "rgba(255, 255, 255, 0.06)";
+              e.currentTarget.style.color = "#B0BAD8";
+              e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.08)";
+            }}
           >
-            <X className="w-5 h-5" />
+            <X size={16} />
           </button>
         </div>
 
-        {/* Cart Body */}
-        {items.length === 0 ? (
-          <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
-            <ShoppingBag className="w-16 h-16 text-muted-foreground/30 mb-4" />
-            <h3 className="font-serif text-2xl text-foreground mb-2">
-              {locale === "bn" ? "আপনার ব্যাগ খালি" : "Your Bag is Empty"}
-            </h3>
-            <p className="text-sm text-muted-foreground max-w-xs mb-8">
-              {locale === "bn"
-                ? "আমাদের সতেজ প্রাকৃতিক পণ্যের সংগ্রহ থেকে পছন্দমতো পণ্য যোগ করুন।"
-                : "Discover our curated collection of farm fresh goods and considered pantry staples."}
-            </p>
-            <Button
-              asChild
-              onClick={closeCart}
-              className="btn-premium rounded-none px-8 py-4 text-xs tracking-[0.15em] uppercase"
+        {/* ── Items List ── */}
+        <div
+          style={{
+            flex: 1,
+            overflowY: "auto",
+            padding: "20px 24px",
+            display: "flex",
+            flexDirection: "column",
+            gap: "14px",
+            background: "transparent",
+          }}
+        >
+          {items.length === 0 ? (
+            <div
+              style={{
+                textAlign: "center",
+                padding: "60px 16px",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                height: "100%",
+                color: "#6B79A0",
+              }}
             >
-              <Link href="/shop">
-                {locale === "bn" ? "কেনাকাটা শুরু করুন" : "Start Shopping"}
-                <ArrowRight className="ml-2 w-4 h-4" />
-              </Link>
-            </Button>
-          </div>
-        ) : (
-          <>
-            {/* Scrollable Items List */}
-            <div className="flex-1 overflow-y-auto divide-y divide-border p-6">
-              {items.map((item) => (
-                <div key={item.id} className="py-4 first:pt-0 last:pb-0 flex gap-4">
-                  {/* Thumbnail */}
-                  <Link
-                    href={`/product/${item.product.slug}`}
-                    onClick={closeCart}
-                    className="w-20 h-24 bg-muted flex-shrink-0 overflow-hidden group"
-                  >
-                    <img
-                      src={item.product.images[0]}
-                      alt={item.product.nameEn}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    />
-                  </Link>
-
-                  {/* Details */}
-                  <div className="flex-1 flex flex-col justify-between">
-                    <div>
-                      <div className="flex justify-between items-start gap-2">
-                        <Link
-                          href={`/product/${item.product.slug}`}
-                          onClick={closeCart}
-                          className="font-serif text-base text-foreground hover:text-primary transition-colors line-clamp-1"
-                        >
-                          {locale === "bn" ? item.product.nameBn : item.product.nameEn}
-                        </Link>
-                        <button
-                          type="button"
-                          onClick={() => removeItem(item.id)}
-                          className="text-muted-foreground hover:text-destructive p-1 transition-colors"
-                          aria-label="Remove item"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-
-                      <p className="text-xs text-muted-foreground mt-0.5">
-                        {item.selectedWeight} {item.selectedUnit}
-                      </p>
-                    </div>
-
-                    <div className="flex items-center justify-between mt-3">
-                      <QuantitySelector
-                        quantity={item.quantity}
-                        onQuantityChange={(qty) => updateQuantity(item.id, qty)}
-                        min={1}
-                        max={99}
-                      />
-                      <span className="font-serif text-base text-foreground font-medium">
+              <div
+                style={{
+                  width: "64px",
+                  height: "64px",
+                  borderRadius: "50%",
+                  background: "rgba(124, 92, 252, 0.1)",
+                  border: "1px solid rgba(124, 92, 252, 0.2)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  marginBottom: "16px",
+                  color: "#7C5CFC",
+                }}
+              >
+                <ShoppingBag size={28} />
+              </div>
+              <h3 style={{ fontSize: "1.1rem", fontWeight: 700, color: "#E8ECFF", margin: "0 0 6px 0" }}>
+                Your cart is empty
+              </h3>
+              <p style={{ fontSize: "0.85rem", color: "#6B79A0", margin: "0 0 20px 0" }}>
+                Add farm-fresh groceries, fish, and produce to get started.
+              </p>
+              <button
+                onClick={closeCart}
+                style={{
+                  padding: "10px 24px",
+                  background: "linear-gradient(135deg, #7C5CFC, #5A3ADA)",
+                  color: "#ffffff",
+                  borderRadius: "8px",
+                  fontWeight: 700,
+                  fontSize: "0.88rem",
+                  border: "none",
+                  cursor: "pointer",
+                  boxShadow: "0 4px 16px rgba(124, 92, 252, 0.35)",
+                }}
+              >
+                Start Shopping
+              </button>
+            </div>
+          ) : (
+            items.map((item) => (
+              <div
+                key={item.id}
+                style={{
+                  background: "rgba(15, 20, 34, 0.7)",
+                  border: "1px solid rgba(255, 255, 255, 0.06)",
+                  borderRadius: "14px",
+                  padding: "14px",
+                  boxShadow: "0 4px 16px rgba(0, 0, 0, 0.4)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  gap: "14px",
+                }}
+              >
+                {/* Left: Thumbnail & Details */}
+                <div style={{ display: "flex", alignItems: "center", gap: "14px", flex: 1, minWidth: 0 }}>
+                  <img
+                    src={item.product?.images?.[0] || "https://images.unsplash.com/photo-1544943910-4c1dc44a0b27?w=300&auto=format&fit=crop&q=80"}
+                    alt={item.product?.nameEn || item.product?.nameBn}
+                    style={{
+                      width: "74px",
+                      height: "74px",
+                      borderRadius: "10px",
+                      objectFit: "cover",
+                      backgroundColor: "rgba(255, 255, 255, 0.03)",
+                      border: "1px solid rgba(255, 255, 255, 0.08)",
+                      flexShrink: 0,
+                    }}
+                  />
+                  <div style={{ minWidth: 0, flex: 1 }}>
+                    <h4
+                      style={{
+                        fontSize: "0.92rem",
+                        fontWeight: 700,
+                        color: "#E8ECFF",
+                        margin: "0 0 3px 0",
+                        whiteSpace: "nowrap",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                      }}
+                    >
+                      {item.product?.nameEn || item.product?.nameBn}
+                    </h4>
+                    <p
+                      style={{
+                        fontSize: "0.75rem",
+                        color: "#6B79A0",
+                        margin: "0 0 6px 0",
+                      }}
+                    >
+                      Weight: {item.selectedWeight} {item.selectedUnit} • Fresh
+                    </p>
+                    <div style={{ display: "flex", alignItems: "baseline", gap: "8px" }}>
+                      <span
+                        style={{
+                          fontSize: "1.02rem",
+                          fontWeight: 800,
+                          color: "#00D084",
+                        }}
+                      >
                         {formatPrice(item.unitPrice * item.quantity)}
                       </span>
+                      {item.product?.comparePrice && (
+                        <span
+                          style={{
+                            fontSize: "0.76rem",
+                            color: "#6B79A0",
+                            textDecoration: "line-through",
+                          }}
+                        >
+                          {formatPrice(item.product.comparePrice * item.quantity)}
+                        </span>
+                      )}
                     </div>
                   </div>
                 </div>
-              ))}
-            </div>
 
-            {/* Footer Summary & Actions */}
-            <div className="border-t border-border p-6 bg-linen/50 space-y-4">
-              {/* Coupon Form */}
-              {appliedCoupon ? (
-                <div className="flex items-center justify-between text-xs bg-accent/80 p-2.5 border border-border">
-                  <span className="flex items-center gap-1.5 text-foreground font-medium">
-                    <Tag className="w-3.5 h-3.5 text-primary" />
-                    {appliedCoupon.code}
-                    {appliedCoupon.discountPercent ? ` (-${appliedCoupon.discountPercent}%)` : ` (-৳${appliedCoupon.fixedDiscount})`}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={removeCoupon}
-                    className="text-muted-foreground hover:text-destructive text-[11px] underline"
+                {/* Right: Quantity Controls & Remove */}
+                <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "8px", flexShrink: 0 }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      border: "1px solid rgba(255, 255, 255, 0.08)",
+                      borderRadius: "6px",
+                      padding: "3px 8px",
+                      gap: "10px",
+                      background: "rgba(255, 255, 255, 0.04)",
+                    }}
                   >
-                    {locale === "bn" ? "মুছুন" : "Remove"}
+                    <button
+                      onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                      style={{
+                        background: "none",
+                        border: "none",
+                        color: "#B0BAD8",
+                        cursor: "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        padding: "2px",
+                      }}
+                      aria-label="Decrease quantity"
+                    >
+                      <Minus size={13} />
+                    </button>
+                    <span style={{ fontSize: "0.9rem", fontWeight: 700, color: "#E8ECFF", minWidth: "16px", textAlign: "center" }}>
+                      {item.quantity}
+                    </span>
+                    <button
+                      onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                      style={{
+                        background: "none",
+                        border: "none",
+                        color: "#B0BAD8",
+                        cursor: "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        padding: "2px",
+                      }}
+                      aria-label="Increase quantity"
+                    >
+                      <Plus size={13} />
+                    </button>
+                  </div>
+
+                  <button
+                    onClick={() => removeItem(item.id)}
+                    style={{
+                      background: "none",
+                      border: "none",
+                      color: "#F7395A",
+                      fontSize: "0.76rem",
+                      fontWeight: 600,
+                      cursor: "pointer",
+                      padding: "2px",
+                    }}
+                  >
+                    Remove
                   </button>
                 </div>
-              ) : (
-                <form onSubmit={handleApplyCoupon} className="flex gap-2">
-                  <input
-                    type="text"
-                    value={couponInput}
-                    onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
-                    placeholder="WELCOME10 / TATKA50"
-                    className="flex-1 px-3 py-2 text-xs bg-background border border-border text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-primary uppercase"
-                  />
-                  <Button type="submit" variant="outline" size="sm" className="rounded-none text-xs">
-                    {locale === "bn" ? "প্রয়োগ" : "Apply"}
-                  </Button>
-                </form>
-              )}
-              {couponError && <p className="text-xs text-destructive">{couponError}</p>}
-
-              {/* Subtotal & Delivery Breakdown */}
-              <div className="space-y-1.5 text-xs text-muted-foreground">
-                <div className="flex justify-between">
-                  <span>{locale === "bn" ? "সাবটোটাল" : "Subtotal"}</span>
-                  <span className="text-foreground font-medium">{formatPrice(subtotal)}</span>
-                </div>
-                {discount > 0 && (
-                  <div className="flex justify-between text-primary">
-                    <span>{locale === "bn" ? "ডিসকাউন্ট" : "Discount"}</span>
-                    <span>-{formatPrice(discount)}</span>
-                  </div>
-                )}
-                <div className="flex justify-between">
-                  <span>{locale === "bn" ? "ডেলিভারি চার্জ" : "Delivery Fee"}</span>
-                  <span className="text-foreground font-medium">
-                    {deliveryFee === 0 ? (locale === "bn" ? "ফ্রি" : "Free") : formatPrice(deliveryFee)}
-                  </span>
-                </div>
-                <div className="flex justify-between text-base font-serif text-foreground pt-2 border-t border-border font-medium">
-                  <span>{locale === "bn" ? "সর্বমোট" : "Total"}</span>
-                  <span>{formatPrice(grandTotal)}</span>
-                </div>
               </div>
+            ))
+          )}
+        </div>
 
-              {/* Action Buttons */}
-              <div className="space-y-2 pt-2">
-                <Button
-                  asChild
-                  onClick={() => {
-                    clearBuyNowItem();
-                    closeCart();
-                  }}
-                  className="w-full btn-premium py-6 rounded-none text-xs tracking-[0.15em] uppercase font-semibold"
-                >
-                  <Link href="/checkout">
-                    {locale === "bn" ? "অর্ডার সম্পন্ন করুন" : "Proceed to Checkout"}
-                    <ArrowRight className="ml-2 w-4 h-4" />
-                  </Link>
-                </Button>
-
-                <Button
-                  asChild
-                  variant="outline"
-                  onClick={closeCart}
-                  className="w-full py-5 rounded-none text-xs tracking-[0.15em] uppercase"
-                >
-                  <Link href="/cart">
-                    {locale === "bn" ? "সম্পূর্ণ ব্যাগ দেখুন" : "View Full Bag"}
-                  </Link>
-                </Button>
+        {/* ── Footer / Summary Section ── */}
+        {items.length > 0 && (
+          <div
+            style={{
+              padding: "20px 24px",
+              background: "rgba(15, 20, 34, 0.9)",
+              borderTop: "1px solid rgba(255, 255, 255, 0.06)",
+              display: "flex",
+              flexDirection: "column",
+              gap: "16px",
+            }}
+          >
+            {/* TOTAL Card */}
+            <div
+              style={{
+                background: "linear-gradient(135deg, #131828 0%, #0A0D18 100%)",
+                border: "1px solid rgba(124, 92, 252, 0.2)",
+                borderRadius: "14px",
+                padding: "18px 22px",
+                color: "#ffffff",
+                boxShadow: "0 6px 24px rgba(0, 0, 0, 0.4)",
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <span style={{ fontSize: "1.05rem", fontWeight: 800, letterSpacing: "0.04em", color: "#B0BAD8" }}>
+                  TOTAL
+                </span>
+                <span style={{ fontSize: "1.45rem", fontWeight: 900, color: "#00D084" }}>
+                  {formatPrice(grandTotal)}
+                </span>
               </div>
+              <p
+                style={{
+                  fontSize: "0.72rem",
+                  color: "#6B79A0",
+                  margin: "6px 0 0 0",
+                  lineHeight: 1.4,
+                }}
+              >
+                Taxes, discounts and shipping calculated at checkout
+              </p>
             </div>
-          </>
+
+            {/* ORDER SPECIAL INSTRUCTIONS */}
+            <div>
+              <button
+                type="button"
+                onClick={() => setShowInstructions(!showInstructions)}
+                style={{
+                  width: "100%",
+                  background: "none",
+                  border: "none",
+                  padding: "0",
+                  textAlign: "left",
+                  fontSize: "0.8rem",
+                  fontWeight: 700,
+                  color: "#B0BAD8",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.06em",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                }}
+              >
+                <span>ORDER SPECIAL INSTRUCTIONS</span>
+                <span style={{ fontSize: "1.1rem", color: "#6B79A0" }}>{showInstructions ? "−" : "+"}</span>
+              </button>
+
+              {showInstructions && (
+                <textarea
+                  rows={2}
+                  value={orderInstructions}
+                  onChange={(e) => setOrderInstructions(e.target.value)}
+                  placeholder="e.g. Leave package with security guard, please deliver before 2 PM..."
+                  style={{
+                    width: "100%",
+                    marginTop: "8px",
+                    padding: "10px 12px",
+                    borderRadius: "8px",
+                    border: "1px solid rgba(255, 255, 255, 0.08)",
+                    background: "rgba(255, 255, 255, 0.04)",
+                    fontSize: "0.82rem",
+                    color: "#E8ECFF",
+                    outline: "none",
+                    fontFamily: "inherit",
+                    resize: "none",
+                  }}
+                />
+              )}
+            </div>
+
+            {/* Bottom Action Buttons */}
+            <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
+              <Link
+                href="/checkout"
+                onClick={closeCart}
+                style={{
+                  flex: 1,
+                  height: "46px",
+                  background: "linear-gradient(135deg, #7C5CFC, #5A3ADA)",
+                  color: "#ffffff",
+                  borderRadius: "8px",
+                  fontWeight: 700,
+                  fontSize: "0.92rem",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  textDecoration: "none",
+                  boxShadow: "0 4px 16px rgba(124, 92, 252, 0.35)",
+                  transition: "all 0.2s ease",
+                }}
+              >
+                Checkout
+              </Link>
+
+              <Link
+                href="/cart"
+                onClick={closeCart}
+                style={{
+                  flex: 1,
+                  height: "46px",
+                  background: "rgba(255, 255, 255, 0.04)",
+                  border: "1.5px solid rgba(255, 255, 255, 0.08)",
+                  color: "#E8ECFF",
+                  borderRadius: "8px",
+                  fontWeight: 700,
+                  fontSize: "0.92rem",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  textDecoration: "none",
+                  transition: "all 0.2s ease",
+                }}
+              >
+                View Cart
+              </Link>
+            </div>
+          </div>
         )}
-      </motion.div>
+      </div>
     </div>
   );
 }

@@ -2,12 +2,32 @@
 
 import React, { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
-import { X, Heart, ShoppingBag, Trash2, ArrowRight } from "lucide-react";
-import { motion } from "framer-motion";
+import {
+  X,
+  Share2,
+  SlidersHorizontal,
+  ShoppingBag,
+  Heart,
+  ArrowRight,
+  Check,
+  PackageX,
+} from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 import { useCartStore } from "@/lib/cart-store";
 import { PRODUCTS } from "@/lib/catalog";
-import { Button } from "@/components/ui/button";
+import { Product } from "@/types";
+import styles from "./WishlistDrawer.module.css";
+
+type SortOption = "date-desc" | "price-low" | "price-high" | "name-asc";
+
+// Sample mock added dates for visual fidelity matching the reference UI
+const MOCK_DATES: Record<string, string> = {
+  "prod-ilish-padma": "Dec 10, 2024",
+  "prod-beef-sirloin": "Dec 8, 2024",
+  "prod-honey-sundarban": "Dec 5, 2024",
+  "prod-kataribhog-rice": "Dec 2, 2024",
+  "prod-spinach-palong": "Nov 28, 2024",
+};
 
 export function WishlistDrawer() {
   const { locale, formatPrice } = useLanguage();
@@ -18,156 +38,326 @@ export function WishlistDrawer() {
     removeFromWishlist,
     moveWishlistToCart,
     moveAllWishlistToCart,
+    clearWishlist,
   } = useCartStore();
 
+  const [sortBy, setSortBy] = useState<SortOption>("date-desc");
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  if (!isWishlistOpen) return null;
+  // Close on Escape key press
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && isWishlistOpen) {
+        closeWishlist();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isWishlistOpen, closeWishlist]);
 
-  const wishlistProducts = mounted
-    ? PRODUCTS.filter((p) => wishlistIds.includes(p.id))
-    : [];
+  // Toast notification helper with auto-hide
+  const showToast = (msg: string) => {
+    setToastMessage(msg);
+    setTimeout(() => {
+      setToastMessage((prev) => (prev === msg ? null : prev));
+    }, 2800);
+  };
+
+  // Get matching products for current wishlistIds
+  const wishlistProducts = useMemo(() => {
+    const matched = PRODUCTS.filter((p) => wishlistIds.includes(p.id));
+
+    // Sort items
+    return [...matched].sort((a, b) => {
+      if (sortBy === "price-low") {
+        return a.basePrice - b.basePrice;
+      }
+      if (sortBy === "price-high") {
+        return b.basePrice - a.basePrice;
+      }
+      if (sortBy === "name-asc") {
+        const nameA = locale === "bn" ? a.nameBn : a.nameEn;
+        const nameB = locale === "bn" ? b.nameBn : b.nameEn;
+        return nameA.localeCompare(nameB);
+      }
+      // date-desc (default order preserved from wishlistIds)
+      return wishlistIds.indexOf(a.id) - wishlistIds.indexOf(b.id);
+    });
+  }, [wishlistIds, sortBy]);
+
+  // Handle Share List action
+  const handleShareList = async () => {
+    const shareUrl = typeof window !== "undefined" ? window.location.href : "";
+    try {
+      if (navigator.clipboard) {
+        await navigator.clipboard.writeText(shareUrl);
+        showToast("Wishlist link copied to clipboard!");
+      } else {
+        showToast("Wishlist link shared!");
+      }
+    } catch {
+      showToast("Wishlist link copied to clipboard!");
+    }
+  };
+
+  // Handle single item Add to Cart
+  const handleAddToCart = (product: Product) => {
+    moveWishlistToCart(product, false);
+    const prodName = product.nameEn || product.nameBn;
+    showToast(`✓ ${prodName} added to cart & removed from wishlist`);
+  };
+
+  // Handle Move All to Cart
+  const handleMoveAllToCart = () => {
+    const inStockItems = wishlistProducts.filter((p) => p.stock > 0);
+    if (inStockItems.length === 0) {
+      showToast("No in-stock items to move!");
+      return;
+    }
+    moveAllWishlistToCart(inStockItems);
+    showToast(`✓ ${inStockItems.length} items moved to cart!`);
+  };
+
+  if (!mounted || !isWishlistOpen) return null;
+
+  const totalItemCount = wishlistProducts.length;
+  const inStockCount = wishlistProducts.filter((p) => p.stock > 0).length;
 
   return (
-    <div className="fixed inset-0 z-50 flex justify-end">
-      {/* Backdrop */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        onClick={closeWishlist}
-        className="fixed inset-0 bg-charcoal/50 backdrop-blur-sm"
-      />
+    <div className={styles.drawerBackdrop} onClick={closeWishlist}>
+      {/* Toast Alert */}
+      {toastMessage && (
+        <div className={styles.shareToast}>
+          <Check size={16} strokeWidth={2.5} />
+          <span>{toastMessage}</span>
+        </div>
+      )}
 
-      {/* Slide-out Drawer */}
-      <motion.div
-        initial={{ x: "100%" }}
-        animate={{ x: 0 }}
-        exit={{ x: "100%" }}
-        transition={{ type: "spring", damping: 25, stiffness: 200 }}
-        className="relative w-full max-w-md h-full bg-background border-l border-border shadow-2xl flex flex-col z-10"
+      {/* Drawer Panel */}
+      <div
+        className={styles.drawerContainer}
+        onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-label="Wishlist Drawer"
       >
-        {/* Header */}
-        <div className="p-6 border-b border-border flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <h2 className="font-serif text-2xl tracking-tight text-foreground">
-              {locale === "bn" ? "সংরক্ষিত পণ্য" : "Saved Pieces"}
-            </h2>
-            <span className="text-xs text-muted-foreground">
-              ({wishlistProducts.length})
-            </span>
+        {/* ── HEADER ── */}
+        <div className={styles.drawerHeader}>
+          <div className={styles.headerTopRow}>
+            <div>
+              <h2 className={styles.drawerTitle}>Saved Items</h2>
+              <p className={styles.drawerSubtitle}>
+                {totalItemCount} {totalItemCount === 1 ? "item" : "items"} in your wishlist
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={closeWishlist}
+              className={styles.closeBtn}
+              aria-label="Close Wishlist"
+              title="Close"
+            >
+              <X size={18} />
+            </button>
           </div>
 
-          <button
-            type="button"
-            onClick={closeWishlist}
-            className="p-2 hover:bg-accent transition-colors text-muted-foreground hover:text-foreground"
-            aria-label="Close wishlist"
-          >
-            <X className="w-5 h-5" />
-          </button>
+          {/* Action Toolbar: Share List & Date Added / Sort */}
+          {totalItemCount > 0 && (
+            <div className={styles.headerActionsRow}>
+              <button
+                type="button"
+                onClick={handleShareList}
+                className={styles.actionPillBtn}
+                title="Share Wishlist"
+              >
+                <Share2 size={13} />
+                <span>Share List</span>
+              </button>
+
+              <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                <SlidersHorizontal size={13} color="#64748b" />
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value as SortOption)}
+                  className={styles.sortSelect}
+                  aria-label="Sort Wishlist Items"
+                >
+                  <option value="date-desc">Date Added</option>
+                  <option value="price-low">Price: Low to High</option>
+                  <option value="price-high">Price: High to Low</option>
+                  <option value="name-asc">Product Name (A-Z)</option>
+                </select>
+              </div>
+            </div>
+          )}
         </div>
 
-        {/* Content */}
-        {wishlistProducts.length === 0 ? (
-          <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
-            <Heart className="w-16 h-16 text-muted-foreground/30 mb-4 stroke-1" />
-            <h3 className="font-serif text-2xl text-foreground mb-2">
-              {locale === "bn" ? "উইশলিস্ট খালি" : "No Saved Pieces"}
-            </h3>
-            <p className="text-sm text-muted-foreground max-w-xs mb-8">
-              {locale === "bn"
-                ? "আপনার পছন্দের পণ্যগুলোতে হার্ট আইকন ক্লিক করে সংরক্ষণ করুন।"
-                : "Save the objects and harvest items you love to revisit anytime."}
-            </p>
-            <Button
-              asChild
-              onClick={closeWishlist}
-              className="btn-premium rounded-none px-8 py-4 text-xs tracking-[0.15em] uppercase"
-            >
-              <Link href="/shop">
-                {locale === "bn" ? "সংগ্রহ ব্রাউজ করুন" : "Browse Pieces"}
-                <ArrowRight className="ml-2 w-4 h-4" />
-              </Link>
-            </Button>
-          </div>
-        ) : (
-          <>
-            <div className="flex-1 overflow-y-auto divide-y divide-border p-6">
-              {wishlistProducts.map((product) => (
-                <div key={product.id} className="py-4 first:pt-0 last:pb-0 flex gap-4">
-                  <Link
-                    href={`/product/${product.slug}`}
-                    onClick={closeWishlist}
-                    className="w-20 h-24 bg-muted flex-shrink-0 overflow-hidden group"
-                  >
+        {/* ── WISHLIST ITEMS LIST ── */}
+        {totalItemCount > 0 ? (
+          <div className={styles.itemsScrollList}>
+            {wishlistProducts.map((product) => {
+              const isOutOfStock = product.stock <= 0;
+              const addedDateStr =
+                MOCK_DATES[product.id] || "Recently added";
+
+              return (
+                <div key={product.id} className={styles.wishlistItemRow}>
+                  {/* Thumbnail Image */}
+                  <div className={styles.itemThumbWrapper}>
                     <img
                       src={product.images[0]}
-                      alt={product.nameEn}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      alt={product.nameEn || product.nameBn}
+                      className={styles.itemThumbImg}
+                      loading="lazy"
                     />
-                  </Link>
+                  </div>
 
-                  <div className="flex-1 flex flex-col justify-between">
-                    <div>
-                      <div className="flex justify-between items-start gap-2">
-                        <Link
-                          href={`/product/${product.slug}`}
-                          onClick={closeWishlist}
-                          className="font-serif text-base text-foreground hover:text-primary transition-colors line-clamp-1"
-                        >
-                          {locale === "bn" ? product.nameBn : product.nameEn}
-                        </Link>
-                        <button
-                          type="button"
-                          onClick={() => removeFromWishlist(product.id)}
-                          className="text-muted-foreground hover:text-destructive p-1 transition-colors"
-                          aria-label="Remove"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-
-                      <p className="text-xs text-muted-foreground mt-0.5">
-                        {locale === "bn" ? product.categoryNameBn : product.categoryNameEn}
-                      </p>
+                  {/* Item Details */}
+                  <div className={styles.itemDetails}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
+                      <Link
+                        href={`/product/${product.slug}`}
+                        onClick={closeWishlist}
+                        className={styles.itemTitle}
+                      >
+                        {product.nameEn || product.nameBn}
+                      </Link>
+                      {isOutOfStock && (
+                        <span className={styles.outOfStockBadge}>
+                          Out of Stock
+                        </span>
+                      )}
                     </div>
 
-                    <div className="flex items-center justify-between mt-3">
-                      <span className="font-serif text-base text-foreground font-medium">
+                    <span className={styles.itemCategory}>
+                      {product.categoryNameEn || product.categoryNameBn}
+                    </span>
+
+                    {/* Price Row */}
+                    <div className={styles.itemPriceRow}>
+                      <span className={styles.currentPrice}>
                         {formatPrice(product.basePrice)}
                       </span>
-                      <Button
-                        type="button"
-                        size="sm"
-                        onClick={() => moveWishlistToCart(product, true)}
-                        className="rounded-none text-[10px] tracking-[0.15em] uppercase px-3 py-1.5 h-auto bg-primary text-primary-foreground hover:bg-primary/90"
-                      >
-                        {locale === "bn" ? "+ ব্যাগে যোগ" : "+ Add to Bag"}
-                      </Button>
+                      {product.comparePrice &&
+                        product.comparePrice > product.basePrice && (
+                          <span className={styles.comparePrice}>
+                            {formatPrice(product.comparePrice)}
+                          </span>
+                        )}
                     </div>
+
+                    {/* Added Date */}
+                    <span className={styles.addedDate}>
+                      Added {addedDateStr}
+                    </span>
+                  </div>
+
+                  {/* Right Actions: Remove & Add To Cart */}
+                  <div className={styles.itemActionColumn}>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        removeFromWishlist(product.id);
+                        showToast("Removed from wishlist");
+                      }}
+                      className={styles.removeSingleBtn}
+                      aria-label={`Remove ${product.nameEn} from wishlist`}
+                      title="Remove"
+                    >
+                      <X size={15} />
+                    </button>
+
+                    {isOutOfStock ? (
+                      <button
+                        type="button"
+                        disabled
+                        className={styles.soldOutBtn}
+                        title="Item is currently out of stock"
+                      >
+                        <PackageX size={13} />
+                        <span>Sold Out</span>
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => handleAddToCart(product)}
+                        className={styles.addToCartPillBtn}
+                        title="Add to cart and remove from wishlist"
+                      >
+                        <ShoppingBag size={13} />
+                        <span>Add to Cart</span>
+                      </button>
+                    )}
                   </div>
                 </div>
-              ))}
+              );
+            })}
+          </div>
+        ) : (
+          /* ── EMPTY STATE ── */
+          <div className={styles.emptyStateContainer}>
+            <div className={styles.emptyIconCircle}>
+              <Heart size={32} strokeWidth={1.8} />
             </div>
-
-            {/* Footer */}
-            <div className="border-t border-border p-6 bg-linen/50 space-y-3">
-              <Button
-                type="button"
-                onClick={() => moveAllWishlistToCart(wishlistProducts)}
-                className="w-full btn-premium py-5 rounded-none text-xs tracking-[0.15em] uppercase font-semibold"
-              >
-                {locale === "bn" ? "সব পণ্য ব্যাগে নিন" : "Move All to Bag"}
-              </Button>
-            </div>
-          </>
+            <h3 className={styles.emptyTitle}>
+              Your wishlist is empty
+            </h3>
+            <p className={styles.emptySubtitle}>
+              Explore our farm-fresh produce, authentic Padma fish, and premium groceries to save items.
+            </p>
+            <Link
+              href="/category/all"
+              onClick={closeWishlist}
+              className={styles.emptyShopBtn}
+            >
+              <span>Explore Bazar</span>
+              <ArrowRight size={16} />
+            </Link>
+          </div>
         )}
-      </motion.div>
+
+        {/* ── FOOTER ── */}
+        {totalItemCount > 0 && (
+          <div className={styles.drawerFooter}>
+            {inStockCount > 0 && (
+              <button
+                type="button"
+                onClick={handleMoveAllToCart}
+                className={styles.moveAllBtn}
+              >
+                <ShoppingBag size={16} />
+                <span>
+                  Move All to Cart ({inStockCount})
+                </span>
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={() => {
+                clearWishlist();
+                showToast("Wishlist cleared");
+              }}
+              style={{
+                background: "transparent",
+                border: "none",
+                color: "#64748b",
+                fontSize: "0.78rem",
+                fontWeight: 600,
+                cursor: "pointer",
+                padding: "4px",
+                textAlign: "center",
+              }}
+            >
+              Clear all saved items
+            </button>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
