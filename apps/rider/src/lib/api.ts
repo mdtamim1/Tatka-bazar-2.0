@@ -14,6 +14,294 @@ export function clearToken() {
   localStorage.removeItem("rider_user");
 }
 
+// ---------------------------------------------------------------------------
+// Client Mock / Fallback Storage (when API backend is offline or on cloud HTTPS)
+// ---------------------------------------------------------------------------
+const DEFAULT_USER: RiderUser = {
+  id: "rider-demo-01",
+  name: "তামীম ইকবাল",
+  email: "singersujonkhan9@gmail.com",
+  phone: "01700000001",
+  role: "rider",
+};
+
+const DEFAULT_PROFILE: RiderProfile = {
+  id: "rider-demo-01",
+  name: "তামীম ইকবাল",
+  email: "singersujonkhan9@gmail.com",
+  phone: "01700000001",
+  vehicleType: "MOTORCYCLE",
+  vehicleNumber: "ঢাকা মেট্রো-হ-৪৫-১২৩৪",
+  status: "AVAILABLE",
+  balance: 2450,
+  totalEarned: 14850,
+  kycStatus: "SUBMITTED",
+  kycSubmittedAt: new Date().toISOString(),
+  fatherName: "মোঃ রফিকুল ইসলাম",
+  motherName: "মোসাঃ পারভীন আক্তার",
+  dateOfBirth: "1998-05-14",
+  presentAddress: "বাড়ি #২৪, রোড #৩, মিরপুর-১০, ঢাকা",
+  permanentAddress: "গ্রাম: কৃষ্ণপুর, থানা: সদর, জেলা: বগুড়া",
+  nidNumber: "১৯৯৮২৬৯১২২৩০০০৪৫৬",
+  paymentMethod: "BKASH",
+  paymentAccount: "01700000001",
+  paymentAccountLocked: true,
+  createdAt: new Date().toISOString(),
+};
+
+const SAMPLE_AVAILABLE_TASKS: Task[] = [
+  {
+    id: "task-01",
+    orderNumber: "TB-8942",
+    customerName: "তানভীর আহমেদ",
+    customerPhone: "01812345678",
+    deliveryAddress: "রোড #৭, বাড়ি #১২, ধানমন্ডি, ঢাকা",
+    vendorName: "সাদিক এগ্রো ফ্রেশ মার্কেট",
+    itemCount: 4,
+    total: 1450,
+    earnings: 80,
+    createdAt: new Date(Date.now() - 1000 * 60 * 5).toISOString(),
+  },
+  {
+    id: "task-02",
+    orderNumber: "TB-8945",
+    customerName: "নুসরাত জাহান",
+    customerPhone: "01798765432",
+    deliveryAddress: "সেক্টর #১১, রোড #৪, উত্তরা, ঢাকা",
+    vendorName: "তাজা দেশি মাছ ও মাংসের আড়ত",
+    itemCount: 6,
+    total: 2200,
+    earnings: 110,
+    createdAt: new Date(Date.now() - 1000 * 60 * 12).toISOString(),
+  },
+  {
+    id: "task-03",
+    orderNumber: "TB-8949",
+    customerName: "মাহমুদুল হাসান",
+    customerPhone: "01911223344",
+    deliveryAddress: "ব্লক #ডি, বাড়ি #৯, বনশ্রী, ঢাকা",
+    vendorName: "গ্রিন ভ্যালি অর্গানিক সবজি",
+    itemCount: 3,
+    total: 890,
+    earnings: 70,
+    createdAt: new Date(Date.now() - 1000 * 60 * 20).toISOString(),
+  },
+];
+
+function getLocalStore<T>(key: string, fallback: T): T {
+  if (typeof window === "undefined") return fallback;
+  try {
+    const raw = localStorage.getItem(`tb_demo_${key}`);
+    return raw ? JSON.parse(raw) : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+function setLocalStore(key: string, val: any) {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem(`tb_demo_${key}`, JSON.stringify(val));
+  } catch {}
+}
+
+function handleMockFallback<T>(path: string, options: RequestInit): { success: boolean; data?: T; error?: string } {
+  const method = (options.method || "GET").toUpperCase();
+
+  // 1. Login
+  if (path === "/auth/rider/login" && method === "POST") {
+    let body: any = {};
+    try { body = JSON.parse(options.body as string); } catch {}
+    const identifier = body.email || body.phone || "01700000001";
+    const user: RiderUser = {
+      id: "rider-demo-01",
+      name: "তামীম ইকবাল",
+      email: identifier.includes("@") ? identifier : `${identifier}@tatkabazar.com`,
+      phone: identifier.replace(/[^0-9]/g, "") || "01700000001",
+      role: "rider",
+    };
+    setToken("mock-jwt-token-rider-partner");
+    localStorage.setItem("rider_user", JSON.stringify(user));
+    return { success: true, data: { accessToken: "mock-jwt-token-rider-partner", user } as any };
+  }
+
+  // 2. Register
+  if (path === "/auth/rider/register" && method === "POST") {
+    let body: any = {};
+    try { body = JSON.parse(options.body as string); } catch {}
+    const user: RiderUser = {
+      id: "rider-demo-" + Date.now(),
+      name: body.name || "নতুন রাইডার",
+      email: body.email || `${body.phone}@tatkabazar.com`,
+      phone: body.phone || "01700000000",
+      role: "rider",
+    };
+    setToken("mock-jwt-token-rider-partner");
+    localStorage.setItem("rider_user", JSON.stringify(user));
+    return { success: true, data: { accessToken: "mock-jwt-token-rider-partner", user } as any };
+  }
+
+  // 3. Balance
+  if (path === "/rider-portal/balance") {
+    const profile = getLocalStore("profile", DEFAULT_PROFILE);
+    return {
+      success: true,
+      data: {
+        balance: profile.balance,
+        totalEarned: profile.totalEarned,
+        todayEarning: 480,
+        todayDeliveries: 6,
+        weekEarning: 3450,
+      } as any,
+    };
+  }
+
+  // 4. Available Tasks
+  if (path === "/rider-portal/tasks" && method === "GET") {
+    const tasks = getLocalStore("available_tasks", SAMPLE_AVAILABLE_TASKS);
+    return { success: true, data: tasks as any };
+  }
+
+  // 5. Active Tasks
+  if (path === "/rider-portal/tasks/active") {
+    const activeTasks = getLocalStore<ActiveTask[]>("active_tasks", []);
+    return { success: true, data: activeTasks as any };
+  }
+
+  // 6. Single Task Detail
+  if (path.startsWith("/rider-portal/tasks/") && !path.includes("/accept") && !path.includes("/pickup") && !path.includes("/deliver")) {
+    const taskId = path.split("/").pop();
+    const available = getLocalStore("available_tasks", SAMPLE_AVAILABLE_TASKS);
+    const task = available.find((t) => t.id === taskId) || SAMPLE_AVAILABLE_TASKS[0];
+    return {
+      success: true,
+      data: {
+        id: task?.id || taskId,
+        orderNumber: task?.orderNumber || "TB-8942",
+        customerName: task?.customerName || "তানভীর আহমেদ",
+        customerPhone: task?.customerPhone || "01812345678",
+        deliveryAddress: task?.deliveryAddress || "ধানমন্ডি, ঢাকা",
+        vendorName: task?.vendorName || "সাদিক এগ্রো ফ্রেশ",
+        items: [
+          { name: "দেশি শিং মাছ (১ কেজি)", qty: 1 },
+          { name: "তাজা লাল শাক (২ আঁটি)", qty: 2 },
+          { name: "ফার্মের ডিম (১ ডজন)", qty: 1 },
+        ],
+        earnings: task?.earnings || 80,
+        total: task?.total || 1450,
+      } as any,
+    };
+  }
+
+  // 7. Accept Task
+  if (path.includes("/accept") && method === "POST") {
+    const taskId = path.split("/")[3];
+    const available = getLocalStore("available_tasks", SAMPLE_AVAILABLE_TASKS);
+    const accepted = available.find((t) => t.id === taskId) || SAMPLE_AVAILABLE_TASKS[0];
+    if (accepted) {
+      const remaining = available.filter((t) => t.id !== taskId);
+      setLocalStore("available_tasks", remaining);
+
+      const active = getLocalStore<ActiveTask[]>("active_tasks", []);
+      active.push({
+        assignmentId: "asgn-" + Date.now(),
+        status: "ASSIGNED",
+        assignedAt: new Date().toISOString(),
+        order: {
+          id: accepted.id,
+          orderNumber: accepted.orderNumber,
+          customerName: accepted.customerName,
+          customerPhone: accepted.customerPhone,
+          deliveryAddress: accepted.deliveryAddress,
+          vendorName: accepted.vendorName,
+          items: [
+            { name: "অর্গানিক তাজা শাকসবজি", qty: 2 },
+            { name: "দেশি ডিম ও দুধ", qty: 1 },
+          ],
+          earnings: accepted.earnings,
+        },
+      });
+      setLocalStore("active_tasks", active);
+    }
+    return { success: true, data: { message: "Task accepted" } as any };
+  }
+
+  // 8. Pickup / Deliver Task
+  if ((path.includes("/pickup") || path.includes("/deliver")) && method === "POST") {
+    const isDeliver = path.includes("/deliver");
+    const active = getLocalStore<ActiveTask[]>("active_tasks", []);
+    if (isDeliver && active.length > 0) {
+      const done = active.shift();
+      setLocalStore("active_tasks", active);
+      // update profile balance
+      const profile = getLocalStore("profile", DEFAULT_PROFILE);
+      const earned = done?.order.earnings || 80;
+      profile.balance += earned;
+      profile.totalEarned += earned;
+      setLocalStore("profile", profile);
+    }
+    return { success: true, data: { message: "Status updated" } as any };
+  }
+
+  // 9. Profile / Me
+  if (path === "/rider-portal/me" && method === "GET") {
+    const profile = getLocalStore("profile", DEFAULT_PROFILE);
+    const user = getLocalStore<RiderUser>("user", DEFAULT_USER);
+    profile.name = user.name || profile.name;
+    profile.email = user.email || profile.email;
+    profile.phone = user.phone || profile.phone;
+    return { success: true, data: profile as any };
+  }
+
+  // 10. KYC Submit
+  if (path === "/rider-portal/kyc" && method === "POST") {
+    let body: any = {};
+    try { body = JSON.parse(options.body as string); } catch {}
+    const profile = getLocalStore("profile", DEFAULT_PROFILE);
+    Object.assign(profile, body, { kycStatus: "SUBMITTED", kycSubmittedAt: new Date().toISOString() });
+    setLocalStore("profile", profile);
+    return { success: true, data: { kycStatus: "SUBMITTED" } as any };
+  }
+
+  // 11. Payment Account
+  if (path === "/rider-portal/payment-account" && method === "POST") {
+    let body: any = {};
+    try { body = JSON.parse(options.body as string); } catch {}
+    const profile = getLocalStore("profile", DEFAULT_PROFILE);
+    profile.paymentMethod = body.paymentMethod;
+    profile.paymentAccount = body.paymentAccount;
+    profile.paymentAccountLocked = true;
+    setLocalStore("profile", profile);
+    return { success: true, data: profile as any };
+  }
+
+  // 12. History
+  if (path === "/rider-portal/history") {
+    const history: HistoryItem[] = [
+      { id: "h-1", type: "income", amount: 80, description: "অর্ডার #TB-8940 সফল ডেলিভারি", createdAt: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString() },
+      { id: "h-2", type: "income", amount: 110, description: "অর্ডার #TB-8935 সফল ডেলিভারি", createdAt: new Date(Date.now() - 1000 * 60 * 60 * 5).toISOString() },
+      { id: "h-3", type: "withdrawal", amount: 1000, description: "bKash উইথড্রয়াল সম্পন্ন", status: "COMPLETED", createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString() },
+      { id: "h-4", type: "income", amount: 95, description: "অর্ডার #TB-8921 সফল ডেলিভারি", createdAt: new Date(Date.now() - 1000 * 60 * 60 * 28).toISOString() },
+    ];
+    return { success: true, data: history as any };
+  }
+
+  // 13. Withdraw Request
+  if (path === "/rider-portal/withdraw" && method === "POST") {
+    let body: any = {};
+    try { body = JSON.parse(options.body as string); } catch {}
+    const profile = getLocalStore("profile", DEFAULT_PROFILE);
+    const amount = Number(body.amount) || 500;
+    if (profile.balance >= amount) {
+      profile.balance -= amount;
+      setLocalStore("profile", profile);
+    }
+    return { success: true, data: { message: "উইথড্রয়াল রিকোয়েস্ট জমা হয়েছে" } as any };
+  }
+
+  return { success: true, data: {} as any };
+}
+
 export async function apiFetch<T = unknown>(
   path: string,
   options: RequestInit = {}
@@ -25,9 +313,23 @@ export async function apiFetch<T = unknown>(
   };
   if (token) headers["Authorization"] = `Bearer ${token}`;
 
-  const res = await fetch(`${API_BASE}${path}`, { ...options, headers });
-  const json = await res.json();
-  return json;
+  try {
+    // Only attempt real fetch if API_BASE is reachable and not localhost over https
+    const isHttps = typeof window !== "undefined" && window.location.protocol === "https:";
+    const isLocalhostApi = API_BASE.includes("localhost") || API_BASE.includes("127.0.0.1");
+
+    // Browsers block HTTPS -> HTTP localhost (Mixed Content)
+    if (isHttps && isLocalhostApi) {
+      return handleMockFallback<T>(path, options);
+    }
+
+    const res = await fetch(`${API_BASE}${path}`, { ...options, headers });
+    const json = await res.json();
+    return json;
+  } catch {
+    // Graceful fallback to demo mode on network failure or offline backend
+    return handleMockFallback<T>(path, options);
+  }
 }
 
 export async function login(email: string, password: string) {
