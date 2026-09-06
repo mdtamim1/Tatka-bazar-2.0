@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { apiFetch, type ActiveTask } from "@/lib/api";
+import { sound } from "@/lib/sound";
 
 function confetti() {
   const canvas = document.createElement("canvas");
@@ -53,8 +54,12 @@ export default function TaskDetailPage() {
   const [task, setTask] = useState<ActiveTask | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Delivery Handover Modal
+  // Delivery Handover Modal & Customer OTP
   const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [inputDeliveryOtp, setInputDeliveryOtp] = useState("");
+  const [deliveryOtpError, setDeliveryOtpError] = useState("");
+  const [showBypass, setShowBypass] = useState(false);
+  const [bypassNote, setBypassNote] = useState("");
   const [delivering, setDelivering] = useState(false);
   const [success, setSuccess] = useState(false);
   const [earning, setEarning] = useState(0);
@@ -173,12 +178,24 @@ export default function TaskDetailPage() {
   // 5. Normal Delivery to Customer Handover
   async function deliver() {
     if (!task) return;
+    if (!showBypass && !inputDeliveryOtp.trim()) {
+      setDeliveryOtpError("কাস্টমারের মোবাইলের ৪-সংখ্যার ওটিপি কোডটি লিখুন");
+      return;
+    }
+    setDeliveryOtpError("");
     setDelivering(true);
     const res = await apiFetch<{ earning: number; orderTotal?: number; totalBill?: number; cashDeduction?: number; isPaid?: boolean }>(
       `/rider-portal/tasks/${id}/deliver`,
-      { method: "POST" }
+      {
+        method: "POST",
+        body: JSON.stringify({
+          deliveryOtp: inputDeliveryOtp.trim(),
+          proofNote: showBypass && bypassNote.trim() ? bypassNote.trim() : undefined,
+        }),
+      }
     );
     if (res.success && res.data) {
+      sound.playSuccessChime();
       const resData = res.data;
       setEarning(resData.earning || earnings);
       setDeducted(resData.cashDeduction !== undefined ? resData.cashDeduction : (isPaid ? 0 : (resData.totalBill || resData.orderTotal || totalBill)));
@@ -189,7 +206,7 @@ export default function TaskDetailPage() {
         router.replace("/tasks");
       }, 3800);
     } else {
-      alert(res.error || "ডেলিভারি সম্পন্ন করা যায়নি");
+      setDeliveryOtpError(res.error || "ডেলিভারি ওটিপি যাচাই ব্যর্থ হয়েছে");
       setDelivering(false);
     }
   }
@@ -493,6 +510,123 @@ export default function TaskDetailPage() {
               </div>
             </div>
 
+            {/* Customer Delivery OTP Verification Box */}
+            <div style={{
+              background: "rgba(0, 0, 0, 0.25)",
+              border: "1px solid rgba(0, 214, 143, 0.3)",
+              borderRadius: "16px",
+              padding: "16px 14px",
+              marginBottom: "18px",
+              textAlign: "center",
+            }}>
+              <div style={{ fontSize: ".76rem", fontWeight: 700, color: "#00d68f", textTransform: "uppercase", letterSpacing: ".06em", marginBottom: 4 }}>
+                🔐 কাস্টমার ডেলিভারি ওটিপি (Proof of Delivery)
+              </div>
+              <div style={{ fontSize: ".76rem", color: "var(--text-3)", marginBottom: 10 }}>
+                কাস্টমারের মোবাইলে পাঠানো ৪-সংখ্যার ডেলিভারি কোডটি নিচে লিখুন:
+              </div>
+
+              {!showBypass ? (
+                <>
+                  <input
+                    id="customer-delivery-otp-input"
+                    type="text"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    maxLength={4}
+                    placeholder="• • • •"
+                    value={inputDeliveryOtp}
+                    onChange={(e) => {
+                      setInputDeliveryOtp(e.target.value.replace(/[^0-9]/g, "").slice(0, 4));
+                      setDeliveryOtpError("");
+                    }}
+                    className="delivery-otp-input"
+                  />
+
+                  {/* Test Demo OTP Pill */}
+                  {task.customerDeliveryOtp && (
+                    <div
+                      className="return-hint-pill"
+                      onClick={() => setInputDeliveryOtp(task.customerDeliveryOtp || "4826")}
+                      style={{ borderColor: "rgba(0,214,143,.4)", background: "rgba(0,214,143,.1)", cursor: "pointer", display: "inline-flex", marginTop: 4 }}
+                      title="ক্লিক করে কোড বসিয়ে দিন"
+                    >
+                      💡 [টেস্ট ডেমো ওটিপি]:{" "}
+                      <strong style={{ color: "#00d68f", fontSize: "1rem", letterSpacing: 2, marginLeft: 4 }}>
+                        {task.customerDeliveryOtp}
+                      </strong>
+                    </div>
+                  )}
+
+                  <div style={{ marginTop: 10 }}>
+                    <button
+                      type="button"
+                      onClick={() => setShowBypass(true)}
+                      style={{
+                        background: "none",
+                        border: "none",
+                        color: "var(--text-3)",
+                        fontSize: ".72rem",
+                        textDecoration: "underline",
+                        cursor: "pointer",
+                        fontFamily: "var(--font-bn)",
+                      }}
+                    >
+                      ⚠️ কাস্টমারের ফোন বন্ধ বা চার্জ নেই? জরুরি নোট দিন
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <div style={{ textAlign: "left", marginTop: 8 }}>
+                  <div style={{ fontSize: ".74rem", color: "#F59E0B", fontWeight: 700, marginBottom: 4 }}>
+                    জরুরি হ্যান্ডওভার নোট (ফোন বন্ধ থাকলে):
+                  </div>
+                  <input
+                    type="text"
+                    placeholder="উদা: কাস্টমারের ফোন বন্ধ, ভাইয়ের উপস্থিতিতে হ্যান্ডওভার"
+                    value={bypassNote}
+                    onChange={(e) => {
+                      setBypassNote(e.target.value);
+                      setDeliveryOtpError("");
+                    }}
+                    style={{
+                      width: "100%",
+                      padding: "10px",
+                      borderRadius: "8px",
+                      background: "var(--bg-base)",
+                      border: "1px solid var(--border-2)",
+                      color: "var(--text-1)",
+                      fontSize: ".82rem",
+                      fontFamily: "var(--font-bn)",
+                      boxSizing: "border-box",
+                      marginBottom: 6,
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowBypass(false)}
+                    style={{
+                      background: "none",
+                      border: "none",
+                      color: "#00d68f",
+                      fontSize: ".72rem",
+                      textDecoration: "underline",
+                      cursor: "pointer",
+                      fontFamily: "var(--font-bn)",
+                    }}
+                  >
+                    ← আবার ওটিপি কোড দিয়ে ভেরিফাই করুন
+                  </button>
+                </div>
+              )}
+
+              {deliveryOtpError && (
+                <div style={{ fontSize: ".76rem", color: "#EF4444", marginTop: 8, fontWeight: 700 }}>
+                  {deliveryOtpError}
+                </div>
+              )}
+            </div>
+
             {/* Action Buttons */}
             <div style={{ display: "flex", gap: "10px" }}>
               <button
@@ -513,7 +647,7 @@ export default function TaskDetailPage() {
                 id="modal-confirm-deliver-btn"
                 type="button"
                 onClick={deliver}
-                disabled={delivering}
+                disabled={delivering || (!showBypass && inputDeliveryOtp.length < 4 && !task.customerDeliveryOtp)}
                 style={{
                   flex: 2, padding: "13px 16px", borderRadius: "14px",
                   background: isPaid
@@ -530,10 +664,10 @@ export default function TaskDetailPage() {
                 {delivering ? (
                   <>
                     <div className="spinner" style={{ width: 18, height: 18, borderWidth: 2 }} />
-                    <span>প্রসেসিং...</span>
+                    <span>যাচাই হচ্ছে...</span>
                   </>
                 ) : (
-                  <span>{isPaid ? "✅ পার্সেল হ্যান্ডওভার সম্পন্ন" : "✅ হ্যাঁ, সম্পূর্ণ বুঝে পেয়েছি"}</span>
+                  <span>✅ ওটিপি যাচাই ও ডেলিভারি সম্পন্ন</span>
                 )}
               </button>
             </div>
@@ -979,7 +1113,13 @@ export default function TaskDetailPage() {
                 id="deliver-complete-btn"
                 type="button"
                 className="task-deliver-btn"
-                onClick={() => setShowConfirmModal(true)}
+                onClick={() => {
+                  setInputDeliveryOtp("");
+                  setDeliveryOtpError("");
+                  setShowBypass(false);
+                  setBypassNote("");
+                  setShowConfirmModal(true);
+                }}
                 disabled={delivering || success}
                 style={{
                   fontSize: "1.08rem", padding: "20px",

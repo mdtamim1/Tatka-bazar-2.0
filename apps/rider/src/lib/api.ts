@@ -14,6 +14,17 @@ export function clearToken() {
   localStorage.removeItem("rider_user");
 }
 
+export function getDutyStatus(): "ONLINE" | "OFFLINE" {
+  if (typeof window === "undefined") return "ONLINE";
+  return (localStorage.getItem("rider_duty_status") as "ONLINE" | "OFFLINE") || "ONLINE";
+}
+
+export function setDutyStatus(status: "ONLINE" | "OFFLINE") {
+  if (typeof window === "undefined") return;
+  localStorage.setItem("rider_duty_status", status);
+  window.dispatchEvent(new CustomEvent("rider_duty_change", { detail: { status } }));
+}
+
 // ---------------------------------------------------------------------------
 // Client Mock / Fallback Storage (when API backend is offline or on cloud HTTPS)
 // ---------------------------------------------------------------------------
@@ -473,6 +484,14 @@ function handleMockFallback<T>(path: string, options: RequestInit): { success: b
   // 5. Active Tasks
   if (cleanPath === "/rider-portal/tasks/active") {
     const activeTasks = getLocalStore<ActiveTask[]>("active_tasks", []);
+    let modified = false;
+    activeTasks.forEach((t) => {
+      if (!t.customerDeliveryOtp) {
+        t.customerDeliveryOtp = "4826";
+        modified = true;
+      }
+    });
+    if (modified) setLocalStore("active_tasks", activeTasks);
     return { success: true, data: activeTasks as any };
   }
 
@@ -492,6 +511,13 @@ function handleMockFallback<T>(path: string, options: RequestInit): { success: b
     const taskId = cleanPath.split("/").pop();
     const available = getLocalStore("available_tasks", SAMPLE_AVAILABLE_TASKS);
     const task = available.find((t) => t.id === taskId) || SAMPLE_AVAILABLE_TASKS[0];
+    const activeList = getLocalStore<ActiveTask[]>("active_tasks", []);
+    const matchingActive = activeList.find((a) => a.assignmentId === taskId || a.order.id === taskId);
+    const customerDeliveryOtp = matchingActive?.customerDeliveryOtp || "4826";
+    if (matchingActive && !matchingActive.customerDeliveryOtp) {
+      matchingActive.customerDeliveryOtp = customerDeliveryOtp;
+      setLocalStore("active_tasks", activeList);
+    }
     const deliveryFee = task?.deliveryFee || 60;
     const earnings = task?.earnings || Math.round(deliveryFee * 0.5);
     const items = task?.items || [
@@ -520,6 +546,7 @@ function handleMockFallback<T>(path: string, options: RequestInit): { success: b
         earnings,
         paymentStatus,
         paymentMethod,
+        customerDeliveryOtp,
       } as any,
     };
   }
@@ -543,6 +570,7 @@ function handleMockFallback<T>(path: string, options: RequestInit): { success: b
       const total = accepted.total || (subtotal + deliveryFee);
       const paymentStatus = accepted.paymentStatus || "COD";
       const paymentMethod = accepted.paymentMethod || (paymentStatus === "PAID" ? "BKASH" : "CASH_ON_DELIVERY");
+      const customerDeliveryOtp = String(Math.floor(1000 + Math.random() * 9000));
 
       const active = getLocalStore<ActiveTask[]>("active_tasks", []);
       active.push({
@@ -550,6 +578,7 @@ function handleMockFallback<T>(path: string, options: RequestInit): { success: b
         status: "PICKED_UP",
         assignedAt: new Date().toISOString(),
         pickedAt: new Date().toISOString(),
+        customerDeliveryOtp,
         order: {
           id: accepted.id,
           orderNumber: accepted.orderNumber,
@@ -784,17 +813,33 @@ function handleMockFallback<T>(path: string, options: RequestInit): { success: b
     return { success: false, error: "টাস্ক পাওয়া যায়নি" };
   }
 
-  // 8d. Deliver Task (Handover & Settlement)
+  // 8d. Deliver Task (Handover & Settlement with OTP verification)
   if (cleanPath.includes("/deliver") && method === "POST") {
+    let body: any = {};
+    try { body = JSON.parse(options.body as string); } catch {}
     const taskId = cleanPath.split("/")[3];
     const active = getLocalStore<ActiveTask[]>("active_tasks", []);
     let idx = active.findIndex((a) => a.assignmentId === taskId || a.order.id === taskId);
-    if (idx === -1 && active.length > 0) idx = 0;
     let earned = 30;
     let orderTotal = 0;
     let cashDeduction = 0;
     let isPaid = false;
-    if (idx !== -1) {
+
+    const targetTask = active[idx];
+    if (idx !== -1 && targetTask) {
+      const expectedOtp = targetTask.customerDeliveryOtp;
+      const inputOtp = body.deliveryOtp ? String(body.deliveryOtp).trim() : "";
+      const proofNote = body.proofNote ? String(body.proofNote).trim() : "";
+
+      if (expectedOtp && !proofNote) {
+        if (!inputOtp || inputOtp !== expectedOtp) {
+          return {
+            success: false,
+            error: "ভুল ডেলিভারি ওটিপি! কাস্টমারের মোবাইলে প্রেরিত ৪-সংখ্যার কোডটি দিন।",
+          };
+        }
+      }
+
       const [done] = active.splice(idx, 1);
       setLocalStore("active_tasks", active);
 
@@ -1040,6 +1085,21 @@ function handleMockFallback<T>(path: string, options: RequestInit): { success: b
     return { success: true, data: { message: "সব নোটিফিকেশন পড়া হয়েছে" } as any };
   }
 
+  // 15b. Duty Status — GET / POST
+  if (cleanPath === "/rider-portal/duty-status") {
+    if (method === "POST") {
+      let body: any = {};
+      try { body = JSON.parse(options.body as string); } catch {}
+      const st = body.status === "OFFLINE" ? "OFFLINE" : "ONLINE";
+      setDutyStatus(st);
+      const profile = getLocalStore("profile", DEFAULT_PROFILE);
+      profile.status = st === "ONLINE" ? "AVAILABLE" : "OFFLINE";
+      setLocalStore("profile", profile);
+      return { success: true, data: { status: st } as any };
+    }
+    return { success: true, data: { status: getDutyStatus() } as any };
+  }
+
   // 16. Withdraw Request
   if (cleanPath === "/rider-portal/withdraw" && method === "POST") {
     let body: any = {};
@@ -1183,6 +1243,8 @@ export interface ActiveTask {
   hubPhone?: string | undefined;
   returnCode?: string | undefined;
   returnTripFee?: number | undefined;
+  customerDeliveryOtp?: string | undefined;
+  deliveryProofNote?: string | undefined;
   order: {
     id: string;
     orderNumber: string;

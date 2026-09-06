@@ -1,7 +1,7 @@
 "use client";
 import React, { useEffect, useState, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { apiFetch, type Task, type ActiveTask, type RiderProfile } from "@/lib/api";
+import { apiFetch, getDutyStatus, setDutyStatus, type Task, type ActiveTask, type RiderProfile } from "@/lib/api";
 
 export default function TasksPage() {
   const router = useRouter();
@@ -10,6 +10,16 @@ export default function TasksPage() {
   const [profile, setProfile] = useState<RiderProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [accepting, setAccepting] = useState<string | null>(null);
+  const [duty, setDuty] = useState<"ONLINE" | "OFFLINE">("ONLINE");
+
+  useEffect(() => {
+    setDuty(getDutyStatus());
+    const handleDutyChange = (e: any) => {
+      if (e.detail?.status) setDuty(e.detail.status);
+    };
+    window.addEventListener("rider_duty_change", handleDutyChange);
+    return () => window.removeEventListener("rider_duty_change", handleDutyChange);
+  }, []);
 
   // Modal state
   const [modalTask, setModalTask] = useState<Task | null>(null);
@@ -252,6 +262,39 @@ export default function TasksPage() {
       })()}
 
       <div className="page-content">
+        {duty === "OFFLINE" && (
+          <div className="offline-lock-card">
+            <div className="offline-lock-icon">⏸️</div>
+            <div style={{ fontSize: "1.1rem", fontWeight: 800, color: "#fff", fontFamily: "var(--font-bn)", marginBottom: 6 }}>
+              আপনি বর্তমানে অফলাইনে (বিশ্রামে) আছেন
+            </div>
+            <div style={{ fontSize: ".82rem", color: "var(--text-3)", fontFamily: "var(--font-bn)", maxWidth: 360, margin: "0 auto 16px", lineHeight: 1.5 }}>
+              নতুন কোনো ডেলিভারি রিকোয়েস্ট বা অর্ডার গ্রহণ করতে অন-ডিউটি চালু করুন।
+            </div>
+            <button
+              id="go-online-btn"
+              onClick={() => {
+                setDuty("ONLINE");
+                setDutyStatus("ONLINE");
+              }}
+              style={{
+                background: "linear-gradient(135deg, #00d68f, #00b377)",
+                color: "#051322",
+                padding: "10px 22px",
+                borderRadius: "999px",
+                fontWeight: 900,
+                fontSize: ".9rem",
+                border: "none",
+                cursor: "pointer",
+                boxShadow: "0 4px 16px rgba(0,214,143,.35)",
+                fontFamily: "var(--font-bn)",
+              }}
+            >
+              🟢 অনলাইনে যান (Go Online)
+            </button>
+          </div>
+        )}
+
         {active.length > 0 && (
           <>
             <div className="section-header">
@@ -326,7 +369,15 @@ export default function TasksPage() {
                   </div>
                 </div>
 
-                {a.order.total && (
+                {/* Return Trip Allowance Highlight if in Returning state */}
+                {a.status === "RETURNING_TO_VENDOR" ? (
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "6px 12px", background: "rgba(239,68,68,.1)", border: "1px solid rgba(239,68,68,.25)", borderRadius: 8, fontSize: ".76rem", color: "#fca5a5", fontFamily: "var(--font-bn)", marginBottom: 4 }}>
+                    <span>রিটার্ন ট্রিপ ভাতা (কোনো বিল কর্তন নেই):</span>
+                    <strong style={{ color: "#22c55e", fontFamily: "monospace", fontSize: ".85rem" }}>
+                      + ৳ ২০
+                    </strong>
+                  </div>
+                ) : (
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "6px 12px", background: a.order.paymentStatus === "PAID" ? "rgba(16,185,129,.08)" : "var(--bg-base)", borderRadius: 8, fontSize: ".76rem", color: "var(--text-2)", fontFamily: "var(--font-bn)", marginBottom: 4 }}>
                     <span>{a.order.paymentStatus === "PAID" ? "কাস্টমার থেকে নগদ আদায়:" : "কাস্টমার থেকে সংগৃহীত বিল:"}</span>
                     <strong style={{ color: a.order.paymentStatus === "PAID" ? "#10B981" : "var(--text-1)", fontFamily: "monospace" }}>
@@ -368,11 +419,50 @@ export default function TasksPage() {
         <div className="section-header">
           <div className="section-title">
             📦 নতুন অর্ডার
-            <span className="live-badge"><span className="live-dot" />LIVE</span>
+            {duty === "ONLINE" && <span className="live-badge"><span className="live-dot" />LIVE</span>}
           </div>
+          {duty === "ONLINE" && tasks.length > 0 && (
+            <button
+              id="trigger-sound-alert-btn"
+              onClick={() => {
+                if (tasks[0]) {
+                  window.dispatchEvent(new CustomEvent("trigger_rider_order_alert", { detail: { task: tasks[0] } }));
+                }
+              }}
+              style={{
+                background: "rgba(255, 122, 0, 0.12)",
+                border: "1px solid rgba(255, 122, 0, 0.35)",
+                color: "#ff7a00",
+                borderRadius: 6,
+                padding: "3px 8px",
+                fontSize: ".70rem",
+                fontWeight: 700,
+                fontFamily: "var(--font-bn)",
+                cursor: "pointer",
+              }}
+            >
+              🔔 অ্যালার্ট টেস্ট
+            </button>
+          )}
         </div>
 
-        {tasks.length === 0 ? (
+        {duty === "OFFLINE" ? (
+          <div style={{
+            padding: "30px 20px",
+            background: "var(--bg-card)",
+            border: "1px dashed var(--border-2)",
+            borderRadius: "var(--r-lg)",
+            textAlign: "center",
+          }}>
+            <div style={{ fontSize: "2rem", marginBottom: 10 }}>🔒</div>
+            <div style={{ fontSize: ".95rem", fontWeight: 700, color: "var(--text-2)", fontFamily: "var(--font-bn)", marginBottom: 6 }}>
+              নতুন অর্ডার দেখতে অন-ডিউটি চালু করুন
+            </div>
+            <div style={{ fontSize: ".78rem", color: "var(--text-3)", fontFamily: "var(--font-bn)" }}>
+              আপনি অফলাইনে থাকায় নতুন কোনো অর্ডার শো করা হচ্ছে না।
+            </div>
+          </div>
+        ) : tasks.length === 0 ? (
           <div className="empty-state">
             <div className="empty-state-icon">🛵</div>
             <div className="empty-state-title">এখন কোন টাস্ক নেই</div>

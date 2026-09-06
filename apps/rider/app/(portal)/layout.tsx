@@ -1,9 +1,8 @@
 "use client";
-import React from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
-import { apiFetch } from "@/lib/api";
-import type { RiderNotification } from "@/lib/api";
+import { apiFetch, getDutyStatus, setDutyStatus, type RiderNotification, type Task } from "@/lib/api";
+import { sound } from "@/lib/sound";
 
 function HomeIcon()   { return <svg fill="none" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>; }
 function TaskIcon()   { return <svg fill="none" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" /></svg>; }
@@ -12,12 +11,18 @@ function ProfileIcon(){ return <svg fill="none" viewBox="0 0 24 24"><path stroke
 function PhoneIcon()  { return <svg fill="none" viewBox="0 0 24 24" style={{width:16,height:16,stroke:"currentColor"}}><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" /></svg>; }
 function BellIcon()   { return <svg fill="none" viewBox="0 0 24 24" style={{width:18,height:18,stroke:"currentColor"}}><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>; }
 
+const TOTAL_COUNTDOWN = 45;
+
 export default function PortalLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const [riderName, setRiderName] = useState("");
   const [taskCount, setTaskCount] = useState(0);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [duty, setDuty] = useState<"ONLINE" | "OFFLINE">("ONLINE");
+  const [incomingOrder, setIncomingOrder] = useState<Task | null>(null);
+  const [countdown, setCountdown] = useState<number>(TOTAL_COUNTDOWN);
+  const countdownTimerRef = useRef<any>(null);
 
   useEffect(() => {
     const token = localStorage.getItem("rider_token");
@@ -26,8 +31,16 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
     if (user) {
       try { setRiderName(JSON.parse(user).name?.split(" ")[0] || ""); } catch {}
     }
+    setDuty(getDutyStatus());
+
+    const handleDutyChange = (e: any) => {
+      if (e.detail?.status) setDuty(e.detail.status);
+    };
+    window.addEventListener("rider_duty_change", handleDutyChange);
+    return () => window.removeEventListener("rider_duty_change", handleDutyChange);
   }, [router]);
 
+  // Poll tasks
   useEffect(() => {
     const poll = () => {
       apiFetch<{ data: unknown[] }>("/rider-portal/tasks").then(r => {
@@ -39,6 +52,7 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
     return () => clearInterval(id);
   }, []);
 
+  // Poll notifications
   useEffect(() => {
     const pollNotifs = () => {
       apiFetch<RiderNotification[]>("/rider-portal/notifications").then(r => {
@@ -52,18 +66,92 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
     return () => clearInterval(id);
   }, []);
 
+  // Listen for simulated/real incoming order dispatch events
+  useEffect(() => {
+    const handleIncoming = (e: CustomEvent) => {
+      if (getDutyStatus() === "OFFLINE") return;
+      const task = e.detail?.task as Task;
+      if (task) {
+        showIncomingOrder(task);
+      }
+    };
+    window.addEventListener("trigger_rider_order_alert" as any, handleIncoming as any);
+    return () => window.removeEventListener("trigger_rider_order_alert" as any, handleIncoming as any);
+  }, []);
+
+  function toggleDuty() {
+    const next = duty === "ONLINE" ? "OFFLINE" : "ONLINE";
+    setDuty(next);
+    setDutyStatus(next);
+    apiFetch("/rider-portal/duty-status", { method: "POST", body: JSON.stringify({ status: next }) });
+    if (next === "OFFLINE") {
+      dismissIncomingOrder();
+    }
+  }
+
+  function showIncomingOrder(task: Task) {
+    setIncomingOrder(task);
+    setCountdown(TOTAL_COUNTDOWN);
+    sound.startIncomingOrderAlert();
+
+    if (countdownTimerRef.current) clearInterval(countdownTimerRef.current);
+    countdownTimerRef.current = setInterval(() => {
+      setCountdown((prev) => {
+        if (prev <= 1) {
+          dismissIncomingOrder();
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  }
+
+  function dismissIncomingOrder() {
+    sound.stopIncomingOrderAlert();
+    if (countdownTimerRef.current) {
+      clearInterval(countdownTimerRef.current);
+      countdownTimerRef.current = null;
+    }
+    setIncomingOrder(null);
+  }
+
+  async function acceptIncomingOrder() {
+    if (!incomingOrder) return;
+    const targetId = incomingOrder.id;
+    dismissIncomingOrder();
+    sound.playSuccessChime();
+    await apiFetch(`/rider-portal/tasks/${targetId}/accept`, { method: "POST" });
+    router.push(`/tasks/${targetId}`);
+  }
+
+  function triggerDemoAlert() {
+    if (duty === "OFFLINE") {
+      setDuty("ONLINE");
+      setDutyStatus("ONLINE");
+    }
+    const demoTask: Task = {
+      id: "task-01",
+      orderNumber: "TB-8942",
+      customerName: "তানভীর আহমেদ",
+      customerPhone: "01812345678",
+      deliveryAddress: "বাড়ি #১২, রোড #৫, ধানমন্ডি, ঢাকা",
+      vendorName: "সাদিক এগ্রো ফ্রেশ ফুডস",
+      itemCount: 4,
+      deliveryFee: 80,
+      total: 1530,
+      earnings: 40,
+      paymentStatus: "COD",
+      createdAt: new Date().toISOString(),
+    };
+    showIncomingOrder(demoTask);
+  }
+
   const nav = [
     { href: "/home", label: "হোম", icon: <HomeIcon /> },
     { href: "/tasks", label: "টাস্ক", icon: <TaskIcon />, badge: taskCount },
     { href: "/history", label: "হিস্ট্রি", icon: <HistoryIcon /> },
     { href: "/profile", label: "প্রোফাইল", icon: <ProfileIcon /> },
   ];
-
-  function logout() {
-    localStorage.removeItem("rider_token");
-    localStorage.removeItem("rider_user");
-    router.replace("/login");
-  }
 
   return (
     <div className="app-shell">
@@ -123,7 +211,185 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
         </div>
       </header>
 
+      {/* Duty Status Bar (Online/Offline Switch + Sound Test) */}
+      <div className="duty-switch-bar">
+        <div className="duty-toggle-group">
+          <div
+            id="duty-status-toggle"
+            className={`duty-status-pill ${duty === "ONLINE" ? "online" : "offline"}`}
+            onClick={toggleDuty}
+            title="অন/অফ-ডিউটি পরিবর্তন করুন"
+          >
+            <div className="duty-pulse-dot" />
+            <span>{duty === "ONLINE" ? "🟢 অন-ডিউটি (সক্রিয়)" : "⚪ অফ-ডিউটি (বিশ্রামে)"}</span>
+            <span style={{ fontSize: ".68rem", opacity: 0.75, marginLeft: 2 }}>
+              {duty === "ONLINE" ? "• টগল" : "• চালু করুন"}
+            </span>
+          </div>
+        </div>
+
+        <button
+          id="sound-test-btn"
+          onClick={triggerDemoAlert}
+          style={{
+            background: "rgba(255, 122, 0, 0.12)",
+            border: "1px solid rgba(255, 122, 0, 0.35)",
+            color: "#ff7a00",
+            borderRadius: "999px",
+            padding: "4px 12px",
+            fontSize: ".72rem",
+            fontWeight: 700,
+            fontFamily: "var(--font-bn)",
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 5,
+            cursor: "pointer",
+          }}
+          title="নতুন অর্ডারের সাউন্ড ও অ্যালার্ট টেস্ট করুন"
+        >
+          <span>🔔</span> সাউন্ড টেস্ট
+        </button>
+      </div>
+
       <main style={{ flex: 1 }}>{children}</main>
+
+      {/* Incoming Order Audio Ringtone & Countdown Modal */}
+      {incomingOrder && (
+        <div className="incoming-backdrop">
+          <div className="incoming-card">
+            {/* Timer bar */}
+            <div className="incoming-timer-bar">
+              <div
+                className="incoming-timer-fill"
+                style={{ width: `${(countdown / TOTAL_COUNTDOWN) * 100}%` }}
+              />
+            </div>
+
+            <div className="incoming-header">
+              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                <div className="incoming-bell-box">🔔</div>
+                <div>
+                  <div style={{ fontSize: ".72rem", color: "#ff7a00", fontWeight: 800, textTransform: "uppercase", letterSpacing: ".06em" }}>
+                    ইনকামিং ডেলিভারি রিকোয়েস্ট
+                  </div>
+                  <div style={{ fontSize: "1.1rem", fontWeight: 800, color: "#fff", fontFamily: "var(--font-bn)" }}>
+                    অর্ডার #{incomingOrder.orderNumber}
+                  </div>
+                </div>
+              </div>
+              <div style={{
+                background: "rgba(255,122,0,0.2)",
+                border: "1px solid #ff7a00",
+                borderRadius: "8px",
+                padding: "4px 10px",
+                color: "#ffb300",
+                fontWeight: 900,
+                fontSize: ".9rem",
+              }}>
+                ⏱️ {countdown}s
+              </div>
+            </div>
+
+            <div style={{ padding: "20px" }}>
+              {/* Earnings highlight */}
+              <div style={{
+                background: "linear-gradient(135deg, rgba(0,214,143,0.18), rgba(0,214,143,0.06))",
+                border: "1.5px solid rgba(0,214,143,0.4)",
+                borderRadius: "14px",
+                padding: "14px 18px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                marginBottom: "16px",
+              }}>
+                <div>
+                  <div style={{ fontSize: ".72rem", color: "var(--text-3)", fontFamily: "var(--font-bn)" }}>রাইডারের নিশ্চিত আয় (৫০% ফি)</div>
+                  <div style={{ fontSize: "1.6rem", fontWeight: 900, color: "#00d68f", lineHeight: 1.1 }}>
+                    + ৳ {incomingOrder.earnings}
+                  </div>
+                </div>
+                <div style={{ textAlign: "right" }}>
+                  <div style={{ fontSize: ".70rem", color: "var(--text-3)", fontFamily: "var(--font-bn)" }}>পেমেন্ট মোড</div>
+                  <div style={{
+                    fontSize: ".78rem",
+                    fontWeight: 800,
+                    padding: "3px 8px",
+                    borderRadius: "6px",
+                    background: incomingOrder.paymentStatus === "PAID" ? "rgba(0,214,143,0.2)" : "rgba(255,179,0,0.2)",
+                    color: incomingOrder.paymentStatus === "PAID" ? "#00d68f" : "#ffb300",
+                    border: incomingOrder.paymentStatus === "PAID" ? "1px solid rgba(0,214,143,0.4)" : "1px solid rgba(255,179,0,0.4)",
+                    marginTop: 3,
+                  }}>
+                    {incomingOrder.paymentStatus === "PAID" ? "🟢 অনলাইন পেইড" : `💵 সিওডি (৳ ${incomingOrder.total})`}
+                  </div>
+                </div>
+              </div>
+
+              {/* Route snippet */}
+              <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: "20px" }}>
+                <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
+                  <div style={{ color: "#ff7a00", fontSize: "1.1rem" }}>🏪</div>
+                  <div>
+                    <div style={{ fontSize: ".68rem", color: "var(--text-3)", fontFamily: "var(--font-bn)" }}>পিকআপ শপ</div>
+                    <div style={{ fontSize: ".88rem", fontWeight: 700, color: "var(--text-1)", fontFamily: "var(--font-bn)" }}>
+                      {incomingOrder.vendorName}
+                    </div>
+                  </div>
+                </div>
+                <div style={{ borderLeft: "2px dashed var(--border-2)", marginLeft: 8, height: 12 }} />
+                <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
+                  <div style={{ color: "#00d68f", fontSize: "1.1rem" }}>📍</div>
+                  <div>
+                    <div style={{ fontSize: ".68rem", color: "var(--text-3)", fontFamily: "var(--font-bn)" }}>ডেলিভারি ঠিকানা</div>
+                    <div style={{ fontSize: ".88rem", fontWeight: 700, color: "var(--text-1)", fontFamily: "var(--font-bn)" }}>
+                      {incomingOrder.deliveryAddress}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Buttons */}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: 10 }}>
+                <button
+                  id="decline-order-btn"
+                  onClick={dismissIncomingOrder}
+                  style={{
+                    padding: "14px",
+                    background: "rgba(239,68,68,0.15)",
+                    border: "1px solid rgba(239,68,68,0.35)",
+                    color: "#fca5a5",
+                    borderRadius: "12px",
+                    fontSize: ".9rem",
+                    fontWeight: 800,
+                    fontFamily: "var(--font-bn)",
+                    cursor: "pointer",
+                  }}
+                >
+                  প্রত্যাখ্যান
+                </button>
+                <button
+                  id="accept-order-btn"
+                  onClick={acceptIncomingOrder}
+                  style={{
+                    padding: "14px",
+                    background: "linear-gradient(135deg, #00d68f, #00b377)",
+                    border: "none",
+                    color: "#051322",
+                    borderRadius: "12px",
+                    fontSize: "1rem",
+                    fontWeight: 900,
+                    fontFamily: "var(--font-bn)",
+                    boxShadow: "0 4px 20px rgba(0,214,143,0.4)",
+                    cursor: "pointer",
+                  }}
+                >
+                  ⚡ গ্রহণ করুন
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       <nav className="bottom-nav" role="navigation" aria-label="মূল নেভিগেশন">
         {nav.map(item => (
