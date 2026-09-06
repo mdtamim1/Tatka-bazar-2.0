@@ -673,34 +673,119 @@ function handleMockFallback<T>(path: string, options: RequestInit): { success: b
     return { success: true, data: filtered as any };
   }
 
-  // 13. Deposit / Recharge Request
+  // 13. Deposit / Recharge Request (Sets to PENDING, waiting for Admin approval)
   if (cleanPath === "/rider-portal/deposit" && method === "POST") {
     let body: any = {};
     try { body = JSON.parse(options.body as string); } catch {}
     const amount = Number(body.amount) || 0;
     const lastFour = body.lastFour || "";
+    const paymentMethod = body.paymentMethod || "bKash";
     if (!amount || amount <= 0) return { success: false, error: "সঠিক পরিমাণ দিন" };
     if (!lastFour || lastFour.length !== 4) return { success: false, error: "শেষ ৪ সংখ্যা সঠিক নয়" };
-    // In demo: auto-approve — clear due first, then add to balance
-    const profile = getLocalStore("profile", DEFAULT_PROFILE);
-    const due = profile.due || 0;
-    if (due > 0) {
-      const deducted = Math.min(amount, due);
-      profile.due = due - deducted;
-      profile.balance += amount - deducted;
-    } else {
-      profile.balance += amount;
-    }
-    setLocalStore("profile", profile);
-    // Save deposit request history
+
+    const user = getLocalStore<RiderUser>("user", DEFAULT_USER);
+    const profile = getLocalStore<RiderProfile>("profile", DEFAULT_PROFILE);
+
+    // Save deposit request as PENDING. Balance is NOT updated until Admin approves!
+    const newDeposit: DepositRequest = {
+      id: "dep-" + Date.now(),
+      riderId: user.id || profile.id || "rider-demo-01",
+      riderName: profile.name || user.name || "তামীম ইকবাল",
+      riderPhone: profile.phone || user.phone || "01700000001",
+      amount,
+      paymentMethod,
+      lastFour,
+      status: "PENDING",
+      createdAt: new Date().toISOString(),
+    };
+
     const deposits = getLocalStore<DepositRequest[]>("deposit_requests", []);
-    deposits.unshift({ id: "dep-" + Date.now(), amount, lastFour, status: "APPROVED", createdAt: new Date().toISOString() });
+    deposits.unshift(newDeposit);
     setLocalStore("deposit_requests", deposits);
+
     // Add notification
     const notifs = getLocalStore<RiderNotification[]>("notifications", SAMPLE_NOTIFICATIONS);
-    notifs.unshift({ id: "n-" + Date.now(), type: "PAYMENT", title: "রিচার্জ সম্পন্ন", body: `৳ ${amount} আপনার ব্যালেন্সে যোগ হয়েছে`, isRead: false, createdAt: new Date().toISOString() });
+    notifs.unshift({
+      id: "n-" + Date.now(),
+      type: "PAYMENT",
+      title: "ডিপোজিট রিকোয়েস্ট জমা হয়েছে",
+      body: `৳ ${amount} (${paymentMethod}) জমার রিকোয়েস্ট অ্যাডমিন অনুমোদনের অপেক্ষায় রয়েছে`,
+      isRead: false,
+      createdAt: new Date().toISOString(),
+    });
     setLocalStore("notifications", notifs);
-    return { success: true, data: { message: "ডিপোজিট সম্পন্ন হয়েছে", newBalance: profile.balance } as any };
+
+    return {
+      success: true,
+      data: {
+        message: "আপনার ডিপোজিট রিকোয়েস্ট জমা হয়েছে। অ্যাডমিন অনুমোদন করার পর ব্যালেন্সে যুক্ত হবে।",
+        deposit: newDeposit,
+        currentBalance: profile.balance,
+      } as any,
+    };
+  }
+
+  // 13b. Get Deposit Requests History
+  if (cleanPath === "/rider-portal/deposits" && method === "GET") {
+    const deposits = getLocalStore<DepositRequest[]>("deposit_requests", []);
+    return { success: true, data: deposits as any };
+  }
+
+  // 13c. Admin Approve / Reject Deposit Handler
+  if ((cleanPath.startsWith("/api/riders/deposits") || cleanPath.startsWith("/rider-portal/deposits/")) && (method === "PATCH" || method === "POST")) {
+    let body: any = {};
+    try { body = JSON.parse(options.body as string); } catch {}
+    const depositId = cleanPath.split("/").pop();
+    const deposits = getLocalStore<DepositRequest[]>("deposit_requests", []);
+    const target = deposits.find(d => d.id === depositId);
+    if (target) {
+      target.status = body.status === "APPROVED" ? "APPROVED" : "REJECTED";
+      target.approvedAt = new Date().toISOString();
+      target.adminNote = body.adminNote;
+      setLocalStore("deposit_requests", deposits);
+
+      if (target.status === "APPROVED") {
+        // Increment rider balance only upon approval
+        const profile = getLocalStore<RiderProfile>("profile", DEFAULT_PROFILE);
+        profile.balance += target.amount;
+        setLocalStore("profile", profile);
+
+        // Add to history
+        const allHistory = getLocalStore<HistoryItem[]>("history", []);
+        allHistory.unshift({
+          id: "h-dep-" + Date.now(),
+          type: "income",
+          amount: target.amount,
+          description: `ডিপোজিট অনুমোদন — ৳ ${target.amount} (${target.paymentMethod || "bKash"})`,
+          createdAt: new Date().toISOString(),
+        });
+        setLocalStore("history", allHistory);
+
+        // Add notification
+        const notifs = getLocalStore<RiderNotification[]>("notifications", SAMPLE_NOTIFICATIONS);
+        notifs.unshift({
+          id: "n-" + Date.now(),
+          type: "PAYMENT",
+          title: "ডিপোজিট অনুমোদিত হয়েছে ✅",
+          body: `আপনার ৳ ${target.amount} ডিপোজিট অ্যাডমিন অনুমোদন করেছেন এবং ব্যালেন্সে যোগ হয়েছে`,
+          isRead: false,
+          createdAt: new Date().toISOString(),
+        });
+        setLocalStore("notifications", notifs);
+      } else {
+        const notifs = getLocalStore<RiderNotification[]>("notifications", SAMPLE_NOTIFICATIONS);
+        notifs.unshift({
+          id: "n-" + Date.now(),
+          type: "PAYMENT",
+          title: "ডিপোজিট বাতিল ❌",
+          body: `আপনার ৳ ${target.amount} ডিপোজিট রিকোয়েস্ট অ্যাডমিন বাতিল করেছেন`,
+          isRead: false,
+          createdAt: new Date().toISOString(),
+        });
+        setLocalStore("notifications", notifs);
+      }
+    }
+    return { success: true, data: { message: "ডিপোজিট স্ট্যাটাস আপডেট হয়েছে" } as any };
   }
 
   // 14. Notifications — GET
@@ -871,10 +956,16 @@ export interface RiderNotification {
 
 export interface DepositRequest {
   id: string;
+  riderId?: string;
+  riderName?: string;
+  riderPhone?: string;
   amount: number;
+  paymentMethod?: string;
   lastFour: string;
   status: "PENDING" | "APPROVED" | "REJECTED";
   createdAt: string;
+  approvedAt?: string;
+  adminNote?: string;
 }
 
 export interface HistoryItem {

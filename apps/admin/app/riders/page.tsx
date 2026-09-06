@@ -226,10 +226,46 @@ export default function AdminRidersPage() {
             Delivery rider fleet roster, active route tracking, and performance analytics
           </p>
         </div>
-        <button className="admin-btn admin-btn-primary" onClick={() => setCreate(true)}>
-          <Plus size={15} />
-          Add New Rider
-        </button>
+        <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+          <a
+            href="/riders/deposits"
+            className="admin-btn"
+            style={{
+              background: "rgba(16, 185, 129, 0.12)",
+              border: "1px solid rgba(16, 185, 129, 0.3)",
+              color: "var(--green)",
+              textDecoration: "none",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 6,
+              fontSize: "0.82rem",
+              fontWeight: 700,
+            }}
+          >
+            📥 ডিপোজিট রিকোয়েস্ট
+          </a>
+          <a
+            href="/riders/withdrawals"
+            className="admin-btn"
+            style={{
+              background: "rgba(245, 158, 11, 0.12)",
+              border: "1px solid rgba(245, 158, 11, 0.3)",
+              color: "var(--amber)",
+              textDecoration: "none",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 6,
+              fontSize: "0.82rem",
+              fontWeight: 700,
+            }}
+          >
+            💸 উইথড্র রিকোয়েস্ট
+          </a>
+          <button className="admin-btn admin-btn-primary" onClick={() => setCreate(true)}>
+            <Plus size={15} />
+            Add New Rider
+          </button>
+        </div>
       </div>
 
       {/* ── KPI Strip ──────────────────────────────────────── */}

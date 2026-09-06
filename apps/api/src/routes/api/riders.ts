@@ -180,6 +180,47 @@ export async function riderRoutes(fastify: FastifyInstance) {
     }
   });
 
+  // GET /api/riders/deposits — all deposit requests
+  fastify.get("/deposits", async (request, reply) => {
+    const query = request.query as { status?: string };
+    try {
+      // Return empty array or structured deposit items
+      return reply.send({ success: true, data: [] });
+    } catch (err: any) {
+      return reply.status(500).send({ success: false, error: err.message });
+    }
+  });
+
+  // PATCH /api/riders/deposits/:id — approve or reject rider deposit
+  fastify.patch("/deposits/:id", async (request, reply) => {
+    const { id } = request.params as { id: string };
+    const body = request.body as {
+      status: "APPROVED" | "REJECTED";
+      riderId?: string;
+      amount?: number;
+      adminNote?: string;
+    };
+    try {
+      if (body.status === "APPROVED" && body.riderId && body.amount) {
+        await prisma.deliveryRider.update({
+          where: { id: body.riderId },
+          data: { balance: { increment: Number(body.amount) } },
+        });
+        await prisma.riderEarning.create({
+          data: {
+            riderId: body.riderId,
+            amount: Number(body.amount),
+            description: `ডিপোজিট অনুমোদন — ৳ ${body.amount} ব্যালেন্সে যুক্ত হয়েছে`,
+            type: "ADJUSTMENT",
+          },
+        });
+      }
+      return reply.send({ success: true, message: body.status === "APPROVED" ? "ডিপোজিট অনুমোদিত" : "ডিপোজিট বাতিল" });
+    } catch (err: any) {
+      return reply.status(400).send({ success: false, error: err.message });
+    }
+  });
+
   // GET /api/delivery-rates — get rates
   fastify.get("/delivery-rates", async (_request, reply) => {
     try {
