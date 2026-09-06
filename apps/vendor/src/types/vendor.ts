@@ -5,12 +5,16 @@ export type VendorStatus = "PENDING" | "APPROVED" | "REJECTED" | "SUSPENDED";
 export type VendorTier = "STANDARD" | "TRUSTED" | "PREMIUM";
 
 export type OrderStatus =
-  | "RECEIVED"
-  | "PREPARING"
+  | "PENDING"
+  | "PROCESSING"
   | "READY_FOR_PICKUP"
   | "HANDED_TO_RIDER"
   | "COMPLETED"
-  | "CANCELLED";
+  | "RETURNED"
+  | "CANCELLED"
+  // Legacy aliases for backward-compatibility
+  | "RECEIVED"
+  | "PREPARING";
 
 export type PricingType = "FIXED" | "WEIGHT_BASED";
 
@@ -102,12 +106,29 @@ export interface Order {
   riderId?: string;
   riderName?: string;
   riderPhone?: string;
+  riderVehicle?: string;
   assignedAt: string;
   readyAt?: string;
   completedAt?: string;
   isB2B?: boolean;
   notes?: string;
   urgent?: boolean;
+  // Area-wise competitive dispatch & claim
+  claimedByVendorId?: string;
+  claimedByStoreName?: string;
+  claimedAt?: string;
+  isClaimedByOther?: boolean;
+  // Rider Live Tracking
+  riderLatitude?: number;
+  riderLongitude?: number;
+  riderDistanceKm?: number;
+  riderEtaMinutes?: number;
+  riderCurrentLocationName?: string;
+  // Returns
+  returnReason?: string;
+  returnedAt?: string;
+  // 12-Hour Active Shift Window
+  shiftCreatedAt?: string;
 }
 
 export type StockAdjustmentReason =

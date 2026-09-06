@@ -10,6 +10,7 @@ import RoleSwitcherModal from "@/components/common/RoleSwitcherModal";
 import KeyboardShortcutsModal from "@/components/common/KeyboardShortcutsModal";
 import IncomingOrderModal from "@/components/common/IncomingOrderModal";
 import RiderChatModal from "@/components/common/RiderChatModal";
+import VendorOrderTrackModal from "@/components/common/VendorOrderTrackModal";
 import { useVendorStore } from "@/store/vendorStore";
 import { subscribeSyncEvent } from "@/lib/sync";
 import { audioAlert } from "@/utils/audioAlert";
@@ -27,11 +28,17 @@ export default function VendorShell({
 
   // Live store values
   const {
+    profile,
     incomingOrderAlert,
+    claimLockAlert,
+    setClaimLockAlert,
     acceptOrder,
     declineOrder,
     chatOrder,
     setChatOrder,
+    trackingOrder,
+    setTrackingOrder,
+    simulateAreaDispatchOrder,
     simulateIncomingOrder,
     updateOrderStatus,
   } = useVendorStore();
@@ -60,15 +67,30 @@ export default function VendorShell({
   // Cross-app sync listener (receives events from storefront, rider, or admin)
   useEffect(() => {
     const unsubscribe = subscribeSyncEvent((payload) => {
-      if (payload.type === "NEW_ORDER") {
+      if (payload.type === "NEW_ORDER" || payload.type === "ADMIN_DISPATCH_TO_ZONE") {
         simulateIncomingOrder();
+      } else if (payload.type === "VENDOR_CLAIM_ORDER") {
+        // If another vendor claimed this order
+        if (payload.claimedByVendorId && payload.claimedByVendorId !== profile.id) {
+          setClaimLockAlert({
+            isOpen: true,
+            message: `অর্ডারটি ইতিমধ্যে অন্য ভেন্ডর (${payload.claimedByStoreName || "অন্য দোকান"}) গ্রহণ করেছেন!`,
+            claimedByStoreName: payload.claimedByStoreName || "অন্য দোকান",
+          });
+        }
+      } else if (payload.type === "ORDER_CLAIMED_BY_ANOTHER") {
+        setClaimLockAlert({
+          isOpen: true,
+          message: payload.message || "অর্ডারটি ইতিমধ্যে অন্য ভেন্ডর গ্রহণ করেছেন!",
+          claimedByStoreName: payload.claimedByStoreName || "অন্য দোকান",
+        });
       } else if (payload.type === "PAYOUT_APPROVED") {
         audioAlert.playSuccessSound();
       }
     });
 
     return () => unsubscribe();
-  }, [simulateIncomingOrder]);
+  }, [simulateIncomingOrder, profile.id, setClaimLockAlert]);
 
   const isAuthPage = pathname === "/login" || pathname === "/onboarding";
 
@@ -138,11 +160,13 @@ export default function VendorShell({
         onClose={() => setIsShortcutsOpen(false)}
       />
 
-      {/* ── Incoming Order Alert Modal with 45s Countdown & Chime ── */}
+      {/* ── Incoming Order Alert Modal with 45s Countdown, Chime & Claim Lockout ── */}
       <IncomingOrderModal
         order={incomingOrderAlert}
         onAccept={acceptOrder}
         onDecline={declineOrder}
+        isClaimedByOther={Boolean(claimLockAlert?.isOpen)}
+        claimedByStoreName={claimLockAlert?.claimedByStoreName}
       />
 
       {/* ── Live Rider-Vendor Chat Modal ── */}
@@ -150,6 +174,16 @@ export default function VendorShell({
         isOpen={Boolean(chatOrder)}
         onClose={() => setChatOrder(null)}
         orderNumber={chatOrder?.displayId}
+        riderName={chatOrder?.riderName}
+        riderPhone={chatOrder?.riderPhone}
+      />
+
+      {/* ── Live Rider Order Tracking Modal ── */}
+      <VendorOrderTrackModal
+        isOpen={Boolean(trackingOrder)}
+        order={trackingOrder}
+        onClose={() => setTrackingOrder(null)}
+        onOpenChat={(ord) => setChatOrder(ord)}
       />
     </div>
   );

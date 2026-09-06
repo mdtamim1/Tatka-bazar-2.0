@@ -23,6 +23,7 @@ import {
 } from "@/types/vendor";
 import { Language } from "@/utils/translations";
 import { audioAlert } from "@/utils/audioAlert";
+import { broadcastSyncEvent } from "@/lib/sync";
 
 interface VendorState {
   // Localization & Role
@@ -49,6 +50,19 @@ interface VendorState {
   wholesaleBuyers: WholesaleBuyer[];
   coupons: Coupon[];
   notifications: NotificationItem[];
+  orderHistory: Order[];
+
+  // Rider Live Tracking
+  trackingOrder: Order | null;
+  setTrackingOrder: (order: Order | null) => void;
+
+  // Multi-Vendor Claim Lockout
+  claimLockAlert: { isOpen: boolean; message: string; claimedByStoreName: string } | null;
+  setClaimLockAlert: (alert: { isOpen: boolean; message: string; claimedByStoreName: string } | null) => void;
+
+  // 12-Hour Operational Shift
+  shiftStartedAt: string;
+  resetShiftQueue: () => void;
 
   // Action Methods
   setLanguage: (lang: Language) => void;
@@ -64,10 +78,13 @@ interface VendorState {
 
   // Order Operations
   updateOrderStatus: (orderId: string, status: OrderStatus) => void;
+  markOrderReturned: (orderId: string, reason?: string) => void;
   reconcileItemWeight: (orderId: string, itemId: string, actualWeight: number) => void;
   toggleItemPacked: (orderId: string, itemId: string) => void;
   markAllItemsPacked: (orderId: string) => void;
   simulateIncomingOrder: () => void;
+  simulateAreaDispatchOrder: () => void;
+  simulateRemoteClaim: (orderId: string) => void;
 
   // Product Operations
   addProduct: (product: Omit<Product, "id" | "createdAt" | "updatedAt">) => void;
@@ -360,14 +377,49 @@ const initialProducts: Product[] = [
 
 const initialOrders: Order[] = [
   {
+    id: "ord-8495",
+    displayId: "TB-8495",
+    customerName: "গ্রাহক: তা*** (ধানমন্ডি)",
+    customerPhone: "01729-*** [🔒 গোপনীয়]",
+    customerAddress: "ধানমন্ডি জোন [🔒 গ্রাহকের সুনির্দিষ্ট ঠিকানা গোপনীয় - রাইডারের জন্য সংরক্ষিত]",
+    deliveryZone: "ধানমন্ডি জোন",
+    createdAt: new Date().toISOString(),
+    status: "PENDING",
+    urgent: true,
+    grossTotal: 1350,
+    commissionRate: 10,
+    commissionAmount: 135.0,
+    netTotal: 1215.0,
+    paymentMethod: "BKASH",
+    paymentStatus: "PAID",
+    assignedAt: new Date().toISOString(),
+    notes: "মাছের পিসগুলো মাঝারি সাইজ করবেন।",
+    items: [
+      {
+        id: "item-p1",
+        productId: "prod-2",
+        productName: "Padma River Fresh Ilish / Hilsa (1kg+)",
+        productNameBn: "পদ্মার তাজা বড় ইলিশ মাছ (১ কেজি+)",
+        category: "FISH",
+        pricingType: "WEIGHT_BASED",
+        unit: "KG",
+        unitPrice: 1650,
+        quantity: 1,
+        weightOrdered: 1.0,
+        finalPrice: 1650,
+        packed: false,
+      },
+    ],
+  },
+  {
     id: "ord-8492",
     displayId: "TB-8492",
-    customerName: "Dr. Farhana Ahmed",
-    customerPhone: "+8801819876543",
-    customerAddress: "Apartment 5B, Road 11/A, Dhanmondi",
-    deliveryZone: "Dhanmondi",
-    createdAt: "2026-09-03T11:42:00Z",
-    status: "RECEIVED",
+    customerName: "গ্রাহক: ফা*** (ধানমন্ডি)",
+    customerPhone: "01819-*** [🔒 গোপনীয়]",
+    customerAddress: "ধানমন্ডি-১১/এ জোন [🔒 গ্রাহকের সুনির্দিষ্ট ঠিকানা গোপনীয়]",
+    deliveryZone: "ধানমন্ডি জোন",
+    createdAt: new Date(Date.now() - 25 * 60 * 1000).toISOString(),
+    status: "PROCESSING",
     urgent: true,
     grossTotal: 1075,
     commissionRate: 10,
@@ -375,8 +427,8 @@ const initialOrders: Order[] = [
     netTotal: 967.5,
     paymentMethod: "BKASH",
     paymentStatus: "PAID",
-    assignedAt: "2026-09-03T11:43:00Z",
-    notes: "Please pack meat in double thermal bag with ice.",
+    assignedAt: new Date(Date.now() - 24 * 60 * 1000).toISOString(),
+    notes: "গরুর মাংস ডাবল থার্মাল ব্যাগে বরফ দিয়ে প্যাক করবেন।",
     items: [
       {
         id: "item-1",
@@ -388,8 +440,8 @@ const initialOrders: Order[] = [
         unit: "KG",
         unitPrice: 820,
         quantity: 1,
-        weightOrdered: 1.0, // Customer ordered 1 kg
-        weightActual: undefined, // Needs weighing!
+        weightOrdered: 1.0,
+        weightActual: undefined, // Needs scale weighing!
         finalPrice: 820,
         packed: false,
       },
@@ -404,7 +456,7 @@ const initialOrders: Order[] = [
         unitPrice: 25,
         quantity: 3,
         finalPrice: 75,
-        packed: false,
+        packed: true,
       },
       {
         id: "item-3",
@@ -432,27 +484,27 @@ const initialOrders: Order[] = [
         unitPrice: 150,
         quantity: 1,
         finalPrice: 150,
-        packed: false,
+        packed: true,
       },
     ],
   },
   {
     id: "ord-8488",
     displayId: "TB-8488",
-    customerName: "Mahmudur Rahman",
-    customerPhone: "+8801715987123",
-    customerAddress: "House 14, Lake Circus, Kalabagan",
-    deliveryZone: "Kalabagan",
-    createdAt: "2026-09-03T11:20:00Z",
-    status: "PREPARING",
+    customerName: "গ্রাহক: মা*** (কলাবাগান)",
+    customerPhone: "01715-*** [🔒 গোপনীয়]",
+    customerAddress: "কলাবাগান লেক সার্কাস জোন [🔒 ঠিকানা গোপনীয়]",
+    deliveryZone: "কলাবাগান জোন",
+    createdAt: new Date(Date.now() - 45 * 60 * 1000).toISOString(),
+    status: "PROCESSING",
     grossTotal: 2135,
     commissionRate: 10,
     commissionAmount: 213.5,
     netTotal: 1921.5,
     paymentMethod: "CASH_ON_DELIVERY",
     paymentStatus: "PENDING",
-    assignedAt: "2026-09-03T11:21:00Z",
-    notes: "Cut Hilsa into medium curry pieces please.",
+    assignedAt: new Date(Date.now() - 44 * 60 * 1000).toISOString(),
+    notes: "মাঝারি সাইজের পিস করবেন।",
     items: [
       {
         id: "item-5",
@@ -465,7 +517,7 @@ const initialOrders: Order[] = [
         unitPrice: 1650,
         quantity: 1,
         weightOrdered: 1.2,
-        weightActual: 1.22, // Already weighed 1.22 kg
+        weightActual: 1.22,
         finalPrice: 2013,
         packed: true,
       },
@@ -480,33 +532,20 @@ const initialOrders: Order[] = [
         unitPrice: 75,
         quantity: 1,
         weightOrdered: 1.5,
-        weightActual: undefined, // Needs weighing
+        weightActual: undefined,
         finalPrice: 112.5,
         packed: false,
-      },
-      {
-        id: "item-7",
-        productId: "prod-3",
-        productName: "Organic Red Spinach (Lal Shak)",
-        productNameBn: "তাজা লাল শাক আঁটি",
-        category: "VEGETABLES",
-        pricingType: "FIXED",
-        unit: "PACK",
-        unitPrice: 25,
-        quantity: 2,
-        finalPrice: 50,
-        packed: true,
       },
     ],
   },
   {
     id: "ord-8481",
     displayId: "TB-8481",
-    customerName: "Syeda Anika Tabassum",
-    customerPhone: "+8801912345678",
-    customerAddress: "Block D, Lalmatia, Dhaka",
-    deliveryZone: "Lalmatia",
-    createdAt: "2026-09-03T10:45:00Z",
+    customerName: "গ্রাহক: আ*** (লালমাটিয়া)",
+    customerPhone: "01912-*** [🔒 গোপনীয়]",
+    customerAddress: "লালমাটিয়া ব্লক-ডি জোন [🔒 ঠিকানা গোপনীয়]",
+    deliveryZone: "লালমাটিয়া জোন",
+    createdAt: new Date(Date.now() - 75 * 60 * 1000).toISOString(),
     status: "READY_FOR_PICKUP",
     grossTotal: 1830,
     commissionRate: 10,
@@ -514,11 +553,15 @@ const initialOrders: Order[] = [
     netTotal: 1647.0,
     paymentMethod: "BKASH",
     paymentStatus: "PAID",
-    assignedAt: "2026-09-03T10:46:00Z",
-    readyAt: "2026-09-03T11:05:00Z",
-    riderId: "rider-104",
-    riderName: "Kabir Hossain (Rider #104)",
-    riderPhone: "+8801733445566",
+    assignedAt: new Date(Date.now() - 74 * 60 * 1000).toISOString(),
+    readyAt: new Date(Date.now() - 20 * 60 * 1000).toISOString(),
+    riderId: "rd-local-101",
+    riderName: "তানভীর আহমেদ (রাইডার #১০১)",
+    riderPhone: "01712-334455",
+    riderVehicle: "হোন্ডা ড্রিম ১১০ (বাইক)",
+    riderCurrentLocationName: "মিরপুর রোড, লালমাটিয়ার মোড়",
+    riderEtaMinutes: 8,
+    riderDistanceKm: 1.2,
     items: [
       {
         id: "item-8",
@@ -551,11 +594,11 @@ const initialOrders: Order[] = [
   {
     id: "ord-8475",
     displayId: "TB-8475",
-    customerName: "Kazi Nabil",
-    customerPhone: "+8801712984512",
-    customerAddress: "Road 27 (Old), Dhanmondi",
-    deliveryZone: "Dhanmondi",
-    createdAt: "2026-09-03T09:15:00Z",
+    customerName: "গ্রাহক: না*** (ধানমন্ডি)",
+    customerPhone: "01712-*** [🔒 গোপনীয়]",
+    customerAddress: "ধানমন্ডি-২৭ জোন [🔒 ঠিকানা গোপনীয়]",
+    deliveryZone: "ধানমন্ডি জোন",
+    createdAt: new Date(Date.now() - 120 * 60 * 1000).toISOString(),
     status: "COMPLETED",
     grossTotal: 1450,
     commissionRate: 10,
@@ -563,11 +606,11 @@ const initialOrders: Order[] = [
     netTotal: 1305.0,
     paymentMethod: "CARD",
     paymentStatus: "PAID",
-    assignedAt: "2026-09-03T09:16:00Z",
-    readyAt: "2026-09-03T09:30:00Z",
-    completedAt: "2026-09-03T10:05:00Z",
-    riderName: "Shahin Alam",
-    riderPhone: "+8801822334455",
+    assignedAt: new Date(Date.now() - 119 * 60 * 1000).toISOString(),
+    readyAt: new Date(Date.now() - 95 * 60 * 1000).toISOString(),
+    completedAt: new Date(Date.now() - 40 * 60 * 1000).toISOString(),
+    riderName: "শাহিন আলম (রাইডার #১০২)",
+    riderPhone: "01822-334455",
     items: [
       {
         id: "item-10",
@@ -584,8 +627,29 @@ const initialOrders: Order[] = [
         finalPrice: 1246.4,
         packed: true,
       },
+    ],
+  },
+  {
+    id: "ord-8462",
+    displayId: "TB-8462",
+    customerName: "গ্রাহক: রি*** (মোহাম্মদপুর)",
+    customerPhone: "01823-*** [🔒 গোপনীয়]",
+    customerAddress: "মোহাম্মদপুর টাউনহল জোন [🔒 ঠিকানা গোপনীয়]",
+    deliveryZone: "মোহাম্মদপুর জোন",
+    createdAt: new Date(Date.now() - 180 * 60 * 1000).toISOString(),
+    status: "RETURNED",
+    returnReason: "গ্রাহক দরজায় অনুপস্থিত ছিলেন এবং ফোনে যোগাযোগ করা যায়নি।",
+    returnedAt: new Date(Date.now() - 60 * 60 * 1000).toISOString(),
+    grossTotal: 850,
+    commissionRate: 10,
+    commissionAmount: 85.0,
+    netTotal: 765.0,
+    paymentMethod: "CASH_ON_DELIVERY",
+    paymentStatus: "PENDING",
+    assignedAt: new Date(Date.now() - 179 * 60 * 1000).toISOString(),
+    items: [
       {
-        id: "item-11",
+        id: "item-13",
         productId: "prod-4",
         productName: "Deshi Round Ripe Tomatoes",
         productNameBn: "দেশি পাকা গোল টমেটো",
@@ -593,45 +657,122 @@ const initialOrders: Order[] = [
         pricingType: "WEIGHT_BASED",
         unit: "KG",
         unitPrice: 75,
-        quantity: 1,
+        quantity: 2,
         weightOrdered: 2.0,
-        weightActual: 2.05,
-        finalPrice: 153.75,
+        weightActual: 2.0,
+        finalPrice: 150,
+        packed: true,
+      },
+    ],
+  },
+];
+
+const initialOrderHistory: Order[] = [
+  ...initialOrders,
+  {
+    id: "ord-8450",
+    displayId: "TB-8450",
+    customerName: "গ্রাহক: রা*** (মিরপুর)",
+    customerPhone: "01711-*** [🔒 গোপনীয়]",
+    customerAddress: "মিরপুর-১০ জোন [🔒 ঠিকানা গোপনীয়]",
+    deliveryZone: "মিরপুর-১০ জোন",
+    createdAt: "2026-09-01T14:30:00Z",
+    status: "COMPLETED",
+    grossTotal: 2600,
+    commissionRate: 10,
+    commissionAmount: 260.0,
+    netTotal: 2340.0,
+    paymentMethod: "BKASH",
+    paymentStatus: "PAID",
+    assignedAt: "2026-09-01T14:32:00Z",
+    completedAt: "2026-09-01T15:45:00Z",
+    riderName: "জাহিদ হাসান",
+    riderPhone: "01999-112233",
+    items: [
+      {
+        id: "hist-1",
+        productId: "prod-2",
+        productName: "Padma River Fresh Ilish",
+        productNameBn: "পদ্মার তাজা বড় ইলিশ মাছ",
+        category: "FISH",
+        pricingType: "WEIGHT_BASED",
+        unit: "KG",
+        unitPrice: 1650,
+        quantity: 1,
+        weightOrdered: 1.5,
+        weightActual: 1.55,
+        finalPrice: 2557.5,
         packed: true,
       },
     ],
   },
   {
-    id: "ord-8469",
-    displayId: "TB-8469",
-    customerName: "Tanzimul Haque",
-    customerPhone: "+8801552345678",
-    customerAddress: "Japan Garden City, Mohammadpur",
-    deliveryZone: "Mohammadpur",
-    createdAt: "2026-09-02T16:30:00Z",
+    id: "ord-8442",
+    displayId: "TB-8442",
+    customerName: "গ্রাহক: সা*** (উত্তরা)",
+    customerPhone: "01811-*** [🔒 গোপনীয়]",
+    customerAddress: "উত্তরা সেক্টর ৭ জোন [🔒 ঠিকানা গোপনীয়]",
+    deliveryZone: "উত্তরা জোন",
+    createdAt: "2026-08-30T10:15:00Z",
     status: "COMPLETED",
-    grossTotal: 3450,
+    grossTotal: 3120,
     commissionRate: 10,
-    commissionAmount: 345.0,
-    netTotal: 3105.0,
-    paymentMethod: "BKASH",
+    commissionAmount: 312.0,
+    netTotal: 2808.0,
+    paymentMethod: "CARD",
     paymentStatus: "PAID",
-    assignedAt: "2026-09-02T16:32:00Z",
-    completedAt: "2026-09-02T17:40:00Z",
+    assignedAt: "2026-08-30T10:17:00Z",
+    completedAt: "2026-08-30T11:30:00Z",
     items: [
       {
-        id: "item-12",
-        productId: "prod-2",
-        productName: "Padma River Fresh Ilish / Hilsa (1kg+)",
-        productNameBn: "পদ্মার তাজা বড় ইলিশ মাছ (১ কেজি+)",
-        category: "FISH",
+        id: "hist-2",
+        productId: "prod-1",
+        productName: "Fresh Deshi Beef",
+        productNameBn: "হাড়সহ দেশি তাজা গরুর মাংস",
+        category: "MEAT",
         pricingType: "WEIGHT_BASED",
         unit: "KG",
-        unitPrice: 1650,
-        quantity: 2,
-        weightOrdered: 2.0,
-        weightActual: 2.08,
-        finalPrice: 3432,
+        unitPrice: 820,
+        quantity: 3,
+        weightOrdered: 3.0,
+        weightActual: 3.02,
+        finalPrice: 2476.4,
+        packed: true,
+      },
+    ],
+  },
+  {
+    id: "ord-8430",
+    displayId: "TB-8430",
+    customerName: "গ্রাহক: ই*** (গুলশান)",
+    customerPhone: "01722-*** [🔒 গোপনীয়]",
+    customerAddress: "গুলশান-১ জোন [🔒 ঠিকানা গোপনীয়]",
+    deliveryZone: "গুলশান জোন",
+    createdAt: "2026-08-28T16:00:00Z",
+    status: "RETURNED",
+    returnReason: "প্যাকেজিং ছেঁড়া থাকায় গ্রাহক গ্রহণ করেননি।",
+    returnedAt: "2026-08-28T17:15:00Z",
+    grossTotal: 950,
+    commissionRate: 10,
+    commissionAmount: 95.0,
+    netTotal: 855.0,
+    paymentMethod: "CASH_ON_DELIVERY",
+    paymentStatus: "PENDING",
+    assignedAt: "2026-08-28T16:02:00Z",
+    items: [
+      {
+        id: "hist-3",
+        productId: "prod-4",
+        productName: "Deshi Round Ripe Tomatoes",
+        productNameBn: "দেশি পাকা গোল টমেটো",
+        category: "VEGETABLES",
+        pricingType: "WEIGHT_BASED",
+        unit: "KG",
+        unitPrice: 75,
+        quantity: 4,
+        weightOrdered: 4.0,
+        weightActual: 4.0,
+        finalPrice: 300,
         packed: true,
       },
     ],
@@ -964,6 +1105,34 @@ export const useVendorStore = create<VendorState>()(
       wholesaleBuyers: initialWholesaleBuyers,
       coupons: initialCoupons,
       notifications: initialNotifications,
+      orderHistory: initialOrderHistory,
+
+      trackingOrder: null,
+      setTrackingOrder: (order) => set({ trackingOrder: order }),
+
+      claimLockAlert: null,
+      setClaimLockAlert: (alert) => set({ claimLockAlert: alert }),
+
+      shiftStartedAt: new Date().toISOString(),
+      resetShiftQueue: () => {
+        set((state) => {
+          const newHistory = [...state.orders, ...state.orderHistory].filter(
+            (o, idx, arr) => arr.findIndex((x) => x.id === o.id) === idx
+          );
+          const activeOnly = state.orders.filter(
+            (o) =>
+              o.status === "PENDING" ||
+              o.status === "PROCESSING" ||
+              o.status === "READY_FOR_PICKUP"
+          );
+          return {
+            orders: activeOnly,
+            orderHistory: newHistory,
+            shiftStartedAt: new Date().toISOString(),
+          };
+        });
+        audioAlert.playSuccessSound();
+      },
 
       setLanguage: (lang: Language) => set({ language: lang }),
       setRole: (role: VendorRole) => set({ currentRole: role }),
@@ -988,14 +1157,62 @@ export const useVendorStore = create<VendorState>()(
       setChatOrder: (order) => set({ chatOrder: order }),
 
       acceptOrder: (orderId) => {
-        get().updateOrderStatus(orderId, "PREPARING");
-        set({ incomingOrderAlert: null });
+        const order = get().orders.find((o) => o.id === orderId);
+        const storeName = get().profile.storeNameBn || get().profile.storeName;
+
+        get().updateOrderStatus(orderId, "PROCESSING");
+        set({ incomingOrderAlert: null, claimLockAlert: null });
+
+        // Broadcast claim event so any competing vendor modals close with lockout
+        broadcastSyncEvent({
+          type: "VENDOR_CLAIM_ORDER",
+          orderId: orderId,
+          claimedByVendorId: get().profile.id,
+          claimedByStoreName: storeName,
+          amount: order?.grossTotal,
+        });
+
         audioAlert.playSuccessSound();
       },
 
       declineOrder: (orderId) => {
         get().updateOrderStatus(orderId, "CANCELLED");
-        set({ incomingOrderAlert: null });
+        set({ incomingOrderAlert: null, claimLockAlert: null });
+      },
+
+      markOrderReturned: (orderId, reason = "গ্রাহক দরজায় অনুপস্থিত ছিলেন") => {
+        set((state) => {
+          const updatedOrders = state.orders.map((o) =>
+            o.id === orderId
+              ? {
+                  ...o,
+                  status: "RETURNED" as OrderStatus,
+                  returnReason: reason,
+                  returnedAt: new Date().toISOString(),
+                }
+              : o
+          );
+          const target = updatedOrders.find((o) => o.id === orderId);
+          let updatedHistory = state.orderHistory;
+          if (target) {
+            const histIndex = updatedHistory.findIndex((h) => h.id === orderId);
+            if (histIndex >= 0) {
+              updatedHistory = [...updatedHistory];
+              updatedHistory[histIndex] = target;
+            } else {
+              updatedHistory = [target, ...updatedHistory];
+            }
+          }
+          return { orders: updatedOrders, orderHistory: updatedHistory };
+        });
+
+        broadcastSyncEvent({
+          type: "ORDER_RETURNED",
+          orderId: orderId,
+          message: reason,
+        });
+
+        audioAlert.playSuccessSound();
       },
 
       toggleVacationMode: () => {
@@ -1018,8 +1235,21 @@ export const useVendorStore = create<VendorState>()(
             const updated = { ...o, status: newStatus };
             if (newStatus === "READY_FOR_PICKUP") {
               updated.readyAt = new Date().toISOString();
+              if (!updated.riderId) {
+                updated.riderId = "rd-local-101";
+                updated.riderName = "তানভীর আহমেদ (রাইডার #১০১)";
+                updated.riderPhone = "01712-334455";
+                updated.riderVehicle = "হোন্ডা ড্রিম ১১০ (বাইক)";
+                updated.riderLatitude = 23.7925;
+                updated.riderLongitude = 90.4078;
+                updated.riderEtaMinutes = 10;
+                updated.riderDistanceKm = 1.4;
+                updated.riderCurrentLocationName = "মিরপুর-১০ গোলচত্বর";
+              }
             } else if (newStatus === "COMPLETED") {
               updated.completedAt = new Date().toISOString();
+            } else if (newStatus === "RETURNED") {
+              updated.returnedAt = new Date().toISOString();
             }
             return updated;
           });
@@ -1045,7 +1275,28 @@ export const useVendorStore = create<VendorState>()(
             }
           }
 
-          return { orders: updatedOrders, commissionLedger: updatedLedger };
+          if (newStatus === "READY_FOR_PICKUP" && target) {
+            broadcastSyncEvent({
+              type: "ORDER_READY_FOR_PICKUP",
+              orderId: target.id,
+              deliveryZone: target.deliveryZone,
+              riderName: target.riderName || "তানভীর আহমেদ",
+              riderPhone: target.riderPhone || "01712-334455",
+            });
+          }
+
+          let updatedHistory = state.orderHistory;
+          if (target) {
+            const histIndex = updatedHistory.findIndex((h) => h.id === orderId);
+            if (histIndex >= 0) {
+              updatedHistory = [...updatedHistory];
+              updatedHistory[histIndex] = target;
+            } else {
+              updatedHistory = [target, ...updatedHistory];
+            }
+          }
+
+          return { orders: updatedOrders, commissionLedger: updatedLedger, orderHistory: updatedHistory };
         });
         audioAlert.playSuccessSound();
       },
@@ -1197,6 +1448,126 @@ export const useVendorStore = create<VendorState>()(
         }));
 
         audioAlert.playNewOrderChime();
+      },
+
+      simulateAreaDispatchOrder: () => {
+        const orderNum = Math.floor(8600 + Math.random() * 800);
+        const zones = ["মিরপুর-১০ জোন", "ধানমন্ডি জোন", "গুলশান-১ জোন", "উত্তরা সেক্টর ৭"];
+        const selectedZone = zones[Math.floor(Math.random() * zones.length)];
+        const newOrder: Order = {
+          id: `ord-${orderNum}`,
+          displayId: `TB-${orderNum}`,
+          customerName: `গ্রাহক: তা*** (${selectedZone})`,
+          customerPhone: "017*** [🔒 গোপনীয়]",
+          customerAddress: `${selectedZone} [🔒 গ্রাহকের সুনির্দিষ্ট ঠিকানা গোপনীয় - রাইডারের জন্য সংরক্ষিত]`,
+          deliveryZone: selectedZone,
+          createdAt: new Date().toISOString(),
+          status: "PENDING",
+          urgent: true,
+          grossTotal: 1850,
+          commissionRate: 10,
+          commissionAmount: 185.0,
+          netTotal: 1665.0,
+          paymentMethod: "BKASH",
+          paymentStatus: "PAID",
+          assignedAt: new Date().toISOString(),
+          notes: "পণ্যগুলো ভালোমতো প্যাকিং করবেন।",
+          items: [
+            {
+              id: `it-${Date.now()}-1`,
+              productId: "prod-2",
+              productName: "Padma River Fresh Ilish",
+              productNameBn: "পদ্মার তাজা বড় ইলিশ মাছ (১ কেজি+)",
+              category: "FISH",
+              pricingType: "WEIGHT_BASED",
+              unit: "KG",
+              unitPrice: 1650,
+              quantity: 1,
+              weightOrdered: 1.0,
+              finalPrice: 1650,
+              packed: false,
+            },
+            {
+              id: `it-${Date.now()}-2`,
+              productId: "prod-5",
+              productName: "Hot Green Chilli",
+              productNameBn: "তাজা কাঁচা মরিচ",
+              category: "SPICES",
+              pricingType: "WEIGHT_BASED",
+              unit: "KG",
+              unitPrice: 160,
+              quantity: 1,
+              weightOrdered: 0.5,
+              finalPrice: 80,
+              packed: false,
+            },
+            {
+              id: `it-${Date.now()}-3`,
+              productId: "prod-4",
+              productName: "Deshi Round Ripe Tomatoes",
+              productNameBn: "দেশি পাকা গোল টমেটো",
+              category: "VEGETABLES",
+              pricingType: "WEIGHT_BASED",
+              unit: "KG",
+              unitPrice: 75,
+              quantity: 1,
+              weightOrdered: 1.5,
+              finalPrice: 120,
+              packed: false,
+            },
+          ],
+        };
+
+        const newNotif: NotificationItem = {
+          id: `notif-${Date.now()}`,
+          title: `Area Dispatch: #${newOrder.displayId}`,
+          titleBn: `এলাকাভিত্তিক অর্ডার: #${newOrder.displayId}`,
+          message: `Admin dispatched order to ${selectedZone} vendor pool. First to claim gets the order!`,
+          messageBn: `অ্যাডমিন ${selectedZone} ভেন্ডর পুলে অর্ডার পাঠিয়েছে। যে ভেন্ডর আগে এক্সেপ্ট করবে সে অর্ডার পাবে!`,
+          type: "ORDER",
+          timestamp: new Date().toISOString(),
+          read: false,
+          link: "/orders",
+        };
+
+        set((state) => ({
+          orders: [newOrder, ...state.orders],
+          notifications: [newNotif, ...state.notifications],
+          incomingOrderAlert: newOrder,
+          claimLockAlert: null,
+        }));
+
+        broadcastSyncEvent({
+          type: "ADMIN_DISPATCH_TO_ZONE",
+          orderId: newOrder.id,
+          deliveryZone: selectedZone,
+          amount: newOrder.grossTotal,
+        });
+
+        audioAlert.playNewOrderChime();
+      },
+
+      simulateRemoteClaim: (orderId: string) => {
+        const competingStores = [
+          "আল-মদিনা ফ্রেশ স্টোর (মিরপুর)",
+          "মালেক ব্রাদার্স গ্রোসারি",
+          "তাজা কিচেন অ্যান্ড মিট মার্ট",
+          "সোনার বাংলা ডেইরি অ্যান্ড ভেজিটেবল",
+        ];
+        const claimedStore = competingStores[Math.floor(Math.random() * competingStores.length)];
+
+        set((state) => ({
+          claimLockAlert: {
+            isOpen: true,
+            message: `অর্ডারটি ইতিমধ্যে অন্য ভেন্ডর (${claimedStore}) গ্রহণ করেছেন!`,
+            claimedByStoreName: claimedStore,
+          },
+          orders: state.orders.map((o) =>
+            o.id === orderId
+              ? { ...o, isClaimedByOther: true, claimedByStoreName: claimedStore }
+              : o
+          ),
+        }));
       },
 
       addProduct: (productData) => {

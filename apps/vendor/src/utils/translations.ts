@@ -35,6 +35,7 @@ export const translations = {
     // Navigation
     navDashboard: "Dashboard",
     navOrders: "Orders Queue",
+    navHistory: "Order History",
     navProducts: "Catalog & Products",
     navInventory: "Inventory & Stock",
     navWholesale: "B2B Wholesale",
@@ -331,6 +332,7 @@ export const translations = {
     // Navigation
     navDashboard: "ড্যাশবোর্ড",
     navOrders: "অর্ডার কিউ",
+    navHistory: "অর্ডার হিস্ট্রি",
     navProducts: "ক্যাটালগ ও পণ্য",
     navInventory: "ইনভেন্টরি ও স্টক",
     navWholesale: "পাইকারি (বি২বি)",

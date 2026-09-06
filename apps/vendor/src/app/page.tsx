@@ -41,6 +41,7 @@ export default function VendorDashboardPage() {
     updateOrderStatus,
     simulateIncomingOrder,
     setChatOrder,
+    setTrackingOrder,
   } = useVendorStore();
 
   const t = translations[language];
@@ -336,9 +337,14 @@ export default function VendorDashboardPage() {
                             </span>
                           )}
                         </div>
-                        <p className="text-xs text-slate-700 font-medium mt-1.5">
-                          <strong className="text-slate-900">{order.customerName}</strong> • {order.customerAddress}
-                        </p>
+                        <div className="text-xs text-slate-700 font-medium mt-1.5 flex items-center gap-1.5 flex-wrap">
+                          <strong className="text-slate-900">{order.customerName}</strong>
+                          <span className="text-slate-400">•</span>
+                          <span>📍 {order.deliveryZone || "মিরপুর জোন"}</span>
+                          <span className="text-[10px] text-emerald-800 font-bold bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
+                            🔒 ঠিকানা সুরক্ষিত
+                          </span>
+                        </div>
                       </div>
 
                       <div className="text-right">
@@ -430,6 +436,14 @@ export default function VendorDashboardPage() {
                           >
                             <MessageCircle size={14} />
                             <span>{language === "bn" ? "রাইডার চ্যাট" : "Rider Chat"}</span>
+                          </button>
+
+                          <button
+                            onClick={() => setTrackingOrder(order)}
+                            className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all shadow-2xs active:scale-95"
+                          >
+                            <Bike size={14} />
+                            <span>{language === "bn" ? "লাইভ ট্র্যাক" : "Live Track"}</span>
                           </button>
                         </div>
                       </div>

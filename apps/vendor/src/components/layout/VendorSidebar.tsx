@@ -20,6 +20,7 @@ import {
   Store,
   X,
   Lock,
+  History,
 } from "lucide-react";
 import { useVendorStore } from "@/store/vendorStore";
 import { translations } from "@/utils/translations";
@@ -69,6 +70,12 @@ export default function VendorSidebar({ onClose }: VendorSidebarProps) {
       icon: ShoppingBag,
       badge: pendingOrdersCount > 0 ? pendingOrdersCount : undefined,
       badgeColor: "bg-emerald-600 text-white font-bold",
+      roles: ["OWNER", "MANAGER", "STAFF"],
+    },
+    {
+      label: t.navHistory,
+      href: "/orders/history",
+      icon: History,
       roles: ["OWNER", "MANAGER", "STAFF"],
     },
     {
