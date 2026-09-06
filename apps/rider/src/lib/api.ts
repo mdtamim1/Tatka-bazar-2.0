@@ -49,6 +49,12 @@ const DEFAULT_PROFILE: RiderProfile = {
   createdAt: new Date().toISOString(),
 };
 
+const SAMPLE_NOTIFICATIONS: RiderNotification[] = [
+  { id: "n-1", type: "TASK", title: "নতুন ডেলিভারি টাস্ক", body: "অর্ডার #TB-8942 আপনার জন্য অপেক্ষা করছে", isRead: false, createdAt: new Date(Date.now() - 1000 * 60 * 5).toISOString() },
+  { id: "n-2", type: "PAYMENT", title: "পেমেন্ট অ্যাপ্রুভড", body: "৳ ৫০০ আপনার ব্যালেন্সে যোগ হয়েছে", isRead: false, createdAt: new Date(Date.now() - 1000 * 60 * 30).toISOString() },
+  { id: "n-3", type: "SYSTEM", title: "স্বাগতম!", body: "Tatka Rider প্যানেলে আপনাকে স্বাগত জানাই", isRead: true, createdAt: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString() },
+];
+
 const SAMPLE_AVAILABLE_TASKS: Task[] = [
   {
     id: "task-01",
@@ -292,7 +298,51 @@ function handleMockFallback<T>(path: string, options: RequestInit): { success: b
     return { success: true, data: filtered as any };
   }
 
-  // 13. Withdraw Request
+  // 13. Deposit / Recharge Request
+  if (cleanPath === "/rider-portal/deposit" && method === "POST") {
+    let body: any = {};
+    try { body = JSON.parse(options.body as string); } catch {}
+    const amount = Number(body.amount) || 0;
+    const lastFour = body.lastFour || "";
+    if (!amount || amount <= 0) return { success: false, error: "সঠিক পরিমাণ দিন" };
+    if (!lastFour || lastFour.length !== 4) return { success: false, error: "শেষ ৪ সংখ্যা সঠিক নয়" };
+    // In demo: auto-approve — clear due first, then add to balance
+    const profile = getLocalStore("profile", DEFAULT_PROFILE);
+    const due = profile.due || 0;
+    if (due > 0) {
+      const deducted = Math.min(amount, due);
+      profile.due = due - deducted;
+      profile.balance += amount - deducted;
+    } else {
+      profile.balance += amount;
+    }
+    setLocalStore("profile", profile);
+    // Save deposit request history
+    const deposits = getLocalStore<DepositRequest[]>("deposit_requests", []);
+    deposits.unshift({ id: "dep-" + Date.now(), amount, lastFour, status: "APPROVED", createdAt: new Date().toISOString() });
+    setLocalStore("deposit_requests", deposits);
+    // Add notification
+    const notifs = getLocalStore<RiderNotification[]>("notifications", SAMPLE_NOTIFICATIONS);
+    notifs.unshift({ id: "n-" + Date.now(), type: "PAYMENT", title: "রিচার্জ সম্পন্ন", body: `৳ ${amount} আপনার ব্যালেন্সে যোগ হয়েছে`, isRead: false, createdAt: new Date().toISOString() });
+    setLocalStore("notifications", notifs);
+    return { success: true, data: { message: "ডিপোজিট সম্পন্ন হয়েছে", newBalance: profile.balance } as any };
+  }
+
+  // 14. Notifications — GET
+  if (cleanPath === "/rider-portal/notifications" && method === "GET") {
+    const notifs = getLocalStore<RiderNotification[]>("notifications", SAMPLE_NOTIFICATIONS);
+    return { success: true, data: notifs as any };
+  }
+
+  // 15. Notifications — Mark all read
+  if (cleanPath === "/rider-portal/notifications/read" && method === "POST") {
+    const notifs = getLocalStore<RiderNotification[]>("notifications", SAMPLE_NOTIFICATIONS);
+    notifs.forEach(n => n.isRead = true);
+    setLocalStore("notifications", notifs);
+    return { success: true, data: { message: "সব নোটিফিকেশন পড়া হয়েছে" } as any };
+  }
+
+  // 16. Withdraw Request
   if (cleanPath === "/rider-portal/withdraw" && method === "POST") {
     let body: any = {};
     try { body = JSON.parse(options.body as string); } catch {}
@@ -418,6 +468,23 @@ export interface ActiveTask {
   };
 }
 
+export interface RiderNotification {
+  id: string;
+  type: "TASK" | "PAYMENT" | "SYSTEM";
+  title: string;
+  body: string;
+  isRead: boolean;
+  createdAt: string;
+}
+
+export interface DepositRequest {
+  id: string;
+  amount: number;
+  lastFour: string;
+  status: "PENDING" | "APPROVED" | "REJECTED";
+  createdAt: string;
+}
+
 export interface HistoryItem {
   id: string;
   type: "income" | "withdrawal";
@@ -452,5 +519,6 @@ export interface RiderProfile {
   paymentMethod?: string;
   paymentAccount?: string;
   paymentAccountLocked?: boolean;
+  due?: number;
   createdAt: string;
 }

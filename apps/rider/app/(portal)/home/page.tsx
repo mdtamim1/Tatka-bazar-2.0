@@ -28,12 +28,17 @@ export default function HomePage() {
   const router = useRouter();
   const [data, setData] = useState<BalanceData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [due, setDue] = useState(0);
   const cardRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     apiFetch<BalanceData>("/rider-portal/balance").then(r => {
       if (r.success && r.data) setData(r.data);
       setLoading(false);
+    });
+    // Load due from profile
+    apiFetch<{ due?: number }>("/rider-portal/me").then(r => {
+      if (r.success && r.data) setDue(Number((r.data as any).due) || 0);
     });
   }, []);
 
@@ -64,17 +69,29 @@ export default function HomePage() {
             <span className="currency">৳</span>
             {loading ? "—" : <AnimatedNumber value={bal} />}
           </div>
+          {due > 0 && (
+            <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8, background: "rgba(239,68,68,.15)", borderRadius: 8, padding: "6px 12px", border: "1px solid rgba(239,68,68,.3)" }}>
+              <span style={{ fontSize: ".72rem", color: "#fca5a5", fontFamily: "var(--font-bn)" }}>⚠️ বকেয়া ডিউ:</span>
+              <span style={{ fontSize: ".85rem", fontWeight: 800, color: "#ef4444" }}>৳ {due.toLocaleString("bn-BD")}</span>
+            </div>
+          )}
           <div className="balance-row">
             <div>
               <div className="balance-stat-label">আজকের আয়</div>
               <div className="balance-stat-value">৳ {loading ? "—" : todayEarning.toLocaleString("bn-BD")}</div>
             </div>
-            <button id="withdraw-main-btn" className="withdraw-btn" onClick={() => router.push("/withdraw")}>
-              উইথড্র করুন →
-            </button>
+            <div style={{ display: "flex", gap: 8 }}>
+              <button id="deposit-main-btn" className="withdraw-btn" style={{ background: "rgba(0,214,143,.18)", border: "1px solid rgba(0,214,143,.35)", color: "#00d68f" }} onClick={() => router.push("/deposit")}>
+                জমা করুন ↑
+              </button>
+              <button id="withdraw-main-btn" className="withdraw-btn" onClick={() => router.push("/withdraw")}>
+                উইথড্র করুন →
+              </button>
+            </div>
           </div>
         </div>
       </div>
+
 
       <div className="stat-row">
         <div className="stat-card">

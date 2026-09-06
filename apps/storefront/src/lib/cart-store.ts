@@ -37,7 +37,7 @@ interface CartState {
   setSelectedHub: (hub: string) => void;
 
   // Cart operations
-  addItem: (product: Product, weight: number, unit: WeightUnit, unitPrice: number, quantity?: number) => void;
+  addItem: (product: Product, weight: number, unit: WeightUnit, unitPrice: number, quantity?: number, openDrawer?: boolean) => void;
   removeItem: (itemId: string) => void;
   updateQuantity: (itemId: string, quantity: number) => void;
   clearCart: () => void;
@@ -51,6 +51,11 @@ interface CartState {
   isInWishlist: (productId: string) => boolean;
   moveWishlistToCart: (product: Product, openCartDrawer?: boolean) => void;
   moveAllWishlistToCart: (products: Product[]) => void;
+
+  // Direct Buy Now (Isolated from Cart)
+  buyNowItem: CartItem | null;
+  setBuyNowItem: (product: Product, weight: number, unit: WeightUnit, unitPrice: number, quantity?: number) => void;
+  clearBuyNowItem: () => void;
 
   // Computed helper values
   getItemCount: () => number;
@@ -82,7 +87,27 @@ export const useCartStore = create<CartState>()(
 
       setSelectedHub: (hub) => set({ selectedHub: hub }),
 
-      addItem: (product, weight, unit, unitPrice, quantity = 1) => {
+      // Direct Buy Now state and methods
+      buyNowItem: null,
+      setBuyNowItem: (product, weight, unit, unitPrice, quantity = 1) => {
+        const item: CartItem = {
+          id: `buynow-${product.id}-${weight}-${unit}`,
+          productId: product.id,
+          product,
+          selectedWeight: weight,
+          selectedUnit: unit,
+          unitPrice,
+          quantity,
+          totalPrice: unitPrice * quantity,
+          vendorId: product.vendorId || "tatka-official",
+          vendorNameBn: product.vendorNameBn,
+          vendorNameEn: product.vendorNameEn,
+        };
+        set({ buyNowItem: item, isOpen: false });
+      },
+      clearBuyNowItem: () => set({ buyNowItem: null }),
+
+      addItem: (product, weight, unit, unitPrice, quantity = 1, openDrawer = true) => {
         set((state) => {
           const itemId = `${product.id}-${weight}-${unit}`;
           const existingIndex = state.items.findIndex((item) => item.id === itemId);
@@ -114,7 +139,7 @@ export const useCartStore = create<CartState>()(
             updatedItems = [newItem, ...state.items];
           }
 
-          return { items: updatedItems, isOpen: true };
+          return { items: updatedItems, isOpen: openDrawer };
         });
       },
 
@@ -340,6 +365,7 @@ export const useCartStore = create<CartState>()(
         wishlistIds: state.wishlistIds,
         selectedHub: state.selectedHub,
         appliedCoupon: state.appliedCoupon,
+        buyNowItem: state.buyNowItem,
       }),
     }
   )
