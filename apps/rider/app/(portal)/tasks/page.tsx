@@ -58,13 +58,13 @@ export default function TasksPage() {
     const expected = modalTask.orderNumber.trim().toUpperCase();
     const entered = inputOrderNum.trim().toUpperCase();
     if (entered !== expected) {
-      setModalError(`❌ অর্ডার নম্বর মিলছে না। সঠিক নম্বর: ${modalTask.orderNumber}`);
+      setModalError("❌ ভুল অর্ডার আইডি! সেলার থেকে নেওয়া প্যাকেটের ওপরের সঠিক অর্ডার আইডিটি লিখুন।");
       return;
     }
     setModalError("");
     setAccepting(modalTask.id);
     closeModal();
-    await apiFetch(`/rider-portal/tasks/${modalTask.id}/accept`, { method: "POST" });
+    await apiFetch(`/rider-portal/tasks/${modalTask.id}/accept`, { method: "POST", body: JSON.stringify({ orderNumber: entered }) });
     await fetchData();
     // Navigate to the latest active task
     const activeRes = await apiFetch<ActiveTask[]>("/rider-portal/tasks/active");
@@ -79,7 +79,7 @@ export default function TasksPage() {
 
   return (
     <>
-      {/* Order ID Verification Modal */}
+      {/* Order ID Verification Modal — Only input from physical package */}
       {modalTask && (
         <div
           style={{
@@ -101,26 +101,26 @@ export default function TasksPage() {
           }}>
             <div style={{ fontSize: "2rem", textAlign: "center", marginBottom: 8 }}>📦</div>
             <div style={{ fontSize: "1.1rem", fontWeight: 700, color: "var(--text-1)", textAlign: "center", marginBottom: 4 }}>
-              অর্ডার নম্বর যাচাই করুন
+              পণ্য রিসিভ ও অর্ডার আইডি যাচাই
             </div>
-            <div style={{ fontSize: ".8rem", color: "var(--text-3)", textAlign: "center", fontFamily: "var(--font-bn)", marginBottom: 20, lineHeight: 1.7 }}>
-              প্যাকেটের উপরে থাকা অর্ডার নম্বরটি লিখুন।<br />
-              অর্ডারটি হাতে পেয়ে তারপর একসেপ্ট করুন।
+            <div style={{ fontSize: ".8rem", color: "var(--text-3)", textAlign: "center", fontFamily: "var(--font-bn)", marginBottom: 18, lineHeight: 1.6 }}>
+              সেলার থেকে পণ্যটি হাতে বুঝে নিন।<br />
+              প্যাকেটের গায়ে লেখা অর্ডার আইডিটি লিখে একসেপ্ট করুন।
             </div>
 
             <div style={{ marginBottom: 12, fontSize: ".78rem", color: "var(--text-3)", fontFamily: "var(--font-bn)", padding: "10px 14px", background: "var(--bg-base)", borderRadius: "var(--r-md)", border: "1px solid var(--border-1)" }}>
-              🏪 ভেন্ডর: <strong style={{ color: "var(--text-1)" }}>{modalTask.vendorName}</strong><br />
-              📍 {modalTask.deliveryAddress}
+              🏪 সেলার / ভেন্ডর: <strong style={{ color: "var(--text-1)" }}>{modalTask.vendorName}</strong><br />
+              📍 গন্তব্য: {modalTask.deliveryAddress}
             </div>
 
             <label style={{ display: "block", fontSize: ".76rem", color: "var(--text-3)", fontFamily: "var(--font-bn)", marginBottom: 6 }}>
-              অর্ডার নম্বর লিখুন
+              প্যাকেটের গায়ের অর্ডার আইডি লিখুন
             </label>
             <input
               ref={inputRef}
               id="order-id-input"
               type="text"
-              placeholder="যেমন: TB-8942"
+              placeholder="যেমন: TB-XXXX"
               value={inputOrderNum}
               onChange={e => { setInputOrderNum(e.target.value); setModalError(""); }}
               onKeyDown={e => { if (e.key === "Enter") confirmAccept(); if (e.key === "Escape") closeModal(); }}
@@ -185,7 +185,7 @@ export default function TasksPage() {
           <>
             <div className="section-header">
               <div className="section-title">
-                ✅ চলমান ডেলিভারি
+                ✅ চলমান ডেলিভারি (রিসিভড অর্ডার)
                 <span className="live-badge"><span className="live-dot" />{active.length}টি</span>
               </div>
             </div>
@@ -196,7 +196,14 @@ export default function TasksPage() {
                     <div className="task-vendor-icon" style={{ background: "var(--emerald-glass)", border: "1px solid rgba(0,214,143,.3)" }}>🏪</div>
                     <div>
                       <div className="task-vendor-name">{a.order.vendorName}</div>
-                      <div className="task-vendor-items bn">#{a.order.orderNumber}</div>
+                      <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 2 }}>
+                        <span style={{ color: "var(--emerald)", fontWeight: 700, fontFamily: "monospace", fontSize: ".82rem" }}>
+                          #{a.order.orderNumber}
+                        </span>
+                        <span style={{ fontSize: ".68rem", color: "var(--emerald)", background: "rgba(0,214,143,.12)", padding: "1px 6px", borderRadius: 4, fontWeight: 600 }}>
+                          রিসিভড
+                        </span>
+                      </div>
                     </div>
                   </div>
                   <div className="task-earning">
@@ -252,10 +259,10 @@ export default function TasksPage() {
                   <div className="task-earning-amount">৳ {Number(task.earnings).toLocaleString()}</div>
                 </div>
               </div>
-              {/* Show order number and total bill prominently on the card */}
+              {/* Order ID is hidden before accepting — revealed only after physical pickup from seller */}
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "6px 0 4px", fontSize: ".75rem", fontFamily: "var(--font-bn)" }}>
-                <span style={{ color: "var(--orange)", fontWeight: 700, fontFamily: "monospace", letterSpacing: ".06em" }}>
-                  🔖 #{task.orderNumber}
+                <span style={{ color: "var(--text-3)", display: "flex", alignItems: "center", gap: 5 }}>
+                  🔒 অর্ডার আইডি: <span style={{ color: "var(--orange)", fontWeight: 600 }}>সেলার থেকে রিসিভের সময়</span>
                 </span>
                 <span style={{ color: "var(--text-2)" }}>
                   মোট বিল: <strong style={{ color: "var(--text-1)", fontFamily: "monospace" }}>৳ {Number(task.total).toLocaleString()}</strong>
@@ -266,7 +273,7 @@ export default function TasksPage() {
                 <span className="task-address-text">{task.deliveryAddress}</span>
               </div>
               <div style={{ fontSize: ".72rem", color: "var(--text-3)", fontFamily: "var(--font-bn)", marginBottom: 10, lineHeight: 1.5 }}>
-                💡 অর্ডারটি হাতে পেলে উপরের নম্বর দিয়ে একসেপ্ট করুন
+                💡 সেলার থেকে প্রোডাক্ট বুঝে নেওয়ার পর প্যাকেটের ওপর থাকা অর্ডার আইডি দিয়ে একসেপ্ট করুন
               </div>
               <button
                 id={`accept-task-${task.id}`}

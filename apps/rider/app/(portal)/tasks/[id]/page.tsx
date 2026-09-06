@@ -379,7 +379,14 @@ export default function TaskDetailPage() {
 
         {/* Hero Card */}
         <div className="detail-hero">
-          <div className="detail-order-num">অর্ডার #{task.order.orderNumber}</div>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
+            <div className="detail-order-num" style={{ fontSize: ".82rem", color: "var(--orange)", fontWeight: 800, margin: 0 }}>
+              অর্ডার #{task.order.orderNumber}
+            </div>
+            <span style={{ fontSize: ".68rem", color: "var(--emerald)", background: "rgba(0,214,143,.12)", border: "1px solid rgba(0,214,143,.25)", padding: "3px 8px", borderRadius: 6, fontWeight: 700 }}>
+              📦 সেলার থেকে রিসিভড
+            </span>
+          </div>
           <span className="detail-status-chip">
             <span className="live-dot" style={{ background: "var(--emerald)" }} />
             চলমান ডেলিভারি
