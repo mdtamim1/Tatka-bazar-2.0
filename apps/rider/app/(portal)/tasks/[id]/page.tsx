@@ -69,6 +69,7 @@ export default function TaskDetailPage() {
   }, [id]);
 
   // Derived financial figures
+  const isPaid = task?.order.paymentStatus === "PAID";
   const deliveryFee = Number(task?.order.deliveryFee ?? 60);
   const earnings = Math.round(deliveryFee * 0.5);
   const subtotal = Number(
@@ -77,18 +78,19 @@ export default function TaskDetailPage() {
       (task?.order.total ? task.order.total - deliveryFee : 1390)
   );
   const totalBill = Number(task?.order.total ?? (subtotal + deliveryFee));
+  const cashToCollect = isPaid ? 0 : totalBill;
 
   async function deliver() {
     if (!task) return;
     setDelivering(true);
-    const res = await apiFetch<{ earning: number; orderTotal?: number; totalBill?: number }>(
+    const res = await apiFetch<{ earning: number; orderTotal?: number; totalBill?: number; cashDeduction?: number; isPaid?: boolean }>(
       `/rider-portal/tasks/${id}/deliver`,
       { method: "POST" }
     );
     if (res.success && res.data) {
-      const resData = res.data as { earning: number; orderTotal?: number; totalBill?: number };
+      const resData = res.data;
       setEarning(resData.earning || earnings);
-      setDeducted(resData.totalBill || resData.orderTotal || totalBill);
+      setDeducted(resData.cashDeduction !== undefined ? resData.cashDeduction : (isPaid ? 0 : (resData.totalBill || resData.orderTotal || totalBill)));
       setShowConfirmModal(false);
       setSuccess(true);
       confetti();
@@ -147,9 +149,15 @@ export default function TaskDetailPage() {
             <div style={{ color: "var(--emerald)", fontWeight: 800, fontSize: "1.1rem", marginBottom: "6px" }}>
               + ৳ {Number(earning).toLocaleString()} আয় ব্যালেন্সে যোগ হয়েছে
             </div>
-            <div style={{ color: "rgba(239,68,68,.9)", fontSize: ".88rem", fontWeight: 700 }}>
-              - ৳ {Number(deducted).toLocaleString()} সংগৃহীত বিল সমন্বয় হয়েছে
-            </div>
+            {isPaid ? (
+              <div style={{ color: "#34D399", fontSize: ".88rem", fontWeight: 700 }}>
+                🟢 অনলাইন পেইড অর্ডার (অ্যাকাউন্ট থেকে কোনো টাকা কর্তন হয়নি)
+              </div>
+            ) : (
+              <div style={{ color: "rgba(239,68,68,.9)", fontSize: ".88rem", fontWeight: 700 }}>
+                - ৳ {Number(deducted).toLocaleString()} সংগৃহীত বিল সমন্বয় হয়েছে
+              </div>
+            )}
           </div>
           <div className="success-sub" style={{ marginTop: "14px" }}>
             স্বয়ংক্রিয়ভাবে টাস্ক তালিকায় ফিরে যাচ্ছেন...
@@ -180,32 +188,34 @@ export default function TaskDetailPage() {
           <div
             style={{
               background: "var(--bg-card)",
-              border: "1.5px solid rgba(255, 107, 43, 0.35)",
+              border: isPaid ? "1.5px solid rgba(16, 185, 129, 0.4)" : "1.5px solid rgba(255, 107, 43, 0.35)",
               borderRadius: "24px",
               padding: "26px 22px",
               width: "100%",
               maxWidth: "400px",
-              boxShadow: "0 28px 80px rgba(0,0,0,0.7), 0 0 35px rgba(255,107,43,0.15)",
+              boxShadow: isPaid
+                ? "0 28px 80px rgba(0,0,0,0.7), 0 0 35px rgba(16,185,129,0.15)"
+                : "0 28px 80px rgba(0,0,0,0.7), 0 0 35px rgba(255,107,43,0.15)",
               fontFamily: "var(--font-bn), inherit",
             }}
           >
-            {/* Warning Icon Badge */}
+            {/* Warning / Status Icon Badge */}
             <div
               style={{
                 width: 60,
                 height: 60,
                 borderRadius: "50%",
-                background: "rgba(255, 107, 43, 0.15)",
-                border: "2px solid rgba(255, 107, 43, 0.4)",
+                background: isPaid ? "rgba(16, 185, 129, 0.15)" : "rgba(255, 107, 43, 0.15)",
+                border: isPaid ? "2px solid rgba(16, 185, 129, 0.4)" : "2px solid rgba(255, 107, 43, 0.4)",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
                 fontSize: "28px",
                 margin: "0 auto 14px",
-                boxShadow: "0 0 20px rgba(255,107,43,0.3)",
+                boxShadow: isPaid ? "0 0 20px rgba(16,185,129,0.3)" : "0 0 20px rgba(255,107,43,0.3)",
               }}
             >
-              ⚠️
+              {isPaid ? "💳" : "⚠️"}
             </div>
 
             <div
@@ -218,7 +228,7 @@ export default function TaskDetailPage() {
                 lineHeight: 1.4,
               }}
             >
-              সম্পূর্ণ টাকা বুঝে নিয়ে একসেপ্ট করুন
+              {isPaid ? "অনলাইন পেইড অর্ডার ডেলিভারি" : "সম্পূর্ণ টাকা বুঝে নিয়ে একসেপ্ট করুন"}
             </div>
 
             <div
@@ -230,7 +240,15 @@ export default function TaskDetailPage() {
                 marginBottom: "18px",
               }}
             >
-              কাস্টমারের কাছ থেকে নগদ মোট টাকা বুঝে পেয়েছেন কি না নিশ্চিত করুন। কনফার্ম করার সাথে সাথে হিসাব সমন্বয় করা হবে।
+              {isPaid ? (
+                <>
+                  এই অর্ডারটির টাকা অনলাইনে অগ্রিম পরিশোধিত আছে (বিকাশ/অনলাইন)।{" "}
+                  <strong style={{ color: "#34D399" }}>কাস্টমারের কাছ থেকে কোনো টাকা নেবেন না।</strong> পার্সেলটি
+                  হস্তান্তর করে কনফার্ম করুন।
+                </>
+              ) : (
+                "কাস্টমারের কাছ থেকে নগদ মোট টাকা বুঝে পেয়েছেন কি না নিশ্চিত করুন। কনফার্ম করার সাথে সাথে হিসাব সমন্বয় করা হবে।"
+              )}
             </div>
 
             {/* Financial Breakdown in Modal */}
@@ -247,9 +265,16 @@ export default function TaskDetailPage() {
               }}
             >
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: ".86rem" }}>
-                <span style={{ color: "var(--text-2)" }}>💵 কাস্টমার থেকে মোট আদায়:</span>
-                <span style={{ fontWeight: 800, color: "var(--text-1)", fontSize: ".95rem" }}>
-                  ৳ {totalBill.toLocaleString()}
+                <span style={{ color: "var(--text-2)" }}>💳 পেমেন্ট মোড:</span>
+                <span style={{ fontWeight: 800, color: isPaid ? "#10B981" : "#F59E0B" }}>
+                  {isPaid ? "অনলাইন পেইড (PAID)" : "ক্যাশ অন ডেলিভারি (COD)"}
+                </span>
+              </div>
+
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: ".86rem" }}>
+                <span style={{ color: "var(--text-2)" }}>💵 কাস্টমার থেকে নগদ আদায়:</span>
+                <span style={{ fontWeight: 800, color: isPaid ? "#10B981" : "var(--text-1)", fontSize: ".95rem" }}>
+                  {isPaid ? "৳ ০ (টাকা নেবেন না)" : `৳ ${totalBill.toLocaleString()}`}
                 </span>
               </div>
 
@@ -264,10 +289,12 @@ export default function TaskDetailPage() {
                   borderBottom: "1px dashed var(--border-1)",
                 }}
               >
-                <span style={{ color: "#FCA5A5", display: "flex", alignItems: "center", gap: "4px" }}>
-                  🔻 অ্যাকাউন্ট থেকে মাইনাস হবে:
+                <span style={{ color: isPaid ? "#34D399" : "#FCA5A5", display: "flex", alignItems: "center", gap: "4px" }}>
+                  {isPaid ? "🛡️ অ্যাকাউন্ট থেকে কর্তন:" : "🔻 অ্যাকাউন্ট থেকে মাইনাস হবে:"}
                 </span>
-                <span style={{ fontWeight: 800, color: "#EF4444" }}>- ৳ {totalBill.toLocaleString()}</span>
+                <span style={{ fontWeight: 800, color: isPaid ? "#10B981" : "#EF4444" }}>
+                  {isPaid ? "৳ ০ (কোনো কর্তন নেই)" : `- ৳ ${totalBill.toLocaleString()}`}
+                </span>
               </div>
 
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: ".84rem" }}>
@@ -310,14 +337,16 @@ export default function TaskDetailPage() {
                   flex: 2,
                   padding: "13px 16px",
                   borderRadius: "14px",
-                  background: "linear-gradient(135deg, #FF6B2B, #E05520)",
+                  background: isPaid
+                    ? "linear-gradient(135deg, #10B981, #059669)"
+                    : "linear-gradient(135deg, #FF6B2B, #E05520)",
                   border: "none",
                   color: "#FFFFFF",
                   cursor: delivering ? "not-allowed" : "pointer",
                   fontSize: ".92rem",
                   fontWeight: 800,
                   fontFamily: "var(--font-bn)",
-                  boxShadow: "0 6px 20px rgba(255, 107, 43, 0.4)",
+                  boxShadow: isPaid ? "0 6px 20px rgba(16, 185, 129, 0.4)" : "0 6px 20px rgba(255, 107, 43, 0.4)",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
@@ -333,7 +362,7 @@ export default function TaskDetailPage() {
                   </>
                 ) : (
                   <>
-                    <span>✅ হ্যাঁ, সম্পূর্ণ বুঝে পেয়েছি</span>
+                    <span>{isPaid ? "✅ পার্সেল হ্যান্ডওভার সম্পন্ন" : "✅ হ্যাঁ, সম্পূর্ণ বুঝে পেয়েছি"}</span>
                   </>
                 )}
               </button>
@@ -379,13 +408,24 @@ export default function TaskDetailPage() {
 
         {/* Hero Card */}
         <div className="detail-hero">
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
-            <div className="detail-order-num" style={{ fontSize: ".82rem", color: "var(--orange)", fontWeight: 800, margin: 0 }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8, flexWrap: "wrap", gap: 6 }}>
+            <div className="detail-order-num" style={{ fontSize: ".88rem", color: "var(--orange)", fontWeight: 800, margin: 0 }}>
               অর্ডার #{task.order.orderNumber}
             </div>
-            <span style={{ fontSize: ".68rem", color: "var(--emerald)", background: "rgba(0,214,143,.12)", border: "1px solid rgba(0,214,143,.25)", padding: "3px 8px", borderRadius: 6, fontWeight: 700 }}>
-              📦 সেলার থেকে রিসিভড
-            </span>
+            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              {isPaid ? (
+                <span style={{ fontSize: ".72rem", color: "#10B981", background: "rgba(16,185,129,.15)", border: "1px solid rgba(16,185,129,.35)", padding: "3px 9px", borderRadius: 6, fontWeight: 800 }}>
+                  🟢 অনলাইন পেইড (PAID)
+                </span>
+              ) : (
+                <span style={{ fontSize: ".72rem", color: "#F59E0B", background: "rgba(245,158,11,.15)", border: "1px solid rgba(245,158,11,.35)", padding: "3px 9px", borderRadius: 6, fontWeight: 800 }}>
+                  💵 ক্যাশ অন ডেলিভারি (COD)
+                </span>
+              )}
+              <span style={{ fontSize: ".68rem", color: "var(--emerald)", background: "rgba(0,214,143,.12)", border: "1px solid rgba(0,214,143,.25)", padding: "3px 8px", borderRadius: 6, fontWeight: 700 }}>
+                📦 সেলার থেকে রিসিভড
+              </span>
+            </div>
           </div>
           <span className="detail-status-chip">
             <span className="live-dot" style={{ background: "var(--emerald)" }} />
@@ -496,19 +536,30 @@ export default function TaskDetailPage() {
               letterSpacing: ".08em",
               borderBottom: "1px solid var(--border-1)",
               paddingBottom: "8px",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
             }}
           >
-            বিল বিবরণী (Bill Breakdown)
+            <span>বিল বিবরণী (Bill Breakdown)</span>
+            <span style={{ color: isPaid ? "#10B981" : "#F59E0B", fontWeight: 800, textTransform: "none", fontSize: ".8rem" }}>
+              {isPaid ? "🟢 অনলাইন পরিশোধিত (PAID)" : "💵 ক্যাশ অন ডেলিভারি (COD)"}
+            </span>
           </div>
 
           <div style={{ display: "flex", justifyContent: "space-between", fontSize: ".88rem", color: "var(--text-2)" }}>
-            <span>পণ্যের মোট মূল্য (Subtotal):</span>
+            <span>পণ্যের মোট মূল্য (সেলার পণ্যের দাম):</span>
             <span style={{ fontWeight: 600, color: "var(--text-1)" }}>৳ {subtotal.toLocaleString()}</span>
           </div>
 
           <div style={{ display: "flex", justifyContent: "space-between", fontSize: ".88rem", color: "var(--text-2)" }}>
             <span>ডেলিভারি চার্জ (Delivery Fee):</span>
             <span style={{ fontWeight: 600, color: "var(--orange)" }}>+ ৳ {deliveryFee.toLocaleString()}</span>
+          </div>
+
+          <div style={{ display: "flex", justifyContent: "space-between", fontSize: ".84rem", color: "var(--text-3)" }}>
+            <span>রাইডারের ডেলিভারি আয় (৫০% ফি):</span>
+            <span style={{ fontWeight: 700, color: "#10B981" }}>৳ {earnings.toLocaleString()}</span>
           </div>
 
           {/* Divider */}
@@ -520,26 +571,79 @@ export default function TaskDetailPage() {
               <div style={{ fontSize: ".98rem", fontWeight: 800, color: "var(--text-1)" }}>
                 সর্বমোট প্রদেয় বিল:
               </div>
-              <div style={{ fontSize: ".72rem", color: "var(--text-3)" }}>কাস্টমার থেকে নগদ আদায় করবেন</div>
+              <div style={{ fontSize: ".72rem", color: "var(--text-3)" }}>
+                {isPaid ? "অনলাইনে অগ্রিম পরিশোধিত" : "কাস্টমার থেকে নগদ আদায় করবেন"}
+              </div>
             </div>
             <div style={{ fontSize: "1.35rem", fontWeight: 900, color: "var(--text-1)", fontFamily: "monospace" }}>
               ৳ {totalBill.toLocaleString()}
             </div>
           </div>
+
+          {/* Cash to collect indicator */}
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              padding: "10px 14px",
+              background: isPaid ? "rgba(16,185,129,.1)" : "rgba(255,107,43,.1)",
+              border: `1px solid ${isPaid ? "rgba(16,185,129,.25)" : "rgba(255,107,43,.25)"}`,
+              borderRadius: "12px",
+              marginTop: "4px",
+            }}
+          >
+            <div>
+              <div style={{ fontSize: ".82rem", fontWeight: 800, color: isPaid ? "#10B981" : "var(--orange)" }}>
+                💵 কাস্টমার থেকে নগদ আদায়:
+              </div>
+              <div style={{ fontSize: ".7rem", color: "var(--text-3)" }}>
+                {isPaid ? "অনলাইন পেইড, কোনো টাকা নেওয়া যাবে না" : "কাস্টমার থেকে নগদ বুঝে নিবেন"}
+              </div>
+            </div>
+            <div
+              style={{
+                fontSize: "1.2rem",
+                fontWeight: 900,
+                color: isPaid ? "#10B981" : "#EF4444",
+                fontFamily: "monospace",
+              }}
+            >
+              ৳ {cashToCollect.toLocaleString()}
+            </div>
+          </div>
         </div>
 
         {/* Info / Guideline Box */}
-        <div className="info-box" style={{ background: "rgba(255, 107, 43, 0.08)", borderColor: "rgba(255, 107, 43, 0.25)" }}>
-          <svg fill="none" viewBox="0 0 24 24" style={{ stroke: "var(--orange)" }}>
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-            />
-          </svg>
+        <div
+          className="info-box"
+          style={{
+            background: isPaid ? "rgba(16, 185, 129, 0.08)" : "rgba(255, 107, 43, 0.08)",
+            borderColor: isPaid ? "rgba(16, 185, 129, 0.25)" : "rgba(255, 107, 43, 0.25)",
+          }}
+        >
+          {isPaid ? (
+            <span style={{ fontSize: "1.2rem" }}>💳</span>
+          ) : (
+            <svg fill="none" viewBox="0 0 24 24" style={{ stroke: "var(--orange)" }}>
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+          )}
           <div className="info-box-text" style={{ color: "var(--text-2)" }}>
-            কাস্টমারের ঠিকানায় পৌঁছে সম্পূর্ণ <strong>৳ {totalBill.toLocaleString()}</strong> টাকা হাতে বুঝে নিয়ে নিচের বোতামে চাপুন।
+            {isPaid ? (
+              <>
+                এই অর্ডারটি অনলাইনে ইতিমধ্যে পরিশোধিত। কাস্টমার থেকে <strong style={{ color: "#10B981" }}>কোনো টাকা নেবেন না (৳ ০)</strong>। পার্সেল হস্তান্তর করে নিচের বোতামে চাপুন।
+              </>
+            ) : (
+              <>
+                কাস্টমারের ঠিকানায় পৌঁছে সম্পূর্ণ <strong>৳ {totalBill.toLocaleString()}</strong> টাকা হাতে বুঝে নিয়ে নিচের বোতামে চাপুন।
+              </>
+            )}
           </div>
         </div>
 
@@ -553,12 +657,14 @@ export default function TaskDetailPage() {
           style={{
             fontSize: "1.08rem",
             padding: "20px",
-            background: "linear-gradient(135deg, #FF6B2B, #E05520)",
-            boxShadow: "0 8px 30px rgba(255,107,43,.4)",
+            background: isPaid
+              ? "linear-gradient(135deg, #10B981, #059669)"
+              : "linear-gradient(135deg, #FF6B2B, #E05520)",
+            boxShadow: isPaid ? "0 8px 30px rgba(16,185,129,.4)" : "0 8px 30px rgba(255,107,43,.4)",
             cursor: "pointer",
           }}
         >
-          🎯 ডেলিভারি সম্পন্ন করুন
+          {isPaid ? "🎯 পার্সেল হ্যান্ডওভার ও ডেলিভারি সম্পন্ন" : "🎯 ডেলিভারি সম্পন্ন করুন"}
         </button>
 
       </div>

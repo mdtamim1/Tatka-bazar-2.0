@@ -135,6 +135,8 @@ export async function riderPortalRoutes(fastify: FastifyInstance) {
           deliveryFee,
           total: Number(o.total),
           earnings,
+          paymentStatus: o.paymentStatus,
+          paymentMethod: o.paymentMethod,
           items: o.items.map(i => ({ name: i.name, qty: i.quantity, price: Number(i.price), total: Number(i.total) })),
           createdAt: o.createdAt,
         };
@@ -177,6 +179,8 @@ export async function riderPortalRoutes(fastify: FastifyInstance) {
             deliveryFee,
             total: Number(a.order.total),
             earnings,
+            paymentStatus: a.order.paymentStatus,
+            paymentMethod: a.order.paymentMethod,
           },
         };
       })});
@@ -221,7 +225,9 @@ export async function riderPortalRoutes(fastify: FastifyInstance) {
       const rate = await prisma.deliveryRate.findFirst({ where: { isActive: true }, orderBy: { createdAt: "desc" } });
       const earning = deliveryFee > 0 ? Math.round(deliveryFee * 0.5) : Number(rate?.amount ?? 50);
       const totalBill = Number(assignment.order.total);
-      const netBalanceChange = earning - totalBill;
+      const isPaid = assignment.order.paymentStatus === "PAID" || (assignment.order.paymentMethod && assignment.order.paymentMethod !== "COD");
+      const deduction = isPaid ? 0 : totalBill;
+      const netBalanceChange = earning - deduction;
 
       const [, , , earningRecord] = await prisma.$transaction([
         prisma.deliveryAssignment.update({ where: { id: assignmentId }, data: { status: "DELIVERED", deliveredAt: new Date() } }),
@@ -235,7 +241,7 @@ export async function riderPortalRoutes(fastify: FastifyInstance) {
             description: `ডেলিভারি আয় (৫০% ডেলিভারি চার্জ) — অর্ডার #${assignment.order.orderNumber}`, type: "DELIVERY" },
         }),
       ]);
-      return reply.send({ success: true, data: { earning, totalBill, netBalanceChange, earningRecord } });
+      return reply.send({ success: true, data: { earning, totalBill, cashDeduction: deduction, isPaid, netBalanceChange, earningRecord } });
     } catch (err: any) {
       return reply.status(400).send({ success: false, error: err.message });
     }

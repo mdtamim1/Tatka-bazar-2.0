@@ -68,6 +68,8 @@ const SAMPLE_AVAILABLE_TASKS: Task[] = [
     deliveryFee: 60,
     total: 1450,
     earnings: 30,
+    paymentStatus: "PAID",
+    paymentMethod: "BKASH",
     items: [
       { name: "দেশি শিং মাছ (১ কেজি)", qty: 1, price: 650, total: 650 },
       { name: "তাজা লাল শাক (২ আঁটি)", qty: 2, price: 30, total: 60 },
@@ -88,6 +90,8 @@ const SAMPLE_AVAILABLE_TASKS: Task[] = [
     deliveryFee: 80,
     total: 2200,
     earnings: 40,
+    paymentStatus: "COD",
+    paymentMethod: "CASH_ON_DELIVERY",
     items: [
       { name: "দেশি গরুর মাংস (১ কেজি)", qty: 1, price: 780, total: 780 },
       { name: "ফার্মের মুরগি (২ কেজি)", qty: 1, price: 360, total: 360 },
@@ -110,6 +114,8 @@ const SAMPLE_AVAILABLE_TASKS: Task[] = [
     deliveryFee: 60,
     total: 890,
     earnings: 30,
+    paymentStatus: "PAID",
+    paymentMethod: "NAGAD",
     items: [
       { name: "অর্গানিক মিষ্টি কুমড়া (১টি)", qty: 1, price: 120, total: 120 },
       { name: "তাজা লাউ (১টি)", qty: 1, price: 80, total: 80 },
@@ -129,6 +135,8 @@ const SAMPLE_AVAILABLE_TASKS: Task[] = [
     deliveryFee: 100,
     total: 2950,
     earnings: 50,
+    paymentStatus: "PAID",
+    paymentMethod: "ONLINE_CARD",
     items: [
       { name: "পদ্মার তাজা ইলিশ (১ কেজি)", qty: 1, price: 1800, total: 1800 },
       { name: "গলদা চিংড়ি (৫০০ গ্রাম)", qty: 1, price: 750, total: 750 },
@@ -148,6 +156,8 @@ const SAMPLE_AVAILABLE_TASKS: Task[] = [
     deliveryFee: 60,
     total: 1680,
     earnings: 30,
+    paymentStatus: "COD",
+    paymentMethod: "CASH_ON_DELIVERY",
     items: [
       { name: "মিনিকেট চাল (১০ কেজি)", qty: 1, price: 720, total: 720 },
       { name: "তীর সয়াবিন তেল (৫ লিটার)", qty: 1, price: 680, total: 680 },
@@ -168,6 +178,8 @@ const SAMPLE_AVAILABLE_TASKS: Task[] = [
     deliveryFee: 60,
     total: 680,
     earnings: 30,
+    paymentStatus: "COD",
+    paymentMethod: "CASH_ON_DELIVERY",
     items: [
       { name: "তাজা করলা (১ কেজি)", qty: 1, price: 90, total: 90 },
       { name: "দেশি শসা (২ কেজি)", qty: 2, price: 60, total: 120 },
@@ -189,6 +201,8 @@ const SAMPLE_AVAILABLE_TASKS: Task[] = [
     deliveryFee: 100,
     total: 2550,
     earnings: 50,
+    paymentStatus: "PAID",
+    paymentMethod: "BKASH",
     items: [
       { name: "ড্রাগন ফ্রুট (২ কেজি)", qty: 2, price: 380, total: 760 },
       { name: "ইম্পোর্টেড মাল্টা (২ কেজি)", qty: 2, price: 290, total: 580 },
@@ -209,6 +223,8 @@ const SAMPLE_AVAILABLE_TASKS: Task[] = [
     deliveryFee: 80,
     total: 1920,
     earnings: 40,
+    paymentStatus: "COD",
+    paymentMethod: "CASH_ON_DELIVERY",
     items: [
       { name: "সোনালী মুরগি (২ পিস)", qty: 2, price: 380, total: 760 },
       { name: "লাল ডিম (২ ডজন)", qty: 2, price: 155, total: 310 },
@@ -229,6 +245,8 @@ const SAMPLE_AVAILABLE_TASKS: Task[] = [
     deliveryFee: 60,
     total: 1200,
     earnings: 30,
+    paymentStatus: "PAID",
+    paymentMethod: "NAGAD",
     items: [
       { name: "খাঁটি হলুদ গুঁড়া (৫০০ গ্রাম)", qty: 1, price: 180, total: 180 },
       { name: "ঝাল মরিচ গুঁড়া (৫০০ গ্রাম)", qty: 1, price: 240, total: 240 },
@@ -250,6 +268,8 @@ const SAMPLE_AVAILABLE_TASKS: Task[] = [
     deliveryFee: 60,
     total: 740,
     earnings: 30,
+    paymentStatus: "COD",
+    paymentMethod: "CASH_ON_DELIVERY",
     items: [
       { name: "পালং শাক (৩ আঁটি)", qty: 3, price: 35, total: 105 },
       { name: "তাজা ফুলকপি (২টি)", qty: 2, price: 60, total: 120 },
@@ -271,6 +291,8 @@ const SAMPLE_AVAILABLE_TASKS: Task[] = [
     deliveryFee: 80,
     total: 3180,
     earnings: 40,
+    paymentStatus: "PAID",
+    paymentMethod: "BKASH",
     items: [
       { name: "দেশি খাসির মাংস (২ কেজি)", qty: 2, price: 1150, total: 2300 },
       { name: "খাসির কলিজা (৫০০ গ্রাম)", qty: 1, price: 480, total: 480 },
@@ -290,6 +312,8 @@ const SAMPLE_AVAILABLE_TASKS: Task[] = [
     deliveryFee: 70,
     total: 2020,
     earnings: 35,
+    paymentStatus: "COD",
+    paymentMethod: "CASH_ON_DELIVERY",
     items: [
       { name: "তাজা রূপচাঁদা মাছ (৫০০ গ্রাম)", qty: 1, price: 850, total: 850 },
       { name: "নদীর পাবদা মাছ (১ কেজি)", qty: 1, price: 780, total: 780 },
@@ -310,6 +334,8 @@ const SAMPLE_AVAILABLE_TASKS: Task[] = [
     deliveryFee: 70,
     total: 2420,
     earnings: 35,
+    paymentStatus: "PAID",
+    paymentMethod: "ONLINE_CARD",
     items: [
       { name: "সুন্দরবনের প্রাকৃতিক মধু (৫০০ গ্রাম)", qty: 1, price: 850, total: 850 },
       { name: "গাওয়া ঘি প্রিমিয়াম (৫০০ গ্রাম)", qty: 1, price: 950, total: 950 },
@@ -329,6 +355,8 @@ const SAMPLE_AVAILABLE_TASKS: Task[] = [
     deliveryFee: 60,
     total: 1310,
     earnings: 30,
+    paymentStatus: "COD",
+    paymentMethod: "CASH_ON_DELIVERY",
     items: [
       { name: "ম্যাগি নুডুলস ফ্যামিলি প্যাক", qty: 2, price: 230, total: 460 },
       { name: "কোয়েকার ওটস (১ কেজি)", qty: 1, price: 390, total: 390 },
@@ -349,6 +377,8 @@ const SAMPLE_AVAILABLE_TASKS: Task[] = [
     deliveryFee: 60,
     total: 1180,
     earnings: 30,
+    paymentStatus: "PAID",
+    paymentMethod: "BKASH",
     items: [
       { name: "সাগর কলা (১ ডজন)", qty: 1, price: 140, total: 140 },
       { name: "থাই পেয়ারা (২ কেজি)", qty: 2, price: 110, total: 220 },
@@ -433,7 +463,7 @@ function handleMockFallback<T>(path: string, options: RequestInit): { success: b
   // 4. Available Tasks (15 Demo Tasks)
   if (cleanPath === "/rider-portal/tasks" && method === "GET") {
     let tasks = getLocalStore<Task[]>("available_tasks", SAMPLE_AVAILABLE_TASKS);
-    if (!tasks || tasks.length < 5) {
+    if (!tasks || tasks.length < 5 || !tasks[0]?.paymentStatus) {
       setLocalStore("available_tasks", SAMPLE_AVAILABLE_TASKS);
       tasks = SAMPLE_AVAILABLE_TASKS;
     }
@@ -461,6 +491,8 @@ function handleMockFallback<T>(path: string, options: RequestInit): { success: b
     ];
     const subtotal = task?.subtotal || items.reduce((s, it) => s + (it.total || it.qty * (it.price || 0)), 0);
     const total = task?.total || (subtotal + deliveryFee);
+    const paymentStatus = task?.paymentStatus || "COD";
+    const paymentMethod = task?.paymentMethod || (paymentStatus === "PAID" ? "BKASH" : "CASH_ON_DELIVERY");
     return {
       success: true,
       data: {
@@ -475,6 +507,8 @@ function handleMockFallback<T>(path: string, options: RequestInit): { success: b
         deliveryFee,
         total,
         earnings,
+        paymentStatus,
+        paymentMethod,
       } as any,
     };
   }
@@ -496,6 +530,8 @@ function handleMockFallback<T>(path: string, options: RequestInit): { success: b
       ];
       const subtotal = accepted.subtotal || items.reduce((s, it) => s + (it.total || it.qty * (it.price || 0)), 0);
       const total = accepted.total || (subtotal + deliveryFee);
+      const paymentStatus = accepted.paymentStatus || "COD";
+      const paymentMethod = accepted.paymentMethod || (paymentStatus === "PAID" ? "BKASH" : "CASH_ON_DELIVERY");
 
       const active = getLocalStore<ActiveTask[]>("active_tasks", []);
       active.push({
@@ -514,6 +550,8 @@ function handleMockFallback<T>(path: string, options: RequestInit): { success: b
           deliveryFee,
           total,
           earnings,
+          paymentStatus,
+          paymentMethod,
         },
       });
       setLocalStore("active_tasks", active);
@@ -527,19 +565,24 @@ function handleMockFallback<T>(path: string, options: RequestInit): { success: b
     const active = getLocalStore<ActiveTask[]>("active_tasks", []);
     let earned = 30;
     let orderTotal = 0;
+    let cashDeduction = 0;
+    let isPaid = false;
     if (isDeliver && active.length > 0) {
       const done = active.shift();
       setLocalStore("active_tasks", active);
 
+      isPaid = done?.order.paymentStatus === "PAID";
       const deliveryFee = Number(done?.order.deliveryFee ?? 60);
       earned = done?.order.earnings ?? Math.round(deliveryFee * 0.5);
       orderTotal = Number(done?.order.total ?? 1450);
+      cashDeduction = isPaid ? 0 : orderTotal;
 
       // update profile balance:
       // + 50% delivery charge added to rider account
-      // - total order bill deducted from rider account
+      // - total order bill deducted from rider account only if COD (collected cash from customer)
+      // - for PAID order, deduction is 0 (customer paid online to company)
       const profile = getLocalStore("profile", DEFAULT_PROFILE);
-      profile.balance = profile.balance + earned - orderTotal;
+      profile.balance = profile.balance + earned - cashDeduction;
       profile.totalEarned += earned;
       setLocalStore("profile", profile);
 
@@ -556,14 +599,16 @@ function handleMockFallback<T>(path: string, options: RequestInit): { success: b
         description: `অর্ডার #${done?.order.orderNumber} ডেলিভারি আয় (৫০% ডেলিভারি ফি)`,
         createdAt: new Date().toISOString(),
       });
-      allHistory.unshift({
-        id: "h-deduct-" + Date.now(),
-        type: "withdrawal",
-        amount: orderTotal,
-        description: `অর্ডার #${done?.order.orderNumber} সংগৃহীত বিল সমন্বয় (অ্যাকাউন্ট থেকে কর্তন)`,
-        status: "COMPLETED",
-        createdAt: new Date().toISOString(),
-      });
+      if (!isPaid) {
+        allHistory.unshift({
+          id: "h-deduct-" + Date.now(),
+          type: "withdrawal",
+          amount: orderTotal,
+          description: `অর্ডার #${done?.order.orderNumber} সংগৃহীত বিল সমন্বয় (অ্যাকাউন্ট থেকে কর্তন)`,
+          status: "COMPLETED",
+          createdAt: new Date().toISOString(),
+        });
+      }
       setLocalStore("history", allHistory);
 
       // add notification
@@ -571,14 +616,16 @@ function handleMockFallback<T>(path: string, options: RequestInit): { success: b
       notifs.unshift({
         id: "n-" + Date.now(),
         type: "PAYMENT",
-        title: "ডেলিভারি সম্পন্ন ও ব্যালেন্স সমন্বয়",
-        body: `অর্ডার #${done?.order.orderNumber}: আয় ৳ ${earned} যোগ হয়েছে এবং বিল ৳ ${orderTotal} সমন্বয় হয়েছে`,
+        title: isPaid ? "ডেলিভারি সম্পন্ন — অনলাইন পেইড" : "ডেলিভারি সম্পন্ন ও বিল সমন্বয়",
+        body: isPaid
+          ? `অর্ডার #${done?.order.orderNumber}: আয় ৳ ${earned} যোগ হয়েছে (অনলাইন পেইড অর্ডার, কোনো কর্তন নেই)`
+          : `অর্ডার #${done?.order.orderNumber}: আয় ৳ ${earned} যোগ হয়েছে এবং সংগৃহীত বিল ৳ ${orderTotal} সমন্বয় হয়েছে`,
         isRead: false,
         createdAt: new Date().toISOString(),
       });
       setLocalStore("notifications", notifs);
     }
-    return { success: true, data: { earning: earned, orderTotal, message: "ডেলিভারি সম্পন্ন" } as any };
+    return { success: true, data: { earning: earned, orderTotal, cashDeduction, isPaid, message: "ডেলিভারি সম্পন্ন" } as any };
   }
 
   // 9. Profile / Me
@@ -785,6 +832,8 @@ export interface Task {
   deliveryFee?: number;
   total: number;
   earnings: number;
+  paymentStatus?: "PAID" | "COD";
+  paymentMethod?: string;
   items?: TaskItem[];
   createdAt: string;
 }
@@ -806,6 +855,8 @@ export interface ActiveTask {
     deliveryFee?: number;
     total?: number;
     earnings: number;
+    paymentStatus?: "PAID" | "COD";
+    paymentMethod?: string;
   };
 }
 

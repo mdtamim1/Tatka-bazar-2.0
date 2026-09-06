@@ -196,13 +196,22 @@ export default function TasksPage() {
                     <div className="task-vendor-icon" style={{ background: "var(--emerald-glass)", border: "1px solid rgba(0,214,143,.3)" }}>🏪</div>
                     <div>
                       <div className="task-vendor-name">{a.order.vendorName}</div>
-                      <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 2 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 2, flexWrap: "wrap" }}>
                         <span style={{ color: "var(--emerald)", fontWeight: 700, fontFamily: "monospace", fontSize: ".82rem" }}>
                           #{a.order.orderNumber}
                         </span>
                         <span style={{ fontSize: ".68rem", color: "var(--emerald)", background: "rgba(0,214,143,.12)", padding: "1px 6px", borderRadius: 4, fontWeight: 600 }}>
                           রিসিভড
                         </span>
+                        {a.order.paymentStatus === "PAID" ? (
+                          <span style={{ fontSize: ".68rem", color: "#10B981", background: "rgba(16,185,129,.15)", border: "1px solid rgba(16,185,129,.3)", padding: "1px 6px", borderRadius: 4, fontWeight: 700 }}>
+                            🟢 PAID
+                          </span>
+                        ) : (
+                          <span style={{ fontSize: ".68rem", color: "#F59E0B", background: "rgba(245,158,11,.15)", border: "1px solid rgba(245,158,11,.3)", padding: "1px 6px", borderRadius: 4, fontWeight: 700 }}>
+                            💵 COD
+                          </span>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -214,9 +223,11 @@ export default function TasksPage() {
                   </div>
                 </div>
                 {a.order.total && (
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "6px 12px", background: "var(--bg-base)", borderRadius: 8, fontSize: ".76rem", color: "var(--text-2)", fontFamily: "var(--font-bn)", marginBottom: 4 }}>
-                    <span>কাস্টমার থেকে সংগৃহীত বিল:</span>
-                    <strong style={{ color: "var(--text-1)", fontFamily: "monospace" }}>৳ {Number(a.order.total).toLocaleString()}</strong>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "6px 12px", background: a.order.paymentStatus === "PAID" ? "rgba(16,185,129,.08)" : "var(--bg-base)", borderRadius: 8, fontSize: ".76rem", color: "var(--text-2)", fontFamily: "var(--font-bn)", marginBottom: 4 }}>
+                    <span>{a.order.paymentStatus === "PAID" ? "কাস্টমার থেকে নগদ আদায়:" : "কাস্টমার থেকে সংগৃহীত বিল:"}</span>
+                    <strong style={{ color: a.order.paymentStatus === "PAID" ? "#10B981" : "var(--text-1)", fontFamily: "monospace" }}>
+                      {a.order.paymentStatus === "PAID" ? "৳ ০ (অনলাইনে পরিশোধিত)" : `৳ ${Number(a.order.total).toLocaleString()}`}
+                    </strong>
                   </div>
                 )}
                 <div className="task-address">
@@ -253,7 +264,18 @@ export default function TasksPage() {
                   <div className="task-vendor-icon">🏪</div>
                   <div>
                     <div className="task-vendor-name">{task.vendorName}</div>
-                    <div className="task-vendor-items bn">{task.itemCount}টি পণ্য</div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 2 }}>
+                      <span className="task-vendor-items bn">{task.itemCount}টি পণ্য</span>
+                      {task.paymentStatus === "PAID" ? (
+                        <span style={{ fontSize: ".68rem", color: "#10B981", background: "rgba(16,185,129,.15)", border: "1px solid rgba(16,185,129,.3)", padding: "1px 6px", borderRadius: 4, fontWeight: 700 }}>
+                          🟢 PAID
+                        </span>
+                      ) : (
+                        <span style={{ fontSize: ".68rem", color: "#F59E0B", background: "rgba(245,158,11,.15)", border: "1px solid rgba(245,158,11,.3)", padding: "1px 6px", borderRadius: 4, fontWeight: 700 }}>
+                          💵 COD
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
                 <div className="task-earning">
@@ -269,7 +291,11 @@ export default function TasksPage() {
                   🔒 অর্ডার আইডি: <span style={{ color: "var(--orange)", fontWeight: 600 }}>সেলার থেকে রিসিভের সময়</span>
                 </span>
                 <span style={{ color: "var(--text-2)" }}>
-                  মোট বিল: <strong style={{ color: "var(--text-1)", fontFamily: "monospace" }}>৳ {Number(task.total).toLocaleString()}</strong>
+                  {task.paymentStatus === "PAID" ? (
+                    <span style={{ color: "#10B981", fontWeight: 700 }}>আদায়: ৳ ০ (অনলাইন পেইড)</span>
+                  ) : (
+                    <>মোট বিল: <strong style={{ color: "var(--text-1)", fontFamily: "monospace" }}>৳ {Number(task.total).toLocaleString()}</strong></>
+                  )}
                 </span>
               </div>
               <div className="task-address">
