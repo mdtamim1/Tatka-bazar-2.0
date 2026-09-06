@@ -124,6 +124,14 @@ input,textarea,select{font-family:inherit;}
 .empty-state-text{font-size:.80rem;color:var(--text-3);font-family:var(--font-bn);line-height:1.5;max-width:260px;}
 
 /* History */
+.history-search-box{position:relative;display:flex;align-items:center;width:100%;}
+.history-search-input{width:100%;padding:11px 40px 11px 38px;background:var(--bg-card);border:1px solid var(--border-2);border-radius:var(--r-md);color:var(--text-1);font-size:.85rem;font-family:var(--font-bn);outline:none;transition:all .2s var(--ease);}
+.history-search-input:focus{border-color:var(--border-orange);box-shadow:0 0 0 3px var(--orange-100);background:var(--bg-raised);}
+.history-search-icon{position:absolute;left:13px;pointer-events:none;color:var(--text-3);display:flex;align-items:center;justify-content:center;font-size:15px;}
+.history-search-clear{position:absolute;right:10px;background:var(--bg-raised);border:1px solid var(--border-2);color:var(--text-3);width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;cursor:pointer;transition:all .2s var(--ease);}
+.history-search-clear:hover{color:var(--text-1);border-color:var(--border-3);background:var(--bg-hover);}
+.history-search-meta{display:flex;align-items:center;justify-content:space-between;padding:0 2px;font-size:.72rem;color:var(--text-3);font-family:var(--font-bn);}
+.history-order-badge{display:inline-flex;align-items:center;gap:4px;padding:2px 7px;border-radius:var(--r-sm);font-size:.68rem;font-weight:700;background:rgba(255,107,43,.12);color:var(--orange);border:1px solid rgba(255,107,43,.25);letter-spacing:.02em;margin-top:3px;}
 .history-filters{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none;}
 .history-filters::-webkit-scrollbar{display:none;}
 .filter-btn{display:flex;align-items:center;gap:6px;padding:8px 16px;border-radius:var(--r-full);font-size:.78rem;font-weight:600;white-space:nowrap;border:1px solid var(--border-2);background:var(--bg-raised);color:var(--text-3);font-family:var(--font-bn);transition:all .2s var(--ease);cursor:pointer;flex-shrink:0;}

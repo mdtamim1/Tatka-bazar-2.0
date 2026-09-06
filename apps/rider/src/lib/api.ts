@@ -588,14 +588,16 @@ function handleMockFallback<T>(path: string, options: RequestInit): { success: b
 
       // add history entries
       const allHistory = getLocalStore<HistoryItem[]>("history", [
-        { id: "h-1", type: "income", amount: 80, description: "অর্ডার #TB-8940 সফল ডেলিভারি", createdAt: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString() },
-        { id: "h-2", type: "income", amount: 110, description: "অর্ডার #TB-8935 সফল ডেলিভারি", createdAt: new Date(Date.now() - 1000 * 60 * 60 * 5).toISOString() },
+        { id: "h-1", type: "income", amount: 80, orderNumber: "TB-8940", description: "অর্ডার #TB-8940 সফল ডেলিভারি", createdAt: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString() },
+        { id: "h-2", type: "income", amount: 110, orderNumber: "TB-8935", description: "অর্ডার #TB-8935 সফল ডেলিভারি", createdAt: new Date(Date.now() - 1000 * 60 * 60 * 5).toISOString() },
         { id: "h-3", type: "withdrawal", amount: 1000, description: "bKash উইথড্রয়াল সম্পন্ন", status: "COMPLETED", createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString() },
+        { id: "h-4", type: "income", amount: 95, orderNumber: "TB-8921", description: "অর্ডার #TB-8921 সফল ডেলিভারি", createdAt: new Date(Date.now() - 1000 * 60 * 60 * 28).toISOString() },
       ]);
       allHistory.unshift({
         id: "h-" + Date.now(),
         type: "income",
         amount: earned,
+        orderNumber: done?.order.orderNumber,
         description: `অর্ডার #${done?.order.orderNumber} ডেলিভারি আয় (৫০% ডেলিভারি ফি)`,
         createdAt: new Date().toISOString(),
       });
@@ -604,6 +606,7 @@ function handleMockFallback<T>(path: string, options: RequestInit): { success: b
           id: "h-deduct-" + Date.now(),
           type: "withdrawal",
           amount: orderTotal,
+          orderNumber: done?.order.orderNumber,
           description: `অর্ডার #${done?.order.orderNumber} সংগৃহীত বিল সমন্বয় (অ্যাকাউন্ট থেকে কর্তন)`,
           status: "COMPLETED",
           createdAt: new Date().toISOString(),
@@ -663,13 +666,21 @@ function handleMockFallback<T>(path: string, options: RequestInit): { success: b
   // 12. History
   if (cleanPath === "/rider-portal/history") {
     const filterType = params.get("type") || "all";
-    const allHistory: HistoryItem[] = [
-      { id: "h-1", type: "income", amount: 80, description: "অর্ডার #TB-8940 সফল ডেলিভারি", createdAt: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString() },
-      { id: "h-2", type: "income", amount: 110, description: "অর্ডার #TB-8935 সফল ডেলিভারি", createdAt: new Date(Date.now() - 1000 * 60 * 60 * 5).toISOString() },
+    const searchQuery = (params.get("q") || "").trim().toLowerCase();
+    const allHistory = getLocalStore<HistoryItem[]>("history", [
+      { id: "h-1", type: "income", amount: 80, orderNumber: "TB-8940", description: "অর্ডার #TB-8940 সফল ডেলিভারি", createdAt: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString() },
+      { id: "h-2", type: "income", amount: 110, orderNumber: "TB-8935", description: "অর্ডার #TB-8935 সফল ডেলিভারি", createdAt: new Date(Date.now() - 1000 * 60 * 60 * 5).toISOString() },
       { id: "h-3", type: "withdrawal", amount: 1000, description: "bKash উইথড্রয়াল সম্পন্ন", status: "COMPLETED", createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString() },
-      { id: "h-4", type: "income", amount: 95, description: "অর্ডার #TB-8921 সফল ডেলিভারি", createdAt: new Date(Date.now() - 1000 * 60 * 60 * 28).toISOString() },
-    ];
-    const filtered = filterType === "all" ? allHistory : allHistory.filter((h) => h.type === filterType);
+      { id: "h-4", type: "income", amount: 95, orderNumber: "TB-8921", description: "অর্ডার #TB-8921 সফল ডেলিভারি", createdAt: new Date(Date.now() - 1000 * 60 * 60 * 28).toISOString() },
+    ]);
+    let filtered = filterType === "all" ? allHistory : allHistory.filter((h) => h.type === filterType);
+    if (searchQuery) {
+      filtered = filtered.filter((h) =>
+        (h.orderNumber && h.orderNumber.toLowerCase().includes(searchQuery)) ||
+        h.description.toLowerCase().includes(searchQuery) ||
+        h.id.toLowerCase().includes(searchQuery)
+      );
+    }
     return { success: true, data: filtered as any };
   }
 
@@ -973,7 +984,8 @@ export interface HistoryItem {
   type: "income" | "withdrawal";
   amount: number;
   description: string;
-  status?: string;
+  orderNumber?: string | undefined;
+  status?: string | undefined;
   createdAt: string;
 }
 
