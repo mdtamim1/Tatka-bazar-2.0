@@ -63,11 +63,16 @@ export default function TaskDetailPage() {
   // Stage 1 -> 2 Transit
   const [transiting, setTransiting] = useState(false);
 
-  // Cancel & Return Flow
+  // Cancel Request Flow
   const [showCancelModal, setShowCancelModal] = useState(false);
-  const [cancelReason, setCancelReason] = useState("কাস্টমার ফোন ধরছেন না");
+  const [cancelReason, setCancelReason] = useState("কাস্টমার ফোন ধরছেন না / বন্ধ");
   const [cancelling, setCancelling] = useState(false);
-  const [confirmingReturn, setConfirmingReturn] = useState(false);
+
+  // Return Code Input & Verification
+  const [inputReturnCode, setInputReturnCode] = useState("");
+  const [codeError, setCodeError] = useState("");
+  const [verifyingCode, setVerifyingCode] = useState(false);
+  const [approvingDemo, setApprovingDemo] = useState(false);
   const [returnSuccess, setReturnSuccess] = useState(false);
 
   useEffect(() => {
@@ -105,11 +110,11 @@ export default function TaskDetailPage() {
     setTransiting(false);
   }
 
-  // 2. Initiate Cancel & Return to Vendor
-  async function handleCancelReturn() {
+  // 2. Rider Submits Cancellation Request to Admin & Hub
+  async function handleSendCancelRequest() {
     if (!task) return;
     setCancelling(true);
-    const res = await apiFetch<ActiveTask>(`/rider-portal/tasks/${id}/cancel-return`, {
+    const res = await apiFetch<ActiveTask>(`/rider-portal/tasks/${id}/cancel-request`, {
       method: "POST",
       body: JSON.stringify({ reason: cancelReason }),
     });
@@ -117,31 +122,55 @@ export default function TaskDetailPage() {
       setTask(res.data);
       setShowCancelModal(false);
     } else {
-      alert("রিটার্ন শুরু করা যায়নি");
+      alert("বাতিল অনুরোধ পাঠানো যায়নি");
     }
     setCancelling(false);
   }
 
-  // 3. Confirm Handover back to Vendor
-  async function handleConfirmReturn() {
+  // 3. Demo Simulator: Admin Approves Cancellation Request
+  async function handleAdminApproveDemo() {
     if (!task) return;
-    setConfirmingReturn(true);
+    setApprovingDemo(true);
+    const res = await apiFetch<ActiveTask>(`/rider-portal/tasks/${id}/approve-cancel`, {
+      method: "POST",
+    });
+    if (res.success && res.data) {
+      setTask(res.data);
+    } else {
+      alert("অ্যাপ্রুভাল প্রসেস করা যায়নি");
+    }
+    setApprovingDemo(false);
+  }
+
+  // 4. Rider Verifies 4-digit Return Code provided by Store Owner
+  async function handleVerifyReturnCode() {
+    if (!task) return;
+    if (!inputReturnCode.trim()) {
+      setCodeError("দোকানদারের দেওয়া ৪ সংখ্যার রিটার্ন কোডটি লিখুন");
+      return;
+    }
+    setCodeError("");
+    setVerifyingCode(true);
     const res = await apiFetch<{ returnAllowance: number; message: string }>(
-      `/rider-portal/tasks/${id}/confirm-return`,
-      { method: "POST" }
+      `/rider-portal/tasks/${id}/verify-return-code`,
+      {
+        method: "POST",
+        body: JSON.stringify({ returnCode: inputReturnCode }),
+      }
     );
     if (res.success) {
       setReturnSuccess(true);
+      confetti();
       setTimeout(() => {
         router.replace("/tasks");
-      }, 3500);
+      }, 3800);
     } else {
-      alert(res.error || "রিটার্ন সম্পন্ন করা যায়নি");
-      setConfirmingReturn(false);
+      setCodeError(res.error || "ভুল রিটার্ন কোড! দোকানদারের কোড মিলিয়ে নিন।");
+      setVerifyingCode(false);
     }
   }
 
-  // 4. Final Delivery to Customer
+  // 5. Normal Delivery to Customer Handover
   async function deliver() {
     if (!task) return;
     setDelivering(true);
@@ -190,10 +219,11 @@ export default function TaskDetailPage() {
   }
 
   const currentStage = task.status;
-  const isPickedUp = currentStage === "PICKED_UP" || currentStage === "ON_THE_WAY" || currentStage === "DELIVERED";
-  const isOnTheWay = currentStage === "ON_THE_WAY" || currentStage === "DELIVERED";
-  const isDelivered = currentStage === "DELIVERED";
+  const isRequested = currentStage === "CANCELLATION_REQUESTED";
   const isReturning = currentStage === "RETURNING_TO_VENDOR";
+  const isDelivered = currentStage === "DELIVERED";
+  const isOnTheWay = currentStage === "ON_THE_WAY" || isDelivered;
+  const isPickedUp = currentStage === "PICKED_UP" || isOnTheWay;
 
   return (
     <>
@@ -233,11 +263,11 @@ export default function TaskDetailPage() {
         </div>
       )}
 
-      {/* ─── Success Overlay: Returned to Vendor ─── */}
+      {/* ─── Success Overlay: Store Return Verified ─── */}
       {returnSuccess && (
         <div className="success-overlay" style={{ pointerEvents: "auto", background: "rgba(5,8,16,.92)", zIndex: 1000 }}>
-          <div className="success-circle" style={{ background: "rgba(16,185,129,.15)", borderColor: "#10B981" }}>🔄</div>
-          <div className="success-text" style={{ fontSize: "1.5rem" }}>সেলারকে রিটার্ন সম্পন্ন!</div>
+          <div className="success-circle" style={{ background: "rgba(16,185,129,.15)", borderColor: "#10B981" }}>🔐</div>
+          <div className="success-text" style={{ fontSize: "1.5rem" }}>দোকানদার কোড যাচাই সফল!</div>
           <div
             style={{
               background: "rgba(255,255,255,.05)",
@@ -251,10 +281,10 @@ export default function TaskDetailPage() {
             }}
           >
             <div style={{ color: "var(--emerald)", fontWeight: 800, fontSize: "1.05rem", marginBottom: "6px" }}>
-              🛡️ ওয়ালেট থেকে কোনো বিল কাটা হয়নি (৳ ০)
+              🛡️ পার্সেল সেলারকে ফেরত সম্পন্ন (০ বিল কর্তন)
             </div>
-            <div style={{ color: "var(--orange)", fontSize: ".9rem", fontWeight: 800 }}>
-              + ৳ ২০ রিটার্ন ট্রিপ ভাতা আপনার ওয়ালেটে যোগ হয়েছে
+            <div style={{ color: "var(--orange)", fontSize: ".95rem", fontWeight: 800 }}>
+              + ৳ ২০ রিটার্ন ট্রিপ ভাতা আপনার ওয়ালেটে জমা হয়েছে
             </div>
           </div>
           <div className="success-sub" style={{ marginTop: "14px" }}>
@@ -263,7 +293,7 @@ export default function TaskDetailPage() {
         </div>
       )}
 
-      {/* ─── Cancel & Return Modal ─── */}
+      {/* ─── Cancel Request & Hub Contact Modal ─── */}
       {showCancelModal && (
         <div
           style={{
@@ -279,20 +309,35 @@ export default function TaskDetailPage() {
               background: "var(--bg-card)",
               border: "1.5px solid rgba(239, 68, 68, 0.4)",
               borderRadius: "24px", padding: "24px 20px",
-              width: "100%", maxWidth: "380px",
+              width: "100%", maxWidth: "390px",
               boxShadow: "0 28px 80px rgba(0,0,0,0.7)",
               fontFamily: "var(--font-bn)",
+              maxHeight: "92vh",
+              overflowY: "auto",
             }}
           >
-            <div style={{ fontSize: "2rem", textAlign: "center", marginBottom: 8 }}>⚠️</div>
+            <div style={{ fontSize: "2rem", textAlign: "center", marginBottom: 6 }}>📞</div>
             <div style={{ fontSize: "1.15rem", fontWeight: 800, color: "var(--text-1)", textAlign: "center", marginBottom: 4 }}>
-              ডেলিভারি বাতিল ও সেলারকে রিটার্ন
+              ডেলিভারি বাতিল ও হাবে যোগাযোগ
             </div>
-            <div style={{ fontSize: ".78rem", color: "var(--text-3)", textAlign: "center", lineHeight: 1.5, marginBottom: 16 }}>
-              কাস্টমার পণ্য নিতে না পারলে কারণ নির্বাচন করে পার্সেলটি সেলারের দোকানে ফেরত দিন।
+            <div style={{ fontSize: ".78rem", color: "var(--text-3)", textAlign: "center", lineHeight: 1.5, marginBottom: 14 }}>
+              কাস্টমার পার্সেল না নিলে কারণ সিলেক্ট করে হাবে যোগাযোগ করুন। অ্যাডমিন অনুমোদনের পর দোকানে পণ্য ফেরত দেওয়ার অপশন চালু হবে।
             </div>
 
-            <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 16 }}>
+            {/* Hub Contact Hotline Card */}
+            <div className="hub-contact-card" style={{ marginBottom: 14 }}>
+              <div>
+                <div style={{ fontSize: ".68rem", color: "var(--text-3)" }}>টাটকা বাজার সেন্ট্রাল হাব</div>
+                <div style={{ fontSize: ".92rem", fontWeight: 800, color: "var(--text-1)" }}>
+                  📞 {task.hubPhone || "01711-998877"}
+                </div>
+              </div>
+              <a href={`tel:${(task.hubPhone || "01711998877").replace(/[^0-9]/g, "")}`} className="hub-call-btn">
+                📞 সরাসরি কল দিন
+              </a>
+            </div>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 14 }}>
               {[
                 "📞 কাস্টমার ফোন ধরছেন না / বন্ধ",
                 "🚫 কাস্টমার পার্সেল নিতে অস্বীকৃতি জানিয়েছেন",
@@ -311,8 +356,8 @@ export default function TaskDetailPage() {
               ))}
             </div>
 
-            <div style={{ padding: "10px 12px", background: "rgba(255,107,43,.08)", borderRadius: "10px", fontSize: ".74rem", color: "var(--text-2)", marginBottom: 18, border: "1px dashed var(--border-orange)" }}>
-              🛡️ <strong>আর্থিক নিশ্চয়তা:</strong> আপনার ওয়ালেট থেকে কোনো বিল কাটা হবে না এবং সেলারকে ফেরত দিলে আপনি ৳ ২০ ট্রিপ ভাতা পাবেন।
+            <div style={{ padding: "10px 12px", background: "rgba(255,107,43,.08)", borderRadius: "10px", fontSize: ".74rem", color: "var(--text-2)", marginBottom: 16, border: "1px dashed var(--border-orange)" }}>
+              🛡️ <strong>আপনার অধিকার:</strong> আবেদন পাঠানোর পর অ্যাডমিন অ্যাপ্রুভ করলে দোকানে মাল ফেরত দিয়ে কোড যাচাই সম্পন্ন করবেন। ওয়ালেট থেকে কোনো টাকা কাটা হবে না এবং আপনি ৳ ২০ ট্রিপ ভাতা পাবেন।
             </div>
 
             <div style={{ display: "flex", gap: 10 }}>
@@ -330,9 +375,9 @@ export default function TaskDetailPage() {
                 বাতিল নয়
               </button>
               <button
-                id="confirm-cancel-return-btn"
+                id="send-cancel-request-btn"
                 type="button"
-                onClick={handleCancelReturn}
+                onClick={handleSendCancelRequest}
                 disabled={cancelling}
                 style={{
                   flex: 2, padding: "12px", borderRadius: "12px",
@@ -343,14 +388,14 @@ export default function TaskDetailPage() {
                   display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
                 }}
               >
-                {cancelling ? "প্রসেসিং..." : "🔄 রিটার্ন শুরু করুন"}
+                {cancelling ? "পাঠানো হচ্ছে..." : "📩 বাতিল অনুরোধ পাঠান"}
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* ─── Delivery Confirmation Warning Modal ─── */}
+      {/* ─── Delivery Confirmation Handover Warning Modal ─── */}
       {showConfirmModal && (
         <div
           style={{
@@ -523,15 +568,15 @@ export default function TaskDetailPage() {
           </div>
         </div>
 
-        {/* ─── 3-Stage Delivery Stepper ─── */}
-        {!isReturning ? (
+        {/* ─── 3-Stage Delivery Stepper / Return Status Alert ─── */}
+        {!isRequested && !isReturning ? (
           <div className="delivery-stepper">
             <div className="stepper-line" style={{ left: "16%", right: "16%" }} />
             <div className={`stepper-item ${isPickedUp ? (isOnTheWay ? "done" : "active") : ""}`}>
               <div className="stepper-dot">{isOnTheWay ? "✓" : "১"}</div>
               <div className="stepper-label">
                 পার্সেল সংগ্রহ<br />
-                <span style={{ fontSize: ".62rem", opacity: 0.8 }}>সেলার থেকে রিসিভড</span>
+                <span style={{ fontSize: ".62rem", opacity: 0.8 }}>সেলার থেকে</span>
               </div>
             </div>
             <div className={`stepper-item ${isOnTheWay ? (isDelivered ? "done" : "active") : ""}`}>
@@ -546,6 +591,29 @@ export default function TaskDetailPage() {
               <div className="stepper-label">
                 কাস্টমার হ্যান্ডওভার<br />
                 <span style={{ fontSize: ".62rem", opacity: 0.8 }}>ডেলিভারি সম্পন্ন</span>
+              </div>
+            </div>
+          </div>
+        ) : isRequested ? (
+          <div
+            style={{
+              padding: "12px 14px",
+              background: "rgba(245, 158, 11, 0.1)",
+              border: "1px solid rgba(245, 158, 11, 0.35)",
+              borderRadius: "var(--r-md)",
+              display: "flex",
+              alignItems: "center",
+              gap: 12,
+              fontFamily: "var(--font-bn)",
+            }}
+          >
+            <span style={{ fontSize: "1.4rem" }}>⏳</span>
+            <div>
+              <div style={{ fontSize: ".86rem", fontWeight: 800, color: "var(--amber)" }}>
+                বাতিল অনুরোধ পাঠানো হয়েছে — অ্যাডমিন অনুমোদনের অপেক্ষায়
+              </div>
+              <div style={{ fontSize: ".72rem", color: "var(--text-3)" }}>
+                হাব ইনচার্জ কাস্টমারকে চেক করার পর সেলারের কাছে ফেরত পাঠানোর অপশন আনলক হবে।
               </div>
             </div>
           </div>
@@ -565,10 +633,10 @@ export default function TaskDetailPage() {
             <span style={{ fontSize: "1.4rem" }}>🔄</span>
             <div>
               <div style={{ fontSize: ".86rem", fontWeight: 800, color: "#EF4444" }}>
-                অর্ডার বাতিল — সেলারকে পার্সেল ফেরত দিন
+                সেলারকে পার্সেল ফেরত দিন ও রিটার্ন কোড সংগ্রহ করুন
               </div>
               <div style={{ fontSize: ".72rem", color: "var(--text-3)" }}>
-                কারণ: <strong>{task.cancellationReason || "কাস্টমার রিসিভ করেননি"}</strong>
+                অ্যাডমিন বাতিল অনুমোদন করেছে। দোকানে পণ্য পৌঁছে দিয়ে দোকানদারের কোড দিয়ে সম্পন্ন করুন।
               </div>
             </div>
           </div>
@@ -590,7 +658,11 @@ export default function TaskDetailPage() {
                   💵 ক্যাশ অন ডেলিভারি (COD)
                 </span>
               )}
-              {isReturning ? (
+              {isRequested ? (
+                <span style={{ fontSize: ".68rem", color: "var(--amber)", background: "rgba(245,158,11,.15)", border: "1px solid rgba(245,158,11,.3)", padding: "3px 8px", borderRadius: 6, fontWeight: 800 }}>
+                  ⏳ বাতিল অপেক্ষারত
+                </span>
+              ) : isReturning ? (
                 <span style={{ fontSize: ".68rem", color: "#EF4444", background: "rgba(239,68,68,.15)", border: "1px solid rgba(239,68,68,.3)", padding: "3px 8px", borderRadius: 6, fontWeight: 800 }}>
                   🔄 সেলারকে ফেরত
                 </span>
@@ -606,8 +678,8 @@ export default function TaskDetailPage() {
             </div>
           </div>
           <span className="detail-status-chip">
-            <span className="live-dot" style={{ background: isReturning ? "#EF4444" : "var(--emerald)" }} />
-            {isReturning ? "রিটার্ন প্রক্রিয়াধীন" : isOnTheWay ? "পথে আছেন" : "চলমান ডেলিভারি"}
+            <span className="live-dot" style={{ background: isRequested ? "var(--amber)" : isReturning ? "#EF4444" : "var(--emerald)" }} />
+            {isRequested ? "বাতিল ভেরিফিকেশন" : isReturning ? "রিটার্ন প্রক্রিয়াধীন" : isOnTheWay ? "পথে আছেন" : "চলমান ডেলিভারি"}
           </span>
 
           <div className="detail-info-grid">
@@ -640,40 +712,131 @@ export default function TaskDetailPage() {
               <div className="detail-info-value">🏪 {task.order.vendorName}</div>
             </div>
             <div className="detail-info-item">
-              <div className="detail-info-label">{isReturning ? "রিটার্ন ট্রিপ ভাতা" : "আপনার ডেলিভারি আয়"}</div>
+              <div className="detail-info-label">{isReturning || isRequested ? "রিটার্ন ট্রিপ ভাতা" : "আপনার ডেলিভারি আয়"}</div>
               <div className="detail-info-value" style={{ color: "var(--emerald)", fontSize: "1.15rem", fontWeight: 900 }}>
-                {isReturning ? "৳ ২০" : `৳ ${Number(earnings).toLocaleString()}`}
+                {isReturning || isRequested ? "৳ ২০" : `৳ ${Number(earnings).toLocaleString()}`}
               </div>
             </div>
           </div>
         </div>
 
-        {/* If in Returning Stage, display prominent Return Guide */}
+        {/* ─── State 1: CANCELLATION_REQUESTED (Waiting on Admin & Hub call) ─── */}
+        {isRequested && (
+          <div className="waiting-card">
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <span style={{ fontSize: "1.6rem" }}>⏳</span>
+              <div>
+                <div style={{ fontSize: ".92rem", fontWeight: 800, color: "var(--amber)" }}>
+                  ক্যানসেলেশন রিকোয়েস্ট অ্যাডমিন প্যানেলে পাঠানো হয়েছে
+                </div>
+                <div style={{ fontSize: ".74rem", color: "var(--text-3)", marginTop: 2 }}>
+                  কারণ: <strong>{task.cancellationReason}</strong>
+                </div>
+              </div>
+            </div>
+
+            {/* Direct Hub Helpline Call */}
+            <div className="hub-contact-card">
+              <div>
+                <div style={{ fontSize: ".68rem", color: "var(--text-3)" }}>টাটকা বাজার সেন্ট্রাল হাব</div>
+                <div style={{ fontSize: ".90rem", fontWeight: 800, color: "var(--text-1)" }}>
+                  📞 {task.hubPhone || "01711-998877"}
+                </div>
+              </div>
+              <a href={`tel:${(task.hubPhone || "01711998877").replace(/[^0-9]/g, "")}`} className="hub-call-btn">
+                📞 হাবে কল দিন
+              </a>
+            </div>
+
+            <div style={{ fontSize: ".75rem", color: "var(--text-2)", lineHeight: 1.5 }}>
+              💡 হাবে কথা বলুন যাতে তারা কাস্টমারকে চেক করে অর্ডারটি বাতিল অনুমোদন করে। অনুমোদন পেলে আপনি পণ্যটি দোকানে ফেরত দেওয়ার অপশন পাবেন।
+            </div>
+
+            {/* Demo Simulation Action for Testing */}
+            <div style={{ borderTop: "1px dashed var(--border-2)", paddingTop: 12 }}>
+              <div style={{ fontSize: ".68rem", color: "var(--text-3)", marginBottom: 6 }}>
+                ⚡ টেস্টের জন্য অ্যাডমিন অনুমোদন বাটন:
+              </div>
+              <button
+                id="demo-admin-approve-btn"
+                type="button"
+                className="btn-secondary"
+                disabled={approvingDemo}
+                onClick={handleAdminApproveDemo}
+                style={{
+                  fontSize: ".82rem",
+                  padding: "10px",
+                  borderColor: "var(--amber)",
+                  color: "var(--amber)",
+                }}
+              >
+                {approvingDemo ? "প্রসেসিং..." : "⚡ [অ্যাডমিন অনুমোদন সম্পন্ন করুন — স্ট্যাটাস ওপেন]"}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* ─── State 2: RETURNING_TO_VENDOR (Store Handover & OTP Verification) ─── */}
         {isReturning && (
           <div className="return-card">
-            <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: ".9rem", fontWeight: 800, color: "#EF4444" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: ".95rem", fontWeight: 800, color: "#EF4444" }}>
               <span>🔄</span>
-              <span>পণ্যটি সেলারের দোকানে ফেরত দিন</span>
+              <span>সেলারকে পণ্য ফেরত ও রিটার্ন কোড ভেরিফিকেশন</span>
             </div>
-            <div style={{ fontSize: ".8rem", color: "var(--text-2)", lineHeight: 1.6 }}>
-              দয়া করে পার্সেলটি নিয়ে সরাসরি <strong>{task.order.vendorName}</strong> দোকানে যান এবং পণ্যগুলো সেলারের হাতে অক্ষত অবস্থায় ফিরিয়ে দিন।
+            
+            <div style={{ fontSize: ".80rem", color: "var(--text-2)", lineHeight: 1.6 }}>
+              পার্সেলটি মূল দোকানে ফিরিয়ে দিন: <strong>🏪 {task.order.vendorName}</strong>।<br />
+              দোকানদার পণ্য অক্ষত বুঝে নিয়ে আপনাকে <strong>৪-সংখ্যার রিটার্ন কোড</strong> দেবেন।
             </div>
-            <div style={{ padding: "10px 12px", background: "var(--bg-base)", borderRadius: "var(--r-md)", border: "1px solid var(--border-1)", fontSize: ".76rem", color: "var(--text-3)" }}>
-              🛡️ <strong>ক্যাশ নিরাপত্তা:</strong> এই অর্ডারের কোনো টাকা আপনার ওয়ালেট থেকে কাটা হয়নি। ফেরত সম্পন্ন করলে আপনার ব্যালেন্সে <strong>৳ ২০</strong> ট্রিপ ভাতা জমা হবে।
+
+            {/* Test Helper Pill */}
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 6 }}>
+              <span style={{ fontSize: ".72rem", color: "var(--text-3)" }}>
+                দোকানদার থেকে প্রাপ্ত কোডটি লিখুন:
+              </span>
+              <span className="return-hint-pill">
+                🔑 দোকানদারের রিটার্ন কোড: <strong>{task.returnCode || "5842"}</strong>
+              </span>
             </div>
+
+            {/* Return Code Input */}
+            <input
+              id="return-code-input"
+              type="text"
+              maxLength={4}
+              className="return-code-input"
+              placeholder="••••"
+              value={inputReturnCode}
+              onChange={(e) => {
+                setInputReturnCode(e.target.value.replace(/[^0-9]/g, ""));
+                setCodeError("");
+              }}
+            />
+
+            {codeError && (
+              <div style={{ fontSize: ".76rem", color: "#EF4444", padding: "8px 12px", background: "rgba(239,68,68,.1)", borderRadius: "var(--r-sm)", textAlign: "center" }}>
+                {codeError}
+              </div>
+            )}
+
+            <div style={{ padding: "10px 12px", background: "var(--bg-base)", borderRadius: "var(--r-md)", border: "1px solid var(--border-1)", fontSize: ".75rem", color: "var(--text-3)" }}>
+              🛡️ <strong>ক্যাশ নিরাপত্তা:</strong> এই অর্ডারের কোনো টাকা আপনার অ্যাকাউন্ট থেকে কাটা হবে না (৳ ০ কর্তন)। কোড যাচাই সম্পন্ন হলে সাথে সাথে ব্যালেন্সে <strong>৳ ২০</strong> রিটার্ন ভাতা জমা হবে।
+            </div>
+
             <button
-              id="confirm-return-vendor-btn"
+              id="verify-return-code-btn"
               type="button"
               className="task-deliver-btn"
-              disabled={confirmingReturn}
-              onClick={handleConfirmReturn}
+              disabled={verifyingCode || inputReturnCode.length < 4}
+              onClick={handleVerifyReturnCode}
               style={{
                 background: "linear-gradient(135deg, #10B981, #059669)",
                 boxShadow: "0 8px 30px rgba(16,185,129,.4)",
                 padding: "16px",
+                opacity: inputReturnCode.length < 4 ? 0.6 : 1,
               }}
             >
-              {confirmingReturn ? "প্রসেসিং..." : "✅ ভেন্ডরকে পার্সেল ফেরত দিয়েছি"}
+              {verifyingCode ? "কোড যাচাই করা হচ্ছে..." : "✅ রিটার্ন কোড যাচাই ও সম্পন্ন করুন"}
             </button>
           </div>
         )}
@@ -741,8 +904,10 @@ export default function TaskDetailPage() {
           </div>
 
           <div style={{ display: "flex", justifyContent: "space-between", fontSize: ".84rem", color: "var(--text-3)" }}>
-            <span>রাইডারের ডেলিভারি আয় (৫০% ফি):</span>
-            <span style={{ fontWeight: 700, color: "#10B981" }}>৳ {earnings.toLocaleString()}</span>
+            <span>{isReturning || isRequested ? "রিটার্ন ট্রিপ ভাতা:" : "রাইডারের ডেলিভারি আয় (৫০% ফি):"}</span>
+            <span style={{ fontWeight: 700, color: "#10B981" }}>
+              ৳ {isReturning || isRequested ? 20 : earnings.toLocaleString()}
+            </span>
           </div>
 
           <div style={{ height: "1px", background: "var(--border-1)", margin: "2px 0" }} />
@@ -789,8 +954,8 @@ export default function TaskDetailPage() {
           </div>
         </div>
 
-        {/* Action Controls when not returning */}
-        {!isReturning && (
+        {/* Action Controls when not returning or requesting */}
+        {!isReturning && !isRequested && (
           <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 4 }}>
             {/* Stage-based primary action */}
             {currentStage === "PICKED_UP" || currentStage === "ASSIGNED" ? (
@@ -829,7 +994,7 @@ export default function TaskDetailPage() {
               </button>
             )}
 
-            {/* Cancel & Return Trigger */}
+            {/* Cancel & Hub Contact Trigger */}
             <button
               id="open-cancel-return-btn"
               type="button"
@@ -844,7 +1009,7 @@ export default function TaskDetailPage() {
                 transition: "all .2s ease",
               }}
             >
-              ⚠️ কাস্টমার নেয়নি / অর্ডার বাতিল ও রিটার্ন
+              ⚠️ কাস্টমার নেয়নি / বাতিল অনুরোধ পাঠান
             </button>
           </div>
         )}

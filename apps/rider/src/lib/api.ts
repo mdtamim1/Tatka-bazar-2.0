@@ -482,6 +482,9 @@ function handleMockFallback<T>(path: string, options: RequestInit): { success: b
     !cleanPath.includes("/accept") &&
     !cleanPath.includes("/pickup") &&
     !cleanPath.includes("/transit") &&
+    !cleanPath.includes("/cancel-request") &&
+    !cleanPath.includes("/approve-cancel") &&
+    !cleanPath.includes("/verify-return-code") &&
     !cleanPath.includes("/cancel-return") &&
     !cleanPath.includes("/confirm-return") &&
     !cleanPath.includes("/deliver")
@@ -582,7 +585,134 @@ function handleMockFallback<T>(path: string, options: RequestInit): { success: b
     return { success: false, error: "টাস্ক পাওয়া যায়নি" };
   }
 
-  // 8b. Cancel & Initiate Return to Vendor
+  // 8b. Rider Sends Cancellation Request to Admin & Local Hub
+  if (cleanPath.includes("/cancel-request") && method === "POST") {
+    let body: any = {};
+    try { body = JSON.parse(options.body as string); } catch {}
+    const taskId = cleanPath.split("/")[3];
+    const active = getLocalStore<ActiveTask[]>("active_tasks", []);
+    const idx = active.findIndex((a) => a.assignmentId === taskId || a.order.id === taskId);
+    if (idx !== -1 && active[idx]) {
+      const returnOtp = active[idx].returnCode || String(Math.floor(1000 + Math.random() * 9000));
+      active[idx].status = "CANCELLATION_REQUESTED";
+      active[idx].cancellationReason = body.reason || "কাস্টমার পার্সেল রিসিভ করেননি";
+      active[idx].cancellationRequestedAt = new Date().toISOString();
+      active[idx].hubPhone = "01711-998877";
+      active[idx].returnCode = returnOtp;
+      setLocalStore("active_tasks", active);
+
+      // add notification
+      const notifs = getLocalStore<RiderNotification[]>("notifications", SAMPLE_NOTIFICATIONS);
+      notifs.unshift({
+        id: "n-cancel-req-" + Date.now(),
+        type: "TASK",
+        title: "বাতিল অনুরোধ পাঠানো হয়েছে",
+        body: `অর্ডার #${active[idx].order.orderNumber}: বাতিলের আবেদন অ্যাডমিনে পাঠানো হয়েছে। প্রয়োজনে হাবে কল দিন (01711-998877)।`,
+        isRead: false,
+        createdAt: new Date().toISOString(),
+      });
+      setLocalStore("notifications", notifs);
+
+      return { success: true, data: active[idx] as any };
+    }
+    return { success: false, error: "টাস্ক পাওয়া যায়নি" };
+  }
+
+  // 8c. Admin Approves Cancellation -> Status becomes RETURNING_TO_VENDOR
+  if (cleanPath.includes("/approve-cancel") && method === "POST") {
+    const taskId = cleanPath.split("/")[3];
+    const active = getLocalStore<ActiveTask[]>("active_tasks", []);
+    const idx = active.findIndex((a) => a.assignmentId === taskId || a.order.id === taskId);
+    if (idx !== -1 && active[idx]) {
+      if (!active[idx].returnCode) {
+        active[idx].returnCode = String(Math.floor(1000 + Math.random() * 9000));
+      }
+      active[idx].status = "RETURNING_TO_VENDOR";
+      setLocalStore("active_tasks", active);
+
+      const notifs = getLocalStore<RiderNotification[]>("notifications", SAMPLE_NOTIFICATIONS);
+      notifs.unshift({
+        id: "n-cancel-appr-" + Date.now(),
+        type: "TASK",
+        title: "বাতিল আবেদন অনুমোদিত — পার্সেল ফেরত দিন",
+        body: `অর্ডার #${active[idx].order.orderNumber}: অ্যাডমিন বাতিল আবেদন অনুমোদন করেছে। পণ্যটি সেলারের দোকানে পৌঁছে দিন।`,
+        isRead: false,
+        createdAt: new Date().toISOString(),
+      });
+      setLocalStore("notifications", notifs);
+
+      return { success: true, data: active[idx] as any };
+    }
+    return { success: false, error: "টাস্ক পাওয়া যায়নি" };
+  }
+
+  // 8d. Verify Store Return Code (Handover confirmed by Vendor with 4-digit code)
+  if (cleanPath.includes("/verify-return-code") && method === "POST") {
+    let body: any = {};
+    try { body = JSON.parse(options.body as string); } catch {}
+    const taskId = cleanPath.split("/")[3];
+    const enteredCode = (body.returnCode || "").toString().trim();
+    const active = getLocalStore<ActiveTask[]>("active_tasks", []);
+    const idx = active.findIndex((a) => a.assignmentId === taskId || a.order.id === taskId);
+    if (idx !== -1 && active[idx]) {
+      const expectedCode = (active[idx].returnCode || "").trim();
+      if (!enteredCode || enteredCode !== expectedCode) {
+        return {
+          success: false,
+          error: "❌ ভুল রিটার্ন কোড! দোকানদার পণ্য বুঝে নিয়ে যে ৪-সংখ্যার রিটার্ন কোড দিয়েছেন সেটি লিখুন।",
+        };
+      }
+
+      const [done] = active.splice(idx, 1);
+      setLocalStore("active_tasks", active);
+
+      const returnAllowance = 20; // ৳ ২০ return trip fee
+      const profile = getLocalStore("profile", DEFAULT_PROFILE);
+      profile.balance = (profile.balance || 0) + returnAllowance;
+      profile.totalEarned = (profile.totalEarned || 0) + returnAllowance;
+      setLocalStore("profile", profile);
+
+      const allHistory = getLocalStore<HistoryItem[]>("history", [
+        { id: "h-1", type: "income", amount: 80, orderNumber: "TB-8940", description: "অর্ডার #TB-8940 সফল ডেলিভারি", createdAt: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString() },
+        { id: "h-2", type: "income", amount: 110, orderNumber: "TB-8935", description: "অর্ডার #TB-8935 সফল ডেলিভারি", createdAt: new Date(Date.now() - 1000 * 60 * 60 * 5).toISOString() },
+        { id: "h-3", type: "withdrawal", amount: 1000, description: "bKash উইথড্রয়াল সম্পন্ন", status: "COMPLETED", createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString() },
+        { id: "h-4", type: "income", amount: 95, orderNumber: "TB-8921", description: "অর্ডার #TB-8921 সফল ডেলিভারি", createdAt: new Date(Date.now() - 1000 * 60 * 60 * 28).toISOString() },
+      ]);
+      allHistory.unshift({
+        id: "h-return-" + Date.now(),
+        type: "income",
+        amount: returnAllowance,
+        orderNumber: done?.order.orderNumber,
+        description: `অর্ডার #${done?.order.orderNumber} বাতিল — সেলারকে রিটার্ন সফল (কোড যাচাইকৃত) — ট্রিপ ভাতা`,
+        status: "COMPLETED",
+        createdAt: new Date().toISOString(),
+      });
+      setLocalStore("history", allHistory);
+
+      const notifs = getLocalStore<RiderNotification[]>("notifications", SAMPLE_NOTIFICATIONS);
+      notifs.unshift({
+        id: "n-return-done-" + Date.now(),
+        type: "TASK",
+        title: "পার্সেল রিটার্ন কোড যাচাই সফল",
+        body: `অর্ডার #${done?.order.orderNumber}: সেলারকে পার্সেল ফেরত কোড যাচাই সম্পন্ন। ৳ ২০ রিটার্ন ট্রিপ ভাতা অ্যাকাউন্টে যোগ হয়েছে। কোনো বিল কর্তন নেই।`,
+        isRead: false,
+        createdAt: new Date().toISOString(),
+      });
+      setLocalStore("notifications", notifs);
+
+      return {
+        success: true,
+        data: {
+          returnAllowance,
+          cashDeduction: 0,
+          message: "দোকানদার কোড যাচাই সফল! রিটার্ন সম্পন্ন হয়েছে।",
+        } as any,
+      };
+    }
+    return { success: false, error: "টাস্ক পাওয়া যায়নি" };
+  }
+
+  // 8e. Direct Cancel & Initiate Return to Vendor (Legacy/Fallback)
   if (cleanPath.includes("/cancel-return") && method === "POST") {
     let body: any = {};
     try { body = JSON.parse(options.body as string); } catch {}
@@ -592,13 +722,14 @@ function handleMockFallback<T>(path: string, options: RequestInit): { success: b
     if (idx !== -1 && active[idx]) {
       active[idx].status = "RETURNING_TO_VENDOR";
       active[idx].cancellationReason = body.reason || "কাস্টমার পার্সেল রিসিভ করেননি";
+      if (!active[idx].returnCode) active[idx].returnCode = String(Math.floor(1000 + Math.random() * 9000));
       setLocalStore("active_tasks", active);
       return { success: true, data: active[idx] as any };
     }
     return { success: false, error: "টাস্ক পাওয়া যায়নি" };
   }
 
-  // 8c. Confirm Return to Vendor (Finances: zero deduction, +৳20 trip fee)
+  // 8f. Confirm Return to Vendor (Finances: zero deduction, +৳20 trip fee)
   if (cleanPath.includes("/confirm-return") && method === "POST") {
     const taskId = cleanPath.split("/")[3];
     const active = getLocalStore<ActiveTask[]>("active_tasks", []);
@@ -613,7 +744,6 @@ function handleMockFallback<T>(path: string, options: RequestInit): { success: b
       profile.totalEarned = (profile.totalEarned || 0) + returnAllowance;
       setLocalStore("profile", profile);
 
-      // add history entry
       const allHistory = getLocalStore<HistoryItem[]>("history", [
         { id: "h-1", type: "income", amount: 80, orderNumber: "TB-8940", description: "অর্ডার #TB-8940 সফল ডেলিভারি", createdAt: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString() },
         { id: "h-2", type: "income", amount: 110, orderNumber: "TB-8935", description: "অর্ডার #TB-8935 সফল ডেলিভারি", createdAt: new Date(Date.now() - 1000 * 60 * 60 * 5).toISOString() },
@@ -631,7 +761,6 @@ function handleMockFallback<T>(path: string, options: RequestInit): { success: b
       });
       setLocalStore("history", allHistory);
 
-      // add notification
       const notifs = getLocalStore<RiderNotification[]>("notifications", SAMPLE_NOTIFICATIONS);
       notifs.unshift({
         id: "n-return-" + Date.now(),
@@ -1032,7 +1161,14 @@ export interface Task {
   createdAt: string;
 }
 
-export type DeliveryStage = "ASSIGNED" | "PICKED_UP" | "ON_THE_WAY" | "RETURNING_TO_VENDOR" | "DELIVERED" | "CANCELLED_RETURNED";
+export type DeliveryStage =
+  | "ASSIGNED"
+  | "PICKED_UP"
+  | "ON_THE_WAY"
+  | "CANCELLATION_REQUESTED"
+  | "RETURNING_TO_VENDOR"
+  | "DELIVERED"
+  | "CANCELLED_RETURNED";
 
 export interface ActiveTask {
   assignmentId: string;
@@ -1043,6 +1179,9 @@ export interface ActiveTask {
   deliveredAt?: string | undefined;
   returnedAt?: string | undefined;
   cancellationReason?: string | undefined;
+  cancellationRequestedAt?: string | undefined;
+  hubPhone?: string | undefined;
+  returnCode?: string | undefined;
   returnTripFee?: number | undefined;
   order: {
     id: string;

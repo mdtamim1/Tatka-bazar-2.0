@@ -140,6 +140,13 @@ input,textarea,select{font-family:inherit;}
 .return-reason-btn{display:flex;align-items:center;gap:10px;width:100%;padding:11px 14px;background:var(--bg-card);border:1px solid var(--border-2);border-radius:var(--r-md);color:var(--text-1);font-size:.84rem;font-family:var(--font-bn);cursor:pointer;transition:all .2s ease;text-align:left;}
 .return-reason-btn:hover{border-color:var(--border-orange);background:var(--bg-raised);}
 .return-reason-btn.selected{border-color:var(--red);background:rgba(239,68,68,.12);color:var(--red);font-weight:700;}
+.hub-contact-card{background:var(--bg-raised);border:1px solid var(--border-2);border-radius:var(--r-md);padding:12px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px;font-family:var(--font-bn);}
+.hub-call-btn{display:inline-flex;align-items:center;gap:6px;padding:9px 14px;background:linear-gradient(135deg,var(--emerald),#059669);border-radius:var(--r-md);color:#fff;font-size:.80rem;font-weight:700;text-decoration:none;box-shadow:0 4px 14px rgba(16,185,129,.35);transition:all .2s ease;}
+.hub-call-btn:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(16,185,129,.5);}
+.waiting-card{background:rgba(245,158,11,.08);border:1.5px solid rgba(245,158,11,.35);border-radius:var(--r-lg);padding:20px 18px;display:flex;flex-direction:column;gap:14px;font-family:var(--font-bn);animation:fade-in .3s ease-out;}
+.return-code-input{width:100%;padding:14px 16px;background:var(--bg-base);border:2px solid var(--border-orange);border-radius:var(--r-md);color:var(--text-1);font-size:1.3rem;font-family:monospace;letter-spacing:.25em;text-align:center;outline:none;transition:all .2s ease;}
+.return-code-input:focus{border-color:var(--emerald);box-shadow:0 0 0 4px rgba(0,214,143,.15);}
+.return-hint-pill{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;background:rgba(245,158,11,.12);border:1px dashed rgba(245,158,11,.4);border-radius:var(--r-sm);font-size:.74rem;color:var(--amber);font-family:monospace;}
 
 /* Empty */
 .empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:60px 24px;text-align:center;}

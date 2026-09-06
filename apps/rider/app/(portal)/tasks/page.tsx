@@ -288,7 +288,11 @@ export default function TasksPage() {
                         </span>
                         
                         {/* 3-Stage Stage Chip */}
-                        {a.status === "RETURNING_TO_VENDOR" ? (
+                        {a.status === "CANCELLATION_REQUESTED" ? (
+                          <span style={{ fontSize: ".68rem", color: "var(--amber)", background: "rgba(245,158,11,.15)", border: "1px solid rgba(245,158,11,.3)", padding: "1px 6px", borderRadius: 4, fontWeight: 700 }}>
+                            ⏳ বাতিল অপেক্ষারত
+                          </span>
+                        ) : a.status === "RETURNING_TO_VENDOR" ? (
                           <span style={{ fontSize: ".68rem", color: "#EF4444", background: "rgba(239,68,68,.15)", border: "1px solid rgba(239,68,68,.3)", padding: "1px 6px", borderRadius: 4, fontWeight: 700 }}>
                             🔄 সেলারকে রিটার্ন
                           </span>
@@ -341,13 +345,17 @@ export default function TasksPage() {
                   className="task-deliver-btn"
                   onClick={() => router.push(`/tasks/${a.assignmentId}`)}
                   style={{
-                    background: a.status === "RETURNING_TO_VENDOR"
+                    background: a.status === "CANCELLATION_REQUESTED"
+                      ? "linear-gradient(135deg, #F59E0B, #D97706)"
+                      : a.status === "RETURNING_TO_VENDOR"
                       ? "linear-gradient(135deg, #EF4444, #DC2626)"
                       : undefined,
                   }}
                 >
-                  {a.status === "RETURNING_TO_VENDOR"
-                    ? "⚠️ সেলারকে পার্সেল ফেরত দিন →"
+                  {a.status === "CANCELLATION_REQUESTED"
+                    ? "⏳ বাতিল অনুরোধ দেখুন ও হাবে কথা বলুন →"
+                    : a.status === "RETURNING_TO_VENDOR"
+                    ? "🔄 সেলারকে পার্সেল ফেরত ও কোড দিন →"
                     : a.status === "ON_THE_WAY"
                     ? "🎯 কাস্টমার হ্যান্ডওভার ও সম্পন্ন করুন →"
                     : "🚀 ডেলিভারির পথে রওনা দিন →"}
