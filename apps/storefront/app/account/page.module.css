@@ -13,26 +13,53 @@
   align-items: flex-start;
 }
 
-/* ── Container / Phone Frame ── */
-.deviceContainer {
+/* ── Main Account Container (Fully Responsive PC, Tablet, Mobile/App) ── */
+.accountContainer {
   width: 100%;
-  max-width: 440px;
-  background: #f8fafc;
-  border-radius: 36px;
+  max-width: 880px;
+  background: #ffffff;
+  border-radius: 28px;
   overflow: hidden;
-  box-shadow: 0 20px 60px -15px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 16px 48px -12px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(0, 0, 0, 0.04);
   position: relative;
-  min-height: 840px;
+  min-height: 740px;
   display: flex;
   flex-direction: column;
+  transition: all 0.25s ease;
 }
 
-@media (min-width: 900px) {
-  .dualDesktopWrapper {
-    display: flex;
-    gap: 32px;
-    align-items: flex-start;
-    justify-content: center;
+@media (max-width: 767px) {
+  .pageWrapper {
+    padding: 0 0 40px 0;
+    background-color: #f8fafc;
+  }
+
+  .accountContainer {
+    max-width: 100%;
+    border-radius: 0;
+    box-shadow: none;
+    border: none;
+    min-height: 100vh;
+    background: #f8fafc;
+  }
+}
+
+.profileView {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
@@ -104,23 +131,41 @@
 }
 
 .settingsGearBtn {
-  width: 38px;
   height: 38px;
-  border-radius: 50%;
+  padding: 0 14px;
+  border-radius: 999px;
   background: rgba(255, 255, 255, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.4);
   color: #ffffff;
   display: flex;
   align-items: center;
-  justify-content: center;
+  gap: 7px;
   cursor: pointer;
   transition: all 0.2s ease;
   backdrop-filter: blur(4px);
+  font-size: 0.84rem;
+  font-weight: 700;
 }
 
 .settingsGearBtn:hover {
   background: rgba(255, 255, 255, 0.35);
-  transform: rotate(45deg);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.settingsBtnText {
+  display: inline;
+}
+
+@media (max-width: 640px) {
+  .settingsGearBtn {
+    width: 38px;
+    padding: 0;
+    justify-content: center;
+  }
+  .settingsBtnText {
+    display: none;
+  }
 }
 
 /* ── 3 Stats Row (Image 1: Wishlist, Coupons, Points) ── */
@@ -320,11 +365,18 @@
   line-height: 1.25;
 }
 
-/* ── Hot Sale Grid (Image 1) ── */
+/* ── Hot Sale Grid (Image 1: Responsive 4-col PC, 2-col Mobile) ── */
 .hotSaleGrid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+}
+
+@media (max-width: 767px) {
+  .hotSaleGrid {
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
 }
 
 .hotSaleCard {
@@ -402,47 +454,67 @@
   transform: scale(1.08);
 }
 
-/* ── Settings Screen / Drawer (Right side of Image 1) ── */
+/* ── Settings Screen (Fully Responsive inside accountContainer) ── */
 .settingsView {
   width: 100%;
-  max-width: 440px;
   background: #ffffff;
-  border-radius: 36px;
-  overflow: hidden;
-  box-shadow: 0 20px 60px -15px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.05);
   display: flex;
   flex-direction: column;
-  min-height: 840px;
+  min-height: 680px;
+  flex: 1;
+  animation: fadeIn 0.2s ease-out;
 }
 
 .settingsHeader {
   display: flex;
   align-items: center;
-  padding: 24px 20px;
+  gap: 12px;
+  padding: 26px 28px;
   border-bottom: 1px solid #f1f5f9;
   position: relative;
 }
 
+@media (max-width: 640px) {
+  .settingsHeader {
+    padding: 18px 16px;
+  }
+}
+
 .backArrowBtn {
-  background: none;
+  background: #f1f5f9;
   border: none;
   cursor: pointer;
   color: #0f172a;
   display: flex;
   align-items: center;
-  justify-content: center;
-  padding: 4px;
-  border-radius: 8px;
-  margin-right: 12px;
-  transition: background 0.15s;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  transition: all 0.15s ease;
+  font-size: 0.84rem;
+  font-weight: 700;
 }
 
 .backArrowBtn:hover {
-  background: #f1f5f9;
+  background: #e2e8f0;
+  transform: translateX(-2px);
+}
+
+.backBtnText {
+  display: inline;
+}
+
+@media (max-width: 640px) {
+  .backArrowBtn {
+    padding: 8px;
+  }
+  .backBtnText {
+    display: none;
+  }
 }
 
 .settingsTitle {
-  font-size: 1.15rem;
+  font-size: 1.25rem;
   font-weight: 800;
   color: #0f172a;
   margin: 0;
@@ -451,30 +523,38 @@
 .settingsList {
   display: flex;
   flex-direction: column;
-  padding: 8px 0;
+  padding: 12px 24px;
   flex: 1;
+}
+
+@media (max-width: 640px) {
+  .settingsList {
+    padding: 8px 12px;
+  }
 }
 
 .settingsItem {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 20px;
+  padding: 16px 18px;
   background: none;
   border: none;
   width: 100%;
   cursor: pointer;
   font-family: inherit;
-  transition: background 0.15s;
+  transition: background 0.15s, transform 0.15s;
   border-bottom: 1px solid #f8fafc;
+  border-radius: 12px;
 }
 
 .settingsItem:hover {
   background: #f8fafc;
+  transform: translateX(3px);
 }
 
 .settingsItemLabel {
-  font-size: 0.92rem;
+  font-size: 0.94rem;
   font-weight: 600;
   color: #1e293b;
 }
@@ -484,13 +564,19 @@
   align-items: center;
   gap: 8px;
   color: #94a3b8;
-  font-size: 0.84rem;
+  font-size: 0.86rem;
   font-weight: 500;
 }
 
 .settingsFooter {
-  padding: 24px 20px 32px 20px;
+  padding: 24px 28px 36px 28px;
   margin-top: auto;
+}
+
+@media (max-width: 640px) {
+  .settingsFooter {
+    padding: 20px 16px 32px 16px;
+  }
 }
 
 .logOutBtn {

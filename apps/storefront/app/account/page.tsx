@@ -406,14 +406,12 @@ export default function CustomerAccountPage() {
         </div>
       )}
 
-      <div className={styles.dualDesktopWrapper}>
-        {/* ===================================================================
-            SCREEN 1: MAIN ECOMMERCE PROFILE (Image 1 Left Screen)
-            =================================================================== */}
-        <div
-          className={styles.deviceContainer}
-          style={{ display: showSettingsView ? "none" : "flex" }}
-        >
+      <div className={styles.accountContainer}>
+        {!showSettingsView ? (
+          /* ===================================================================
+              SCREEN 1: MAIN ECOMMERCE PROFILE
+              =================================================================== */
+          <div className={styles.profileView}>
           {/* Orange-Red Gradient Header Card (Image 1) */}
           <div className={styles.gradientHeader}>
             <div className={styles.headerTop}>
@@ -439,7 +437,10 @@ export default function CustomerAccountPage() {
                 title={locale === "bn" ? "সেটিংস খুলুন" : "Open Settings"}
                 aria-label="Open Settings"
               >
-                <Settings size={20} />
+                <Settings size={18} />
+                <span className={styles.settingsBtnText}>
+                  {locale === "bn" ? "সেটিংস" : "Settings"}
+                </span>
               </button>
             </div>
 
@@ -713,16 +714,11 @@ export default function CustomerAccountPage() {
             </div>
           </div>
         </div>
-
-        {/* ===================================================================
-            SCREEN 2: SETTINGS SCREEN / DRAWER (Image 1 Right Screen)
-            =================================================================== */}
-        <div
-          className={styles.settingsView}
-          style={{
-            display: showSettingsView ? "flex" : undefined,
-          }}
-        >
+        ) : (
+        /* ===================================================================
+            SCREEN 2: SETTINGS SCREEN (Image 1 Right Screen)
+            =================================================================== */
+        <div className={styles.settingsView}>
           {/* Header with Back Arrow (< Settings) */}
           <div className={styles.settingsHeader}>
             <button
@@ -732,7 +728,10 @@ export default function CustomerAccountPage() {
               onClick={() => setShowSettingsView(false)}
               aria-label="Back to Profile"
             >
-              <ArrowLeft size={20} />
+              <ArrowLeft size={18} />
+              <span className={styles.backBtnText}>
+                {locale === "bn" ? "প্রোফাইলে ফিরুন" : "Back to Profile"}
+              </span>
             </button>
             <h2 className={styles.settingsTitle}>
               {locale === "bn" ? "সেটিংস" : "Settings"}
@@ -868,6 +867,7 @@ export default function CustomerAccountPage() {
             </button>
           </div>
         </div>
+        )}
       </div>
 
       {/* ===================================================================
