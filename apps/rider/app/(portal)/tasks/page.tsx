@@ -208,7 +208,9 @@ export default function TasksPage() {
                   </div>
                   <div className="task-earning">
                     <div className="task-earning-label">আয় (৫০% ফি)</div>
-                    <div className="task-earning-amount">৳ {Number(a.order.earnings).toLocaleString()}</div>
+                    <div className="task-earning-amount">
+                      ৳ {Math.round(Number(a.order.deliveryFee ?? (a.order.earnings ? a.order.earnings : 60)) * (a.order.deliveryFee ? 0.5 : 1)).toLocaleString()}
+                    </div>
                   </div>
                 </div>
                 {a.order.total && (
@@ -256,7 +258,9 @@ export default function TasksPage() {
                 </div>
                 <div className="task-earning">
                   <div className="task-earning-label">আয় (৫০% ফি)</div>
-                  <div className="task-earning-amount">৳ {Number(task.earnings).toLocaleString()}</div>
+                  <div className="task-earning-amount">
+                    ৳ {Math.round(Number(task.deliveryFee ?? (task.earnings ? task.earnings : 60)) * (task.deliveryFee ? 0.5 : 1)).toLocaleString()}
+                  </div>
                 </div>
               </div>
               {/* Order ID is hidden before accepting — revealed only after physical pickup from seller */}

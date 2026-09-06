@@ -69,8 +69,8 @@ export default function TaskDetailPage() {
   }, [id]);
 
   // Derived financial figures
-  const deliveryFee = Number(task?.order.deliveryFee ?? (task?.order.earnings ? task.order.earnings * 2 : 60));
-  const earnings = Number(task?.order.earnings ?? Math.round(deliveryFee * 0.5));
+  const deliveryFee = Number(task?.order.deliveryFee ?? 60);
+  const earnings = Math.round(deliveryFee * 0.5);
   const subtotal = Number(
     task?.order.subtotal ??
       task?.order.items?.reduce((s, it) => s + (it.total || (it.qty * (it.price || 0))), 0) ??
@@ -524,33 +524,6 @@ export default function TaskDetailPage() {
             </div>
             <div style={{ fontSize: "1.35rem", fontWeight: 900, color: "var(--text-1)", fontFamily: "monospace" }}>
               ৳ {totalBill.toLocaleString()}
-            </div>
-          </div>
-
-          {/* 50% Delivery Charge Rider Share Highlight */}
-          <div
-            style={{
-              background: "rgba(0, 214, 143, 0.08)",
-              border: "1px solid rgba(0, 214, 143, 0.25)",
-              borderRadius: "12px",
-              padding: "10px 14px",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              marginTop: "4px",
-            }}
-          >
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <span style={{ fontSize: "1.2rem" }}>🎁</span>
-              <div>
-                <div style={{ fontSize: ".82rem", fontWeight: 700, color: "#00D68F" }}>
-                  আপনার ডেলিভারি আয়:
-                </div>
-                <div style={{ fontSize: ".70rem", color: "var(--text-3)" }}>ডেলিভারি চার্জের ৫০% পাবেন</div>
-              </div>
-            </div>
-            <div style={{ fontSize: "1.1rem", fontWeight: 800, color: "#00D68F" }}>
-              ৳ {earnings.toLocaleString()}
             </div>
           </div>
         </div>
