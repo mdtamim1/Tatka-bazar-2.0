@@ -68,11 +68,11 @@ export default function HomePage() {
         onClick={() => router.push("/profile")}
         title="সম্পূর্ণ পারফরম্যান্স ও রেটিং স্কোরকার্ড দেখুন"
       >
-        <span>💎 প্লাটিনাম এলিট</span>
+        <span>🥉 ব্রোঞ্জ রাইডার</span>
         <span style={{ opacity: 0.5 }}>•</span>
-        <span>⭐ ৪.৯ (১২৮ রিভিউ)</span>
+        <span>⭐ ৫.০ (নতুন রাইডার)</span>
         <span style={{ opacity: 0.5 }}>•</span>
-        <span>⏱️ ৯৬.৫% অন-টাইম</span>
+        <span>⏱️ ১০০% অন-টাইম</span>
       </div>
 
       <div className="balance-card-wrapper">

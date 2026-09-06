@@ -141,8 +141,9 @@ const DEFAULT_PROFILE: RiderProfile = {
   vehicleType: "MOTORCYCLE",
   vehicleNumber: "ঢাকা মেট্রো-হ-৪৫-১২৩৪",
   status: "AVAILABLE",
-  balance: 2450,
-  totalEarned: 14850,
+  balance: 0,
+  totalEarned: 0,
+  due: 0,
   kycStatus: "SUBMITTED",
   kycSubmittedAt: new Date().toISOString(),
   fatherName: "মোঃ রফিকুল ইসলাম",
@@ -158,347 +159,77 @@ const DEFAULT_PROFILE: RiderProfile = {
 };
 
 const SAMPLE_NOTIFICATIONS: RiderNotification[] = [
-  { id: "n-1", type: "TASK", title: "নতুন ডেলিভারি টাস্ক", body: "অর্ডার #TB-8942 আপনার জন্য অপেক্ষা করছে", isRead: false, createdAt: new Date(Date.now() - 1000 * 60 * 5).toISOString() },
-  { id: "n-2", type: "PAYMENT", title: "পেমেন্ট অ্যাপ্রুভড", body: "৳ ৫০০ আপনার ব্যালেন্সে যোগ হয়েছে", isRead: false, createdAt: new Date(Date.now() - 1000 * 60 * 30).toISOString() },
-  { id: "n-3", type: "SYSTEM", title: "স্বাগতম!", body: "Tatka Rider প্যানেলে আপনাকে স্বাগত জানাই", isRead: true, createdAt: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString() },
+  {
+    id: "n-welcome",
+    type: "SYSTEM",
+    title: "স্বাগতম!",
+    body: "Tatka Rider প্যানেলে আপনাকে স্বাগত জানাই। ডিউটি অন করে নতুন ডেলিভারির জন্য প্রস্তুত থাকুন।",
+    isRead: true,
+    createdAt: new Date().toISOString(),
+  },
 ];
 
-const SAMPLE_AVAILABLE_TASKS: Task[] = [
-  {
-    id: "task-01",
-    orderNumber: "TB-8942",
-    customerName: "তানভীর আহমেদ",
-    customerPhone: "01812345678",
-    deliveryAddress: "রোড #৭, বাড়ি #১২, ধানমন্ডি, ঢাকা",
-    vendorName: "সাদিক এগ্রো ফ্রেশ মার্কেট",
-    itemCount: 4,
-    subtotal: 1390,
-    deliveryFee: 60,
-    total: 1450,
-    earnings: 30,
-    paymentStatus: "PAID",
-    paymentMethod: "BKASH",
-    items: [
-      { name: "দেশি শিং মাছ (১ কেজি)", qty: 1, price: 650, total: 650 },
-      { name: "তাজা লাল শাক (২ আঁটি)", qty: 2, price: 30, total: 60 },
-      { name: "ফার্মের ডিম (১ ডজন)", qty: 1, price: 150, total: 150 },
-      { name: "চাষের তাজা রুই মাছ (২ কেজি)", qty: 1, price: 530, total: 530 },
-    ],
-    createdAt: new Date(Date.now() - 1000 * 60 * 3).toISOString(),
-  },
-  {
-    id: "task-02",
-    orderNumber: "TB-8945",
-    customerName: "নুসরাত জাহান",
-    customerPhone: "01798765432",
-    deliveryAddress: "সেক্টর #১১, রোড #৪, উত্তরা, ঢাকা",
-    vendorName: "তাজা দেশি মাছ ও মাংসের আড়ত",
-    itemCount: 6,
-    subtotal: 2120,
-    deliveryFee: 80,
-    total: 2200,
-    earnings: 40,
-    paymentStatus: "COD",
-    paymentMethod: "CASH_ON_DELIVERY",
-    items: [
-      { name: "দেশি গরুর মাংস (১ কেজি)", qty: 1, price: 780, total: 780 },
-      { name: "ফার্মের মুরগি (২ কেজি)", qty: 1, price: 360, total: 360 },
-      { name: "দেশি আলু (৫ কেজি)", qty: 1, price: 250, total: 250 },
-      { name: "দেশি পেঁয়াজ (২ কেজি)", qty: 1, price: 180, total: 180 },
-      { name: "তাজা বেগুন (১ কেজি)", qty: 1, price: 90, total: 90 },
-      { name: "কাঁচামরিচ ও ধনেপাতা প্যাক", qty: 1, price: 60, total: 60 },
-    ],
-    createdAt: new Date(Date.now() - 1000 * 60 * 6).toISOString(),
-  },
-  {
-    id: "task-03",
-    orderNumber: "TB-8949",
-    customerName: "মাহমুদুল হাসান",
-    customerPhone: "01911223344",
-    deliveryAddress: "ব্লক #ডি, বাড়ি #৯, বনশ্রী, ঢাকা",
-    vendorName: "গ্রিন ভ্যালি অর্গানিক সবজি",
-    itemCount: 3,
-    subtotal: 830,
-    deliveryFee: 60,
-    total: 890,
-    earnings: 30,
-    paymentStatus: "PAID",
-    paymentMethod: "NAGAD",
-    items: [
-      { name: "অর্গানিক মিষ্টি কুমড়া (১টি)", qty: 1, price: 120, total: 120 },
-      { name: "তাজা লাউ (১টি)", qty: 1, price: 80, total: 80 },
-      { name: "খাঁটি গাওয়া ঘি (২৫০ গ্রাম)", qty: 1, price: 630, total: 630 },
-    ],
-    createdAt: new Date(Date.now() - 1000 * 60 * 10).toISOString(),
-  },
-  {
-    id: "task-04",
-    orderNumber: "TB-8952",
-    customerName: "আরিফুর রহমান",
-    customerPhone: "01715566778",
-    deliveryAddress: "রোড #২৩, বাড়ি #৫, গুলশান-১, ঢাকা",
-    vendorName: "প্রিমিয়াম সি ফুড ও ডেইরি",
-    itemCount: 3,
-    subtotal: 2850,
-    deliveryFee: 100,
-    total: 2950,
-    earnings: 50,
-    paymentStatus: "PAID",
-    paymentMethod: "ONLINE_CARD",
-    items: [
-      { name: "পদ্মার তাজা ইলিশ (১ কেজি)", qty: 1, price: 1800, total: 1800 },
-      { name: "গলদা চিংড়ি (৫০০ গ্রাম)", qty: 1, price: 750, total: 750 },
-      { name: "খাঁটি গরুর দুধ (৩ লিটার)", qty: 3, price: 100, total: 300 },
-    ],
-    createdAt: new Date(Date.now() - 1000 * 60 * 14).toISOString(),
-  },
-  {
-    id: "task-05",
-    orderNumber: "TB-8955",
-    customerName: "ফারহানা শারমিন",
-    customerPhone: "01622334455",
-    deliveryAddress: "সেকশন #১০, ব্লক #সি, মিরপুর, ঢাকা",
-    vendorName: "ভাই ভাই জেনারেল স্টোর",
-    itemCount: 4,
-    subtotal: 1620,
-    deliveryFee: 60,
-    total: 1680,
-    earnings: 30,
-    paymentStatus: "COD",
-    paymentMethod: "CASH_ON_DELIVERY",
-    items: [
-      { name: "মিনিকেট চাল (১০ কেজি)", qty: 1, price: 720, total: 720 },
-      { name: "তীর সয়াবিন তেল (৫ লিটার)", qty: 1, price: 680, total: 680 },
-      { name: "মসুর ডাল দেশি (১ কেজি)", qty: 1, price: 140, total: 140 },
-      { name: "সাদা চিনি (১ কেজি)", qty: 1, price: 80, total: 80 },
-    ],
-    createdAt: new Date(Date.now() - 1000 * 60 * 18).toISOString(),
-  },
-  {
-    id: "task-06",
-    orderNumber: "TB-8958",
-    customerName: "সাজিদ মাহমুদ",
-    customerPhone: "01844556677",
-    deliveryAddress: "তাজমহল রোড, মোহাম্মদপুর, ঢাকা",
-    vendorName: "টাটকা অর্গানিক ফার্ম",
-    itemCount: 5,
-    subtotal: 620,
-    deliveryFee: 60,
-    total: 680,
-    earnings: 30,
-    paymentStatus: "COD",
-    paymentMethod: "CASH_ON_DELIVERY",
-    items: [
-      { name: "তাজা করলা (১ কেজি)", qty: 1, price: 90, total: 90 },
-      { name: "দেশি শসা (২ কেজি)", qty: 2, price: 60, total: 120 },
-      { name: "পাকা টমেটো (২ কেজি)", qty: 2, price: 80, total: 160 },
-      { name: "কাঁচা পেঁপে (২ কেজি)", qty: 1, price: 120, total: 120 },
-      { name: "টাটকা ধনেপাতা (৩ আঁটি)", qty: 3, price: 43, total: 130 },
-    ],
-    createdAt: new Date(Date.now() - 1000 * 60 * 22).toISOString(),
-  },
-  {
-    id: "task-07",
-    orderNumber: "TB-8961",
-    customerName: "ড. কামরুল ইসলাম",
-    customerPhone: "01711224466",
-    deliveryAddress: "রোড #৯, বারিধারা ডিওএইচএস, ঢাকা",
-    vendorName: "নেচারস বাস্কেট ফ্রুটস",
-    itemCount: 4,
-    subtotal: 2450,
-    deliveryFee: 100,
-    total: 2550,
-    earnings: 50,
-    paymentStatus: "PAID",
-    paymentMethod: "BKASH",
-    items: [
-      { name: "ড্রাগন ফ্রুট (২ কেজি)", qty: 2, price: 380, total: 760 },
-      { name: "ইম্পোর্টেড মাল্টা (২ কেজি)", qty: 2, price: 290, total: 580 },
-      { name: "মিষ্টি বেদানা (১ কেজি)", qty: 1, price: 480, total: 480 },
-      { name: "ফুজি আপেল (২ কেজি)", qty: 2, price: 315, total: 630 },
-    ],
-    createdAt: new Date(Date.now() - 1000 * 60 * 25).toISOString(),
-  },
-  {
-    id: "task-08",
-    orderNumber: "TB-8964",
-    customerName: "মেহজাবিন চৌধুরী",
-    customerPhone: "01533445566",
-    deliveryAddress: "ব্লক #জি, বসুন্ধরা আবাসিক এলাকা, ঢাকা",
-    vendorName: "ঢাকা ফার্ম ফ্রেশ",
-    itemCount: 4,
-    subtotal: 1840,
-    deliveryFee: 80,
-    total: 1920,
-    earnings: 40,
-    paymentStatus: "COD",
-    paymentMethod: "CASH_ON_DELIVERY",
-    items: [
-      { name: "সোনালী মুরগি (২ পিস)", qty: 2, price: 380, total: 760 },
-      { name: "লাল ডিম (২ ডজন)", qty: 2, price: 155, total: 310 },
-      { name: "আড়ং বাটার (২০০ গ্রাম)", qty: 2, price: 240, total: 480 },
-      { name: "দেশি পনির (২৫০ গ্রাম)", qty: 1, price: 290, total: 290 },
-    ],
-    createdAt: new Date(Date.now() - 1000 * 60 * 28).toISOString(),
-  },
-  {
-    id: "task-09",
-    orderNumber: "TB-8967",
-    customerName: "শফিক আহমেদ",
-    customerPhone: "01988776655",
-    deliveryAddress: "খিলগাঁও তিলপাপাড়া, ঢাকা",
-    vendorName: "দেশি মশলা ও ড্রিমস",
-    itemCount: 5,
-    subtotal: 1140,
-    deliveryFee: 60,
-    total: 1200,
-    earnings: 30,
-    paymentStatus: "PAID",
-    paymentMethod: "NAGAD",
-    items: [
-      { name: "খাঁটি হলুদ গুঁড়া (৫০০ গ্রাম)", qty: 1, price: 180, total: 180 },
-      { name: "ঝাল মরিচ গুঁড়া (৫০০ গ্রাম)", qty: 1, price: 240, total: 240 },
-      { name: "আস্ত জিরা (২৫০ গ্রাম)", qty: 1, price: 220, total: 220 },
-      { name: "সবুজ এলাচ (৫০ গ্রাম)", qty: 1, price: 280, total: 280 },
-      { name: "দারুচিনি ও লবঙ্গ প্যাক", qty: 1, price: 220, total: 220 },
-    ],
-    createdAt: new Date(Date.now() - 1000 * 60 * 32).toISOString(),
-  },
-  {
-    id: "task-10",
-    orderNumber: "TB-8970",
-    customerName: "রুমানা আক্তার",
-    customerPhone: "01855667788",
-    deliveryAddress: "ব্লক #বি, লালমাটিয়া, ঢাকা",
-    vendorName: "ফ্রেশ গার্ডেন মার্ট",
-    itemCount: 5,
-    subtotal: 680,
-    deliveryFee: 60,
-    total: 740,
-    earnings: 30,
-    paymentStatus: "COD",
-    paymentMethod: "CASH_ON_DELIVERY",
-    items: [
-      { name: "পালং শাক (৩ আঁটি)", qty: 3, price: 35, total: 105 },
-      { name: "তাজা ফুলকপি (২টি)", qty: 2, price: 60, total: 120 },
-      { name: "পাতাকপি / বাঁধাকপি (২টি)", qty: 2, price: 50, total: 100 },
-      { name: "দেশি শিম (১ কেজি)", qty: 1, price: 135, total: 135 },
-      { name: "তাজা গাজর (২ কেজি)", qty: 2, price: 110, total: 220 },
-    ],
-    createdAt: new Date(Date.now() - 1000 * 60 * 36).toISOString(),
-  },
-  {
-    id: "task-11",
-    orderNumber: "TB-8973",
-    customerName: "জিয়াউর রহমান",
-    customerPhone: "01722338899",
-    deliveryAddress: "কুনিপাড়া, তেজগাঁও, ঢাকা",
-    vendorName: "বিসমিল্লাহ মিট হাউজ",
-    itemCount: 3,
-    subtotal: 3100,
-    deliveryFee: 80,
-    total: 3180,
-    earnings: 40,
-    paymentStatus: "PAID",
-    paymentMethod: "BKASH",
-    items: [
-      { name: "দেশি খাসির মাংস (২ কেজি)", qty: 2, price: 1150, total: 2300 },
-      { name: "খাসির কলিজা (৫০০ গ্রাম)", qty: 1, price: 480, total: 480 },
-      { name: "গরুর চর্বিহীন সলিড মাংস (৫০০ গ্রাম)", qty: 1, price: 320, total: 320 },
-    ],
-    createdAt: new Date(Date.now() - 1000 * 60 * 40).toISOString(),
-  },
-  {
-    id: "task-12",
-    orderNumber: "TB-8976",
-    customerName: "নাজমা বেগম",
-    customerPhone: "01677889900",
-    deliveryAddress: "সিদ্ধেশ্বরী রোড, শান্তিনগর, ঢাকা",
-    vendorName: "ক্যাপিটাল ফ্রেশ ফুডস",
-    itemCount: 4,
-    subtotal: 1950,
-    deliveryFee: 70,
-    total: 2020,
-    earnings: 35,
-    paymentStatus: "COD",
-    paymentMethod: "CASH_ON_DELIVERY",
-    items: [
-      { name: "তাজা রূপচাঁদা মাছ (৫০০ গ্রাম)", qty: 1, price: 850, total: 850 },
-      { name: "নদীর পাবদা মাছ (১ কেজি)", qty: 1, price: 780, total: 780 },
-      { name: "দেশি রসুন বাটা (২৫০ গ্রাম)", qty: 1, price: 160, total: 160 },
-      { name: "আদা বাটা (২৫০ গ্রাম)", qty: 1, price: 160, total: 160 },
-    ],
-    createdAt: new Date(Date.now() - 1000 * 60 * 45).toISOString(),
-  },
-  {
-    id: "task-13",
-    orderNumber: "TB-8979",
-    customerName: "ইমরান খান",
-    customerPhone: "01933441122",
-    deliveryAddress: "দক্ষিণ বাড্ডা, ঢাকা",
-    vendorName: "অর্গানিক ভিলেজ বাংলাদেশ",
-    itemCount: 3,
-    subtotal: 2350,
-    deliveryFee: 70,
-    total: 2420,
-    earnings: 35,
-    paymentStatus: "PAID",
-    paymentMethod: "ONLINE_CARD",
-    items: [
-      { name: "সুন্দরবনের প্রাকৃতিক মধু (৫০০ গ্রাম)", qty: 1, price: 850, total: 850 },
-      { name: "গাওয়া ঘি প্রিমিয়াম (৫০০ গ্রাম)", qty: 1, price: 950, total: 950 },
-      { name: "সুগন্ধি কাটারিভোগ চাল (৫ কেজি)", qty: 1, price: 550, total: 550 },
-    ],
-    createdAt: new Date(Date.now() - 1000 * 60 * 50).toISOString(),
-  },
-  {
-    id: "task-14",
-    orderNumber: "TB-8982",
-    customerName: "তাহমিনা সুলতানা",
-    customerPhone: "01811992233",
-    deliveryAddress: "মৌচাক মোড়, মালিবাগ, ঢাকা",
-    vendorName: "সুপার ফ্রেশ ডিপার্টমেন্টাল",
-    itemCount: 4,
-    subtotal: 1250,
-    deliveryFee: 60,
-    total: 1310,
-    earnings: 30,
-    paymentStatus: "COD",
-    paymentMethod: "CASH_ON_DELIVERY",
-    items: [
-      { name: "ম্যাগি নুডুলস ফ্যামিলি প্যাক", qty: 2, price: 230, total: 460 },
-      { name: "কোয়েকার ওটস (১ কেজি)", qty: 1, price: 390, total: 390 },
-      { name: "মিল্ক ভিটা তরল দুধ (২ লিটার)", qty: 2, price: 100, total: 200 },
-      { name: "লেকসাস বিস্কুট জাম্বো প্যাক", qty: 1, price: 200, total: 200 },
-    ],
-    createdAt: new Date(Date.now() - 1000 * 60 * 55).toISOString(),
-  },
-  {
-    id: "task-15",
-    orderNumber: "TB-8985",
-    customerName: "রাশেদ চৌধুরী",
-    customerPhone: "01744558811",
-    deliveryAddress: "বনশ্রী মেইন রোড, রামপুরা, ঢাকা",
-    vendorName: "ফ্রেশ ফল ভাণ্ডার",
-    itemCount: 4,
-    subtotal: 1120,
-    deliveryFee: 60,
-    total: 1180,
-    earnings: 30,
-    paymentStatus: "PAID",
-    paymentMethod: "BKASH",
-    items: [
-      { name: "সাগর কলা (১ ডজন)", qty: 1, price: 140, total: 140 },
-      { name: "থাই পেয়ারা (২ কেজি)", qty: 2, price: 110, total: 220 },
-      { name: "মিষ্টি পেঁপে (২ কেজি)", qty: 1, price: 160, total: 160 },
-      { name: "আম্রপালি আম (৩ কেজি)", qty: 1, price: 600, total: 600 },
-    ],
-    createdAt: new Date(Date.now() - 1000 * 60 * 60).toISOString(),
-  },
-];
+const SAMPLE_AVAILABLE_TASKS: Task[] = [];
+
+const RIDER_DATA_VERSION = "v3_full_reset_clean_zero";
+
+export function checkAndPurgeDemoData() {
+  if (typeof window === "undefined") return;
+  try {
+    const currentVersion = localStorage.getItem("tatka_rider_reset_ver");
+    if (currentVersion !== RIDER_DATA_VERSION) {
+      localStorage.removeItem("tb_demo_profile");
+      localStorage.removeItem("tb_demo_available_tasks");
+      localStorage.removeItem("tb_demo_active_tasks");
+      localStorage.removeItem("tb_demo_history");
+      localStorage.removeItem("tb_demo_tatka_today_completed_orders");
+      localStorage.removeItem("tb_demo_tatka_today_returned_orders");
+      localStorage.removeItem("tb_demo_deposit_requests");
+      localStorage.removeItem("tb_demo_notifications");
+      localStorage.removeItem("tatka_today_completed_orders");
+      localStorage.removeItem("tatka_today_returned_orders");
+      localStorage.removeItem("tatka_rider_today_date");
+      localStorage.removeItem("tatka_rider_performance");
+      localStorage.removeItem("tatka_chat_task-01");
+
+      localStorage.setItem("tb_demo_profile", JSON.stringify(DEFAULT_PROFILE));
+      localStorage.setItem("tb_demo_available_tasks", JSON.stringify([]));
+      localStorage.setItem("tb_demo_active_tasks", JSON.stringify([]));
+      localStorage.setItem("tb_demo_history", JSON.stringify([]));
+      localStorage.setItem("tatka_rider_reset_ver", RIDER_DATA_VERSION);
+    }
+  } catch {}
+}
+
+export function fullyResetRiderPanel() {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.removeItem("tb_demo_profile");
+    localStorage.removeItem("tb_demo_available_tasks");
+    localStorage.removeItem("tb_demo_active_tasks");
+    localStorage.removeItem("tb_demo_history");
+    localStorage.removeItem("tb_demo_tatka_today_completed_orders");
+    localStorage.removeItem("tb_demo_tatka_today_returned_orders");
+    localStorage.removeItem("tb_demo_deposit_requests");
+    localStorage.removeItem("tb_demo_notifications");
+    localStorage.removeItem("tatka_today_completed_orders");
+    localStorage.removeItem("tatka_today_returned_orders");
+    localStorage.removeItem("tatka_rider_today_date");
+    localStorage.removeItem("tatka_rider_performance");
+    localStorage.removeItem("tatka_chat_task-01");
+
+    localStorage.setItem("tb_demo_profile", JSON.stringify(DEFAULT_PROFILE));
+    localStorage.setItem("tb_demo_available_tasks", JSON.stringify([]));
+    localStorage.setItem("tb_demo_active_tasks", JSON.stringify([]));
+    localStorage.setItem("tb_demo_history", JSON.stringify([]));
+    localStorage.setItem("tatka_rider_reset_ver", RIDER_DATA_VERSION);
+    window.dispatchEvent(new CustomEvent("tatka_rider_reset"));
+  } catch {}
+}
 
 function getLocalStore<T>(key: string, fallback: T): T {
   if (typeof window === "undefined") return fallback;
+  checkAndPurgeDemoData();
   try {
     const raw = localStorage.getItem(`tb_demo_${key}`);
     return raw ? JSON.parse(raw) : fallback;
@@ -515,54 +246,7 @@ function setLocalStore(key: string, val: any) {
 }
 
 export function generate30DaySampleHistory(): HistoryItem[] {
-  const list: HistoryItem[] = [];
-  const now = Date.now();
-  const dayMs = 1000 * 60 * 60 * 24;
-
-  const ordersSeed: Array<{ dayOffset: number; num: string; amount: number; type?: "income" | "withdrawal"; desc: string }> = [
-    { dayOffset: 0.1, num: "TB-8940", amount: 50, desc: "অর্ডার #TB-8940 সফল ডেলিভারি (৫০% ডেলিভারি ফি)" },
-    { dayOffset: 0.25, num: "TB-8935", amount: 60, desc: "অর্ডার #TB-8935 সফল ডেলিভারি (৫০% ডেলিভারি ফি)" },
-    { dayOffset: 0.3, num: "TB-8928", amount: 20, desc: "অর্ডার #TB-8928 বাতিল — সেলারকে রিটার্ন সফল (ট্রিপ ভাতা)" },
-    { dayOffset: 1, num: "TB-8921", amount: 50, desc: "অর্ডার #TB-8921 সফল ডেলিভারি" },
-    { dayOffset: 1.2, num: "TB-8918", amount: 80, desc: "অর্ডার #TB-8918 সফল ডেলিভারি" },
-    { dayOffset: 1.5, num: "TB-8912", amount: 45, desc: "অর্ডার #TB-8912 সফল ডেলিভারি" },
-    { dayOffset: 2, num: "TB-8905", amount: 60, desc: "অর্ডার #TB-8905 সফল ডেলিভারি" },
-    { dayOffset: 2.5, num: "TB-8898", amount: 55, desc: "অর্ডার #TB-8898 সফল ডেলিভারি" },
-    { dayOffset: 3, num: "TB-8890", amount: 70, desc: "অর্ডার #TB-8890 সফল ডেলিভারি" },
-    { dayOffset: 3.8, num: "WD-101", amount: 1500, type: "withdrawal", desc: "bKash উইথড্রয়াল সম্পন্ন" },
-    { dayOffset: 4.2, num: "TB-8882", amount: 60, desc: "অর্ডার #TB-8882 সফল ডেলিভারি" },
-    { dayOffset: 5, num: "TB-8875", amount: 50, desc: "অর্ডার #TB-8875 সফল ডেলিভারি" },
-    { dayOffset: 6, num: "TB-8868", amount: 20, desc: "অর্ডার #TB-8868 বাতিল — সেলারকে রিটার্ন সম্পন্ন" },
-    { dayOffset: 7, num: "TB-8860", amount: 90, desc: "অর্ডার #TB-8860 এক্সপ্রেস ডেলিভারি সম্পন্ন" },
-    { dayOffset: 8, num: "TB-8851", amount: 45, desc: "অর্ডার #TB-8851 সফল ডেলিভারি" },
-    { dayOffset: 9, num: "TB-8842", amount: 60, desc: "অর্ডার #TB-8842 সফল ডেলিভারি" },
-    { dayOffset: 10, num: "TB-8835", amount: 55, desc: "অর্ডার #TB-8835 সফল ডেলিভারি" },
-    { dayOffset: 11, num: "WD-102", amount: 2000, type: "withdrawal", desc: "Nagad উইথড্রয়াল সম্পন্ন" },
-    { dayOffset: 12, num: "TB-8822", amount: 65, desc: "অর্ডার #TB-8822 সফল ডেলিভারি" },
-    { dayOffset: 14, num: "TB-8810", amount: 75, desc: "অর্ডার #TB-8810 সফল ডেলিভারি" },
-    { dayOffset: 16, num: "TB-8798", amount: 50, desc: "অর্ডার #TB-8798 সফল ডেলিভারি" },
-    { dayOffset: 18, num: "TB-8780", amount: 20, desc: "অর্ডার #TB-8780 সেলারকে রিটার্ন ট্রিপ ভাতা" },
-    { dayOffset: 20, num: "TB-8765", amount: 80, desc: "অর্ডার #TB-8765 সফল ডেলিভারি" },
-    { dayOffset: 22, num: "WD-103", amount: 2500, type: "withdrawal", desc: "bKash উইথড্রয়াল সম্পন্ন" },
-    { dayOffset: 24, num: "TB-8742", amount: 60, desc: "অর্ডার #TB-8742 সফল ডেলিভারি" },
-    { dayOffset: 26, num: "TB-8720", amount: 70, desc: "অর্ডার #TB-8720 সফল ডেলিভারি" },
-    { dayOffset: 28, num: "TB-8695", amount: 85, desc: "অর্ডার #TB-8695 সফল ডেলিভারি" },
-    { dayOffset: 29.5, num: "TB-8680", amount: 65, desc: "অর্ডার #TB-8680 সফল ডেলিভারি" },
-  ];
-
-  ordersSeed.forEach((seed, idx) => {
-    list.push({
-      id: `h-seed-${idx + 1}`,
-      type: seed.type || "income",
-      amount: seed.amount,
-      orderNumber: seed.num,
-      description: seed.desc,
-      status: "COMPLETED",
-      createdAt: new Date(now - seed.dayOffset * dayMs).toISOString(),
-    });
-  });
-
-  return list;
+  return [];
 }
 
 export function syncDailyOrdersReset(): {
@@ -578,53 +262,9 @@ export function syncDailyOrdersReset(): {
 
   if (savedDate !== today) {
     localStorage.setItem("tatka_rider_today_date", today);
-    const initialCompleted: TodayCompletedOrder[] = [
-      {
-        id: "comp-today-1",
-        orderNumber: "TB-8940",
-        customerName: "ফারহানা করিম",
-        customerPhone: "01711223344",
-        deliveryAddress: "বাড়ি #১২, রোড #৩, ধানমন্ডি, ঢাকা",
-        vendorName: "সাদিক এগ্রো ফ্রেশ মার্কেট",
-        earnings: 50,
-        total: 1350,
-        paymentStatus: "PAID",
-        completedAt: new Date(Date.now() - 1000 * 60 * 90).toISOString(),
-        deliveryOtp: "4826",
-        itemCount: 3,
-      },
-      {
-        id: "comp-today-2",
-        orderNumber: "TB-8935",
-        customerName: "আরিফুল ইসলাম",
-        customerPhone: "01899887766",
-        deliveryAddress: "সেক্টর #৪, রোড #১২, উত্তরা, ঢাকা",
-        vendorName: "ফ্রেশ গার্ডেন মার্ট",
-        earnings: 60,
-        total: 1850,
-        paymentStatus: "COD",
-        completedAt: new Date(Date.now() - 1000 * 60 * 210).toISOString(),
-        deliveryOtp: "9134",
-        itemCount: 4,
-      },
-    ];
-    const initialReturned: TodayReturnedOrder[] = [
-      {
-        id: "ret-today-1",
-        orderNumber: "TB-8928",
-        customerName: "কামরুল হাসান",
-        vendorName: "দেশি মাছ ও মাংসের আড়ত",
-        deliveryAddress: "বনশ্রী ব্লক #সি, ঢাকা",
-        returnAllowance: 20,
-        returnCode: "7742",
-        reason: "কাস্টমার ফোন রিসিভ করেননি",
-        returnedAt: new Date(Date.now() - 1000 * 60 * 320).toISOString(),
-        itemCount: 2,
-      },
-    ];
-    setLocalStore("tatka_today_completed_orders", initialCompleted);
-    setLocalStore("tatka_today_returned_orders", initialReturned);
-    return { todayDate: today, completed: initialCompleted, returned: initialReturned };
+    setLocalStore("tatka_today_completed_orders", []);
+    setLocalStore("tatka_today_returned_orders", []);
+    return { todayDate: today, completed: [], returned: [] };
   }
 
   const completed = getLocalStore<TodayCompletedOrder[]>("tatka_today_completed_orders", []);
@@ -674,52 +314,43 @@ function handleMockFallback<T>(path: string, options: RequestInit): { success: b
   // 3. Balance
   if (cleanPath === "/rider-portal/balance") {
     const profile = getLocalStore("profile", DEFAULT_PROFILE);
+    const completed = getLocalStore<TodayCompletedOrder[]>("tatka_today_completed_orders", []);
+    const todayEarning = completed.reduce((sum, c) => sum + (c.earnings || 0), 0);
+    const todayDeliveries = completed.length;
     return {
       success: true,
       data: {
-        balance: profile.balance,
-        totalEarned: profile.totalEarned,
-        todayEarning: 480,
-        todayDeliveries: 6,
-        weekEarning: 3450,
+        balance: profile.balance || 0,
+        totalEarned: profile.totalEarned || 0,
+        todayEarning,
+        todayDeliveries,
+        weekEarning: todayEarning,
       } as any,
     };
   }
 
-  // 4. Available Tasks (Demo Tasks)
+  // 4. Available Tasks
   if (cleanPath === "/rider-portal/tasks" && method === "GET") {
-    let tasks = getLocalStore<Task[] | null>("available_tasks", null as any);
-    if (!tasks || !Array.isArray(tasks)) {
-      setLocalStore("available_tasks", SAMPLE_AVAILABLE_TASKS);
-      tasks = SAMPLE_AVAILABLE_TASKS;
-    }
+    const tasks = getLocalStore<Task[]>("available_tasks", []);
     return { success: true, data: tasks as any };
   }
 
-  // 4b. Reseed Available Tasks (when rider needs fresh demo orders)
+  // 4b. Reseed Available Tasks
   if (cleanPath === "/rider-portal/tasks/reset-sample" && method === "POST") {
-    setLocalStore("available_tasks", SAMPLE_AVAILABLE_TASKS);
-    return { success: true, data: SAMPLE_AVAILABLE_TASKS as any };
+    setLocalStore("available_tasks", []);
+    return { success: true, data: [] as any };
   }
 
   // 5. Active Tasks
   if (cleanPath === "/rider-portal/tasks/active") {
     const activeTasks = getLocalStore<ActiveTask[]>("active_tasks", []);
-    let modified = false;
-    activeTasks.forEach((t) => {
-      if (!t.customerDeliveryOtp) {
-        t.customerDeliveryOtp = "4826";
-        modified = true;
-      }
-    });
-    if (modified) setLocalStore("active_tasks", activeTasks);
     return { success: true, data: activeTasks as any };
   }
 
   // 5b. Today Orders Summary & Auto Daily Reset
   if (cleanPath === "/rider-portal/tasks/today-summary") {
     const { todayDate, completed, returned } = syncDailyOrdersReset();
-    const available = getLocalStore("available_tasks", SAMPLE_AVAILABLE_TASKS);
+    const available = getLocalStore<Task[]>("available_tasks", []);
     const active = getLocalStore<ActiveTask[]>("active_tasks", []);
     const pendingCount = available.length;
     const processingCount = active.length;
@@ -1893,61 +1524,24 @@ export interface RiderPerformance {
 }
 
 export const SAMPLE_PERFORMANCE: RiderPerformance = {
-  tier: "PLATINUM",
-  tierTitleBn: "প্লাটিনাম এলিট (Platinum Elite)",
-  tierBadgeEmoji: "💎",
-  tierPerkBn: "সর্বোচ্চ প্রায়োরিটি অর্ডার ডিসপ্যাচ + ৫% এলিট বোনাস + ডেডিকেটেড ভিআইপি সাপোর্ট",
-  totalDeliveries: 542,
-  rating: 4.9,
-  totalRatings: 128,
-  onTimeRate: 96.5,
-  acceptanceRate: 98.2,
-  cancellationRate: 1.2,
+  tier: "BRONZE",
+  tierTitleBn: "ব্রোঞ্জ রাইডার (Bronze Rider)",
+  tierBadgeEmoji: "🥉",
+  tierPerkBn: "বেসিক কমিশন + স্ট্যান্ডার্ড রাইডার সাপোর্ট",
+  totalDeliveries: 0,
+  rating: 5.0,
+  totalRatings: 0,
+  onTimeRate: 100,
+  acceptanceRate: 100,
+  cancellationRate: 0,
   starsBreakdown: {
-    star5: 112,
-    star4: 12,
-    star3: 3,
-    star2: 1,
+    star5: 0,
+    star4: 0,
+    star3: 0,
+    star2: 0,
     star1: 0,
   },
-  recentReviews: [
-    {
-      id: "rev-1",
-      customerName: "তানভীর আহমেদ",
-      area: "ধানমন্ডি, ঢাকা",
-      rating: 5,
-      comment: "খুব দ্রুত এবং সাবধানে গরম গরম পার্সেল ডেলিভারি দিয়েছেন ভাইয়া। ওনার ব্যবহার খুবই অমায়িক ও আন্তরিক!",
-      date: "গতকাল",
-      orderNumber: "TB-8942",
-    },
-    {
-      id: "rev-2",
-      customerName: "ফারহানা করিম",
-      area: "মিরপুর-১০, ঢাকা",
-      rating: 5,
-      comment: "বৃষ্টির মধ্যেও একদম নিখুঁত সময়ে পণ্য পৌঁছে দেওয়ার জন্য অনেক ধন্যবাদ তাতকা বাজার ও রাইডার ভাইকে।",
-      date: "৩ দিন আগে",
-      orderNumber: "TB-8955",
-    },
-    {
-      id: "rev-3",
-      customerName: "সাদমান সাদিক",
-      area: "গুলশান-২, ঢাকা",
-      rating: 5,
-      comment: "প্রোডাক্টের প্যাকেজিং কোনো ক্ষয়ক্ষতি ছাড়া পেয়েছি। পারফেক্ট ৫ স্টার সার্ভিস!",
-      date: "৫ দিন আগে",
-      orderNumber: "TB-8910",
-    },
-    {
-      id: "rev-4",
-      customerName: "নাসরিন সুলতানা",
-      area: "উত্তরা সেক্টর ৭, ঢাকা",
-      rating: 4,
-      comment: "ভালো সার্ভিস। ট্রাফিকের কারণে ৫ মিনিট দেরি হলেও আগেই মেসেজ দিয়ে জানিয়েছিলেন। প্রশংসনীয় পেশাদারিত্ব।",
-      date: "১ সপ্তাহ আগে",
-      orderNumber: "TB-8889",
-    },
-  ],
+  recentReviews: [],
 };
 
 export function getPerformanceData(): RiderPerformance {

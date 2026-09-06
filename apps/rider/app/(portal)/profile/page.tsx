@@ -1,6 +1,6 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import { apiFetch, getPerformanceData, type RiderProfile, type RiderPerformance } from "@/lib/api";
+import { apiFetch, getPerformanceData, fullyResetRiderPanel, type RiderProfile, type RiderPerformance } from "@/lib/api";
 
 const STEPS = ["ব্যক্তিগত তথ্য", "ঠিকানা", "পরিচয়পত্র"];
 
@@ -253,6 +253,39 @@ export default function ProfilePage() {
           )}
         </>
       )}
+
+      {/* ─── Panel Reset ─── */}
+      <div style={{ marginTop: 24, padding: "16px", background: "rgba(239,68,68,.08)", border: "1px dashed rgba(239,68,68,.3)", borderRadius: "var(--r-lg)", textAlign: "center" }}>
+        <div style={{ fontSize: ".88rem", fontWeight: 700, color: "#ef4444", fontFamily: "var(--font-bn)" }}>
+          🔄 রাইডার প্যানেল ডাটা রিসেট
+        </div>
+        <div style={{ fontSize: ".76rem", color: "var(--text-3)", fontFamily: "var(--font-bn)", marginTop: 4, marginBottom: 12 }}>
+          সকল ডেমো অর্ডার, ব্যালেন্স, হিস্ট্রি ও ক্যাশ কালেকশন ০ তে রিসেট করতে চান?
+        </div>
+        <button
+          id="btn-reset-rider-panel"
+          type="button"
+          onClick={() => {
+            if (confirm("আপনি কি নিশ্চিতভাবে রাইডার প্যানেলের সকল ডেমো ডাটা ও অ্যামাউন্ট ০ তে রিসেট করতে চান?")) {
+              fullyResetRiderPanel();
+              window.location.reload();
+            }
+          }}
+          style={{
+            padding: "8px 18px",
+            background: "#ef4444",
+            color: "#fff",
+            border: "none",
+            borderRadius: "var(--r-md)",
+            fontSize: ".8rem",
+            fontWeight: 700,
+            fontFamily: "var(--font-bn)",
+            cursor: "pointer",
+          }}
+        >
+          প্যানেল সম্পূর্ণ রিসেট করুন
+        </button>
+      </div>
     </div>
   );
 }
