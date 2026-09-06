@@ -200,10 +200,16 @@ export default function TasksPage() {
                     </div>
                   </div>
                   <div className="task-earning">
-                    <div className="task-earning-label">আয়</div>
+                    <div className="task-earning-label">আয় (৫০% ফি)</div>
                     <div className="task-earning-amount">৳ {Number(a.order.earnings).toLocaleString()}</div>
                   </div>
                 </div>
+                {a.order.total && (
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "6px 12px", background: "var(--bg-base)", borderRadius: 8, fontSize: ".76rem", color: "var(--text-2)", fontFamily: "var(--font-bn)", marginBottom: 4 }}>
+                    <span>কাস্টমার থেকে সংগৃহীত বিল:</span>
+                    <strong style={{ color: "var(--text-1)", fontFamily: "monospace" }}>৳ {Number(a.order.total).toLocaleString()}</strong>
+                  </div>
+                )}
                 <div className="task-address">
                   <svg fill="none" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
                   <span className="task-address-text">{a.order.deliveryAddress}</span>
@@ -242,13 +248,18 @@ export default function TasksPage() {
                   </div>
                 </div>
                 <div className="task-earning">
-                  <div className="task-earning-label">আয়</div>
+                  <div className="task-earning-label">আয় (৫০% ফি)</div>
                   <div className="task-earning-amount">৳ {Number(task.earnings).toLocaleString()}</div>
                 </div>
               </div>
-              {/* Show order number prominently on the card */}
-              <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 0 4px", fontSize: ".73rem", color: "var(--orange)", fontWeight: 700, fontFamily: "monospace", letterSpacing: ".06em" }}>
-                🔖 অর্ডার নম্বর: <span style={{ fontSize: ".85rem" }}>{task.orderNumber}</span>
+              {/* Show order number and total bill prominently on the card */}
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "6px 0 4px", fontSize: ".75rem", fontFamily: "var(--font-bn)" }}>
+                <span style={{ color: "var(--orange)", fontWeight: 700, fontFamily: "monospace", letterSpacing: ".06em" }}>
+                  🔖 #{task.orderNumber}
+                </span>
+                <span style={{ color: "var(--text-2)" }}>
+                  মোট বিল: <strong style={{ color: "var(--text-1)", fontFamily: "monospace" }}>৳ {Number(task.total).toLocaleString()}</strong>
+                </span>
               </div>
               <div className="task-address">
                 <svg fill="none" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>

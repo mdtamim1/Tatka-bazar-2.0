@@ -64,8 +64,16 @@ const SAMPLE_AVAILABLE_TASKS: Task[] = [
     deliveryAddress: "রোড #৭, বাড়ি #১২, ধানমন্ডি, ঢাকা",
     vendorName: "সাদিক এগ্রো ফ্রেশ মার্কেট",
     itemCount: 4,
+    subtotal: 1390,
+    deliveryFee: 60,
     total: 1450,
-    earnings: 80,
+    earnings: 30,
+    items: [
+      { name: "দেশি শিং মাছ (১ কেজি)", qty: 1, price: 650, total: 650 },
+      { name: "তাজা লাল শাক (২ আঁটি)", qty: 2, price: 30, total: 60 },
+      { name: "ফার্মের ডিম (১ ডজন)", qty: 1, price: 150, total: 150 },
+      { name: "চাষের তাজা রুই মাছ (২ কেজি)", qty: 1, price: 530, total: 530 },
+    ],
     createdAt: new Date(Date.now() - 1000 * 60 * 5).toISOString(),
   },
   {
@@ -76,8 +84,18 @@ const SAMPLE_AVAILABLE_TASKS: Task[] = [
     deliveryAddress: "সেক্টর #১১, রোড #৪, উত্তরা, ঢাকা",
     vendorName: "তাজা দেশি মাছ ও মাংসের আড়ত",
     itemCount: 6,
+    subtotal: 2120,
+    deliveryFee: 80,
     total: 2200,
-    earnings: 110,
+    earnings: 40,
+    items: [
+      { name: "দেশি গরুর মাংস (১ কেজি)", qty: 1, price: 780, total: 780 },
+      { name: "ফার্মের মুরগি (২ কেজি)", qty: 1, price: 360, total: 360 },
+      { name: "দেশি আলু (৫ কেজি)", qty: 1, price: 250, total: 250 },
+      { name: "দেশি পেঁয়াজ (২ কেজি)", qty: 1, price: 180, total: 180 },
+      { name: "তাজা বেগুন (১ কেজি)", qty: 1, price: 90, total: 90 },
+      { name: "কাঁচামরিচ ও ধনেপাতা প্যাক", qty: 1, price: 60, total: 60 },
+    ],
     createdAt: new Date(Date.now() - 1000 * 60 * 12).toISOString(),
   },
   {
@@ -88,8 +106,15 @@ const SAMPLE_AVAILABLE_TASKS: Task[] = [
     deliveryAddress: "ব্লক #ডি, বাড়ি #৯, বনশ্রী, ঢাকা",
     vendorName: "গ্রিন ভ্যালি অর্গানিক সবজি",
     itemCount: 3,
+    subtotal: 830,
+    deliveryFee: 60,
     total: 890,
-    earnings: 70,
+    earnings: 30,
+    items: [
+      { name: "অর্গানিক মিষ্টি কুমড়া (১টি)", qty: 1, price: 120, total: 120 },
+      { name: "তাজা লাউ (১টি)", qty: 1, price: 80, total: 80 },
+      { name: "খাঁটি গাওয়া ঘি (২৫০ গ্রাম)", qty: 1, price: 630, total: 630 },
+    ],
     createdAt: new Date(Date.now() - 1000 * 60 * 20).toISOString(),
   },
 ];
@@ -182,6 +207,16 @@ function handleMockFallback<T>(path: string, options: RequestInit): { success: b
     const taskId = cleanPath.split("/").pop();
     const available = getLocalStore("available_tasks", SAMPLE_AVAILABLE_TASKS);
     const task = available.find((t) => t.id === taskId) || SAMPLE_AVAILABLE_TASKS[0];
+    const deliveryFee = task?.deliveryFee || 60;
+    const earnings = task?.earnings || Math.round(deliveryFee * 0.5);
+    const items = task?.items || [
+      { name: "দেশি শিং মাছ (১ কেজি)", qty: 1, price: 650, total: 650 },
+      { name: "তাজা লাল শাক (২ আঁটি)", qty: 2, price: 30, total: 60 },
+      { name: "ফার্মের ডিম (১ ডজন)", qty: 1, price: 150, total: 150 },
+      { name: "চাষের তাজা রুই মাছ (২ কেজি)", qty: 1, price: 530, total: 530 },
+    ];
+    const subtotal = task?.subtotal || items.reduce((s, it) => s + (it.total || it.qty * (it.price || 0)), 0);
+    const total = task?.total || (subtotal + deliveryFee);
     return {
       success: true,
       data: {
@@ -191,13 +226,11 @@ function handleMockFallback<T>(path: string, options: RequestInit): { success: b
         customerPhone: task?.customerPhone || "01812345678",
         deliveryAddress: task?.deliveryAddress || "ধানমন্ডি, ঢাকা",
         vendorName: task?.vendorName || "সাদিক এগ্রো ফ্রেশ",
-        items: [
-          { name: "দেশি শিং মাছ (১ কেজি)", qty: 1 },
-          { name: "তাজা লাল শাক (২ আঁটি)", qty: 2 },
-          { name: "ফার্মের ডিম (১ ডজন)", qty: 1 },
-        ],
-        earnings: task?.earnings || 80,
-        total: task?.total || 1450,
+        items,
+        subtotal,
+        deliveryFee,
+        total,
+        earnings,
       } as any,
     };
   }
@@ -211,6 +244,15 @@ function handleMockFallback<T>(path: string, options: RequestInit): { success: b
       const remaining = available.filter((t) => t.id !== taskId);
       setLocalStore("available_tasks", remaining);
 
+      const deliveryFee = accepted.deliveryFee || 60;
+      const earnings = accepted.earnings || Math.round(deliveryFee * 0.5);
+      const items = accepted.items || [
+        { name: "অর্গানিক তাজা শাকসবজি", qty: 2, price: 120, total: 240 },
+        { name: "দেশি ডিম ও খাঁটি দুধ", qty: 1, price: 350, total: 350 },
+      ];
+      const subtotal = accepted.subtotal || items.reduce((s, it) => s + (it.total || it.qty * (it.price || 0)), 0);
+      const total = accepted.total || (subtotal + deliveryFee);
+
       const active = getLocalStore<ActiveTask[]>("active_tasks", []);
       active.push({
         assignmentId: "asgn-" + Date.now(),
@@ -223,11 +265,11 @@ function handleMockFallback<T>(path: string, options: RequestInit): { success: b
           customerPhone: accepted.customerPhone,
           deliveryAddress: accepted.deliveryAddress,
           vendorName: accepted.vendorName,
-          items: [
-            { name: "অর্গানিক তাজা শাকসবজি", qty: 2 },
-            { name: "দেশি ডিম ও দুধ", qty: 1 },
-          ],
-          earnings: accepted.earnings,
+          items,
+          subtotal,
+          deliveryFee,
+          total,
+          earnings,
         },
       });
       setLocalStore("active_tasks", active);
@@ -239,18 +281,60 @@ function handleMockFallback<T>(path: string, options: RequestInit): { success: b
   if ((cleanPath.includes("/pickup") || cleanPath.includes("/deliver")) && method === "POST") {
     const isDeliver = cleanPath.includes("/deliver");
     const active = getLocalStore<ActiveTask[]>("active_tasks", []);
-    let earned = 80;
+    let earned = 30;
+    let orderTotal = 0;
     if (isDeliver && active.length > 0) {
       const done = active.shift();
       setLocalStore("active_tasks", active);
-      // update profile balance
+
+      const deliveryFee = Number(done?.order.deliveryFee ?? 60);
+      earned = done?.order.earnings ?? Math.round(deliveryFee * 0.5);
+      orderTotal = Number(done?.order.total ?? 1450);
+
+      // update profile balance:
+      // + 50% delivery charge added to rider account
+      // - total order bill deducted from rider account
       const profile = getLocalStore("profile", DEFAULT_PROFILE);
-      earned = done?.order.earnings || 80;
-      profile.balance += earned;
+      profile.balance = profile.balance + earned - orderTotal;
       profile.totalEarned += earned;
       setLocalStore("profile", profile);
+
+      // add history entries
+      const allHistory = getLocalStore<HistoryItem[]>("history", [
+        { id: "h-1", type: "income", amount: 80, description: "অর্ডার #TB-8940 সফল ডেলিভারি", createdAt: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString() },
+        { id: "h-2", type: "income", amount: 110, description: "অর্ডার #TB-8935 সফল ডেলিভারি", createdAt: new Date(Date.now() - 1000 * 60 * 60 * 5).toISOString() },
+        { id: "h-3", type: "withdrawal", amount: 1000, description: "bKash উইথড্রয়াল সম্পন্ন", status: "COMPLETED", createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString() },
+      ]);
+      allHistory.unshift({
+        id: "h-" + Date.now(),
+        type: "income",
+        amount: earned,
+        description: `অর্ডার #${done?.order.orderNumber} ডেলিভারি আয় (৫০% ডেলিভারি ফি)`,
+        createdAt: new Date().toISOString(),
+      });
+      allHistory.unshift({
+        id: "h-deduct-" + Date.now(),
+        type: "withdrawal",
+        amount: orderTotal,
+        description: `অর্ডার #${done?.order.orderNumber} সংগৃহীত বিল সমন্বয় (অ্যাকাউন্ট থেকে কর্তন)`,
+        status: "COMPLETED",
+        createdAt: new Date().toISOString(),
+      });
+      setLocalStore("history", allHistory);
+
+      // add notification
+      const notifs = getLocalStore<RiderNotification[]>("notifications", SAMPLE_NOTIFICATIONS);
+      notifs.unshift({
+        id: "n-" + Date.now(),
+        type: "PAYMENT",
+        title: "ডেলিভারি সম্পন্ন ও ব্যালেন্স সমন্বয়",
+        body: `অর্ডার #${done?.order.orderNumber}: আয় ৳ ${earned} যোগ হয়েছে এবং বিল ৳ ${orderTotal} সমন্বয় হয়েছে`,
+        isRead: false,
+        createdAt: new Date().toISOString(),
+      });
+      setLocalStore("notifications", notifs);
     }
-    return { success: true, data: { earning: earned, message: "Status updated" } as any };
+    return { success: true, data: { earning: earned, orderTotal, message: "ডেলিভারি সম্পন্ন" } as any };
   }
 
   // 9. Profile / Me
@@ -438,6 +522,13 @@ export interface BalanceData {
   weekEarning: number;
 }
 
+export interface TaskItem {
+  name: string;
+  qty: number;
+  price?: number;
+  total?: number;
+}
+
 export interface Task {
   id: string;
   orderNumber: string;
@@ -446,8 +537,11 @@ export interface Task {
   deliveryAddress: string;
   vendorName: string;
   itemCount: number;
+  subtotal?: number;
+  deliveryFee?: number;
   total: number;
   earnings: number;
+  items?: TaskItem[];
   createdAt: string;
 }
 
@@ -463,7 +557,10 @@ export interface ActiveTask {
     customerPhone: string;
     deliveryAddress: string;
     vendorName: string;
-    items: { name: string; qty: number }[];
+    items: TaskItem[];
+    subtotal?: number;
+    deliveryFee?: number;
+    total?: number;
     earnings: number;
   };
 }

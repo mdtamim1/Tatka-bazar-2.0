@@ -121,16 +121,24 @@ export async function riderPortalRoutes(fastify: FastifyInstance) {
         },
         orderBy: { createdAt: "asc" },
         take: 20,
+      });      const rate = await prisma.deliveryRate.findFirst({ where: { isActive: true }, orderBy: { createdAt: "desc" } });
+      const formatted = orders.map(o => {
+        const deliveryFee = Number(o.deliveryFee);
+        const earnings = deliveryFee > 0 ? Math.round(deliveryFee * 0.5) : (rate?.amount ?? 50);
+        return {
+          id: o.id, orderNumber: o.orderNumber,
+          customerName: o.user.name, customerPhone: o.user.phone,
+          deliveryAddress: `${o.address.line1}, ${o.address.area}, ${o.address.city}`,
+          vendorName: o.items[0]?.vendor?.businessName ?? "Tatka Bazar",
+          itemCount: o.items.reduce((sum, i) => sum + i.quantity, 0),
+          subtotal: Number(o.subtotal),
+          deliveryFee,
+          total: Number(o.total),
+          earnings,
+          items: o.items.map(i => ({ name: i.name, qty: i.quantity, price: Number(i.price), total: Number(i.total) })),
+          createdAt: o.createdAt,
+        };
       });
-      const rate = await prisma.deliveryRate.findFirst({ where: { isActive: true }, orderBy: { createdAt: "desc" } });
-      const formatted = orders.map(o => ({
-        id: o.id, orderNumber: o.orderNumber,
-        customerName: o.user.name, customerPhone: o.user.phone,
-        deliveryAddress: `${o.address.line1}, ${o.address.area}, ${o.address.city}`,
-        vendorName: o.items[0]?.vendor?.businessName ?? "Tatka Bazar",
-        itemCount: o.items.reduce((sum, i) => sum + i.quantity, 0),
-        total: o.total, earnings: rate?.amount ?? 50, createdAt: o.createdAt,
-      }));
       return reply.send({ success: true, data: formatted });
     } catch (err: any) {
       return reply.status(500).send({ success: false, error: err.message });
@@ -154,17 +162,24 @@ export async function riderPortalRoutes(fastify: FastifyInstance) {
         },
       });
       const rate = await prisma.deliveryRate.findFirst({ where: { isActive: true }, orderBy: { createdAt: "desc" } });
-      return reply.send({ success: true, data: assignments.map(a => ({
-        assignmentId: a.id, status: a.status, assignedAt: a.assignedAt, pickedAt: a.pickedAt,
-        order: {
-          id: a.order.id, orderNumber: a.order.orderNumber,
-          customerName: a.order.user.name, customerPhone: a.order.user.phone,
-          deliveryAddress: `${a.order.address.line1}, ${a.order.address.area}, ${a.order.address.city}`,
-          vendorName: a.order.items[0]?.vendor?.businessName ?? "Tatka Bazar",
-          items: a.order.items.map(i => ({ name: i.name, qty: i.quantity })),
-          earnings: rate?.amount ?? 50,
-        },
-      }))});
+      return reply.send({ success: true, data: assignments.map(a => {
+        const deliveryFee = Number(a.order.deliveryFee);
+        const earnings = deliveryFee > 0 ? Math.round(deliveryFee * 0.5) : (rate?.amount ?? 50);
+        return {
+          assignmentId: a.id, status: a.status, assignedAt: a.assignedAt, pickedAt: a.pickedAt,
+          order: {
+            id: a.order.id, orderNumber: a.order.orderNumber,
+            customerName: a.order.user.name, customerPhone: a.order.user.phone,
+            deliveryAddress: `${a.order.address.line1}, ${a.order.address.area}, ${a.order.address.city}`,
+            vendorName: a.order.items[0]?.vendor?.businessName ?? "Tatka Bazar",
+            items: a.order.items.map(i => ({ name: i.name, qty: i.quantity, price: Number(i.price), total: Number(i.total) })),
+            subtotal: Number(a.order.subtotal),
+            deliveryFee,
+            total: Number(a.order.total),
+            earnings,
+          },
+        };
+      })});
     } catch (err: any) {
       return reply.status(500).send({ success: false, error: err.message });
     }
@@ -202,22 +217,25 @@ export async function riderPortalRoutes(fastify: FastifyInstance) {
       if (!assignment || assignment.riderId !== riderId) return reply.status(404).send({ success: false, error: "Assignment not found" });
       if (assignment.status === "DELIVERED") return reply.status(409).send({ success: false, error: "Already delivered" });
 
+      const deliveryFee = Number(assignment.order.deliveryFee);
       const rate = await prisma.deliveryRate.findFirst({ where: { isActive: true }, orderBy: { createdAt: "desc" } });
-      const earning = Number(rate?.amount ?? 50);
+      const earning = deliveryFee > 0 ? Math.round(deliveryFee * 0.5) : Number(rate?.amount ?? 50);
+      const totalBill = Number(assignment.order.total);
+      const netBalanceChange = earning - totalBill;
 
       const [, , , earningRecord] = await prisma.$transaction([
         prisma.deliveryAssignment.update({ where: { id: assignmentId }, data: { status: "DELIVERED", deliveredAt: new Date() } }),
-        prisma.order.update({ where: { id: assignment.orderId }, data: { status: "DELIVERED" } }),
+        prisma.order.update({ where: { id: assignment.orderId }, data: { status: "DELIVERED", paymentStatus: "PAID", paidAt: new Date() } }),
         prisma.deliveryRider.update({
           where: { id: riderId },
-          data: { balance: { increment: earning }, totalEarned: { increment: earning }, status: "AVAILABLE" },
+          data: { balance: { increment: netBalanceChange }, totalEarned: { increment: earning }, status: "AVAILABLE" },
         }),
         prisma.riderEarning.create({
           data: { riderId, orderId: assignment.orderId, amount: earning,
-            description: `???????? ???????  ?????? #${assignment.order.orderNumber}`, type: "DELIVERY" },
+            description: `ডেলিভারি আয় (৫০% ডেলিভারি চার্জ) — অর্ডার #${assignment.order.orderNumber}`, type: "DELIVERY" },
         }),
       ]);
-      return reply.send({ success: true, data: { earning, earningRecord } });
+      return reply.send({ success: true, data: { earning, totalBill, netBalanceChange, earningRecord } });
     } catch (err: any) {
       return reply.status(400).send({ success: false, error: err.message });
     }
