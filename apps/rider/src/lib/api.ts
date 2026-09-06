@@ -417,7 +417,7 @@ function handleMockFallback<T>(path: string, options: RequestInit): { success: b
         customerName: task?.customerName || "তানভীর আহমেদ",
         customerPhone: task?.customerPhone || "01812345678",
         deliveryAddress: task?.deliveryAddress || "ধানমন্ডি, ঢাকা",
-        vendorName: task?.vendorName || "সাদিক এগ্রো ফ্রেশ",
+        vendorName: task?.vendorName || "সবুজ খামার গ্রোসারি",
         items,
         subtotal,
         deliveryFee,
@@ -1126,17 +1126,92 @@ export async function apiFetch<T = unknown>(
     } catch {}
   }
 
-  // 2. Cross-App Dispatch Claim Sync (Notify /api/dispatch when rider accepts)
+  // 2. Cross-App Dispatch Claim & Lifecycle Sync (Notify /api/dispatch when rider acts)
   if (path.includes("/accept") && method === "POST") {
     const taskId = path.split("/")[3];
     if (taskId) {
-      try {
-        fetch("/api/dispatch", {
+      const userProfile = getLocalStore("profile", DEFAULT_PROFILE);
+      const riderPayload = {
+        action: "CLAIM",
+        taskId,
+        riderId: userProfile.id || "rider-demo-01",
+        riderName: userProfile.name ? `${userProfile.name} (রাইডার #১০১)` : "তামীম ইকবাল (রাইডার #১০১)",
+        riderPhone: userProfile.phone || "01700000001",
+        riderVehicle: `${userProfile.vehicleType === "MOTORCYCLE" ? "মোটরসাইকেল" : "বাইক"} (${userProfile.vehicleNumber || "ঢাকা মেট্রো-হ-৪৫-১২৩৪"})`,
+        riderTier: "ব্রোঞ্জ রাইডার",
+      };
+      const targets = [
+        "/api/dispatch",
+        "https://tatka-bazar-2-0-vendor.vercel.app/api/dispatch",
+        "http://localhost:3002/api/dispatch",
+      ];
+      targets.forEach((url) => {
+        fetch(url, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ action: "CLAIM", taskId }),
+          body: JSON.stringify(riderPayload),
         }).catch(() => {});
-      } catch {}
+      });
+    }
+  }
+
+  // 3. Cross-App Handover / Parcel Pickup Sync (Parcel picked up from vendor -> Transit)
+  if (path.includes("/transit") && method === "POST") {
+    const taskId = path.split("/")[3];
+    if (taskId) {
+      const payload = { action: "STATUS_UPDATE", taskId, status: "ON_THE_WAY" };
+      const targets = [
+        "/api/dispatch",
+        "https://tatka-bazar-2-0-vendor.vercel.app/api/dispatch",
+        "http://localhost:3002/api/dispatch",
+      ];
+      targets.forEach((url) => {
+        fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        }).catch(() => {});
+      });
+    }
+  }
+
+  // 4. Cross-App Delivery Completion Sync
+  if (path.includes("/deliver") && method === "POST") {
+    const taskId = path.split("/")[3];
+    if (taskId) {
+      const payload = { action: "STATUS_UPDATE", taskId, status: "DELIVERED" };
+      const targets = [
+        "/api/dispatch",
+        "https://tatka-bazar-2-0-vendor.vercel.app/api/dispatch",
+        "http://localhost:3002/api/dispatch",
+      ];
+      targets.forEach((url) => {
+        fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        }).catch(() => {});
+      });
+    }
+  }
+
+  // 5. Cross-App Return Sync
+  if ((path.includes("/confirm-return") || path.includes("/verify-return-code")) && method === "POST") {
+    const taskId = path.split("/")[3];
+    if (taskId) {
+      const payload = { action: "STATUS_UPDATE", taskId, status: "RETURNED" };
+      const targets = [
+        "/api/dispatch",
+        "https://tatka-bazar-2-0-vendor.vercel.app/api/dispatch",
+        "http://localhost:3002/api/dispatch",
+      ];
+      targets.forEach((url) => {
+        fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        }).catch(() => {});
+      });
     }
   }
 
@@ -1443,6 +1518,25 @@ export function sendChatMessage(
     try {
       localStorage.setItem(`tatka_chat_${channelId}`, JSON.stringify(updated));
       window.dispatchEvent(new CustomEvent("tatka_chat_updated", { detail: { channelId, message: newMsg } }));
+
+      // Sync across Vercel cloud dispatch endpoints
+      const endpoints = [
+        "/api/dispatch",
+        "https://tatka-bazar-2-0-vendor.vercel.app/api/dispatch",
+      ];
+      endpoints.forEach((url) => {
+        fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            action: "SEND_CHAT",
+            orderId: channelId,
+            sender: sender === "RIDER" ? "RIDER" : "VENDOR",
+            senderName,
+            text,
+          }),
+        }).catch(() => {});
+      });
     } catch {}
   }
   return newMsg;

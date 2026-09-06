@@ -34,9 +34,9 @@ export default function RiderChatModal({
   isOpen,
   onClose,
   orderNumber = "TB-9824",
-  riderName = "তামীম ইকবাল (রাইডার)",
+  riderName = "তামীম ইকবাল (রাইডার #১০১)",
   riderPhone = "01700000001",
-  riderVehicle = "হোন্ডা সিবি শাইন (বাইক)",
+  riderVehicle = "মোটরসাইকেল (ঢাকা মেট্রো-হ-৪৫-১২৩৪)",
   riderRating = "4.95 ★",
 }: RiderChatModalProps) {
   const channelId = "task-01"; // Unified with active demo channel
@@ -62,9 +62,26 @@ export default function RiderChatModal({
     window.addEventListener("tatka_chat_updated", handleChatUpdate);
     window.addEventListener("storage", handleStorage);
 
+    // Poll cloud dispatch for new rider messages every 3s
+    const pollInterval = setInterval(() => {
+      fetch(`/api/dispatch?chatOrderId=${channelId}`)
+        .then((r) => r.json())
+        .then((data) => {
+          if (data.success && Array.isArray(data.messages) && data.messages.length > 0) {
+            setMessages((prev) => {
+              const ids = new Set(prev.map((m) => m.id));
+              const newOnes = data.messages.filter((m: ChatMsg) => !ids.has(m.id));
+              return newOnes.length > 0 ? [...prev, ...newOnes] : prev;
+            });
+          }
+        })
+        .catch(() => {});
+    }, 3000);
+
     return () => {
       window.removeEventListener("tatka_chat_updated", handleChatUpdate);
       window.removeEventListener("storage", handleStorage);
+      clearInterval(pollInterval);
     };
   }, [isOpen]);
 
@@ -94,9 +111,9 @@ export default function RiderChatModal({
     if (!text) return;
 
     const newMsg: ChatMsg = {
-      id: `msg-${Date.now()}`,
+      id: `msg-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
       sender: "VENDOR",
-      senderName: "সাদিক এগ্রো (ভেন্ডর)",
+      senderName: "সবুজ খামার গ্রোসারি (ভেন্ডর)",
       text,
       timestamp: new Date().toISOString(),
     };
@@ -113,6 +130,25 @@ export default function RiderChatModal({
         })
       );
       audioAlert.playSuccessSound();
+
+      // Broadcast to cloud dispatch endpoints
+      const endpoints = [
+        "/api/dispatch",
+        "https://tatka-bazar-2-0-rider-seven.vercel.app/api/dispatch",
+      ];
+      endpoints.forEach((url) => {
+        fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            action: "SEND_CHAT",
+            orderId: channelId,
+            sender: "VENDOR",
+            senderName: "সবুজ খামার গ্রোসারি (ভেন্ডর)",
+            text,
+          }),
+        }).catch(() => {});
+      });
     } catch {}
 
     setTimeout(() => {

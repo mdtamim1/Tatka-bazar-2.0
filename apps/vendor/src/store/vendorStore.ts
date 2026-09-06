@@ -85,6 +85,7 @@ interface VendorState {
   simulateIncomingOrder: () => void;
   simulateAreaDispatchOrder: () => void;
   simulateRemoteClaim: (orderId: string) => void;
+  syncRiderDispatch: (tasks: any[]) => void;
 
   // Product Operations
   addProduct: (product: Omit<Product, "id" | "createdAt" | "updatedAt">) => void;
@@ -555,10 +556,10 @@ const initialOrders: Order[] = [
     paymentStatus: "PAID",
     assignedAt: new Date(Date.now() - 74 * 60 * 1000).toISOString(),
     readyAt: new Date(Date.now() - 20 * 60 * 1000).toISOString(),
-    riderId: "rd-local-101",
-    riderName: "তানভীর আহমেদ (রাইডার #১০১)",
-    riderPhone: "01712-334455",
-    riderVehicle: "হোন্ডা ড্রিম ১১০ (বাইক)",
+    riderId: "rider-demo-01",
+    riderName: "তামীম ইকবাল (রাইডার #১০১)",
+    riderPhone: "01700000001",
+    riderVehicle: "মোটরসাইকেল (ঢাকা মেট্রো-হ-৪৫-১২৩৪)",
     riderCurrentLocationName: "মিরপুর রোড, লালমাটিয়ার মোড়",
     riderEtaMinutes: 8,
     riderDistanceKm: 1.2,
@@ -609,8 +610,10 @@ const initialOrders: Order[] = [
     assignedAt: new Date(Date.now() - 119 * 60 * 1000).toISOString(),
     readyAt: new Date(Date.now() - 95 * 60 * 1000).toISOString(),
     completedAt: new Date(Date.now() - 40 * 60 * 1000).toISOString(),
-    riderName: "শাহিন আলম (রাইডার #১০২)",
-    riderPhone: "01822-334455",
+    riderId: "rider-demo-01",
+    riderName: "তামীম ইকবাল (রাইডার #১০১)",
+    riderPhone: "01700000001",
+    riderVehicle: "মোটরসাইকেল (ঢাকা মেট্রো-হ-৪৫-১২৩৪)",
     items: [
       {
         id: "item-10",
@@ -1236,10 +1239,10 @@ export const useVendorStore = create<VendorState>()(
             if (newStatus === "READY_FOR_PICKUP") {
               updated.readyAt = new Date().toISOString();
               if (!updated.riderId) {
-                updated.riderId = "rd-local-101";
-                updated.riderName = "তানভীর আহমেদ (রাইডার #১০১)";
-                updated.riderPhone = "01712-334455";
-                updated.riderVehicle = "হোন্ডা ড্রিম ১১০ (বাইক)";
+                updated.riderId = "rider-demo-01";
+                updated.riderName = "তামীম ইকবাল (রাইডার #১০১)";
+                updated.riderPhone = "01700000001";
+                updated.riderVehicle = "মোটরসাইকেল (ঢাকা মেট্রো-হ-৪৫-১২৩৪)";
                 updated.riderLatitude = 23.7925;
                 updated.riderLongitude = 90.4078;
                 updated.riderEtaMinutes = 10;
@@ -1280,8 +1283,8 @@ export const useVendorStore = create<VendorState>()(
               type: "ORDER_READY_FOR_PICKUP",
               orderId: target.id,
               deliveryZone: target.deliveryZone,
-              riderName: target.riderName || "তানভীর আহমেদ",
-              riderPhone: target.riderPhone || "01712-334455",
+              riderName: target.riderName || "তামীম ইকবাল (রাইডার #১০১)",
+              riderPhone: target.riderPhone || "01700000001",
             });
 
             // Cross-app live dispatch to Rider Portal (Vercel & Localhost)
@@ -1596,6 +1599,69 @@ export const useVendorStore = create<VendorState>()(
               : o
           ),
         }));
+      },
+
+      syncRiderDispatch: (tasks: any[]) => {
+        if (!Array.isArray(tasks) || tasks.length === 0) return;
+        set((state) => {
+          let changed = false;
+          const updatedOrders = state.orders.map((order) => {
+            const matchingTask = tasks.find(
+              (t: any) =>
+                t.id === order.id ||
+                t.orderNumber === order.displayId ||
+                t.id === order.displayId ||
+                t.orderNumber === order.id
+            );
+            if (!matchingTask) return order;
+
+            const riderName = matchingTask.riderName || matchingTask.claimedBy?.riderName;
+            const riderPhone = matchingTask.riderPhone || matchingTask.claimedBy?.riderPhone;
+            const riderVehicle = matchingTask.riderVehicle || matchingTask.claimedBy?.riderVehicle;
+            const taskStatus = matchingTask.status;
+
+            let newStatus = order.status;
+            if (taskStatus === "DELIVERED" && order.status !== "COMPLETED") {
+              newStatus = "COMPLETED";
+            } else if (taskStatus === "RETURNED" && order.status !== "RETURNED") {
+              newStatus = "RETURNED";
+            } else if (
+              taskStatus === "ON_THE_WAY" &&
+              order.status !== "HANDED_TO_RIDER" &&
+              order.status !== "COMPLETED"
+            ) {
+              newStatus = "HANDED_TO_RIDER";
+            } else if (
+              (taskStatus === "ASSIGNED" || matchingTask.claimed) &&
+              (order.status === "PENDING" || order.status === "RECEIVED" || order.status === "PROCESSING")
+            ) {
+              newStatus = "READY_FOR_PICKUP";
+            }
+
+            const finalRiderName = riderName || order.riderName || "তামীম ইকবাল (রাইডার #১০১)";
+            const finalRiderPhone = riderPhone || order.riderPhone || "01700000001";
+            const finalRiderVehicle = riderVehicle || order.riderVehicle || "মোটরসাইকেল (ঢাকা মেট্রো-হ-৪৫-১২৩৪)";
+
+            if (
+              order.riderName !== finalRiderName ||
+              order.riderPhone !== finalRiderPhone ||
+              order.riderVehicle !== finalRiderVehicle ||
+              order.status !== newStatus
+            ) {
+              changed = true;
+              return {
+                ...order,
+                riderName: finalRiderName,
+                riderPhone: finalRiderPhone,
+                riderVehicle: finalRiderVehicle,
+                status: newStatus,
+              };
+            }
+            return order;
+          });
+
+          return changed ? { orders: updatedOrders } : state;
+        });
       },
 
       addProduct: (productData) => {

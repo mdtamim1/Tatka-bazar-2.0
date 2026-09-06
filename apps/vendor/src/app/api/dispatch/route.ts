@@ -2,12 +2,17 @@ import { NextResponse } from "next/server";
 
 export const dynamic = "force-dynamic";
 
+// Global in-memory queue to survive invocations on warm serverless instances
 const globalScope = globalThis as unknown as {
   _tatka_dispatch_tasks?: any[];
+  _tatka_chat_messages?: Record<string, any[]>;
 };
 
 if (!globalScope._tatka_dispatch_tasks) {
   globalScope._tatka_dispatch_tasks = [];
+}
+if (!globalScope._tatka_chat_messages) {
+  globalScope._tatka_chat_messages = {};
 }
 
 const CORS_HEADERS = {
@@ -26,6 +31,17 @@ export async function OPTIONS() {
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const orderId = searchParams.get("orderId");
+  const all = searchParams.get("all");
+  const chatOrderId = searchParams.get("chatOrderId");
+
+  // If requesting chat messages
+  if (chatOrderId) {
+    const messages = globalScope._tatka_chat_messages?.[chatOrderId] || [];
+    return NextResponse.json(
+      { success: true, messages },
+      { headers: CORS_HEADERS }
+    );
+  }
 
   const tasks = globalScope._tatka_dispatch_tasks || [];
 
@@ -37,6 +53,15 @@ export async function GET(request: Request) {
     );
   }
 
+  // Return all tasks if requested (for vendor sync)
+  if (all === "true") {
+    return NextResponse.json(
+      { success: true, data: tasks, total: tasks.length },
+      { headers: CORS_HEADERS }
+    );
+  }
+
+  // Return unassigned / ready-for-pickup tasks
   const pendingTasks = tasks.filter((t: any) => !t.claimed && t.status === "READY_FOR_PICKUP");
 
   return NextResponse.json(
@@ -51,6 +76,7 @@ export async function POST(request: Request) {
     const action = body.action || (body.task ? "READY_FOR_PICKUP" : "READY_FOR_PICKUP");
     const tasks = globalScope._tatka_dispatch_tasks || [];
 
+    // 1. Ready For Pickup (Vendor adds new order)
     if (action === "READY_FOR_PICKUP") {
       const taskData = body.task || body;
       if (!taskData.id) {
@@ -66,7 +92,8 @@ export async function POST(request: Request) {
         customerName: taskData.customerName || "সম্মানিত গ্রাহক",
         customerPhone: taskData.customerPhone || "01729-458921",
         deliveryAddress: taskData.deliveryAddress || `${taskData.deliveryZone || "ঢাকা জোন"}, ঢাকা`,
-        vendorName: taskData.vendorName || "Tatka Vendor Partner",
+        vendorName: taskData.vendorName || "Green Farm Groceries & Organics",
+        vendorPhone: taskData.vendorPhone || "01711-223344",
         itemCount: taskData.itemCount || (Array.isArray(taskData.items) ? taskData.items.length : 2),
         subtotal: Number(taskData.subtotal) || Number(taskData.grossTotal) || 1200,
         deliveryFee: Number(taskData.deliveryFee) || 60,
@@ -79,6 +106,10 @@ export async function POST(request: Request) {
         status: "READY_FOR_PICKUP",
         claimed: false,
         claimedBy: null,
+        riderName: null,
+        riderPhone: null,
+        riderVehicle: null,
+        pickedUpFromStore: false,
       };
 
       const filtered = tasks.filter((t: any) => t.id !== newTask.id);
@@ -95,22 +126,39 @@ export async function POST(request: Request) {
       );
     }
 
+    // 2. Claim (Rider accepts order)
     if (action === "CLAIM") {
       const targetId = body.taskId || body.orderId;
       const riderId = body.riderId || "rider-demo-01";
-      const riderName = body.riderName || "রাইডার";
+      const riderName = body.riderName || "তামীম ইকবাল (রাইডার #১০১)";
+      const riderPhone = body.riderPhone || "01700000001";
+      const riderVehicle = body.riderVehicle || "মোটরসাইকেল (ঢাকা মেট্রো-হ-৪৫-১২৩৪)";
+      const riderTier = body.riderTier || "ব্রোঞ্জ রাইডার";
 
       const idx = tasks.findIndex((t: any) => t.id === targetId || t.orderNumber === targetId);
       if (idx !== -1 && tasks[idx]) {
         tasks[idx].claimed = true;
-        tasks[idx].claimedBy = { riderId, riderName, claimedAt: new Date().toISOString() };
         tasks[idx].status = "ASSIGNED";
+        tasks[idx].riderId = riderId;
+        tasks[idx].riderName = riderName;
+        tasks[idx].riderPhone = riderPhone;
+        tasks[idx].riderVehicle = riderVehicle;
+        tasks[idx].riderTier = riderTier;
+        tasks[idx].pickedUpFromStore = false;
+        tasks[idx].claimedBy = {
+          riderId,
+          riderName,
+          riderPhone,
+          riderVehicle,
+          riderTier,
+          claimedAt: new Date().toISOString(),
+        };
         globalScope._tatka_dispatch_tasks = tasks;
 
         return NextResponse.json(
           {
             success: true,
-            message: "টাস্ক রাইডার কর্তৃক সফলভাবে গ্রহণ করা হয়েছে!",
+            message: "টাস্ক তামীম ইকবাল কর্তৃক সফলভাবে গ্রহণ করা হয়েছে!",
             task: tasks[idx],
           },
           { headers: CORS_HEADERS }
@@ -123,8 +171,68 @@ export async function POST(request: Request) {
       );
     }
 
+    // 3. Status Update (e.g. Parcel Handed Over to Rider -> ON_THE_WAY, or DELIVERED)
+    if (action === "STATUS_UPDATE" || action === "HANDOVER" || action === "PICKUP") {
+      const targetId = body.taskId || body.orderId;
+      const newStatus = action === "HANDOVER" || action === "PICKUP" ? "ON_THE_WAY" : (body.status || "ON_THE_WAY");
+      const idx = tasks.findIndex((t: any) => t.id === targetId || t.orderNumber === targetId);
+
+      if (idx !== -1 && tasks[idx]) {
+        tasks[idx].status = newStatus;
+        if (newStatus === "ON_THE_WAY") {
+          tasks[idx].pickedUpFromStore = true;
+          tasks[idx].pickedAt = new Date().toISOString();
+        } else if (newStatus === "DELIVERED") {
+          tasks[idx].deliveredAt = new Date().toISOString();
+        } else if (newStatus === "RETURNED") {
+          tasks[idx].returnedAt = new Date().toISOString();
+        }
+        globalScope._tatka_dispatch_tasks = tasks;
+
+        return NextResponse.json(
+          {
+            success: true,
+            message: `টাস্ক স্ট্যাটাস '${newStatus}' হিসেবে আপডেট হয়েছে।`,
+            task: tasks[idx],
+          },
+          { headers: CORS_HEADERS }
+        );
+      }
+
+      return NextResponse.json(
+        { success: false, error: "টাস্ক পাওয়া যায়নি" },
+        { status: 404, headers: CORS_HEADERS }
+      );
+    }
+
+    // 4. Send Chat Message between Vendor and Rider
+    if (action === "SEND_CHAT") {
+      const orderId = body.orderId || "task-01";
+      const message = {
+        id: `msg-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+        sender: body.sender || "VENDOR",
+        senderName: body.senderName || (body.sender === "RIDER" ? "তামীম ইকবাল" : "সবুজ খামার গ্রোসারি"),
+        text: body.text || "",
+        timestamp: new Date().toISOString(),
+      };
+
+      const chatMap = globalScope._tatka_chat_messages || {};
+      if (!chatMap[orderId]) {
+        chatMap[orderId] = [];
+      }
+      chatMap[orderId].push(message);
+      globalScope._tatka_chat_messages = chatMap;
+
+      return NextResponse.json(
+        { success: true, message },
+        { headers: CORS_HEADERS }
+      );
+    }
+
+    // 5. Reset
     if (action === "RESET") {
       globalScope._tatka_dispatch_tasks = [];
+      globalScope._tatka_chat_messages = {};
       return NextResponse.json(
         { success: true, message: "ডিসপ্যাচ কিউ সফলভাবে রিসেট করা হয়েছে।" },
         { headers: CORS_HEADERS }

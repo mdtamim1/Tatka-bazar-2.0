@@ -43,9 +43,40 @@ export default function OrdersPage() {
     shiftStartedAt,
     simulateAreaDispatchOrder,
     simulateRemoteClaim,
+    syncRiderDispatch,
   } = useVendorStore();
 
   const t = translations[language];
+
+  // ─── Real-time dispatch sync with Rider Portal ───
+  React.useEffect(() => {
+    let isMounted = true;
+    async function syncDispatch() {
+      const endpoints = [
+        "/api/dispatch?all=true",
+        "https://tatka-bazar-2-0-rider-seven.vercel.app/api/dispatch?all=true",
+      ];
+      for (const url of endpoints) {
+        try {
+          const res = await fetch(url, { signal: AbortSignal.timeout(3500) });
+          if (res.ok) {
+            const data = await res.json();
+            if (data.success && Array.isArray(data.data) && data.data.length > 0) {
+              if (isMounted) syncRiderDispatch(data.data);
+              break;
+            }
+          }
+        } catch {}
+      }
+    }
+
+    syncDispatch();
+    const interval = setInterval(syncDispatch, 3500);
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, [syncRiderDispatch]);
 
   // 6 Top Pipeline Status Tabs: ALL (Today), PENDING, PROCESSING, READY_FOR_PICKUP, COMPLETED, RETURNED
   const [activeTab, setActiveTab] = useState<string>("ALL");
@@ -434,59 +465,74 @@ export default function OrdersPage() {
                   </div>
                 </div>
 
-                {/* Assigned Rider Bar & Live Tracking Action */}
-                {(order.status === "READY_FOR_PICKUP" || order.status === "COMPLETED" || order.riderName) && (
-                  <div className="mt-3.5 p-3 rounded-xl bg-emerald-50/70 border border-emerald-200 text-xs flex flex-wrap items-center justify-between gap-2.5">
-                    <div className="flex items-center gap-2 text-emerald-900">
-                      <div className="w-8 h-8 rounded-lg bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-2xs">
-                        <Bike size={16} />
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-1.5">
-                          <strong className="text-slate-900">
-                            {order.riderName || "তানভীর আহমেদ (রাইডার #১০১)"}
-                          </strong>
-                          <span className="text-[10px] bg-emerald-100 text-emerald-800 px-1.5 py-0.2 rounded font-bold">
-                            {order.status === "READY_FOR_PICKUP" ? "পিকআপের পথে" : "ডেলিভার্ড"}
-                          </span>
+                {/* Assigned Rider Bar & Status Action */}
+                {(order.status === "READY_FOR_PICKUP" || order.status === "HANDED_TO_RIDER" || order.status === "COMPLETED" || order.riderName) && (() => {
+                  const isHandedOver = order.status === "HANDED_TO_RIDER" || order.status === "COMPLETED";
+                  const riderName = order.riderName || "তামীম ইকবাল (রাইডার #১০১)";
+                  const riderPhone = order.riderPhone || "01700000001";
+                  const riderVehicle = order.riderVehicle || "মোটরসাইকেল (ঢাকা মেট্রো-হ-৪৫-১২৩৪)";
+
+                  return (
+                    <div className="mt-3.5 p-3 rounded-xl bg-emerald-50/70 border border-emerald-200 text-xs flex flex-wrap items-center justify-between gap-2.5">
+                      <div className="flex items-center gap-2 text-emerald-900">
+                        <div className="w-8 h-8 rounded-lg bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-2xs">
+                          <Bike size={16} />
                         </div>
-                        <p className="text-[11px] text-slate-500">
-                          {order.riderVehicle || "হোন্ডা ড্রিম বাইক"} • {order.riderPhone || "01712-334455"}
-                        </p>
+                        <div>
+                          <div className="flex items-center gap-1.5">
+                            <strong className="text-slate-900">
+                              {riderName}
+                            </strong>
+                            <span className="text-[10px] bg-emerald-100 text-emerald-800 px-1.5 py-0.2 rounded font-bold">
+                              {order.status === "COMPLETED"
+                                ? "ডেলিভার্ড ✓"
+                                : isHandedOver
+                                ? "পার্সেল পিকআপ সম্পন্ন (ডেলিভারির পথে)"
+                                : "পিকআপের জন্য দোকানে আসার পথে"}
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-slate-500">
+                            {riderVehicle} • {riderPhone}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        {/* Order Tracking Button (Status Pipeline) */}
+                        <button
+                          onClick={() => setTrackingOrder(order)}
+                          className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all shadow-xs active:scale-95"
+                          title="অর্ডার ট্র্যাকিং ও স্ট্যাটাস দেখুন"
+                        >
+                          <Clock size={13} />
+                          <span>অর্ডার ট্র্যাকিং</span>
+                        </button>
+
+                        {/* Chat with Rider (ONLY visible BEFORE parcel pickup from vendor) */}
+                        {!isHandedOver && (
+                          <button
+                            onClick={() => setChatOrder(order)}
+                            className="px-3 py-1.5 bg-white hover:bg-emerald-50 text-emerald-800 border border-emerald-300 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all shadow-2xs"
+                            title="পার্সেল পিকআপের পূর্বে রাইডারের সাথে চ্যাট করুন"
+                          >
+                            <MessageCircle size={13} />
+                            <span>রাইডার চ্যাট</span>
+                          </button>
+                        )}
+
+                        {/* Direct Phone Call Button (Always active) */}
+                        <a
+                          href={`tel:${riderPhone}`}
+                          className="px-2.5 py-1.5 text-emerald-800 hover:text-emerald-900 bg-white hover:bg-emerald-50 rounded-lg border border-emerald-300 font-bold flex items-center gap-1 text-xs transition-colors shadow-2xs"
+                          title="রাইডারকে সরাসরি ফোন কল করুন"
+                        >
+                          <Phone size={13} className="text-emerald-600" />
+                          <span>কল দিন</span>
+                        </a>
                       </div>
                     </div>
-
-                    <div className="flex items-center gap-2">
-                      {/* Live Tracking Button for Vendor */}
-                      <button
-                        onClick={() => setTrackingOrder(order)}
-                        className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all shadow-xs active:scale-95"
-                        title="রাইডারের রিয়েল-টাইম লাইভ লোকেশন ও ম্যাপ ট্র্যাক করুন"
-                      >
-                        <Navigation size={13} className="animate-spin" />
-                        <span>লাইভ ট্র্যাক</span>
-                      </button>
-
-                      {/* Chat with Rider */}
-                      <button
-                        onClick={() => setChatOrder(order)}
-                        className="px-3 py-1.5 bg-white hover:bg-emerald-50 text-emerald-800 border border-emerald-300 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all shadow-2xs"
-                      >
-                        <MessageCircle size={13} />
-                        <span>রাইডার চ্যাট</span>
-                      </button>
-
-                      {/* Call Rider */}
-                      <a
-                        href={`tel:${order.riderPhone || "01712334455"}`}
-                        className="p-1.5 text-slate-600 hover:text-emerald-700 bg-white rounded-lg border border-slate-200 hover:border-emerald-300 transition-colors"
-                        title="রাইডারকে কল দিন"
-                      >
-                        <Phone size={13} />
-                      </a>
-                    </div>
-                  </div>
-                )}
+                  );
+                })()}
 
                 {/* Return Reason Banner (If status is RETURNED) */}
                 {order.status === "RETURNED" && (

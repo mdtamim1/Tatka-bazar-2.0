@@ -56,6 +56,7 @@ export default function TaskDetailPage() {
   const [task, setTask] = useState<ActiveTask | null>(null);
   const [loading, setLoading] = useState(true);
   const [isChatOpen, setIsChatOpen] = useState(false);
+  const [isVendorChatOpen, setIsVendorChatOpen] = useState(false);
 
   // Delivery Handover Modal & Customer OTP
   const [showConfirmModal, setShowConfirmModal] = useState(false);
@@ -119,9 +120,10 @@ export default function TaskDetailPage() {
   const totalBill = Number(task?.order.total ?? (subtotal + deliveryFee));
   const cashToCollect = isPaid ? 0 : totalBill;
 
-  // 1. Advance to Transit (Stage 1 -> 2)
+  // 1. Advance to Transit (Stage 1 -> 2: Parcel Picked Up from Vendor)
   async function startTransit() {
     if (!task) return;
+    setIsVendorChatOpen(false); // Close vendor chatbox upon picking up parcel from store
     setTransiting(true);
     const res = await apiFetch<ActiveTask>(`/rider-portal/tasks/${id}/transit`, { method: "POST" });
     if (res.success && res.data) {
@@ -944,9 +946,48 @@ export default function TaskDetailPage() {
                 📍 {task.order.deliveryAddress}
               </div>
             </div>
-            <div className="detail-info-item">
-              <div className="detail-info-label">দোকান / ভেন্ডর</div>
-              <div className="detail-info-value">🏪 {task.order.vendorName}</div>
+            <div className="detail-info-item" style={{ gridColumn: "1/-1" }}>
+              <div className="detail-info-label">দোকান ও ভেন্ডর যোগাযোগ</div>
+              <div className="detail-info-value" style={{ display: "flex", gap: "8px", alignItems: "center", flexWrap: "wrap", marginTop: 4 }}>
+                <span style={{ fontWeight: 800 }}>🏪 {task.order.vendorName || "সবুজ খামার গ্রোসারি"}</span>
+                <a
+                  href="tel:01711223344"
+                  style={{
+                    color: "var(--emerald)", display: "inline-flex",
+                    alignItems: "center", gap: 4, textDecoration: "none", fontWeight: 700,
+                    background: "rgba(0,214,143,0.12)", border: "1px solid rgba(0,214,143,0.3)",
+                    padding: "4px 10px", borderRadius: "6px", fontSize: ".76rem",
+                  }}
+                  title="ভেন্ডরকে সরাসরি কল করুন"
+                >
+                  📞 01711-223344 (কল দিন)
+                </a>
+                {!isOnTheWay ? (
+                  <button
+                    type="button"
+                    id="vendor-chat-btn"
+                    onClick={() => setIsVendorChatOpen(true)}
+                    style={{
+                      color: "#38bdf8", display: "inline-flex",
+                      alignItems: "center", gap: 4, fontWeight: 700,
+                      background: "rgba(56,189,248,0.12)", border: "1px solid rgba(56,189,248,0.3)",
+                      padding: "4px 10px", borderRadius: "6px", fontSize: ".76rem",
+                      cursor: "pointer", fontFamily: "var(--font-bn)",
+                    }}
+                    title="পার্সেল পিকআপের জন্য ভেন্ডরের সাথে চ্যাট করুন"
+                  >
+                    💬 ভেন্ডরের সাথে চ্যাট
+                  </button>
+                ) : (
+                  <span style={{
+                    fontSize: ".70rem", color: "#94a3b8",
+                    background: "rgba(148,163,184,0.1)", border: "1px solid rgba(148,163,184,0.2)",
+                    padding: "3px 8px", borderRadius: "6px", fontWeight: 600,
+                  }}>
+                    🔒 পার্সেল রিসিভ সম্পন্ন (চ্যাট বন্ধ — প্রয়োজনে সরাসরি ফোনে কথা বলুন)
+                  </span>
+                )}
+              </div>
             </div>
             <div className="detail-info-item">
               <div className="detail-info-label">{isReturning || isRequested ? "রিটার্ন ট্রিপ ভাতা" : "আপনার ডেলিভারি আয়"}</div>
@@ -1275,6 +1316,17 @@ export default function TaskDetailPage() {
             defaultChannel="CUSTOMER"
             taskId={id as string}
             customerName={task.order.customerName}
+          />
+        )}
+
+        {/* Vendor In-App Chat Modal (Active strictly BEFORE parcel pickup from store) */}
+        {task && !isOnTheWay && (
+          <ChatModal
+            isOpen={isVendorChatOpen}
+            onClose={() => setIsVendorChatOpen(false)}
+            defaultChannel="SUPPORT"
+            taskId="task-01"
+            customerName={task.order.vendorName || "সবুজ খামার গ্রোসারি (ভেন্ডর)"}
           />
         )}
       </div>
