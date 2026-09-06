@@ -34,6 +34,7 @@ export default function OrdersPage() {
     language,
     orders,
     updateOrderStatus,
+    reconcileItemWeight,
     acceptOrder,
     declineOrder,
     setChatOrder,
@@ -617,11 +618,9 @@ export default function OrdersPage() {
                       <button
                         onClick={() => {
                           if (unweighedItem) {
-                            setActiveWeightOrderId(order.id);
-                            setActiveWeightItemId(unweighedItem.id);
-                          } else {
-                            updateOrderStatus(order.id, "READY_FOR_PICKUP");
+                            reconcileItemWeight(order.id, unweighedItem.id, unweighedItem.weightOrdered || 1.0);
                           }
+                          updateOrderStatus(order.id, "READY_FOR_PICKUP");
                         }}
                         className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold flex items-center gap-1.5 shadow-xs transition-all active:scale-95"
                       >

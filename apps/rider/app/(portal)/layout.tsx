@@ -111,6 +111,10 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
               if (t.orderNumber) seenTaskIdsRef.current.add(t.orderNumber);
             });
             initialLoadRef.current = false;
+            // If there are pending ready tasks waiting and rider is ONLINE, alert immediately!
+            if (taskList.length > 0 && getDutyStatus() === "ONLINE" && !incomingOrder && taskList[0]) {
+              showIncomingOrder(taskList[0]);
+            }
             return;
           }
 
