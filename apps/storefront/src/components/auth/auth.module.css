@@ -1,0 +1,367 @@
+/* =============================================================================
+   Tatka Bazar — Minimal Shadcn Auth Styles (Images 2, 3, 4)
+   Aesthetic: Ultra-clean, modern, light background, crisp card, sharp inputs
+   ============================================================================= */
+
+.container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 16px;
+  background-color: #f8fafc;
+  font-family: var(--font-body, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif);
+}
+
+.brandLogo {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  margin-bottom: 28px;
+  transition: opacity 0.2s;
+}
+
+.brandLogo:hover {
+  opacity: 0.9;
+}
+
+.logoIcon {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  background: #0f172a;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.logoText {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: #0f172a;
+  letter-spacing: -0.03em;
+}
+
+.logoDot {
+  color: #10b981;
+}
+
+.card {
+  width: 100%;
+  max-width: 440px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 36px 32px;
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.04), 0 2px 6px -1px rgba(0, 0, 0, 0.02);
+}
+
+.title {
+  font-size: 1.55rem;
+  font-weight: 700;
+  color: #0f172a;
+  text-align: center;
+  margin: 0 0 24px 0;
+  letter-spacing: -0.02em;
+}
+
+.subtitle {
+  font-size: 0.88rem;
+  color: #64748b;
+  text-align: center;
+  margin: -16px 0 24px 0;
+  line-height: 1.55;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  text-align: left;
+}
+
+.labelRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.label {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.forgotLink {
+  font-size: 0.82rem;
+  color: #64748b;
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.15s;
+}
+
+.forgotLink:hover {
+  color: #0f172a;
+  text-decoration: underline;
+}
+
+.inputWrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 0.92rem;
+  color: #0f172a;
+  background: #ffffff;
+  transition: all 0.15s ease;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.input:focus {
+  border-color: #0f172a;
+  box-shadow: 0 0 0 2px rgba(15, 23, 42, 0.08);
+}
+
+.input::placeholder {
+  color: #94a3b8;
+}
+
+.eyeBtn {
+  position: absolute;
+  right: 12px;
+  background: none;
+  border: none;
+  color: #94a3b8;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s;
+}
+
+.eyeBtn:hover {
+  color: #0f172a;
+}
+
+.checkboxLabel {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 0.82rem;
+  color: #475569;
+  line-height: 1.45;
+  cursor: pointer;
+  user-select: none;
+}
+
+.checkboxInput {
+  margin-top: 3px;
+  width: 16px;
+  height: 16px;
+  accent-color: #0f172a;
+  cursor: pointer;
+}
+
+.primaryBtn {
+  width: 100%;
+  padding: 12px 16px;
+  background: #0f172a;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.92rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.primaryBtn:hover:not(:disabled) {
+  background: #1e293b;
+  transform: translateY(-1px);
+}
+
+.primaryBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.divider {
+  display: flex;
+  align-items: center;
+  margin: 20px 0 16px 0;
+  color: #94a3b8;
+  font-size: 0.78rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.divider::before,
+.divider::after {
+  content: "";
+  flex: 1;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.divider span {
+  padding: 0 12px;
+}
+
+.googleBtn {
+  width: 100%;
+  padding: 10px 16px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  color: #0f172a;
+  font-size: 0.9rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.googleBtn:hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+}
+
+.googleIcon {
+  width: 18px;
+  height: 18px;
+}
+
+.footerText {
+  text-align: center;
+  margin-top: 24px;
+  font-size: 0.88rem;
+  color: #64748b;
+}
+
+.footerLink {
+  color: #0f172a;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  transition: color 0.15s;
+}
+
+.footerLink:hover {
+  color: #10b981;
+}
+
+/* ── OTP 6-Digit Split Boxes (Image 4) ── */
+.otpRow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin: 16px 0 24px 0;
+}
+
+.otpGroup {
+  display: flex;
+  gap: 8px;
+}
+
+.otpInput {
+  width: 46px;
+  height: 52px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: 1.45rem;
+  font-weight: 700;
+  text-align: center;
+  color: #0f172a;
+  background: #ffffff;
+  transition: all 0.15s ease;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.otpInput:focus {
+  border-color: #0f172a;
+  box-shadow: 0 0 0 2px rgba(15, 23, 42, 0.1);
+  background: #f8fafc;
+}
+
+.otpDash {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #94a3b8;
+  user-select: none;
+  margin: 0 4px;
+}
+
+.demoOtpPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px dashed rgba(16, 185, 129, 0.4);
+  color: #059669;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  margin-bottom: 20px;
+  transition: all 0.15s;
+}
+
+.demoOtpPill:hover {
+  background: rgba(16, 185, 129, 0.18);
+  border-color: #10b981;
+  transform: scale(1.02);
+}
+
+.errorBanner {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #dc2626;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 0.84rem;
+  font-weight: 600;
+  text-align: left;
+  margin-bottom: 12px;
+}
+
+.successBanner {
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  color: #059669;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 0.84rem;
+  font-weight: 600;
+  text-align: left;
+  margin-bottom: 12px;
+}

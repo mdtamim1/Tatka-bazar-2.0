@@ -1,8 +1,13 @@
 "use client";
 import React, { useEffect, useState, useRef } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { apiFetch, getDutyStatus, setDutyStatus, type RiderNotification, type Task } from "@/lib/api";
+import { apiFetch, getDutyStatus, setDutyStatus, startGPSBroadcast, stopGPSBroadcast, getRiderActiveSos, resolveSosAlert, type RiderNotification, type Task, type SosAlert } from "@/lib/api";
+
 import { sound } from "@/lib/sound";
+import { ChatModal } from "@/components/ChatModal";
+import { SosModal } from "@/components/SosModal";
+import { PwaPrompt } from "@/components/PwaPrompt";
+import { subscribeSyncEvent } from "@/lib/sync";
 
 function HomeIcon()   { return <svg fill="none" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>; }
 function TaskIcon()   { return <svg fill="none" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" /></svg>; }
@@ -17,27 +22,77 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
   const pathname = usePathname();
   const router = useRouter();
   const [riderName, setRiderName] = useState("");
+  const [riderId, setRiderId] = useState("rider-demo-01");
   const [taskCount, setTaskCount] = useState(0);
   const [unreadCount, setUnreadCount] = useState(0);
   const [duty, setDuty] = useState<"ONLINE" | "OFFLINE">("ONLINE");
+  const [gpsActive, setGpsActive] = useState(false);
   const [incomingOrder, setIncomingOrder] = useState<Task | null>(null);
   const [countdown, setCountdown] = useState<number>(TOTAL_COUNTDOWN);
   const countdownTimerRef = useRef<any>(null);
+
+  // Real-time Sync state
+  const [syncNotice, setSyncNotice] = useState<string | null>(null);
+
+  // Safety & Communication States
+  const [activeSos, setActiveSos] = useState<SosAlert | null>(null);
+  const [isSosModalOpen, setIsSosModalOpen] = useState(false);
+  const [isChatModalOpen, setIsChatModalOpen] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem("rider_token");
     if (!token) { router.replace("/login"); return; }
     const user = localStorage.getItem("rider_user");
+    let rId = "rider-demo-01", rName = "রাইডার";
     if (user) {
-      try { setRiderName(JSON.parse(user).name?.split(" ")[0] || ""); } catch {}
+      try {
+        const parsed = JSON.parse(user);
+        rName = parsed.name?.split(" ")[0] || "";
+        rId = parsed.id || "rider-demo-01";
+      } catch {}
     }
-    setDuty(getDutyStatus());
+    setRiderName(rName);
+    setRiderId(rId);
+    const currentDuty = getDutyStatus();
+    setDuty(currentDuty);
+
+    // Initial check for active SOS
+    setActiveSos(getRiderActiveSos(rId));
+
+    // Auto-start GPS if ONLINE on page load
+    if (currentDuty === "ONLINE") {
+      startGPSBroadcast(rId, rName);
+      setGpsActive(true);
+    }
 
     const handleDutyChange = (e: any) => {
       if (e.detail?.status) setDuty(e.detail.status);
     };
+
+    const handleSosChange = () => {
+      setActiveSos(getRiderActiveSos(rId));
+    };
+
+    const unsubscribeSync = subscribeSyncEvent((payload) => {
+      if (payload.type === "DEPOSIT_APPROVED") {
+        sound.playSuccessChime();
+        setSyncNotice(payload.message || `⚡ অ্যাডমিন কর্তৃক ৳ ${payload.amount || ""} ডিপোজিট অনুমোদিত হয়েছে!`);
+        setTimeout(() => setSyncNotice(null), 5000);
+      } else if (payload.type === "CANCELLATION_APPROVED") {
+        sound.playSuccessChime();
+        setSyncNotice("⚡ ক্যানসেল অনুরোধ অনুমোদিত হয়েছে — পণ্য সেলারের কাছে ফেরত দিন।");
+        setTimeout(() => setSyncNotice(null), 5000);
+      }
+    });
+
     window.addEventListener("rider_duty_change", handleDutyChange);
-    return () => window.removeEventListener("rider_duty_change", handleDutyChange);
+    window.addEventListener("tatka_sos_alert_change", handleSosChange);
+    return () => {
+      window.removeEventListener("rider_duty_change", handleDutyChange);
+      window.removeEventListener("tatka_sos_alert_change", handleSosChange);
+      unsubscribeSync();
+      stopGPSBroadcast();
+    };
   }, [router]);
 
   // Poll tasks
@@ -82,7 +137,8 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
   function toggleDuty() {
     const next = duty === "ONLINE" ? "OFFLINE" : "ONLINE";
     setDuty(next);
-    setDutyStatus(next);
+    setDutyStatus(next); // this also calls startGPSBroadcast / stopGPSBroadcast
+    setGpsActive(next === "ONLINE");
     apiFetch("/rider-portal/duty-status", { method: "POST", body: JSON.stringify({ status: next }) });
     if (next === "OFFLINE") {
       dismissIncomingOrder();
@@ -146,6 +202,11 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
     showIncomingOrder(demoTask);
   }
 
+  function handleResolveSos() {
+    resolveSosAlert(riderId);
+    setActiveSos(null);
+  }
+
   const nav = [
     { href: "/home", label: "হোম", icon: <HomeIcon /> },
     { href: "/tasks", label: "টাস্ক", icon: <TaskIcon />, badge: taskCount },
@@ -155,6 +216,55 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
 
   return (
     <div className="app-shell">
+      {/* PWA Installation Prompt & Offline Detector */}
+      <PwaPrompt />
+
+      {/* Real-time Sync Flash Toast */}
+      {syncNotice && (
+        <div
+          style={{
+            position: "fixed",
+            top: "16px",
+            left: "50%",
+            transform: "translateX(-50%)",
+            background: "linear-gradient(135deg, #00d68f 0%, #059669 100%)",
+            color: "#051322",
+            fontWeight: 800,
+            fontSize: ".78rem",
+            padding: "8px 20px",
+            borderRadius: "999px",
+            boxShadow: "0 6px 24px rgba(0,214,143,.5)",
+            zIndex: 10001,
+            fontFamily: "var(--font-bn)",
+            display: "flex",
+            alignItems: "center",
+            gap: "8px",
+            animation: "fadeIn 0.2s ease-out",
+          }}
+        >
+          <span>⚡</span>
+          <span>{syncNotice}</span>
+        </div>
+      )}
+
+      {/* Active SOS Emergency Banner */}
+      {activeSos && (
+        <div className="sos-active-strip">
+          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            <span style={{ fontSize: "1.15rem" }}>🚨</span>
+            <span>বিপদ সংকেত সক্রিয় — কন্ট্রোল রুম লাইভ ট্র্যাক করছে</span>
+          </div>
+          <button
+            id="sos-resolve-btn"
+            className="sos-resolve-btn"
+            onClick={handleResolveSos}
+            title="বিপদ সংকেত সম্পন্ন করুন"
+          >
+            ✅ আমি এখন নিরাপদ
+          </button>
+        </div>
+      )}
+
       <header className="top-header">
         <div className="header-logo">
           <div className="header-logo-mark">🛵</div>
@@ -164,6 +274,41 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
           </div>
         </div>
         <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          {/* Emergency SOS Button */}
+          <button
+            id="sos-header-btn"
+            type="button"
+            className="sos-header-btn"
+            onClick={() => setIsSosModalOpen(true)}
+            title="জরুরি এসওএস বিপদ সংকেত"
+          >
+            🚨 SOS
+          </button>
+
+          {/* Central Support Chat Button */}
+          <button
+            id="support-chat-btn"
+            type="button"
+            onClick={() => setIsChatModalOpen(true)}
+            className="support-btn"
+            style={{
+              background: "rgba(0, 214, 143, 0.12)",
+              border: "1px solid rgba(0, 214, 143, 0.35)",
+              color: "#00d68f",
+              cursor: "pointer",
+              padding: "5px 10px",
+              borderRadius: "999px",
+              fontSize: ".72rem",
+              fontWeight: 700,
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 4,
+            }}
+            title="তাতকা সেন্ট্রাল সাপোর্ট চ্যাট"
+          >
+            💬 সাপোর্ট
+          </button>
+
           <button
             id="notifications-btn"
             aria-label="নোটিফিকেশন"
@@ -207,11 +352,11 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
               </span>
             )}
           </button>
-          <a href="tel:+8801700000000" className="support-btn"><PhoneIcon />সাপোর্ট</a>
+          <a href="tel:+8801700000000" className="support-btn"><PhoneIcon />কল</a>
         </div>
       </header>
 
-      {/* Duty Status Bar (Online/Offline Switch + Sound Test) */}
+      {/* Duty Status Bar (Online/Offline Switch + GPS Indicator + Sound Test) */}
       <div className="duty-switch-bar">
         <div className="duty-toggle-group">
           <div
@@ -226,6 +371,28 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
               {duty === "ONLINE" ? "• টগল" : "• চালু করুন"}
             </span>
           </div>
+          {/* GPS Live Indicator */}
+          {duty === "ONLINE" && (
+            <div
+              title="লাইভ GPS ট্র্যাকিং সক্রিয় — অ্যাডমিন আপনার লোকেশন দেখতে পাচ্ছেন"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 5,
+                padding: "4px 10px",
+                borderRadius: 999,
+                background: "rgba(0, 214, 143, 0.1)",
+                border: "1px solid rgba(0, 214, 143, 0.35)",
+                fontSize: ".68rem",
+                fontWeight: 700,
+                color: "#00d68f",
+                animation: "gps-blink 2s ease-in-out infinite",
+              }}
+            >
+              <span style={{ fontSize: 10 }}>📡</span>
+              <span>GPS LIVE</span>
+            </div>
+          )}
         </div>
 
         <button
@@ -406,6 +573,26 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
           </button>
         ))}
       </nav>
+
+      {/* Emergency SOS Modal */}
+      <SosModal
+        isOpen={isSosModalOpen}
+        onClose={() => setIsSosModalOpen(false)}
+        riderId={riderId}
+        riderName={riderName || "রাইডার"}
+        riderPhone="01812345678"
+        onSosTriggered={() => {
+          setActiveSos(getRiderActiveSos(riderId));
+        }}
+      />
+
+      {/* Central Support Chat Modal */}
+      <ChatModal
+        isOpen={isChatModalOpen}
+        onClose={() => setIsChatModalOpen(false)}
+        defaultChannel="SUPPORT"
+        riderName={riderName || "রাইডার"}
+      />
     </div>
   );
 }

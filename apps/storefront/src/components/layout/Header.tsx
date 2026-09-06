@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
-  Heart, Menu, X, Search, ChevronDown, ShoppingBag, Truck
+  Heart, Menu, X, Search, ChevronDown, ShoppingBag, Truck, User
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLanguage } from "@/context/LanguageContext";
@@ -268,6 +268,16 @@ export const Header = () => {
               </AnimatePresence>
             </div>
 
+            {/* User Account / Profile Link */}
+            <Link
+              href="/account"
+              className="relative p-2.5 hover:bg-accent transition-colors duration-300 group rounded-full text-foreground"
+              aria-label="My Account"
+              title="My Account"
+            >
+              <User className="w-5 h-5 transition-transform duration-300 group-hover:scale-110" />
+            </Link>
+
             {/* Shopping Bag Cart Icon */}
             <CartIcon />
 
@@ -340,6 +350,7 @@ export const Header = () => {
 
                 <div className="pt-4 border-t border-border space-y-1">
                   {[
+                    { href: "/account", label: locale === "bn" ? "আমার অ্যাকাউন্ট" : "My Account" },
                     { href: "/track", label: locale === "bn" ? "অর্ডার ট্র্যাক" : "Track Order" },
                     { href: "/shop", label: locale === "bn" ? "সব পণ্য" : "Shop All" },
                     { href: "/recipes", label: locale === "bn" ? "রেসিপি" : "Recipes" },

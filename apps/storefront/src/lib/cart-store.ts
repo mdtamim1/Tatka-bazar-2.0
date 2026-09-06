@@ -17,6 +17,11 @@ const VALID_COUPONS: Record<string, Coupon> = {
   WELCOME10: { code: "WELCOME10", discountPercent: 10, minOrder: 300 },
   TATKA50: { code: "TATKA50", fixedDiscount: 50, minOrder: 500 },
   FRESH100: { code: "FRESH100", fixedDiscount: 100, minOrder: 1000 },
+  TATKA10: { code: "TATKA10", discountPercent: 10, minOrder: 500 },
+  FREESHIP: { code: "FREESHIP", fixedDiscount: 60, minOrder: 800 },
+  EIDVIBES: { code: "EIDVIBES", fixedDiscount: 150, minOrder: 1500 },
+  WELCOME50: { code: "WELCOME50", fixedDiscount: 50, minOrder: 300 },
+  "TATKA-REDEEM-50": { code: "TATKA-REDEEM-50", fixedDiscount: 50, minOrder: 300 },
 };
 
 interface CartState {

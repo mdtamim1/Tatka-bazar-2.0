@@ -509,55 +509,23 @@ function CheckoutContent() {
     setGpsSuccess(false);
 
     navigator.geolocation.getCurrentPosition(
-      async (pos) => {
+      (pos) => {
         const lat = pos.coords.latitude;
         const lng = pos.coords.longitude;
         setMapCenter({ lat, lng });
-
-        try {
-          const res = await fetch(
-            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&accept-language=en`
-          );
-          const data = await res.json();
-          const addr = data.address || {};
-
-          setDeliveryAddress((prev) => ({
-            ...prev,
-            district:
-              addr.county ||
-              addr.city_district ||
-              addr.state_district ||
-              addr.city ||
-              prev.district,
-            thana:
-              addr.suburb ||
-              addr.neighbourhood ||
-              addr.town ||
-              addr.village ||
-              prev.thana,
-            village: addr.road || addr.quarter || prev.village,
-            address: data.display_name
-              ? data.display_name.split(",").slice(0, 2).join(", ")
-              : prev.address,
-          }));
-          setGpsSuccess(true);
-        } catch {
-          setGpsError(
-            locale === "bn"
-              ? "ঠিকানা খুঁজে পাওয়া যায়নি।"
-              : "Could not fetch address from location."
-          );
-        }
+        setPinnedLocation({ lat, lng });
+        setGpsSuccess(true);
         setGpsLoading(false);
       },
       (err) => {
         setGpsLoading(false);
         setGpsError(
           locale === "bn"
-            ? "লোকেশন অ্যাক্সেস অনুমতি দিন।"
-            : "Please allow location access in your browser."
+            ? "লোকেশন অনুমতি দিন (অথবা নিচে ঠিকানা লিখুন)।"
+            : "Please allow location access (or type address below)."
         );
-      }
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
     );
   };
 
@@ -915,24 +883,47 @@ function CheckoutContent() {
                     <div className="delivery-mode-toggle">
                       <button
                         type="button"
-                        onClick={() => setDeliveryMode("self")}
+                        onClick={() => {
+                          setDeliveryMode("self");
+                          handleUseCurrentLocation();
+                        }}
                         className={cn(
                           "delivery-mode-btn",
                           deliveryMode === "self" && "delivery-mode-btn-active"
                         )}
                       >
-                        <Navigation className="w-4 h-4 shrink-0" />
-                        <div className="text-left">
+                        {gpsLoading ? (
+                          <Loader2 className="w-4 h-4 shrink-0 text-primary animate-spin" />
+                        ) : gpsSuccess && deliveryMode === "self" ? (
+                          <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-500" />
+                        ) : (
+                          <Navigation className="w-4 h-4 shrink-0" />
+                        )}
+                        <div className="text-left flex-1 min-w-0">
                           <p className="font-semibold text-sm">
                             {locale === "bn"
                               ? "আমার কাছে ডেলিভারি"
                               : "Deliver to Me"}
                           </p>
-                          <p className="text-[11px] opacity-75 mt-0.5">
-                            {locale === "bn"
-                              ? "GPS দিয়ে আমার বর্তমান অবস্থান সেট করুন"
-                              : "Use GPS to auto-fill my current location"}
+                          <p className="text-[11px] opacity-75 mt-0.5 leading-snug">
+                            {gpsLoading
+                              ? locale === "bn"
+                                ? "📡 জিপিএস লোকেশন নেওয়া হচ্ছে..."
+                                : "📡 Capturing GPS location..."
+                              : gpsSuccess && deliveryMode === "self"
+                              ? locale === "bn"
+                                ? "✅ GPS লোকেশন পিন হয়েছে (নিচে ঠিকানা লিখুন)"
+                                : "✅ GPS location pinned (fill address below)"
+                              : locale === "bn"
+                              ? "GPS লোকেশন পিন করুন (নিচে ঠিকানা লিখুন)"
+                              : "Capture GPS location (fill address below)"}
                           </p>
+                          {gpsError && deliveryMode === "self" && (
+                            <p className="text-[10px] text-rose-500 mt-1 flex items-center gap-1 font-medium">
+                              <Info className="w-3 h-3 shrink-0" />
+                              {gpsError}
+                            </p>
+                          )}
                         </div>
                         {deliveryMode === "self" && (
                           <div className="delivery-mode-check">
@@ -950,13 +941,13 @@ function CheckoutContent() {
                         )}
                       >
                         <Map className="w-4 h-4 shrink-0" />
-                        <div className="text-left">
+                        <div className="text-left flex-1 min-w-0">
                           <p className="font-semibold text-sm">
                             {locale === "bn"
                               ? "অন্য ঠিকানায় ডেলিভারি"
                               : "Deliver to Another Location"}
                           </p>
-                          <p className="text-[11px] opacity-75 mt-0.5">
+                          <p className="text-[11px] opacity-75 mt-0.5 leading-snug">
                             {locale === "bn"
                               ? "ম্যাপে পিন করে সঠিক লোকেশন দিন"
                               : "Pin the exact location on the map"}
@@ -970,66 +961,7 @@ function CheckoutContent() {
                       </button>
                     </div>
 
-                    {/* ── GPS Button (self mode) ── */}
                     <AnimatePresence>
-                      {deliveryMode === "self" && (
-                        <motion.div
-                          initial={{ opacity: 0, height: 0 }}
-                          animate={{ opacity: 1, height: "auto" }}
-                          exit={{ opacity: 0, height: 0 }}
-                          transition={{ duration: 0.2 }}
-                        >
-                          <button
-                            type="button"
-                            onClick={handleUseCurrentLocation}
-                            disabled={gpsLoading}
-                            className={cn(
-                              "gps-btn",
-                              gpsSuccess && "gps-btn-success",
-                              gpsLoading && "gps-btn-loading"
-                            )}
-                          >
-                            {gpsLoading ? (
-                              <Loader2 className="w-5 h-5 animate-spin" />
-                            ) : gpsSuccess ? (
-                              <CheckCircle2 className="w-5 h-5" />
-                            ) : (
-                              <Navigation className="w-5 h-5" />
-                            )}
-                            <div className="text-left">
-                              <p className="font-semibold text-sm">
-                                {gpsLoading
-                                  ? locale === "bn"
-                                    ? "লোকেশন খুঁজছি..."
-                                    : "Getting location..."
-                                  : gpsSuccess
-                                  ? locale === "bn"
-                                    ? "✅ লোকেশন পেয়েছি!"
-                                    : "✅ Location found!"
-                                  : locale === "bn"
-                                  ? "আমার বর্তমান লোকেশন ব্যবহার করুন"
-                                  : "Use My Current Location"}
-                              </p>
-                              <p className="text-[11px] opacity-75 mt-0.5">
-                                {gpsSuccess
-                                  ? locale === "bn"
-                                    ? "নিচে ঠিকানাটি দেখুন ও প্রয়োজনে পরিবর্তন করুন"
-                                    : "Address auto-filled below. Edit if needed."
-                                  : locale === "bn"
-                                  ? "GPS থেকে ঠিকানা স্বয়ংক্রিয়ভাবে পূরণ হবে"
-                                  : "Auto-fill address from GPS"}
-                              </p>
-                            </div>
-                          </button>
-                          {gpsError && (
-                            <p className="text-xs text-rose-500 mt-2 flex items-center gap-1.5">
-                              <Info className="w-3.5 h-3.5 shrink-0" />
-                              {gpsError}
-                            </p>
-                          )}
-                        </motion.div>
-                      )}
-
                       {/* ── Leaflet Map (other mode) ── */}
                       {deliveryMode === "other" && (
                         <motion.div

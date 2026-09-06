@@ -742,3 +742,469 @@ input,textarea,select{font-family:inherit;}
   box-shadow: 0 0 20px rgba(0, 214, 143, 0.4);
 }
 
+/* =============================================================================
+   GPS Indicator & Customer Location Map — Rider Portal
+   ============================================================================= */
+
+@keyframes gps-blink {
+  0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(0, 214, 143, 0); }
+  50%       { opacity: 0.75; box-shadow: 0 0 0 4px rgba(0, 214, 143, 0.2); }
+}
+
+@keyframes map-pin-pulse {
+  0%   { transform: scale(0.6); opacity: 0.9; }
+  100% { transform: scale(2.2); opacity: 0; }
+}
+
+/* Customer Location Map Card */
+.customer-map-card {
+  background: var(--bg-card);
+  border: 1.5px solid rgba(0, 214, 143, 0.25);
+  border-radius: var(--r-md);
+  overflow: hidden;
+}
+
+.customer-map-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border-1);
+  background: rgba(0, 214, 143, 0.05);
+}
+
+.customer-map-canvas {
+  width: 100%;
+  height: 240px;
+}
+
+.customer-map-footer {
+  padding: 12px 16px;
+  border-top: 1px solid var(--border-1);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.customer-map-address {
+  font-size: .80rem;
+  color: var(--text-2);
+  font-family: var(--font-bn);
+  line-height: 1.5;
+}
+
+.nav-btn-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.nav-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 12px;
+  border-radius: var(--r-sm);
+  font-size: .80rem;
+  font-weight: 700;
+  font-family: var(--font-bn);
+  cursor: pointer;
+  text-decoration: none;
+  transition: opacity .15s, transform .15s;
+  border: none;
+}
+
+.nav-btn:active { transform: scale(0.97); opacity: 0.85; }
+
+.nav-btn-google {
+  background: linear-gradient(135deg, #4285F4, #34A853);
+  color: #fff;
+}
+
+.nav-btn-waze {
+  background: linear-gradient(135deg, #00D0FF, #0094CC);
+  color: #fff;
+}
+
+/* Leaflet dark overrides for rider portal */
+.customer-map-canvas .leaflet-container {
+  background: #0D1929;
+  font-family: var(--font);
+}
+
+/* Rider Map Pin */
+.rider-map-pin-wrap {
+  position: relative;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.rider-map-pin-pulse {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: rgba(0, 214, 143, 0.25);
+  animation: map-pin-pulse 1.8s ease-out infinite;
+}
+
+.rider-map-pin-dot {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #00D68F;
+  border: 3px solid #fff;
+  box-shadow: 0 2px 10px rgba(0, 214, 143, 0.6);
+  position: relative;
+  z-index: 1;
+}
+
+.customer-map-pin-dot {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #FF6B2B;
+  border: 3px solid #fff;
+  box-shadow: 0 2px 10px rgba(255, 107, 43, 0.6);
+}
+
+/* ── Emergency SOS & Safety Styles ────────────────────────────────────────── */
+
+@keyframes sos-glow {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.6), 0 0 12px rgba(239, 68, 68, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgba(239, 68, 68, 0), 0 0 24px rgba(239, 68, 68, 0.8);
+  }
+}
+
+@keyframes sos-pulse-border {
+  0%, 100% {
+    border-color: rgba(239, 68, 68, 0.7);
+  }
+  50% {
+    border-color: rgba(239, 68, 68, 1);
+  }
+}
+
+.sos-header-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);
+  border: 1px solid #f87171;
+  color: #ffffff;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: .74rem;
+  font-weight: 800;
+  cursor: pointer;
+  animation: sos-glow 2s ease-in-out infinite;
+  letter-spacing: .02em;
+  transition: transform 0.15s;
+}
+
+.sos-header-btn:hover {
+  transform: scale(1.05);
+}
+
+.sos-active-strip {
+  background: linear-gradient(90deg, #7f1d1d 0%, #dc2626 50%, #7f1d1d 100%);
+  color: #fff;
+  padding: 8px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-family: var(--font-bn);
+  font-size: .78rem;
+  font-weight: 700;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  animation: sos-pulse-border 1.5s infinite;
+}
+
+.sos-resolve-btn {
+  background: #ffffff;
+  color: #b91c1c;
+  border: none;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: .70rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.sos-resolve-btn:hover {
+  opacity: 0.9;
+}
+
+/* ── Ratings & Performance Tier Styles ────────────────────────────────────── */
+
+.home-tier-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(135deg, rgba(56, 189, 248, 0.12) 0%, rgba(168, 85, 247, 0.12) 100%);
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  border-radius: 999px;
+  padding: 6px 14px;
+  color: #38bdf8;
+  font-size: .74rem;
+  font-weight: 700;
+  font-family: var(--font-bn);
+  margin-bottom: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 2px 10px rgba(56, 189, 248, 0.15);
+}
+
+.home-tier-pill:hover {
+  transform: translateY(-1px);
+  border-color: rgba(56, 189, 248, 0.6);
+  box-shadow: 0 4px 14px rgba(56, 189, 248, 0.25);
+}
+
+.tier-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: .76rem;
+  font-weight: 800;
+  letter-spacing: .02em;
+}
+
+.tier-platinum {
+  background: linear-gradient(135deg, rgba(34, 211, 238, 0.2) 0%, rgba(192, 132, 252, 0.2) 100%);
+  border: 1.5px solid #38bdf8;
+  color: #38bdf8;
+  box-shadow: 0 0 12px rgba(56, 189, 248, 0.3);
+}
+
+.tier-gold {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.2) 0%, rgba(251, 191, 36, 0.2) 100%);
+  border: 1.5px solid #f59e0b;
+  color: #fbbf24;
+  box-shadow: 0 0 12px rgba(245, 158, 11, 0.3);
+}
+
+.tier-silver {
+  background: linear-gradient(135deg, rgba(148, 163, 184, 0.2) 0%, rgba(203, 213, 225, 0.2) 100%);
+  border: 1.5px solid #94a3b8;
+  color: #e2e8f0;
+}
+
+.tier-bronze {
+  background: linear-gradient(135deg, rgba(180, 83, 9, 0.2) 0%, rgba(217, 119, 6, 0.2) 100%);
+  border: 1.5px solid #d97706;
+  color: #f59e0b;
+}
+
+.perf-dashboard-card {
+  background: var(--bg-raised);
+  border: 1px solid var(--border-1);
+  border-radius: var(--r-lg);
+  padding: 20px 18px;
+  margin-top: 18px;
+}
+
+.perf-metric-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin: 14px 0;
+}
+
+.perf-metric-item {
+  background: var(--bg-base);
+  border: 1px solid var(--border-1);
+  border-radius: var(--r-md);
+  padding: 12px;
+  text-align: center;
+}
+
+.perf-metric-val {
+  font-size: 1.3rem;
+  font-weight: 900;
+  color: var(--text-1);
+  margin-bottom: 2px;
+}
+
+.perf-metric-lbl {
+  font-size: .68rem;
+  color: var(--text-3);
+  font-family: var(--font-bn);
+  font-weight: 600;
+}
+
+.star-bar-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: .72rem;
+  color: var(--text-2);
+  margin-bottom: 6px;
+}
+
+.star-bar-track {
+  flex: 1;
+  height: 6px;
+  background: var(--bg-base);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.star-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #f59e0b, #fbbf24);
+  border-radius: 999px;
+}
+
+.review-item-card {
+  background: var(--bg-base);
+  border: 1px solid var(--border-1);
+  border-radius: var(--r-md);
+  padding: 12px 14px;
+  margin-bottom: 10px;
+}
+
+/* =============================================================================
+   Today Order Status Column & Last 30 Days Performance Module
+   ============================================================================= */
+
+.status-column-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 6px 2px 12px 2px;
+  margin-bottom: 4px;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.status-column-bar::-webkit-scrollbar {
+  display: none;
+}
+
+.status-tab-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-2);
+  color: var(--text-2);
+  font-size: .78rem;
+  font-weight: 700;
+  font-family: var(--font-bn);
+  white-space: nowrap;
+  cursor: pointer;
+  transition: all .2s var(--ease);
+  flex-shrink: 0;
+}
+
+.status-tab-btn:hover {
+  background: var(--bg-hover);
+  border-color: var(--border-3);
+  color: var(--text-1);
+}
+
+.status-tab-btn.active {
+  background: linear-gradient(135deg, var(--orange), var(--orange-dim));
+  border-color: var(--orange);
+  color: #ffffff;
+  box-shadow: 0 4px 14px var(--orange-glow);
+}
+
+.status-tab-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  font-size: .66rem;
+  font-weight: 800;
+  background: rgba(255, 255, 255, 0.15);
+  color: inherit;
+}
+
+.status-tab-btn.active .status-tab-badge {
+  background: #ffffff;
+  color: var(--orange-dim);
+}
+
+.completed-card {
+  background: var(--bg-card);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  border-left: 4px solid var(--emerald);
+  border-radius: var(--r-lg);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  animation: slide-in .3s var(--ease) both;
+}
+
+.returned-card {
+  background: var(--bg-card);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  border-left: 4px solid var(--red);
+  border-radius: var(--r-lg);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  animation: slide-in .3s var(--ease) both;
+}
+
+.thirty-days-module {
+  background: linear-gradient(135deg, #09172c 0%, #0d223f 100%);
+  border: 1px solid rgba(0, 214, 143, 0.25);
+  border-radius: var(--r-xl);
+  padding: 20px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4), 0 0 30px rgba(0, 214, 143, 0.08);
+}
+
+.thirty-days-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+.thirty-metric-card {
+  background: rgba(13, 25, 41, 0.7);
+  border: 1px solid var(--border-2);
+  border-radius: var(--r-md);
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.thirty-metric-val {
+  font-size: 1.25rem;
+  font-weight: 900;
+  color: var(--text-1);
+}
+
+.thirty-metric-lbl {
+  font-size: .68rem;
+  color: var(--text-3);
+  font-family: var(--font-bn);
+  font-weight: 600;
+}
+

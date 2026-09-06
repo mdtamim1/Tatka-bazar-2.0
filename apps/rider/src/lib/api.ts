@@ -1,3 +1,5 @@
+import { emitSyncEvent } from "./sync";
+
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
 
 function getToken(): string | null {
@@ -23,6 +25,101 @@ export function setDutyStatus(status: "ONLINE" | "OFFLINE") {
   if (typeof window === "undefined") return;
   localStorage.setItem("rider_duty_status", status);
   window.dispatchEvent(new CustomEvent("rider_duty_change", { detail: { status } }));
+  if (status === "ONLINE") {
+    const user = localStorage.getItem("rider_user");
+    const name = user ? (JSON.parse(user).name || "রাইডার") : "রাইডার";
+    const id = user ? (JSON.parse(user).id || "rider-demo-01") : "rider-demo-01";
+    startGPSBroadcast(id, name);
+  } else {
+    stopGPSBroadcast();
+  }
+}
+
+// ---------------------------------------------------------------------------
+// GPS Live Broadcast (Rider → localStorage → Admin can poll)
+// ---------------------------------------------------------------------------
+let _gpsWatchId: number | null = null;
+
+export function startGPSBroadcast(riderId: string, riderName: string) {
+  if (typeof window === "undefined" || !navigator.geolocation) return;
+  // Clear existing watch
+  if (_gpsWatchId !== null) {
+    navigator.geolocation.clearWatch(_gpsWatchId);
+    _gpsWatchId = null;
+  }
+  _gpsWatchId = navigator.geolocation.watchPosition(
+    (pos) => {
+      const payload = {
+        riderId,
+        riderName,
+        lat: pos.coords.latitude,
+        lng: pos.coords.longitude,
+        accuracy: pos.coords.accuracy,
+        duty: "ONLINE",
+        ts: Date.now(),
+      };
+      localStorage.setItem(`rider_gps_${riderId}`, JSON.stringify(payload));
+      // Notify same-tab listeners
+      window.dispatchEvent(new CustomEvent("rider_gps_update", { detail: payload }));
+    },
+    (err) => {
+      // GPS denied - write a Dhaka fallback so admin map still shows rider
+      const payload = {
+        riderId,
+        riderName,
+        lat: 23.8103 + (Math.random() - 0.5) * 0.05,
+        lng: 90.4125 + (Math.random() - 0.5) * 0.05,
+        accuracy: 9999,
+        duty: "ONLINE",
+        ts: Date.now(),
+        gpsError: err.message,
+      };
+      localStorage.setItem(`rider_gps_${riderId}`, JSON.stringify(payload));
+    },
+    { enableHighAccuracy: true, maximumAge: 8000, timeout: 10000 }
+  );
+}
+
+export function stopGPSBroadcast() {
+  if (typeof window === "undefined") return;
+  if (_gpsWatchId !== null) {
+    navigator.geolocation.clearWatch(_gpsWatchId);
+    _gpsWatchId = null;
+  }
+  // Mark all rider_gps_* entries as OFFLINE
+  Object.keys(localStorage)
+    .filter((k) => k.startsWith("rider_gps_"))
+    .forEach((k) => {
+      try {
+        const data = JSON.parse(localStorage.getItem(k) || "{}");
+        data.duty = "OFFLINE";
+        data.ts = Date.now();
+        localStorage.setItem(k, JSON.stringify(data));
+      } catch {}
+    });
+}
+
+/** Read all rider GPS pings from localStorage (used by Admin panel) */
+export function getAllRiderGPS(): RiderGPSPin[] {
+  if (typeof window === "undefined") return [];
+  return Object.keys(localStorage)
+    .filter((k) => k.startsWith("rider_gps_"))
+    .map((k) => {
+      try { return JSON.parse(localStorage.getItem(k) || "") as RiderGPSPin; }
+      catch { return null; }
+    })
+    .filter(Boolean) as RiderGPSPin[];
+}
+
+export interface RiderGPSPin {
+  riderId: string;
+  riderName: string;
+  lat: number;
+  lng: number;
+  accuracy?: number;
+  duty: "ONLINE" | "OFFLINE";
+  ts: number;
+  gpsError?: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -417,6 +514,124 @@ function setLocalStore(key: string, val: any) {
   } catch {}
 }
 
+export function generate30DaySampleHistory(): HistoryItem[] {
+  const list: HistoryItem[] = [];
+  const now = Date.now();
+  const dayMs = 1000 * 60 * 60 * 24;
+
+  const ordersSeed: Array<{ dayOffset: number; num: string; amount: number; type?: "income" | "withdrawal"; desc: string }> = [
+    { dayOffset: 0.1, num: "TB-8940", amount: 50, desc: "অর্ডার #TB-8940 সফল ডেলিভারি (৫০% ডেলিভারি ফি)" },
+    { dayOffset: 0.25, num: "TB-8935", amount: 60, desc: "অর্ডার #TB-8935 সফল ডেলিভারি (৫০% ডেলিভারি ফি)" },
+    { dayOffset: 0.3, num: "TB-8928", amount: 20, desc: "অর্ডার #TB-8928 বাতিল — সেলারকে রিটার্ন সফল (ট্রিপ ভাতা)" },
+    { dayOffset: 1, num: "TB-8921", amount: 50, desc: "অর্ডার #TB-8921 সফল ডেলিভারি" },
+    { dayOffset: 1.2, num: "TB-8918", amount: 80, desc: "অর্ডার #TB-8918 সফল ডেলিভারি" },
+    { dayOffset: 1.5, num: "TB-8912", amount: 45, desc: "অর্ডার #TB-8912 সফল ডেলিভারি" },
+    { dayOffset: 2, num: "TB-8905", amount: 60, desc: "অর্ডার #TB-8905 সফল ডেলিভারি" },
+    { dayOffset: 2.5, num: "TB-8898", amount: 55, desc: "অর্ডার #TB-8898 সফল ডেলিভারি" },
+    { dayOffset: 3, num: "TB-8890", amount: 70, desc: "অর্ডার #TB-8890 সফল ডেলিভারি" },
+    { dayOffset: 3.8, num: "WD-101", amount: 1500, type: "withdrawal", desc: "bKash উইথড্রয়াল সম্পন্ন" },
+    { dayOffset: 4.2, num: "TB-8882", amount: 60, desc: "অর্ডার #TB-8882 সফল ডেলিভারি" },
+    { dayOffset: 5, num: "TB-8875", amount: 50, desc: "অর্ডার #TB-8875 সফল ডেলিভারি" },
+    { dayOffset: 6, num: "TB-8868", amount: 20, desc: "অর্ডার #TB-8868 বাতিল — সেলারকে রিটার্ন সম্পন্ন" },
+    { dayOffset: 7, num: "TB-8860", amount: 90, desc: "অর্ডার #TB-8860 এক্সপ্রেস ডেলিভারি সম্পন্ন" },
+    { dayOffset: 8, num: "TB-8851", amount: 45, desc: "অর্ডার #TB-8851 সফল ডেলিভারি" },
+    { dayOffset: 9, num: "TB-8842", amount: 60, desc: "অর্ডার #TB-8842 সফল ডেলিভারি" },
+    { dayOffset: 10, num: "TB-8835", amount: 55, desc: "অর্ডার #TB-8835 সফল ডেলিভারি" },
+    { dayOffset: 11, num: "WD-102", amount: 2000, type: "withdrawal", desc: "Nagad উইথড্রয়াল সম্পন্ন" },
+    { dayOffset: 12, num: "TB-8822", amount: 65, desc: "অর্ডার #TB-8822 সফল ডেলিভারি" },
+    { dayOffset: 14, num: "TB-8810", amount: 75, desc: "অর্ডার #TB-8810 সফল ডেলিভারি" },
+    { dayOffset: 16, num: "TB-8798", amount: 50, desc: "অর্ডার #TB-8798 সফল ডেলিভারি" },
+    { dayOffset: 18, num: "TB-8780", amount: 20, desc: "অর্ডার #TB-8780 সেলারকে রিটার্ন ট্রিপ ভাতা" },
+    { dayOffset: 20, num: "TB-8765", amount: 80, desc: "অর্ডার #TB-8765 সফল ডেলিভারি" },
+    { dayOffset: 22, num: "WD-103", amount: 2500, type: "withdrawal", desc: "bKash উইথড্রয়াল সম্পন্ন" },
+    { dayOffset: 24, num: "TB-8742", amount: 60, desc: "অর্ডার #TB-8742 সফল ডেলিভারি" },
+    { dayOffset: 26, num: "TB-8720", amount: 70, desc: "অর্ডার #TB-8720 সফল ডেলিভারি" },
+    { dayOffset: 28, num: "TB-8695", amount: 85, desc: "অর্ডার #TB-8695 সফল ডেলিভারি" },
+    { dayOffset: 29.5, num: "TB-8680", amount: 65, desc: "অর্ডার #TB-8680 সফল ডেলিভারি" },
+  ];
+
+  ordersSeed.forEach((seed, idx) => {
+    list.push({
+      id: `h-seed-${idx + 1}`,
+      type: seed.type || "income",
+      amount: seed.amount,
+      orderNumber: seed.num,
+      description: seed.desc,
+      status: "COMPLETED",
+      createdAt: new Date(now - seed.dayOffset * dayMs).toISOString(),
+    });
+  });
+
+  return list;
+}
+
+export function syncDailyOrdersReset(): {
+  todayDate: string;
+  completed: TodayCompletedOrder[];
+  returned: TodayReturnedOrder[];
+} {
+  if (typeof window === "undefined") {
+    return { todayDate: "", completed: [], returned: [] };
+  }
+  const today = new Date().toISOString().slice(0, 10);
+  const savedDate = localStorage.getItem("tatka_rider_today_date");
+
+  if (savedDate !== today) {
+    localStorage.setItem("tatka_rider_today_date", today);
+    const initialCompleted: TodayCompletedOrder[] = [
+      {
+        id: "comp-today-1",
+        orderNumber: "TB-8940",
+        customerName: "ফারহানা করিম",
+        customerPhone: "01711223344",
+        deliveryAddress: "বাড়ি #১২, রোড #৩, ধানমন্ডি, ঢাকা",
+        vendorName: "সাদিক এগ্রো ফ্রেশ মার্কেট",
+        earnings: 50,
+        total: 1350,
+        paymentStatus: "PAID",
+        completedAt: new Date(Date.now() - 1000 * 60 * 90).toISOString(),
+        deliveryOtp: "4826",
+        itemCount: 3,
+      },
+      {
+        id: "comp-today-2",
+        orderNumber: "TB-8935",
+        customerName: "আরিফুল ইসলাম",
+        customerPhone: "01899887766",
+        deliveryAddress: "সেক্টর #৪, রোড #১২, উত্তরা, ঢাকা",
+        vendorName: "ফ্রেশ গার্ডেন মার্ট",
+        earnings: 60,
+        total: 1850,
+        paymentStatus: "COD",
+        completedAt: new Date(Date.now() - 1000 * 60 * 210).toISOString(),
+        deliveryOtp: "9134",
+        itemCount: 4,
+      },
+    ];
+    const initialReturned: TodayReturnedOrder[] = [
+      {
+        id: "ret-today-1",
+        orderNumber: "TB-8928",
+        customerName: "কামরুল হাসান",
+        vendorName: "দেশি মাছ ও মাংসের আড়ত",
+        deliveryAddress: "বনশ্রী ব্লক #সি, ঢাকা",
+        returnAllowance: 20,
+        returnCode: "7742",
+        reason: "কাস্টমার ফোন রিসিভ করেননি",
+        returnedAt: new Date(Date.now() - 1000 * 60 * 320).toISOString(),
+        itemCount: 2,
+      },
+    ];
+    setLocalStore("tatka_today_completed_orders", initialCompleted);
+    setLocalStore("tatka_today_returned_orders", initialReturned);
+    return { todayDate: today, completed: initialCompleted, returned: initialReturned };
+  }
+
+  const completed = getLocalStore<TodayCompletedOrder[]>("tatka_today_completed_orders", []);
+  const returned = getLocalStore<TodayReturnedOrder[]>("tatka_today_returned_orders", []);
+  return { todayDate: today, completed, returned };
+}
+
 function handleMockFallback<T>(path: string, options: RequestInit): { success: boolean; data?: T; error?: string } {
   const method = (options.method || "GET").toUpperCase();
   const cleanPath = path.split("?")[0] || "";
@@ -471,14 +686,20 @@ function handleMockFallback<T>(path: string, options: RequestInit): { success: b
     };
   }
 
-  // 4. Available Tasks (15 Demo Tasks)
+  // 4. Available Tasks (Demo Tasks)
   if (cleanPath === "/rider-portal/tasks" && method === "GET") {
-    let tasks = getLocalStore<Task[]>("available_tasks", SAMPLE_AVAILABLE_TASKS);
-    if (!tasks || tasks.length < 5 || !tasks[0]?.paymentStatus) {
+    let tasks = getLocalStore<Task[] | null>("available_tasks", null as any);
+    if (!tasks || !Array.isArray(tasks)) {
       setLocalStore("available_tasks", SAMPLE_AVAILABLE_TASKS);
       tasks = SAMPLE_AVAILABLE_TASKS;
     }
     return { success: true, data: tasks as any };
+  }
+
+  // 4b. Reseed Available Tasks (when rider needs fresh demo orders)
+  if (cleanPath === "/rider-portal/tasks/reset-sample" && method === "POST") {
+    setLocalStore("available_tasks", SAMPLE_AVAILABLE_TASKS);
+    return { success: true, data: SAMPLE_AVAILABLE_TASKS as any };
   }
 
   // 5. Active Tasks
@@ -495,9 +716,36 @@ function handleMockFallback<T>(path: string, options: RequestInit): { success: b
     return { success: true, data: activeTasks as any };
   }
 
+  // 5b. Today Orders Summary & Auto Daily Reset
+  if (cleanPath === "/rider-portal/tasks/today-summary") {
+    const { todayDate, completed, returned } = syncDailyOrdersReset();
+    const available = getLocalStore("available_tasks", SAMPLE_AVAILABLE_TASKS);
+    const active = getLocalStore<ActiveTask[]>("active_tasks", []);
+    const pendingCount = available.length;
+    const processingCount = active.length;
+    const completedCount = completed.length;
+    const returnedCount = returned.length;
+    const totalTodayCount = pendingCount + processingCount + completedCount + returnedCount;
+
+    return {
+      success: true,
+      data: {
+        todayDate,
+        pendingCount,
+        processingCount,
+        completedCount,
+        returnedCount,
+        totalTodayCount,
+        todayCompleted: completed,
+        todayReturned: returned,
+      } as any,
+    };
+  }
+
   // 6. Single Task Detail
   if (
     cleanPath.startsWith("/rider-portal/tasks/") &&
+    !cleanPath.includes("/today-summary") &&
     !cleanPath.includes("/accept") &&
     !cleanPath.includes("/pickup") &&
     !cleanPath.includes("/transit") &&
@@ -572,6 +820,29 @@ function handleMockFallback<T>(path: string, options: RequestInit): { success: b
       const paymentMethod = accepted.paymentMethod || (paymentStatus === "PAID" ? "BKASH" : "CASH_ON_DELIVERY");
       const customerDeliveryOtp = String(Math.floor(1000 + Math.random() * 9000));
 
+      // Assign realistic Dhaka-area customer delivery coordinates
+      const DHAKA_COORDS: Record<string, [number, number]> = {
+        "ধানমন্ডি": [23.7461, 90.3742],
+        "উত্তরা":   [23.8759, 90.3795],
+        "বনশ্রী":   [23.7524, 90.4397],
+        "গুলশান":   [23.7808, 90.4147],
+        "মিরপুর":   [23.8223, 90.3654],
+        "মোহাম্মদপুর": [23.7614, 90.3578],
+        "বারিধারা": [23.7968, 90.4246],
+        "তেজগাঁও":  [23.7671, 90.3929],
+        "মালিবাগ":  [23.7448, 90.4153],
+        "শান্তিনগর":[23.7353, 90.4118],
+        "বাড্ডা":   [23.7796, 90.4285],
+      };
+      let customerLat = 23.8103, customerLng = 90.4125;
+      const addr = accepted.deliveryAddress || "";
+      for (const [area, [lat, lng]] of Object.entries(DHAKA_COORDS)) {
+        if (addr.includes(area)) { customerLat = lat; customerLng = lng; break; }
+      }
+      // Add small random offset so each pin isn't exactly the same
+      customerLat += (Math.random() - 0.5) * 0.008;
+      customerLng += (Math.random() - 0.5) * 0.008;
+
       const active = getLocalStore<ActiveTask[]>("active_tasks", []);
       active.push({
         assignmentId: "asgn-" + Date.now(),
@@ -579,6 +850,8 @@ function handleMockFallback<T>(path: string, options: RequestInit): { success: b
         assignedAt: new Date().toISOString(),
         pickedAt: new Date().toISOString(),
         customerDeliveryOtp,
+        customerLat,
+        customerLng,
         order: {
           id: accepted.id,
           orderNumber: accepted.orderNumber,
@@ -593,12 +866,14 @@ function handleMockFallback<T>(path: string, options: RequestInit): { success: b
           earnings,
           paymentStatus,
           paymentMethod,
+          hasAccount: accepted.hasAccount ?? true,
         },
       });
       setLocalStore("active_tasks", active);
     }
     return { success: true, data: { message: "Task accepted" } as any };
   }
+
 
   // 8a. Start Transit / On The Way (Stage 1 -> Stage 2)
   if (cleanPath.includes("/transit") && method === "POST") {
@@ -670,6 +945,13 @@ function handleMockFallback<T>(path: string, options: RequestInit): { success: b
       });
       setLocalStore("notifications", notifs);
 
+      // Real-time cross-tab sync
+      emitSyncEvent({
+        type: "CANCELLATION_APPROVED",
+        taskId: active[idx].assignmentId,
+        message: `অর্ডার #${active[idx].order.orderNumber}: অ্যাডমিন বাতিল আবেদন অনুমোদন করেছে। পণ্যটি সেলারের দোকানে পৌঁছে দিন।`,
+      });
+
       return { success: true, data: active[idx] as any };
     }
     return { success: false, error: "টাস্ক পাওয়া যায়নি" };
@@ -717,6 +999,21 @@ function handleMockFallback<T>(path: string, options: RequestInit): { success: b
         createdAt: new Date().toISOString(),
       });
       setLocalStore("history", allHistory);
+
+      const todayReturned = getLocalStore<TodayReturnedOrder[]>("tatka_today_returned_orders", []);
+      todayReturned.unshift({
+        id: "ret-" + Date.now(),
+        orderNumber: done?.order.orderNumber || "TB-8928",
+        customerName: done?.order.customerName || "কাস্টমার",
+        vendorName: done?.order.vendorName || "সেলার",
+        deliveryAddress: done?.order.deliveryAddress || "ঢাকা",
+        returnAllowance,
+        returnCode: enteredCode || "7742",
+        reason: done?.cancellationReason || "কাস্টমার পার্সেল রিসিভ করেননি",
+        returnedAt: new Date().toISOString(),
+        itemCount: done?.order.items?.length || 2,
+      });
+      setLocalStore("tatka_today_returned_orders", todayReturned);
 
       const notifs = getLocalStore<RiderNotification[]>("notifications", SAMPLE_NOTIFICATIONS);
       notifs.unshift({
@@ -789,6 +1086,21 @@ function handleMockFallback<T>(path: string, options: RequestInit): { success: b
         createdAt: new Date().toISOString(),
       });
       setLocalStore("history", allHistory);
+
+      const todayReturned = getLocalStore<TodayReturnedOrder[]>("tatka_today_returned_orders", []);
+      todayReturned.unshift({
+        id: "ret-" + Date.now(),
+        orderNumber: done?.order.orderNumber || "TB-8928",
+        customerName: done?.order.customerName || "কাস্টমার",
+        vendorName: done?.order.vendorName || "সেলার",
+        deliveryAddress: done?.order.deliveryAddress || "ঢাকা",
+        returnAllowance,
+        returnCode: done?.returnCode || "7742",
+        reason: done?.cancellationReason || "কাস্টমার পার্সেল রিসিভ করেননি",
+        returnedAt: new Date().toISOString(),
+        itemCount: done?.order.items?.length || 2,
+      });
+      setLocalStore("tatka_today_returned_orders", todayReturned);
 
       const notifs = getLocalStore<RiderNotification[]>("notifications", SAMPLE_NOTIFICATIONS);
       notifs.unshift({
@@ -886,6 +1198,24 @@ function handleMockFallback<T>(path: string, options: RequestInit): { success: b
       }
       setLocalStore("history", allHistory);
 
+      // Record in today's completed list
+      const todayCompleted = getLocalStore<TodayCompletedOrder[]>("tatka_today_completed_orders", []);
+      todayCompleted.unshift({
+        id: "comp-" + Date.now(),
+        orderNumber: done?.order.orderNumber || "TB-8942",
+        customerName: done?.order.customerName || "কাস্টমার",
+        customerPhone: done?.order.customerPhone || "01812345678",
+        deliveryAddress: done?.order.deliveryAddress || "ধানমন্ডি, ঢাকা",
+        vendorName: done?.order.vendorName || "সাদিক এগ্রো",
+        earnings: earned,
+        total: orderTotal,
+        paymentStatus: isPaid ? "PAID" : "COD",
+        completedAt: new Date().toISOString(),
+        deliveryOtp: inputOtp || "4826",
+        itemCount: done?.order.items?.length || 2,
+      });
+      setLocalStore("tatka_today_completed_orders", todayCompleted);
+
       // add notification
       const notifs = getLocalStore<RiderNotification[]>("notifications", SAMPLE_NOTIFICATIONS);
       notifs.unshift({
@@ -939,12 +1269,7 @@ function handleMockFallback<T>(path: string, options: RequestInit): { success: b
   if (cleanPath === "/rider-portal/history") {
     const filterType = params.get("type") || "all";
     const searchQuery = (params.get("q") || "").trim().toLowerCase();
-    const allHistory = getLocalStore<HistoryItem[]>("history", [
-      { id: "h-1", type: "income", amount: 80, orderNumber: "TB-8940", description: "অর্ডার #TB-8940 সফল ডেলিভারি", createdAt: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString() },
-      { id: "h-2", type: "income", amount: 110, orderNumber: "TB-8935", description: "অর্ডার #TB-8935 সফল ডেলিভারি", createdAt: new Date(Date.now() - 1000 * 60 * 60 * 5).toISOString() },
-      { id: "h-3", type: "withdrawal", amount: 1000, description: "bKash উইথড্রয়াল সম্পন্ন", status: "COMPLETED", createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString() },
-      { id: "h-4", type: "income", amount: 95, orderNumber: "TB-8921", description: "অর্ডার #TB-8921 সফল ডেলিভারি", createdAt: new Date(Date.now() - 1000 * 60 * 60 * 28).toISOString() },
-    ]);
+    const allHistory = getLocalStore<HistoryItem[]>("history", generate30DaySampleHistory());
     let filtered = filterType === "all" ? allHistory : allHistory.filter((h) => h.type === filterType);
     if (searchQuery) {
       filtered = filtered.filter((h) =>
@@ -1055,6 +1380,14 @@ function handleMockFallback<T>(path: string, options: RequestInit): { success: b
           createdAt: new Date().toISOString(),
         });
         setLocalStore("notifications", notifs);
+
+        emitSyncEvent({
+          type: "DEPOSIT_APPROVED",
+          amount: target.amount,
+          depositId: target.id,
+          riderId: target.riderId,
+          message: `⚡ আপনার ৳ ${target.amount} ডিপোজিট অনুমোদিত হয়েছে!`,
+        });
       } else {
         const notifs = getLocalStore<RiderNotification[]>("notifications", SAMPLE_NOTIFICATIONS);
         notifs.unshift({
@@ -1066,6 +1399,14 @@ function handleMockFallback<T>(path: string, options: RequestInit): { success: b
           createdAt: new Date().toISOString(),
         });
         setLocalStore("notifications", notifs);
+
+        emitSyncEvent({
+          type: "DEPOSIT_REJECTED",
+          amount: target.amount,
+          depositId: target.id,
+          riderId: target.riderId,
+          message: `❌ আপনার ৳ ${target.amount} ডিপোজিট বাতিল করা হয়েছে।`,
+        });
       }
     }
     return { success: true, data: { message: "ডিপোজিট স্ট্যাটাস আপডেট হয়েছে" } as any };
@@ -1217,6 +1558,7 @@ export interface Task {
   earnings: number;
   paymentStatus?: "PAID" | "COD";
   paymentMethod?: string;
+  hasAccount?: boolean | undefined;
   items?: TaskItem[];
   createdAt: string;
 }
@@ -1245,6 +1587,9 @@ export interface ActiveTask {
   returnTripFee?: number | undefined;
   customerDeliveryOtp?: string | undefined;
   deliveryProofNote?: string | undefined;
+  /** Customer's pinned GPS delivery coordinates (from checkout map/GPS) */
+  customerLat?: number | undefined;
+  customerLng?: number | undefined;
   order: {
     id: string;
     orderNumber: string;
@@ -1259,6 +1604,7 @@ export interface ActiveTask {
     earnings: number;
     paymentStatus?: "PAID" | "COD" | undefined;
     paymentMethod?: string | undefined;
+    hasAccount?: boolean | undefined;
   };
 }
 
@@ -1295,6 +1641,45 @@ export interface HistoryItem {
   createdAt: string;
 }
 
+export interface TodayCompletedOrder {
+  id: string;
+  orderNumber: string;
+  customerName: string;
+  customerPhone: string;
+  deliveryAddress: string;
+  vendorName: string;
+  earnings: number;
+  total: number;
+  paymentStatus: "PAID" | "COD";
+  completedAt: string;
+  deliveryOtp?: string;
+  itemCount?: number;
+}
+
+export interface TodayReturnedOrder {
+  id: string;
+  orderNumber: string;
+  customerName?: string;
+  vendorName: string;
+  deliveryAddress?: string;
+  returnAllowance: number;
+  returnCode: string;
+  reason?: string;
+  returnedAt: string;
+  itemCount?: number;
+}
+
+export interface TodayOrdersSummary {
+  todayDate: string;
+  pendingCount: number;
+  processingCount: number;
+  completedCount: number;
+  returnedCount: number;
+  totalTodayCount: number;
+  todayCompleted: TodayCompletedOrder[];
+  todayReturned: TodayReturnedOrder[];
+}
+
 export interface RiderProfile {
   id: string;
   name: string;
@@ -1322,4 +1707,254 @@ export interface RiderProfile {
   paymentAccountLocked?: boolean;
   due?: number;
   createdAt: string;
+}
+
+// ─── Chat System ────────────────────────────────────────────────────────────
+
+export interface ChatMessage {
+  id: string;
+  channelId: string;
+  sender: "RIDER" | "CUSTOMER" | "SUPPORT";
+  senderName: string;
+  text: string;
+  timestamp: string;
+}
+
+const DEFAULT_DEMO_MESSAGES: Record<string, ChatMessage[]> = {
+  "task-01": [
+    {
+      id: "msg-1",
+      channelId: "task-01",
+      sender: "CUSTOMER",
+      senderName: "তানভীর আহমেদ",
+      text: "ভাইয়া, আপনি পৌঁছালে কল দিয়েন। গেটের দারোয়ানকে বলে রেখেছি।",
+      timestamp: new Date(Date.now() - 1000 * 60 * 12).toISOString(),
+    },
+  ],
+  "support": [
+    {
+      id: "msg-sup-1",
+      channelId: "support",
+      sender: "SUPPORT",
+      senderName: "তাতকা হেল্পডেস্ক (সাপোর্ট)",
+      text: "আসসালামু আলাইকুম! তাতকা রাইডার সাপোর্টে স্বাগতম। রাস্তায় যেকোনো সমস্যায় আমাদের জানান।",
+      timestamp: new Date(Date.now() - 1000 * 60 * 60).toISOString(),
+    },
+  ],
+};
+
+export function getChatMessages(channelId: string): ChatMessage[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = localStorage.getItem(`tatka_chat_${channelId}`);
+    if (raw) return JSON.parse(raw);
+    if (DEFAULT_DEMO_MESSAGES[channelId]) {
+      return DEFAULT_DEMO_MESSAGES[channelId];
+    }
+  } catch {}
+  return [];
+}
+
+export function sendChatMessage(
+  channelId: string,
+  sender: "RIDER" | "CUSTOMER" | "SUPPORT",
+  senderName: string,
+  text: string
+): ChatMessage {
+  const current = getChatMessages(channelId);
+  const newMsg: ChatMessage = {
+    id: `msg-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+    channelId,
+    sender,
+    senderName,
+    text,
+    timestamp: new Date().toISOString(),
+  };
+  const updated = [...current, newMsg];
+  if (typeof window !== "undefined") {
+    try {
+      localStorage.setItem(`tatka_chat_${channelId}`, JSON.stringify(updated));
+      window.dispatchEvent(new CustomEvent("tatka_chat_updated", { detail: { channelId, message: newMsg } }));
+    } catch {}
+  }
+  return newMsg;
+}
+
+// ─── Emergency SOS System ───────────────────────────────────────────────────
+
+export interface SosAlert {
+  id: string;
+  riderId: string;
+  riderName: string;
+  riderPhone: string;
+  lat: number;
+  lng: number;
+  status: "ACTIVE" | "RESOLVED";
+  triggeredAt: string;
+  reason?: string;
+}
+
+const SOS_STORAGE_KEY = "tatka_active_sos_alerts";
+
+export function getActiveSosAlerts(): SosAlert[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = localStorage.getItem(SOS_STORAGE_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch {}
+  return [];
+}
+
+export function getRiderActiveSos(riderId: string): SosAlert | null {
+  const alerts = getActiveSosAlerts();
+  return alerts.find(a => a.riderId === riderId && a.status === "ACTIVE") || null;
+}
+
+export function triggerSosAlert(data: {
+  riderId: string;
+  riderName: string;
+  riderPhone: string;
+  lat: number;
+  lng: number;
+  reason?: string;
+}): SosAlert {
+  const alerts = getActiveSosAlerts().filter(a => a.riderId !== data.riderId);
+  const newAlert: SosAlert = {
+    id: `sos-${Date.now()}`,
+    riderId: data.riderId,
+    riderName: data.riderName,
+    riderPhone: data.riderPhone,
+    lat: data.lat,
+    lng: data.lng,
+    status: "ACTIVE",
+    triggeredAt: new Date().toISOString(),
+    ...(data.reason !== undefined ? { reason: data.reason } : {}),
+  };
+  alerts.unshift(newAlert);
+  if (typeof window !== "undefined") {
+    try {
+      localStorage.setItem(SOS_STORAGE_KEY, JSON.stringify(alerts));
+      window.dispatchEvent(new CustomEvent("tatka_sos_alert_change", { detail: { alert: newAlert } }));
+    } catch {}
+  }
+  return newAlert;
+}
+
+export function resolveSosAlert(riderId: string): void {
+  const alerts = getActiveSosAlerts();
+  const updated = alerts.map(a => {
+    if (a.riderId === riderId) return { ...a, status: "RESOLVED" as const };
+    return a;
+  }).filter(a => a.status === "ACTIVE"); // keep active ones in the list
+  if (typeof window !== "undefined") {
+    try {
+      localStorage.setItem(SOS_STORAGE_KEY, JSON.stringify(updated));
+      window.dispatchEvent(new CustomEvent("tatka_sos_alert_change", { detail: { riderId, resolved: true } }));
+    } catch {}
+  }
+}
+
+// ─── Ratings & Performance Tier System ──────────────────────────────────────
+
+export interface RiderReview {
+  id: string;
+  customerName: string;
+  area: string;
+  rating: number;
+  comment: string;
+  date: string;
+  orderNumber: string;
+}
+
+export interface RiderPerformance {
+  tier: "BRONZE" | "SILVER" | "GOLD" | "PLATINUM";
+  tierTitleBn: string;
+  tierBadgeEmoji: string;
+  tierPerkBn: string;
+  totalDeliveries: number;
+  rating: number;
+  totalRatings: number;
+  onTimeRate: number;
+  acceptanceRate: number;
+  cancellationRate: number;
+  nextTierTarget?: {
+    targetTier: string;
+    deliveriesNeeded: number;
+    minRating: number;
+  };
+  starsBreakdown: {
+    star5: number;
+    star4: number;
+    star3: number;
+    star2: number;
+    star1: number;
+  };
+  recentReviews: RiderReview[];
+}
+
+export const SAMPLE_PERFORMANCE: RiderPerformance = {
+  tier: "PLATINUM",
+  tierTitleBn: "প্লাটিনাম এলিট (Platinum Elite)",
+  tierBadgeEmoji: "💎",
+  tierPerkBn: "সর্বোচ্চ প্রায়োরিটি অর্ডার ডিসপ্যাচ + ৫% এলিট বোনাস + ডেডিকেটেড ভিআইপি সাপোর্ট",
+  totalDeliveries: 542,
+  rating: 4.9,
+  totalRatings: 128,
+  onTimeRate: 96.5,
+  acceptanceRate: 98.2,
+  cancellationRate: 1.2,
+  starsBreakdown: {
+    star5: 112,
+    star4: 12,
+    star3: 3,
+    star2: 1,
+    star1: 0,
+  },
+  recentReviews: [
+    {
+      id: "rev-1",
+      customerName: "তানভীর আহমেদ",
+      area: "ধানমন্ডি, ঢাকা",
+      rating: 5,
+      comment: "খুব দ্রুত এবং সাবধানে গরম গরম পার্সেল ডেলিভারি দিয়েছেন ভাইয়া। ওনার ব্যবহার খুবই অমায়িক ও আন্তরিক!",
+      date: "গতকাল",
+      orderNumber: "TB-8942",
+    },
+    {
+      id: "rev-2",
+      customerName: "ফারহানা করিম",
+      area: "মিরপুর-১০, ঢাকা",
+      rating: 5,
+      comment: "বৃষ্টির মধ্যেও একদম নিখুঁত সময়ে পণ্য পৌঁছে দেওয়ার জন্য অনেক ধন্যবাদ তাতকা বাজার ও রাইডার ভাইকে।",
+      date: "৩ দিন আগে",
+      orderNumber: "TB-8955",
+    },
+    {
+      id: "rev-3",
+      customerName: "সাদমান সাদিক",
+      area: "গুলশান-২, ঢাকা",
+      rating: 5,
+      comment: "প্রোডাক্টের প্যাকেজিং কোনো ক্ষয়ক্ষতি ছাড়া পেয়েছি। পারফেক্ট ৫ স্টার সার্ভিস!",
+      date: "৫ দিন আগে",
+      orderNumber: "TB-8910",
+    },
+    {
+      id: "rev-4",
+      customerName: "নাসরিন সুলতানা",
+      area: "উত্তরা সেক্টর ৭, ঢাকা",
+      rating: 4,
+      comment: "ভালো সার্ভিস। ট্রাফিকের কারণে ৫ মিনিট দেরি হলেও আগেই মেসেজ দিয়ে জানিয়েছিলেন। প্রশংসনীয় পেশাদারিত্ব।",
+      date: "১ সপ্তাহ আগে",
+      orderNumber: "TB-8889",
+    },
+  ],
+};
+
+export function getPerformanceData(): RiderPerformance {
+  if (typeof window === "undefined") return SAMPLE_PERFORMANCE;
+  try {
+    const raw = localStorage.getItem("tatka_rider_performance");
+    if (raw) return JSON.parse(raw);
+  } catch {}
+  return SAMPLE_PERFORMANCE;
 }

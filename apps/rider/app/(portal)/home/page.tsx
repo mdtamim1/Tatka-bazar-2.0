@@ -61,6 +61,20 @@ export default function HomePage() {
 
   return (
     <div className="page-content">
+      {/* Rider Tier & Rating Summary Pill */}
+      <div
+        id="home-tier-pill"
+        className="home-tier-pill"
+        onClick={() => router.push("/profile")}
+        title="সম্পূর্ণ পারফরম্যান্স ও রেটিং স্কোরকার্ড দেখুন"
+      >
+        <span>💎 প্লাটিনাম এলিট</span>
+        <span style={{ opacity: 0.5 }}>•</span>
+        <span>⭐ ৪.৯ (১২৮ রিভিউ)</span>
+        <span style={{ opacity: 0.5 }}>•</span>
+        <span>⏱️ ৯৬.৫% অন-টাইম</span>
+      </div>
+
       <div className="balance-card-wrapper">
         <div className="balance-card" ref={cardRef} onMouseMove={handleMouseMove} onMouseLeave={handleMouseLeave}>
           <div className="balance-card-bg" />

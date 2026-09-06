@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { AdminSidebar } from "./AdminSidebar";
 import { AdminHeader } from "./AdminHeader";
+import { AdminSosAlerts } from "./AdminSosAlerts";
 import { ShieldAlert } from "lucide-react";
 
 export function AdminLayoutShell({ children }: { children: React.ReactNode }) {
@@ -80,6 +81,7 @@ export function AdminLayoutShell({ children }: { children: React.ReactNode }) {
         minWidth: 0,
         background: "var(--bg-deep)",
       }}>
+        <AdminSosAlerts />
         <AdminHeader />
         <main style={{
           flex: 1,

@@ -126,6 +126,55 @@ class SoundManager {
       } catch {}
     });
   }
+
+  /**
+   * Plays a pleasant message pop sound for sent/received chat
+   */
+  public playMessagePop() {
+    const ctx = this.getContext();
+    if (!ctx) return;
+    try {
+      const now = ctx.currentTime;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(640, now);
+      osc.frequency.exponentialRampToValueAtTime(880, now + 0.08);
+
+      gain.gain.setValueAtTime(0.2, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.13);
+    } catch {}
+  }
+
+  /**
+   * Plays an urgent emergency SOS warning sound
+   */
+  public playSosSiren() {
+    const ctx = this.getContext();
+    if (!ctx) return;
+    try {
+      const now = ctx.currentTime;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = "sawtooth";
+      osc.frequency.setValueAtTime(900, now);
+      osc.frequency.linearRampToValueAtTime(600, now + 0.18);
+      osc.frequency.linearRampToValueAtTime(900, now + 0.36);
+
+      gain.gain.setValueAtTime(0.35, now);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.45);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.46);
+    } catch {}
+  }
 }
 
 export const sound = new SoundManager();

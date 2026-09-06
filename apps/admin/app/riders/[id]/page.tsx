@@ -64,9 +64,16 @@ export default function RiderDetailPage() {
         <div style={{ flex: 1 }}>
           <div style={{ fontSize: "1.1rem", fontWeight: 800, color: "var(--text-1)", marginBottom: 4 }}>{rider.name}</div>
           <div style={{ fontSize: ".80rem", color: "var(--text-3)", marginBottom: 8 }}>{rider.phone} • {rider.email}</div>
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
             <span style={{ padding: "4px 10px", background: "var(--bg-active)", borderRadius: "var(--r-full)", fontSize: ".70rem", fontWeight: 700, color: "var(--text-2)" }}>{rider.vehicleType}</span>
             <span style={{ padding: "4px 10px", background: "rgba(34,197,94,.1)", borderRadius: "var(--r-full)", fontSize: ".70rem", fontWeight: 700, color: KYC_COLOR[rider.kycStatus] }}>KYC: {KYC_LABEL[rider.kycStatus] || rider.kycStatus}</span>
+            <span style={{
+              padding: "3px 10px", borderRadius: "var(--r-full)", fontSize: ".70rem", fontWeight: 800,
+              background: "linear-gradient(135deg, rgba(56,189,248,.15) 0%, rgba(168,85,247,.15) 100%)",
+              border: "1px solid rgba(56,189,248,.4)", color: "#38bdf8"
+            }}>
+              💎 প্লাটিনাম এলিট
+            </span>
           </div>
         </div>
         <div style={{ textAlign: "right" }}>
@@ -104,6 +111,46 @@ export default function RiderDetailPage() {
             ✅ KYC অনুমোদিত হয়েছে {rider.kycApprovedAt ? `— ${new Date(rider.kycApprovedAt).toLocaleDateString("bn-BD")}` : ""}
           </div>
         )}
+      </div>
+
+      {/* ─── Ratings & Performance Tier Card ─── */}
+      <div style={{ background: "var(--bg-raised)", border: "1px solid var(--border-1)", borderRadius: "var(--r-lg)", padding: "20px" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16, paddingBottom: 12, borderBottom: "1px solid var(--border-1)" }}>
+          <div style={{ fontSize: ".76rem", fontWeight: 700, color: "var(--green)", textTransform: "uppercase", letterSpacing: ".10em" }}>
+            🌟 রেটিং ও পারফরম্যান্স অ্যানালিটিক্স
+          </div>
+          <span style={{
+            padding: "3px 10px", borderRadius: "999px", fontSize: ".72rem", fontWeight: 800,
+            background: "linear-gradient(135deg, rgba(56,189,248,.15) 0%, rgba(168,85,247,.15) 100%)",
+            border: "1px solid rgba(56,189,248,.4)", color: "#38bdf8"
+          }}>
+            💎 প্লাটিনাম এলিট রাইডার
+          </span>
+        </div>
+
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))", gap: "12px", marginBottom: "16px" }}>
+          <div style={{ background: "var(--bg-base)", border: "1px solid var(--border-1)", borderRadius: "var(--r-md)", padding: "12px", textAlign: "center" }}>
+            <div style={{ fontSize: "1.2rem", fontWeight: 900, color: "#fbbf24" }}>⭐ ৪.৯</div>
+            <div style={{ fontSize: ".66rem", color: "var(--text-3)", marginTop: 2 }}>গড় রেটিং (১২৮ রিভিউ)</div>
+          </div>
+          <div style={{ background: "var(--bg-base)", border: "1px solid var(--border-1)", borderRadius: "var(--r-md)", padding: "12px", textAlign: "center" }}>
+            <div style={{ fontSize: "1.2rem", fontWeight: 900, color: "var(--green)" }}>৯৬.৫%</div>
+            <div style={{ fontSize: ".66rem", color: "var(--text-3)", marginTop: 2 }}>অন-টাইম ডেলিভারি</div>
+          </div>
+          <div style={{ background: "var(--bg-base)", border: "1px solid var(--border-1)", borderRadius: "var(--r-md)", padding: "12px", textAlign: "center" }}>
+            <div style={{ fontSize: "1.2rem", fontWeight: 900, color: "#38bdf8" }}>৯৮.২%</div>
+            <div style={{ fontSize: ".66rem", color: "var(--text-3)", marginTop: 2 }}>অর্ডার গ্রহণ (Acceptance)</div>
+          </div>
+          <div style={{ background: "var(--bg-base)", border: "1px solid var(--border-1)", borderRadius: "var(--r-md)", padding: "12px", textAlign: "center" }}>
+            <div style={{ fontSize: "1.2rem", fontWeight: 900, color: "var(--amber)" }}>১.২%</div>
+            <div style={{ fontSize: ".66rem", color: "var(--text-3)", marginTop: 2 }}>বাতিলের হার (খুব কম)</div>
+          </div>
+        </div>
+
+        <div style={{ fontSize: ".78rem", color: "var(--text-2)", background: "rgba(56,189,248,.06)", border: "1px solid rgba(56,189,248,.2)", borderRadius: "var(--r-sm)", padding: "10px 14px", display: "flex", alignItems: "center", gap: 8 }}>
+          <span>💡</span>
+          <span><strong>টিয়ার সুবিধা ও স্ট্যাটাস:</strong> এই রাইডার তাতকা বাজারের একজন বিশ্বস্ত প্লাটিনাম এলিট পার্টনার। সর্বোচ্চ প্রায়োরিটি অর্ডার ডিসপ্যাচ ও নিয়মিত বোনাস সুবিধা পাচ্ছেন।</span>
+        </div>
       </div>
 
       {/* Payment account */}

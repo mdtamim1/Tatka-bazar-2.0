@@ -114,6 +114,29 @@ export default function AdminRiderDepositsPage() {
     fetchData();
   }, []);
 
+  function broadcastDepositSync(type: "DEPOSIT_APPROVED" | "DEPOSIT_REJECTED", dep: DepositItem) {
+    const payload = {
+      type,
+      riderId: dep.riderId,
+      depositId: dep.id,
+      amount: dep.amount,
+      message: type === "DEPOSIT_APPROVED"
+        ? `⚡ অ্যাডমিন কর্তৃক ৳ ${dep.amount} ডিপোজিট অনুমোদিত হয়েছে!`
+        : `❌ আপনার ৳ ${dep.amount} ডিপোজিট বাতিল করা হয়েছে।`,
+      timestamp: new Date().toISOString(),
+    };
+    if (typeof window !== "undefined") {
+      try {
+        const bc = new BroadcastChannel("tatka_realtime_sync_channel");
+        bc.postMessage(payload);
+        bc.close();
+      } catch {}
+      try {
+        localStorage.setItem("tatka_sync_bus_event", JSON.stringify(payload));
+      } catch {}
+    }
+  }
+
   async function approveDeposit(dep: DepositItem) {
     setProcessing(dep.id);
     setFeedback(null);
@@ -163,6 +186,9 @@ export default function AdminRiderDepositsPage() {
     });
     setLocalStore("notifications", notifs);
 
+    // 3. Broadcast real-time sync event to Rider Portal
+    broadcastDepositSync("DEPOSIT_APPROVED", dep);
+
     setFeedback(`✅ ${dep.riderName || "রাইডার"}-এর ৳ ${dep.amount.toLocaleString()} ডিপোজিট অনুমোদিত হয়েছে ও ব্যালেন্সে যোগ হয়েছে!`);
     await fetchData();
     setProcessing(null);
@@ -199,6 +225,9 @@ export default function AdminRiderDepositsPage() {
       createdAt: new Date().toISOString(),
     });
     setLocalStore("notifications", notifs);
+
+    // Broadcast rejection sync event
+    broadcastDepositSync("DEPOSIT_REJECTED", dep);
 
     setFeedback(`❌ ${dep.riderName || "রাইডার"}-এর ৳ ${dep.amount.toLocaleString()} ডিপোজিট বাতিল করা হয়েছে।`);
     await fetchData();

@@ -1,11 +1,12 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import { apiFetch, type RiderProfile } from "@/lib/api";
+import { apiFetch, getPerformanceData, type RiderProfile, type RiderPerformance } from "@/lib/api";
 
 const STEPS = ["ব্যক্তিগত তথ্য", "ঠিকানা", "পরিচয়পত্র"];
 
 export default function ProfilePage() {
   const [profile, setProfile] = useState<RiderProfile | null>(null);
+  const [perf] = useState<RiderPerformance>(getPerformanceData());
   const [loading, setLoading] = useState(true);
   const [step, setStep] = useState(0);
   const [saving, setSaving] = useState(false);
@@ -63,8 +64,124 @@ export default function ProfilePage() {
         <div className="profile-avatar">{initials}</div>
         <div className="profile-name bn">{profile.name}</div>
         <div className="profile-meta">{profile.phone} • {profile.vehicleType}</div>
-        <div className={`kyc-status-badge ${profile.kycStatus.toLowerCase()}`}>
-          {kycLabel[profile.kycStatus] || profile.kycStatus}
+        <div style={{ display: "flex", gap: "8px", alignItems: "center", justifyContent: "center", marginTop: 8, flexWrap: "wrap" }}>
+          <div className={`kyc-status-badge ${profile.kycStatus.toLowerCase()}`}>
+            {kycLabel[profile.kycStatus] || profile.kycStatus}
+          </div>
+          <div className={`tier-badge tier-${perf.tier.toLowerCase()}`}>
+            <span>{perf.tierBadgeEmoji}</span>
+            <span>{perf.tierTitleBn}</span>
+          </div>
+        </div>
+      </div>
+
+      {/* ─── Ratings & Performance Scorecard ─── */}
+      <div id="performance" className="perf-dashboard-card">
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 10, borderBottom: "1px solid var(--border-1)", paddingBottom: 14 }}>
+          <div>
+            <div style={{ fontSize: ".72rem", color: "var(--text-3)", fontWeight: 700, textTransform: "uppercase", letterSpacing: ".06em" }}>
+              পারফরম্যান্স ও রেটিং স্কোরকার্ড
+            </div>
+            <div style={{ fontSize: "1.1rem", fontWeight: 800, color: "var(--text-1)", marginTop: 2 }}>
+              {perf.tierBadgeEmoji} {perf.tierTitleBn}
+            </div>
+          </div>
+          <div className={`tier-badge tier-${perf.tier.toLowerCase()}`}>
+            <span>{perf.tierBadgeEmoji}</span>
+            <span>{perf.tierTitleBn.split(" ")[0]}</span>
+          </div>
+        </div>
+
+        {/* Tier Perks Note */}
+        <div style={{
+          marginTop: 12, padding: "10px 12px", borderRadius: "var(--r-md)",
+          background: "linear-gradient(135deg, rgba(56,189,248,.08) 0%, rgba(168,85,247,.08) 100%)",
+          border: "1px solid rgba(56,189,248,.25)",
+          fontSize: ".74rem", color: "#38bdf8", fontFamily: "var(--font-bn)",
+          display: "flex", alignItems: "center", gap: 8
+        }}>
+          <span style={{ fontSize: "1.2rem" }}>🎁</span>
+          <span><strong>টিয়ার সুবিধা:</strong> {perf.tierPerkBn}</span>
+        </div>
+
+        {/* 4-Box Core Metrics Grid */}
+        <div className="perf-metric-grid">
+          <div className="perf-metric-item">
+            <div className="perf-metric-val" style={{ color: "#fbbf24", display: "flex", alignItems: "center", justifyContent: "center", gap: 4 }}>
+              <span>⭐</span> {perf.rating.toFixed(1)}
+            </div>
+            <div className="perf-metric-lbl">গড় রেটিং ({perf.totalRatings} রিভিউ)</div>
+          </div>
+          <div className="perf-metric-item">
+            <div className="perf-metric-val" style={{ color: "#10b981" }}>
+              {perf.onTimeRate}%
+            </div>
+            <div className="perf-metric-lbl">অন-টাইম ডেলিভারি</div>
+          </div>
+          <div className="perf-metric-item">
+            <div className="perf-metric-val" style={{ color: "#38bdf8" }}>
+              {perf.acceptanceRate}%
+            </div>
+            <div className="perf-metric-lbl">অর্ডার গ্রহণ (Acceptance)</div>
+          </div>
+          <div className="perf-metric-item">
+            <div className="perf-metric-val" style={{ color: "#a855f7" }}>
+              {perf.totalDeliveries} টি
+            </div>
+            <div className="perf-metric-lbl">মোট সফল ডেলিভারি</div>
+          </div>
+        </div>
+
+        {/* Star Rating Breakdown Bars */}
+        <div style={{ background: "var(--bg-base)", padding: "14px", borderRadius: "var(--r-md)", border: "1px solid var(--border-1)", marginTop: 12 }}>
+          <div style={{ fontSize: ".76rem", fontWeight: 700, color: "var(--text-2)", marginBottom: 10 }}>
+            ⭐ স্টার রেটিং অনুপাত
+          </div>
+          {[
+            { label: "৫ স্টার", count: perf.starsBreakdown.star5, pct: (perf.starsBreakdown.star5 / perf.totalRatings) * 100 },
+            { label: "৪ স্টার", count: perf.starsBreakdown.star4, pct: (perf.starsBreakdown.star4 / perf.totalRatings) * 100 },
+            { label: "৩ স্টার", count: perf.starsBreakdown.star3, pct: (perf.starsBreakdown.star3 / perf.totalRatings) * 100 },
+            { label: "২ স্টার", count: perf.starsBreakdown.star2, pct: (perf.starsBreakdown.star2 / perf.totalRatings) * 100 },
+            { label: "১ স্টার", count: perf.starsBreakdown.star1, pct: (perf.starsBreakdown.star1 / perf.totalRatings) * 100 },
+          ].map((bar) => (
+            <div key={bar.label} className="star-bar-row">
+              <span style={{ width: 44, flexShrink: 0 }}>{bar.label}</span>
+              <div className="star-bar-track">
+                <div className="star-bar-fill" style={{ width: `${Math.round(bar.pct)}%` }} />
+              </div>
+              <span style={{ width: 28, textAlign: "right", color: "var(--text-3)", fontSize: ".68rem" }}>{bar.count}</span>
+            </div>
+          ))}
+        </div>
+
+        {/* Recent Customer Feedback */}
+        <div style={{ marginTop: 16 }}>
+          <div style={{ fontSize: ".82rem", fontWeight: 800, color: "var(--text-1)", marginBottom: 10, display: "flex", alignItems: "center", gap: 6 }}>
+            <span>💬</span>
+            <span>কাস্টমারদের সাম্প্রতিক মন্তব্য ও রিভিউ</span>
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            {perf.recentReviews.map((rev) => (
+              <div key={rev.id} className="review-item-card">
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                    <span style={{ fontSize: ".82rem", fontWeight: 700, color: "var(--text-1)" }}>{rev.customerName}</span>
+                    <span style={{ fontSize: ".68rem", color: "var(--text-3)" }}>• {rev.area}</span>
+                  </div>
+                  <div style={{ color: "#f59e0b", fontSize: ".76rem", letterSpacing: 1 }}>
+                    {"⭐".repeat(rev.rating)}
+                  </div>
+                </div>
+                <div style={{ fontSize: ".78rem", color: "var(--text-2)", lineHeight: 1.4, fontFamily: "var(--font-bn)", fontStyle: "italic" }}>
+                  “{rev.comment}”
+                </div>
+                <div style={{ fontSize: ".65rem", color: "var(--text-3)", marginTop: 4, display: "flex", justifyContent: "space-between" }}>
+                  <span>অর্ডার #{rev.orderNumber}</span>
+                  <span>{rev.date}</span>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 

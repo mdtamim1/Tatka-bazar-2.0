@@ -1,8 +1,10 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { apiFetch, type ActiveTask } from "@/lib/api";
 import { sound } from "@/lib/sound";
+import { ChatModal } from "@/components/ChatModal";
+import { subscribeSyncEvent, emitSyncEvent } from "@/lib/sync";
 
 function confetti() {
   const canvas = document.createElement("canvas");
@@ -53,6 +55,7 @@ export default function TaskDetailPage() {
   const router = useRouter();
   const [task, setTask] = useState<ActiveTask | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isChatOpen, setIsChatOpen] = useState(false);
 
   // Delivery Handover Modal & Customer OTP
   const [showConfirmModal, setShowConfirmModal] = useState(false);
@@ -81,14 +84,28 @@ export default function TaskDetailPage() {
   const [returnSuccess, setReturnSuccess] = useState(false);
 
   useEffect(() => {
-    apiFetch<ActiveTask[]>("/rider-portal/tasks/active").then((r) => {
-      if (r.success && r.data) {
-        const found = (r.data as ActiveTask[]).find((a) => a.assignmentId === id);
-        setTask(found || null);
+    function loadTask() {
+      apiFetch<ActiveTask[]>("/rider-portal/tasks/active").then((r) => {
+        if (r.success && r.data) {
+          const found = (r.data as ActiveTask[]).find((a) => a.assignmentId === id || a.order.id === id);
+          setTask(found || null);
+        }
+        setLoading(false);
+      });
+    }
+
+    loadTask();
+
+    const unsub = subscribeSyncEvent((payload) => {
+      if (payload.type === "CANCELLATION_APPROVED") {
+        if (!payload.taskId || payload.taskId === id || payload.taskId === task?.order?.id || payload.taskId === task?.assignmentId) {
+          loadTask();
+        }
       }
-      setLoading(false);
     });
-  }, [id]);
+
+    return () => unsub();
+  }, [id, task?.order?.id, task?.assignmentId]);
 
   // Derived financial figures
   const isPaid = task?.order.paymentStatus === "PAID";
@@ -141,6 +158,11 @@ export default function TaskDetailPage() {
     });
     if (res.success && res.data) {
       setTask(res.data);
+      emitSyncEvent({
+        type: "CANCELLATION_APPROVED",
+        taskId: id,
+        message: "অ্যাডমিন ক্যানসেল রিকোয়েস্ট অনুমোদন করেছে।",
+      });
     } else {
       alert("অ্যাপ্রুভাল প্রসেস করা যায়নি");
     }
@@ -821,19 +843,100 @@ export default function TaskDetailPage() {
               <div className="detail-info-label">কাস্টমার</div>
               <div className="detail-info-value">{task.order.customerName}</div>
             </div>
-            <div className="detail-info-item">
-              <div className="detail-info-label">ফোন</div>
-              <div className="detail-info-value">
+            <div className="detail-info-item" style={{ gridColumn: "1/-1" }}>
+              <div className="detail-info-label">কাস্টমার স্ট্যাটাস ও যোগাযোগ</div>
+              <div className="detail-info-value" style={{ display: "flex", gap: "8px", alignItems: "center", flexWrap: "wrap", marginTop: 4 }}>
+                {task.order.hasAccount === false ? (
+                  <span style={{
+                    fontSize: ".70rem",
+                    color: "#F59E0B",
+                    background: "rgba(245, 158, 11, 0.12)",
+                    border: "1px solid rgba(245, 158, 11, 0.35)",
+                    padding: "3px 8px",
+                    borderRadius: "6px",
+                    fontWeight: 800,
+                  }}>
+                    ⚠️ অ্যাকাউন্ট ছাড়া গেস্ট অর্ডার
+                  </span>
+                ) : (
+                  <span style={{
+                    fontSize: ".70rem",
+                    color: "#00d68f",
+                    background: "rgba(0, 214, 143, 0.12)",
+                    border: "1px solid rgba(0, 214, 143, 0.35)",
+                    padding: "3px 8px",
+                    borderRadius: "6px",
+                    fontWeight: 800,
+                  }}>
+                    🟢 রেজিস্টার্ড কাস্টমার
+                  </span>
+                )}
+
                 <a
                   href={`tel:${task.order.customerPhone}`}
                   style={{
                     color: "var(--orange)", display: "inline-flex",
                     alignItems: "center", gap: 4, textDecoration: "none", fontWeight: 700,
+                    background: "rgba(255,122,0,0.12)", border: "1px solid rgba(255,122,0,0.3)",
+                    padding: "4px 10px", borderRadius: "6px", fontSize: ".76rem",
                   }}
+                  title="কাস্টমারকে সরাসরি কল করুন"
                 >
-                  📞 {task.order.customerPhone}
+                  📞 {task.order.customerPhone} (কল দিন)
                 </a>
+
+                {task.order.hasAccount === false ? (
+                  <button
+                    type="button"
+                    onClick={() => alert("এই কাস্টমার অ্যাকাউন্ট ছাড়া গেস্ট হিসেবে অর্ডার করেছেন, তাই ইন-অ্যাপ চ্যাট প্রযোজ্য নয়। সরাসরি ফোন কল করুন।")}
+                    style={{
+                      color: "#94a3b8", display: "inline-flex",
+                      alignItems: "center", gap: 4, fontWeight: 700,
+                      background: "rgba(148, 163, 184, 0.1)", border: "1px solid rgba(148, 163, 184, 0.25)",
+                      padding: "4px 10px", borderRadius: "6px", fontSize: ".76rem",
+                      cursor: "not-allowed", fontFamily: "var(--font-bn)", opacity: 0.7,
+                    }}
+                    title="গেস্ট অর্ডারে ইন-অ্যাপ চ্যাট বন্ধ — সরাসরি কল করুন"
+                  >
+                    🚫 চ্যাট বন্ধ (গেস্ট)
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    id="customer-chat-btn"
+                    onClick={() => setIsChatOpen(true)}
+                    style={{
+                      color: "#00d68f", display: "inline-flex",
+                      alignItems: "center", gap: 4, fontWeight: 700,
+                      background: "rgba(0,214,143,0.12)", border: "1px solid rgba(0,214,143,0.3)",
+                      padding: "4px 10px", borderRadius: "6px", fontSize: ".76rem",
+                      cursor: "pointer", fontFamily: "var(--font-bn)",
+                    }}
+                    title="কাস্টমারের সাথে ইন-অ্যাপ চ্যাট করুন"
+                  >
+                    💬 চ্যাট / SMS
+                  </button>
+                )}
               </div>
+
+              {task.order.hasAccount === false && (
+                <div style={{
+                  background: "rgba(245, 158, 11, 0.08)",
+                  border: "1px solid rgba(245, 158, 11, 0.25)",
+                  borderRadius: "8px",
+                  padding: "6px 10px",
+                  fontSize: ".72rem",
+                  color: "#F59E0B",
+                  fontFamily: "var(--font-bn)",
+                  marginTop: 6,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 6,
+                }}>
+                  <span>ℹ️</span>
+                  <span>এই কাস্টমার অ্যাকাউন্ট ছাড়া গেস্ট হিসেবে অর্ডার করেছেন — ইন-অ্যাপ মেসেজ যাবে না, সরাসরি কল করতে হবে।</span>
+                </div>
+              )}
             </div>
             <div className="detail-info-item" style={{ gridColumn: "1/-1" }}>
               <div className="detail-info-label">ডেলিভারি ঠিকানা</div>
@@ -853,6 +956,16 @@ export default function TaskDetailPage() {
             </div>
           </div>
         </div>
+
+        {/* ─── Customer Location Map (ON_THE_WAY stage) ─── */}
+        {isOnTheWay && !isDelivered && (
+          <CustomerLocationMap
+            {...(task.customerLat !== undefined ? { lat: task.customerLat } : {})}
+            {...(task.customerLng !== undefined ? { lng: task.customerLng } : {})}
+            address={task.order.deliveryAddress}
+            customerName={task.order.customerName}
+          />
+        )}
 
         {/* ─── State 1: CANCELLATION_REQUESTED (Waiting on Admin & Hub call) ─── */}
         {isRequested && (
@@ -1153,7 +1266,118 @@ export default function TaskDetailPage() {
             </button>
           </div>
         )}
+
+        {/* Customer In-App Chat Modal */}
+        {task && (
+          <ChatModal
+            isOpen={isChatOpen}
+            onClose={() => setIsChatOpen(false)}
+            defaultChannel="CUSTOMER"
+            taskId={id as string}
+            customerName={task.order.customerName}
+          />
+        )}
       </div>
     </>
+  );
+}
+
+// =============================================================================
+// CustomerLocationMap — Rider's view of customer delivery pin
+// =============================================================================
+function CustomerLocationMap({
+  lat,
+  lng,
+  address,
+  customerName,
+}: {
+  lat?: number;
+  lng?: number;
+  address: string;
+  customerName: string;
+}) {
+  const mapRef = useRef<HTMLDivElement>(null);
+  const leafletRef = useRef<any>(null);
+
+  useEffect(() => {
+    if (typeof window === "undefined" || !mapRef.current) return;
+    const finalLat = lat || 23.8103;
+    const finalLng = lng || 90.4125;
+
+    import("leaflet").then((L) => {
+      if (leafletRef.current) { leafletRef.current.remove(); leafletRef.current = null; }
+      delete (L.Icon.Default.prototype as any)._getIconUrl;
+      L.Icon.Default.mergeOptions({
+        iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
+        iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
+        shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+      });
+      const map = L.map(mapRef.current!, {
+        center: [finalLat, finalLng], zoom: 16,
+        zoomControl: true, scrollWheelZoom: false, attributionControl: false,
+      });
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19 }).addTo(map);
+      const customerIcon = L.divIcon({
+        className: "",
+        html: `<div style="position:relative;width:36px;height:36px;display:flex;align-items:center;justify-content:center;">
+          <div style="position:absolute;inset:0;border-radius:50%;background:rgba(255,107,43,0.25);animation:map-pin-pulse 1.8s ease-out infinite;"></div>
+          <div style="width:20px;height:20px;border-radius:50%;background:#FF6B2B;border:3px solid white;box-shadow:0 2px 10px rgba(255,107,43,.7);position:relative;z-index:1;"></div>
+        </div>`,
+        iconSize: [36, 36], iconAnchor: [18, 18],
+      });
+      L.marker([finalLat, finalLng], { icon: customerIcon })
+        .addTo(map)
+        .bindPopup(`<strong>${customerName}</strong><br/>${address}`)
+        .openPopup();
+      leafletRef.current = map;
+    });
+    return () => { if (leafletRef.current) { leafletRef.current.remove(); leafletRef.current = null; } };
+  }, [lat, lng, address, customerName]);
+
+  const finalLat = lat || 23.8103;
+  const finalLng = lng || 90.4125;
+  const googleUrl = `https://www.google.com/maps/dir/?api=1&destination=${finalLat},${finalLng}&travelmode=driving`;
+  const wazeUrl   = `https://waze.com/ul?ll=${finalLat},${finalLng}&navigate=yes`;
+
+  return (
+    <div className="customer-map-card">
+      <div className="customer-map-header">
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <span style={{ fontSize: "1.1rem" }}>📍</span>
+          <div>
+            <div style={{ fontSize: ".80rem", fontWeight: 800, color: "var(--emerald)" }}>
+              কাস্টমারের ডেলিভারি লোকেশন
+            </div>
+            <div style={{ fontSize: ".68rem", color: "var(--text-3)", fontFamily: "var(--font-bn)" }}>
+              {customerName} — ম্যাপে পিন করা গন্তব্য
+            </div>
+          </div>
+        </div>
+        <span style={{
+          fontSize: ".62rem", fontWeight: 800, color: "#FF6B2B",
+          background: "rgba(255,107,43,.12)", border: "1px solid rgba(255,107,43,.3)",
+          borderRadius: 999, padding: "3px 8px",
+        }}>🔴 LIVE</span>
+      </div>
+
+      <div className="customer-map-canvas">
+        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossOrigin="" />
+        <div ref={mapRef} style={{ width: "100%", height: "100%" }} />
+      </div>
+
+      <div className="customer-map-footer">
+        <div className="customer-map-address">
+          📋 <strong>লিখিত ঠিকানা:</strong> {address}
+        </div>
+        <div className="nav-btn-row">
+          <a href={googleUrl} target="_blank" rel="noopener noreferrer" className="nav-btn nav-btn-google">
+            🧭 Google Maps
+          </a>
+          <a href={wazeUrl} target="_blank" rel="noopener noreferrer" className="nav-btn nav-btn-waze">
+            🗺️ Waze
+          </a>
+        </div>
+      </div>
+    </div>
   );
 }
