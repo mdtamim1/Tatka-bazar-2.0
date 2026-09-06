@@ -260,67 +260,318 @@
   color: #ff5722;
 }
 
-/* ── My Orders 5-Status Grid (Image 1: Pending, Processing, Shipped, Review, Preorder) ── */
-.orderStatusGrid {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 4px;
-  text-align: center;
-}
-
-.statusItem {
+/* ── My Orders Banner Card ── */
+.myOrdersBannerCard {
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  border: 1px solid #e2e8f0;
+  border-radius: 18px;
+  padding: 16px 18px;
   display: flex;
-  flex-direction: column;
   align-items: center;
+  justify-content: space-between;
+  text-decoration: none;
   cursor: pointer;
-  padding: 8px 2px;
-  border-radius: 12px;
-  transition: all 0.15s ease;
-  background: none;
-  border: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+  transition: all 0.2s ease;
+  gap: 12px;
 }
 
-.statusItem:hover {
-  background: #f8fafc;
+.myOrdersBannerCard:hover {
+  border-color: #059669;
+  background: #ffffff;
   transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(5, 150, 105, 0.08);
 }
 
-.statusIconBox {
-  width: 42px;
-  height: 42px;
-  border-radius: 12px;
+.myOrdersLeft {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.myOrdersIconBox {
+  width: 46px;
+  height: 46px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+  color: #ffffff;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #475569;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
+  flex-shrink: 0;
+}
+
+.myOrdersTitleRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 3px;
+}
+
+.myOrdersTitle {
+  font-size: 1rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.myOrdersCountBadge {
+  background: #ecfdf5;
+  color: #059669;
+  border: 1px solid #a7f3d0;
+  font-size: 0.72rem;
+  font-weight: 800;
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+
+.myOrdersSubtitle {
+  font-size: 0.78rem;
+  color: #64748b;
+  margin: 0;
+}
+
+.myOrdersViewBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #f1f5f9;
+  color: #0f172a;
+  font-size: 0.82rem;
+  font-weight: 700;
+  padding: 8px 14px;
+  border-radius: 999px;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.myOrdersBannerCard:hover .myOrdersViewBtn {
+  background: #059669;
+  color: #ffffff;
+}
+
+/* ── Live Active Order Module ── */
+.liveOrderModule {
+  background: #ffffff;
+  border: 1.5px solid #10b981;
+  border-radius: 20px;
+  padding: 18px 20px;
+  box-shadow: 0 10px 30px -10px rgba(16, 185, 129, 0.2), 0 0 0 1px rgba(16, 185, 129, 0.1);
+  animation: liveCardPulse 3s infinite ease-in-out;
   position: relative;
-  margin-bottom: 6px;
+  overflow: hidden;
+}
+
+@keyframes liveCardPulse {
+  0%, 100% {
+    box-shadow: 0 10px 30px -10px rgba(16, 185, 129, 0.2);
+  }
+  50% {
+    box-shadow: 0 14px 34px -8px rgba(16, 185, 129, 0.35);
+  }
+}
+
+.liveOrderHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.liveBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #ecfdf5;
+  color: #059669;
+  border: 1px solid #a7f3d0;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.74rem;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+}
+
+.livePulseDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #10b981;
+  animation: pulseDot 1.4s infinite;
+}
+
+@keyframes pulseDot {
+  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+  70% { transform: scale(1.2); box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
+  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+}
+
+.liveOrderId {
+  font-size: 0.88rem;
+  font-weight: 800;
+  color: #0f172a;
+  font-family: monospace;
+}
+
+.liveOrderItemsText {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 12px;
+  line-height: 1.4;
+}
+
+.liveOrderMetaRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #f8fafc;
+  border: 1px solid #f1f5f9;
+  border-radius: 12px;
+  padding: 8px 12px;
+  font-size: 0.8rem;
+  color: #64748b;
+  margin-bottom: 12px;
+}
+
+.liveOrderTotal {
+  font-weight: 800;
+  color: #059669;
+  font-size: 0.92rem;
+}
+
+/* Rider Contact Strip */
+.liveRiderStrip {
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  color: #ffffff;
+  border-radius: 14px;
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.liveRiderLeft {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.liveRiderAvatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: #00d68f;
+  color: #051322;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 900;
+}
+
+.liveRiderName {
+  font-size: 0.84rem;
+  font-weight: 800;
+}
+
+.liveRiderSub {
+  font-size: 0.7rem;
+  color: #94a3b8;
+}
+
+.liveOtpBadge {
+  background: rgba(0, 214, 143, 0.15);
+  border: 1px dashed #00d68f;
+  color: #00d68f;
+  font-size: 0.72rem;
+  font-weight: 800;
+  padding: 3px 8px;
+  border-radius: 6px;
+}
+
+/* Live Actions Grid */
+.liveActionsGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+@media (max-width: 480px) {
+  .liveActionsGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.liveTrackBtn {
+  background: linear-gradient(135deg, #ff5722 0%, #ea580c 100%);
+  color: #ffffff;
+  border: none;
+  font-size: 0.82rem;
+  font-weight: 800;
+  padding: 10px 12px;
+  border-radius: 10px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  box-shadow: 0 4px 12px rgba(234, 88, 12, 0.25);
+  transition: all 0.15s ease;
+}
+
+.liveTrackBtn:hover {
+  opacity: 0.92;
+  transform: translateY(-1px);
+}
+
+.liveChatBtn {
+  background: #059669;
+  color: #ffffff;
+  border: none;
+  font-size: 0.82rem;
+  font-weight: 800;
+  padding: 10px 12px;
+  border-radius: 10px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  box-shadow: 0 4px 12px rgba(5, 150, 105, 0.25);
+  transition: all 0.15s ease;
+}
+
+.liveChatBtn:hover {
+  background: #047857;
+  transform: translateY(-1px);
+}
+
+.liveCallBtn {
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  color: #0f172a;
+  font-size: 0.82rem;
+  font-weight: 700;
+  padding: 10px 12px;
+  border-radius: 10px;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
   transition: all 0.15s;
 }
 
-.statusBadge {
-  position: absolute;
-  top: -2px;
-  right: -2px;
-  background: #ff5722;
-  color: #ffffff;
-  font-size: 0.62rem;
-  font-weight: 800;
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 1.5px solid #ffffff;
+.liveCallBtn:hover {
+  background: #e2e8f0;
 }
 
-.statusLabel {
-  font-size: 0.72rem;
-  font-weight: 600;
-  color: #64748b;
-  line-height: 1.2;
-}
 
 /* ── Services 4-Icon Row (Image 1: Browsing History, Address, Support, About Us) ── */
 .servicesGrid {

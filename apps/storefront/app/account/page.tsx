@@ -40,6 +40,11 @@ import { useLanguage } from "@/context/LanguageContext";
 import { useCartStore } from "@/lib/cart-store";
 import { PRODUCTS } from "@/lib/catalog";
 import { CustomerLiveTrackingModal } from "@/components/account/CustomerLiveTrackingModal";
+import {
+  CustomerOrder,
+  OrderItem,
+  getCustomerOrders,
+} from "@/lib/order-storage";
 import styles from "./page.module.css";
 
 interface CustomerUser {
@@ -54,28 +59,6 @@ interface SavedAddress {
   address: string;
   phone: string;
   isDefault: boolean;
-}
-
-interface OrderItem {
-  name: string;
-  qty: string;
-  price: number;
-}
-
-interface CustomerOrder {
-  id: string;
-  date: string;
-  status: "Pending" | "Processing" | "Shipped" | "Review" | "Preorder";
-  total: number;
-  items: string;
-  rawItems: OrderItem[];
-  rider?: {
-    name: string;
-    phone: string;
-    rating: string;
-  };
-  deliveryOtp?: string;
-  canTrack?: boolean;
 }
 
 export default function CustomerAccountPage() {
@@ -151,82 +134,19 @@ export default function CustomerAccountPage() {
   const [newAddrPhone, setNewAddrPhone] = useState("+880 1712-345678");
 
   // Orders State with Live Tracking capability
-  const [orders, setOrders] = useState<CustomerOrder[]>([
-    {
-      id: "TB-8942",
-      date: "আজকে, দুপুর ২:১৫",
-      status: "Processing",
-      total: 1530,
-      items: "তাজা ইলিশ মাছ (১ কেজি) ও অর্গানিক পালং শাক",
-      rawItems: [
-        { name: "তাজা পদ্মা ইলিশ", qty: "১ কেজি", price: 1350 },
-        { name: "অর্গানিক পালং শাক", qty: "১ আঁটি", price: 60 },
-        { name: "ডেলিভারি চার্জ", qty: "এক্সপ্রেস", price: 120 }
-      ],
-      rider: { name: "করিম মিয়া (Platinum Rider)", phone: "+880 1711-223344", rating: "4.9 ★" },
-      deliveryOtp: "4826",
-      canTrack: true,
-    },
-    {
-      id: "TB-8921",
-      date: "গতকাল, বিকাল ৫:০০",
-      status: "Shipped",
-      total: 820,
-      items: "ফার্ম ফ্রেশ ডিম (১ ডজন) ও অর্গানিক খাঁটি দুধ",
-      rawItems: [
-        { name: "দেশি ফার্ম ডিম", qty: "১ ডজন", price: 160 },
-        { name: "অর্গানিক খাঁটি তরল দুধ", qty: "২ লিটার", price: 220 },
-        { name: "খাঁটি গাওয়া ঘি", qty: "২৫০ গ্রাম", price: 380 },
-        { name: "ডেলিভারি চার্জ", qty: "নরমাল", price: 60 }
-      ],
-      rider: { name: "করিম মিয়া (Platinum Rider)", phone: "+880 1711-223344", rating: "4.9 ★" },
-      deliveryOtp: "4826",
-      canTrack: true,
-    },
-    {
-      id: "TB-8890",
-      date: "২ দিন আগে",
-      status: "Pending",
-      total: 2450,
-      items: "প্রিমিয়াম বাসমতি চাল ও খাঁটি সরিষার তেল",
-      rawItems: [
-        { name: "প্রিমিয়াম বাসমতি চাল", qty: "৫ কেজি", price: 1850 },
-        { name: "ঘানি ভাঙা সরিষার তেল", qty: "১ লিটার", price: 540 },
-        { name: "ডেলিভারি চার্জ", qty: "নরমাল", price: 60 }
-      ],
-      canTrack: false,
-    },
-    {
-      id: "TB-8812",
-      date: "০২ সেপ্টেম্বর",
-      status: "Review",
-      total: 1200,
-      items: "সুন্দরবনের খাঁটি মধু ও সিজনাল ড্রাগন ফল",
-      rawItems: [
-        { name: "সুন্দরবনের প্রাকৃতিক মধু", qty: "৫০০ গ্রাম", price: 750 },
-        { name: "লাল ড্রাগন ফল", qty: "১ কেজি", price: 390 },
-        { name: "ডেলিভারি চার্জ", qty: "নরমাল", price: 60 }
-      ],
-      canTrack: false,
-    },
-    {
-      id: "TB-8740",
-      date: "২৮ আগস্ট",
-      status: "Preorder",
-      total: 3500,
-      items: "চাঁদপুরের স্পেশাল নদীর রূপচাঁদা ও বড় বাগদা চিংড়ি",
-      rawItems: [
-        { name: "নদীর ফ্রেশ রূপচাঁদা", qty: "১ কেজি", price: 1800 },
-        { name: "বড় গলদা/বাগদা চিংড়ি", qty: "১ কেজি", price: 1640 },
-        { name: "ডেলিভারি চার্জ", qty: "নরমাল", price: 60 }
-      ],
-      canTrack: false,
-    }
-  ]);
+  const [orders, setOrders] = useState<CustomerOrder[]>([]);
 
   // Load persisted user & settings
   useEffect(() => {
     setMounted(true);
+    setOrders(getCustomerOrders());
+
+    const handleOrdersUpdate = () => {
+      setOrders(getCustomerOrders());
+    };
+    window.addEventListener("tatka_orders_updated", handleOrdersUpdate);
+    window.addEventListener("storage", handleOrdersUpdate);
+
     const rawUser = localStorage.getItem("tatka_user");
     if (rawUser) {
       try {
@@ -247,6 +167,11 @@ export default function CustomerAccountPage() {
     if (savedPoints) {
       setPoints(Number(savedPoints) || 55);
     }
+
+    return () => {
+      window.removeEventListener("tatka_orders_updated", handleOrdersUpdate);
+      window.removeEventListener("storage", handleOrdersUpdate);
+    };
   }, []);
 
   function triggerFeedback(msg: string) {
@@ -377,6 +302,11 @@ export default function CustomerAccountPage() {
   // Browsing history demo products
   const browsingHistoryProducts = PRODUCTS.slice(0, 5);
 
+  // Active ongoing order
+  const activeOrder = orders.find((o) =>
+    ["processing", "shipped", "out_for_delivery", "pending"].includes(o.status.toLowerCase())
+  );
+
   return (
     <div className={styles.pageWrapper}>
       {/* Toast Feedback Notification */}
@@ -492,112 +422,125 @@ export default function CustomerAccountPage() {
           {/* Content Body */}
           <div className={styles.contentBody}>
             {/* ── My Orders Section (Image 1) ── */}
+            {/* ── My Orders Section (Clean Banner linking to /account/orders) ── */}
             <div className={styles.cardSection}>
-              <div className={styles.sectionHeader}>
-                <h2 className={styles.sectionTitle}>
-                  {locale === "bn" ? "আমার অর্ডারসমূহ" : "My Orders"}
-                </h2>
-                <button
-                  id="orders-view-all-btn"
-                  type="button"
-                  className={styles.viewAllLink}
-                  onClick={() => {
-                    setSelectedOrderStatus("All");
-                    setActiveModal("orders");
-                  }}
-                >
-                  <span>{locale === "bn" ? "সব দেখুন" : "View All"}</span>
-                  <ChevronRight size={14} />
-                </button>
-              </div>
-
-              {/* 5 Order Status Icons matching Image 1 */}
-              <div className={styles.orderStatusGrid}>
-                {/* 1. Pending */}
-                <button
-                  id="order-pending-btn"
-                  type="button"
-                  className={styles.statusItem}
-                  onClick={() => {
-                    setSelectedOrderStatus("Pending");
-                    setActiveModal("orders");
-                  }}
-                >
-                  <div className={styles.statusIconBox} style={{ background: "rgba(245, 158, 11, 0.1)", color: "#d97706" }}>
-                    <Clock size={22} />
-                    <span className={styles.statusBadge}>1</span>
-                  </div>
-                  <span className={styles.statusLabel}>{locale === "bn" ? "পেন্ডিং" : "Pending"}</span>
-                </button>
-
-                {/* 2. Processing */}
-                <button
-                  id="order-processing-btn"
-                  type="button"
-                  className={styles.statusItem}
-                  onClick={() => {
-                    setSelectedOrderStatus("Processing");
-                    setActiveModal("orders");
-                  }}
-                >
-                  <div className={styles.statusIconBox} style={{ background: "rgba(59, 130, 246, 0.1)", color: "#2563eb" }}>
+              <Link href="/account/orders" className={styles.myOrdersBannerCard}>
+                <div className={styles.myOrdersLeft}>
+                  <div className={styles.myOrdersIconBox}>
                     <Package size={22} />
-                    <span className={styles.statusBadge}>2</span>
                   </div>
-                  <span className={styles.statusLabel}>{locale === "bn" ? "প্রসেসিং" : "Processing"}</span>
-                </button>
+                  <div>
+                    <div className={styles.myOrdersTitleRow}>
+                      <span className={styles.myOrdersTitle}>
+                        {locale === "bn" ? "আমার অর্ডারসমূহ" : "My Orders"}
+                      </span>
+                      <span className={styles.myOrdersCountBadge}>
+                        {locale === "bn" ? `${orders.length}টি অর্ডার` : `${orders.length} Orders`}
+                      </span>
+                    </div>
+                    <p className={styles.myOrdersSubtitle}>
+                      {locale === "bn"
+                        ? "সকল পূর্ববর্তী ও চলমান অর্ডারের তালিকা, ট্র্যাকিং ও বিস্তারিত"
+                        : "View all your past and active orders, live tracking & invoices"}
+                    </p>
+                  </div>
+                </div>
 
-                {/* 3. Shipped */}
-                <button
-                  id="order-shipped-btn"
-                  type="button"
-                  className={styles.statusItem}
-                  onClick={() => {
-                    setSelectedOrderStatus("Shipped");
-                    setActiveModal("orders");
-                  }}
-                >
-                  <div className={styles.statusIconBox} style={{ background: "rgba(16, 185, 129, 0.1)", color: "#059669" }}>
-                    <Truck size={22} />
-                    <span className={styles.statusBadge}>1</span>
-                  </div>
-                  <span className={styles.statusLabel}>{locale === "bn" ? "শিপড" : "Shipped"}</span>
-                </button>
-
-                {/* 4. Review */}
-                <button
-                  id="order-review-btn"
-                  type="button"
-                  className={styles.statusItem}
-                  onClick={() => {
-                    setSelectedOrderStatus("Review");
-                    setActiveModal("orders");
-                  }}
-                >
-                  <div className={styles.statusIconBox} style={{ background: "rgba(168, 85, 247, 0.1)", color: "#7c3aed" }}>
-                    <MessageSquareQuote size={22} />
-                    <span className={styles.statusBadge}>3</span>
-                  </div>
-                  <span className={styles.statusLabel}>{locale === "bn" ? "রিভিউ" : "Review"}</span>
-                </button>
-
-                {/* 5. Preorder */}
-                <button
-                  id="order-preorder-btn"
-                  type="button"
-                  className={styles.statusItem}
-                  onClick={() => {
-                    setSelectedOrderStatus("Preorder");
-                    setActiveModal("orders");
-                  }}
-                >
-                  <div className={styles.statusIconBox} style={{ background: "rgba(239, 68, 68, 0.1)", color: "#dc2626" }}>
-                    <TimerReset size={22} />
-                  </div>
-                  <span className={styles.statusLabel}>{locale === "bn" ? "প্রি-অর্ডার" : "Preorder"}</span>
-                </button>
-              </div>
+                <div className={styles.myOrdersViewBtn}>
+                  <span>{locale === "bn" ? "অর্ডার দেখুন" : "View Orders"}</span>
+                  <ChevronRight size={15} />
+                </div>
+              </Link>
             </div>
+
+            {/* ── Live Ongoing Active Order Module (If customer has an ongoing order) ── */}
+            {activeOrder && (
+              <div className={styles.liveOrderModule}>
+                <div className={styles.liveOrderHeader}>
+                  <span className={styles.liveBadge}>
+                    <span className={styles.livePulseDot} />
+                    <span>{locale === "bn" ? "চলমান অর্ডার" : "Live Order Active"}</span>
+                  </span>
+                  <div className={styles.liveOrderId}>#{activeOrder.id}</div>
+                </div>
+
+                <div className={styles.liveOrderItemsText}>
+                  🛒 {activeOrder.items}
+                </div>
+
+                <div className={styles.liveOrderMetaRow}>
+                  <span>
+                    🕒 {activeOrder.date} • {activeOrder.deliverySlot || "মার্নিং ফ্রেশ"}
+                  </span>
+                  <span className={styles.liveOrderTotal}>
+                    ৳{activeOrder.total?.toLocaleString()}
+                  </span>
+                </div>
+
+                {/* Rider Contact Strip if assigned */}
+                {activeOrder.rider && (
+                  <div className={styles.liveRiderStrip}>
+                    <div className={styles.liveRiderLeft}>
+                      <div className={styles.liveRiderAvatar}>🛵</div>
+                      <div>
+                        <div className={styles.liveRiderName}>
+                          {activeOrder.rider.name}
+                        </div>
+                        <div className={styles.liveRiderSub}>
+                          {activeOrder.rider.vehicle || "বাইক রাইডার"} • রেটিং: {activeOrder.rider.rating || "4.9 ★"}
+                        </div>
+                      </div>
+                    </div>
+
+                    {activeOrder.deliveryOtp && (
+                      <div className={styles.liveOtpBadge}>
+                        🔐 ওটিপি: {activeOrder.deliveryOtp}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Interactive Actions Grid */}
+                <div className={styles.liveActionsGrid}>
+                  <button
+                    type="button"
+                    onClick={() => setActiveTrackingOrder(activeOrder)}
+                    className={styles.liveTrackBtn}
+                  >
+                    <Truck size={15} />
+                    <span>{locale === "bn" ? "লাইভ ট্র্যাক" : "Track Order"}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setActiveTrackingOrder(activeOrder)}
+                    className={styles.liveChatBtn}
+                  >
+                    <MessageSquareQuote size={15} />
+                    <span>{locale === "bn" ? "রাইডার চ্যাট" : "Chat with Rider"}</span>
+                  </button>
+
+                  {activeOrder.rider?.phone && (
+                    <a
+                      href={`tel:${activeOrder.rider.phone}`}
+                      className={styles.liveCallBtn}
+                    >
+                      <Phone size={15} />
+                      <span>{locale === "bn" ? "কল দিন" : "Call"}</span>
+                    </a>
+                  )}
+
+                  <Link
+                    href="/account/orders"
+                    className={styles.liveCallBtn}
+                    style={{ background: "#ffffff", border: "1px solid #e2e8f0" }}
+                  >
+                    <FileText size={15} />
+                    <span>{locale === "bn" ? "অর্ডার হিস্ট্রি" : "Order History"}</span>
+                  </Link>
+                </div>
+              </div>
+            )}
 
             {/* ── Services Section (Image 1: Browsing History, Address, Support, About Us) ── */}
             <div className={styles.cardSection}>
@@ -2266,6 +2209,20 @@ export default function CustomerAccountPage() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* ===================================================================
+          LIVE TRACKING MODAL (GPS MAP, RIDER CHAT, DELIVERY OTP)
+          =================================================================== */}
+      {activeTrackingOrder && (
+        <CustomerLiveTrackingModal
+          isOpen={true}
+          onClose={() => setActiveTrackingOrder(null)}
+          orderId={activeTrackingOrder.id}
+          orderNumber={activeTrackingOrder.orderNumber || activeTrackingOrder.id}
+          deliveryAddress={activeTrackingOrder.deliveryAddress || "বাড়ি #৪২, রোড #৭/এ, ধানমন্ডি, ঢাকা"}
+          total={activeTrackingOrder.total}
+        />
       )}
     </div>
   );

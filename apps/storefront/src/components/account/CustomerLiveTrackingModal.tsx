@@ -4,13 +4,13 @@ import React, { useState, useEffect, useRef } from "react";
 import { X, Phone, Send, ShieldCheck, MapPin, Navigation, Clock, CheckCircle2 } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 
-interface CustomerLiveTrackingModalProps {
+export interface CustomerLiveTrackingModalProps {
   isOpen: boolean;
   onClose: () => void;
-  orderId?: string;
-  orderNumber?: string;
-  deliveryAddress?: string;
-  total?: number;
+  orderId?: string | undefined;
+  orderNumber?: string | undefined;
+  deliveryAddress?: string | undefined;
+  total?: number | undefined;
 }
 
 interface ChatMsg {

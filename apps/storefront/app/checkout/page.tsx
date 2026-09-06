@@ -42,6 +42,7 @@ import { useCartStore } from "@/lib/cart-store";
 import { useLanguage } from "@/context/LanguageContext";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { saveCustomerOrder } from "@/lib/order-storage";
 
 // ─────────────────────────────────────────────────────────────
 // Types
@@ -596,6 +597,36 @@ function CheckoutContent() {
       const res = await submitOrder(orderPayload);
       if (res.success) {
         setPlacedOrder({ orderNumber: res.orderNumber, ...orderPayload });
+
+        // Save order to customer order store for instant visibility in /account and /account/orders
+        try {
+          saveCustomerOrder({
+            id: res.orderNumber,
+            orderNumber: res.orderNumber,
+            total: grandTotal,
+            subtotal,
+            deliveryFee,
+            discount,
+            items: checkoutItems.map((it: any) => it.name).join(", "),
+            rawItems: checkoutItems.map((it: any) => ({
+              name: it.name,
+              qty: `${it.quantity} ${it.unit || "টি"}`,
+              price: it.price * it.quantity,
+            })),
+            deliveryAddress:
+              deliveryAddress.address ||
+              `${deliveryAddress.thana || ""}, ${deliveryAddress.district || "ঢাকা"}`,
+            deliveryArea: deliveryAddress.thana || deliveryAddress.district || "ঢাকা",
+            deliverySlot:
+              deliveryAddress.preferredTime || "স্ট্যান্ডার্ড ডেলিভারি",
+            paymentMethod,
+            paymentStatus: paymentMethod === "COD" ? "COD" : "PAID",
+            status: "Processing",
+          });
+        } catch (storageErr) {
+          console.warn("Failed to persist order to localStorage:", storageErr);
+        }
+
         setCurrentStep("complete");
         if (isDirectBuy) {
           clearBuyNowItem();
