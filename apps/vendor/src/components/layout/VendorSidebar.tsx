@@ -6,16 +6,9 @@ import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
   ShoppingBag,
-  Layers,
-  PackageCheck,
-  Building2,
   Wallet,
-  TrendingUp,
-  Tag,
   MessageSquareDiff,
-  Users,
   Settings,
-  ShieldCheck,
   Palmtree,
   Store,
   X,
@@ -36,7 +29,6 @@ export default function VendorSidebar({ onClose }: VendorSidebarProps) {
     currentRole,
     profile,
     orders,
-    products,
     refundDisputes,
     toggleVacationMode,
     dutyStatus,
@@ -47,10 +39,6 @@ export default function VendorSidebar({ onClose }: VendorSidebarProps) {
   // Live badge counts
   const pendingOrdersCount = orders.filter(
     (o) => o.status === "RECEIVED" || o.status === "PREPARING"
-  ).length;
-
-  const lowStockCount = products.filter(
-    (p) => p.stockQty <= p.lowStockThreshold
   ).length;
 
   const pendingDisputesCount = refundDisputes.filter(
@@ -79,44 +67,11 @@ export default function VendorSidebar({ onClose }: VendorSidebarProps) {
       roles: ["OWNER", "MANAGER", "STAFF"],
     },
     {
-      label: t.navProducts,
-      href: "/products",
-      icon: Layers,
-      roles: ["OWNER", "MANAGER", "STAFF"],
-    },
-    {
-      label: t.navInventory,
-      href: "/inventory",
-      icon: PackageCheck,
-      badge: lowStockCount > 0 ? lowStockCount : undefined,
-      badgeColor: "bg-amber-500 text-white font-bold",
-      roles: ["OWNER", "MANAGER", "STAFF"],
-    },
-    {
-      label: t.navWholesale,
-      href: "/wholesale",
-      icon: Building2,
-      roles: ["OWNER", "MANAGER"],
-    },
-    {
       label: t.navSettlements,
       href: "/settlements",
       icon: Wallet,
       roles: ["OWNER"],
       lockedFor: ["MANAGER", "STAFF"],
-    },
-    {
-      label: t.navAnalytics,
-      href: "/analytics",
-      icon: TrendingUp,
-      roles: ["OWNER", "MANAGER"],
-      lockedFor: ["STAFF"],
-    },
-    {
-      label: t.navPromotions,
-      href: "/promotions",
-      icon: Tag,
-      roles: ["OWNER", "MANAGER"],
     },
     {
       label: t.navReviews,
@@ -127,24 +82,11 @@ export default function VendorSidebar({ onClose }: VendorSidebarProps) {
       roles: ["OWNER", "MANAGER"],
     },
     {
-      label: t.navStaff,
-      href: "/staff",
-      icon: Users,
-      roles: ["OWNER"],
-      lockedFor: ["MANAGER", "STAFF"],
-    },
-    {
       label: t.navSettings,
       href: "/settings",
       icon: Settings,
       roles: ["OWNER"],
       lockedFor: ["MANAGER", "STAFF"],
-    },
-    {
-      label: t.navOnboarding,
-      href: "/onboarding",
-      icon: ShieldCheck,
-      roles: ["OWNER", "MANAGER", "STAFF"],
     },
   ];
 

@@ -6,31 +6,25 @@ import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
   ShoppingBag,
-  Layers,
-  PackageCheck,
-  UserCheck,
+  History,
+  Wallet,
+  Settings,
 } from "lucide-react";
 import { useVendorStore } from "@/store/vendorStore";
 import { translations } from "@/utils/translations";
 
 interface VendorMobileNavProps {
-  onOpenNotifications: () => void;
-  onOpenRoleModal: () => void;
+  onOpenNotifications?: () => void;
+  onOpenRoleModal?: () => void;
 }
 
-export default function VendorMobileNav({
-  onOpenRoleModal,
-}: VendorMobileNavProps) {
+export default function VendorMobileNav({}: VendorMobileNavProps) {
   const pathname = usePathname();
-  const { language, orders, products } = useVendorStore();
+  const { language, orders } = useVendorStore();
   const t = translations[language];
 
   const pendingOrders = orders.filter(
     (o) => o.status === "RECEIVED" || o.status === "PREPARING"
-  ).length;
-
-  const lowStock = products.filter(
-    (p) => p.stockQty <= p.lowStockThreshold
   ).length;
 
   const tabs = [
@@ -46,15 +40,19 @@ export default function VendorMobileNav({
       badge: pendingOrders > 0 ? pendingOrders : undefined,
     },
     {
-      label: t.navProducts,
-      href: "/products",
-      icon: Layers,
+      label: t.navHistory,
+      href: "/orders/history",
+      icon: History,
     },
     {
-      label: t.navInventory,
-      href: "/inventory",
-      icon: PackageCheck,
-      badge: lowStock > 0 ? lowStock : undefined,
+      label: t.navSettlements,
+      href: "/settlements",
+      icon: Wallet,
+    },
+    {
+      label: t.navSettings,
+      href: "/settings",
+      icon: Settings,
     },
   ];
 
@@ -89,15 +87,6 @@ export default function VendorMobileNav({
             </Link>
           );
         })}
-
-        {/* Role switcher button on mobile */}
-        <button
-          onClick={onOpenRoleModal}
-          className="flex flex-col items-center justify-center py-2 px-3 min-w-[64px] min-h-[48px] rounded-xl text-slate-500 hover:text-emerald-700 transition-colors"
-        >
-          <UserCheck size={20} className="text-slate-400" />
-          <span className="text-[10px] mt-1">{t.switchRole}</span>
-        </button>
       </div>
     </nav>
   );

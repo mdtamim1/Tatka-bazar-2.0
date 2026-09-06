@@ -7,8 +7,6 @@ import {
   Bell,
   Volume2,
   VolumeX,
-  Languages,
-  UserCheck,
   Zap,
   HelpCircle,
   Store,
@@ -20,20 +18,17 @@ import { translations } from "@/utils/translations";
 interface VendorHeaderProps {
   onToggleMobileSidebar: () => void;
   onOpenNotifications: () => void;
-  onOpenRoleModal: () => void;
+  onOpenRoleModal?: () => void;
   onOpenShortcuts: () => void;
 }
 
 export default function VendorHeader({
   onToggleMobileSidebar,
   onOpenNotifications,
-  onOpenRoleModal,
   onOpenShortcuts,
 }: VendorHeaderProps) {
   const {
     language,
-    setLanguage,
-    currentRole,
     soundEnabled,
     toggleSound,
     simulateIncomingOrder,
@@ -57,17 +52,6 @@ export default function VendorHeader({
   const pendingPrepCount = orders.filter(
     (o) => o.status === "RECEIVED" || o.status === "PREPARING"
   ).length;
-
-  const getRoleLabel = () => {
-    switch (currentRole) {
-      case "OWNER":
-        return t.roleOwner;
-      case "MANAGER":
-        return t.roleManager;
-      case "STAFF":
-        return t.roleStaff;
-    }
-  };
 
   const getDutyColor = () => {
     switch (dutyStatus) {
@@ -224,16 +208,6 @@ export default function VendorHeader({
           {soundEnabled ? <Volume2 size={16} /> : <VolumeX size={16} />}
         </button>
 
-        {/* Language Switcher */}
-        <button
-          onClick={() => setLanguage(language === "en" ? "bn" : "en")}
-          className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-white border border-slate-200 text-slate-700 hover:text-emerald-700 hover:border-emerald-300 text-xs font-bold transition-all shadow-xs"
-          title="Switch Language"
-        >
-          <Languages size={14} className="text-emerald-600" />
-          <span className="font-bold">{language.toUpperCase()}</span>
-        </button>
-
         {/* Notifications Bell */}
         <button
           onClick={onOpenNotifications}
@@ -246,16 +220,6 @@ export default function VendorHeader({
               {unreadNotifs}
             </span>
           )}
-        </button>
-
-        {/* Role Switcher Pill */}
-        <button
-          onClick={onOpenRoleModal}
-          className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-emerald-200 bg-emerald-50/70 text-emerald-800 text-xs font-bold transition-all hover:bg-emerald-100"
-          title={t.switchRole}
-        >
-          <UserCheck size={13} className="text-emerald-600" />
-          <span>{getRoleLabel()}</span>
         </button>
 
         {/* Keyboard Shortcuts Help */}
