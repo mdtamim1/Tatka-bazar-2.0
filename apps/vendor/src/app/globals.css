@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -8,33 +8,38 @@
   --font-sans: 'Inter', 'Hind Siliguri', -apple-system, BlinkMacSystemFont, sans-serif;
   --font-bengali: 'Hind Siliguri', sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
+  --bg-canvas: #F8FAF8;
+  --bg-surface: #FFFFFF;
+  --primary-green: #059669;
+  --primary-dark: #064E3B;
+  --border-light: #E2E8F0;
 }
 
 body {
   font-family: var(--font-sans);
-  background-color: #0B1215;
-  color: #E2E8F0;
+  background-color: #F8FAF8;
+  color: #0F172A;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Custom smooth scrollbar */
+/* Custom premium emerald scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #0B1215;
+  background: #F1F5F2;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #20333B;
+  background: #A7F3D0;
   border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #0F766E;
+  background: #059669;
 }
 
 /* Tabular numbers for financial and stock figures */
@@ -42,21 +47,33 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
-/* Operational Badges & Utilities */
+/* Operational Badges & Utilities (Off-White & Green Palette) */
 @layer components {
   .badge-emerald {
-    @apply inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20;
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-800 border border-emerald-200/80 shadow-sm;
   }
   .badge-amber {
-    @apply inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-amber-500/10 text-amber-400 border border-amber-500/20;
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-50 text-amber-800 border border-amber-200/80 shadow-sm;
   }
   .badge-rose {
-    @apply inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-rose-500/10 text-rose-400 border border-rose-500/20;
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-rose-50 text-rose-800 border border-rose-200/80 shadow-sm;
   }
   .badge-sky {
-    @apply inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-sky-500/10 text-sky-400 border border-sky-500/20;
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-sky-50 text-sky-800 border border-sky-200/80 shadow-sm;
   }
   .badge-slate {
-    @apply inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-800 text-slate-300 border border-slate-700;
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-slate-100 text-slate-700 border border-slate-200 shadow-sm;
+  }
+
+  .vendor-card {
+    @apply bg-white border border-slate-200/80 rounded-2xl shadow-sm hover:shadow-md hover:border-emerald-200 transition-all duration-200;
+  }
+
+  .vendor-btn-primary {
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md shadow-emerald-600/20 active:scale-[0.98] transition-all;
+  }
+
+  .vendor-btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 font-bold text-xs shadow-sm active:scale-[0.98] transition-all;
   }
 }

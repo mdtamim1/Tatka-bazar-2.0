@@ -15,7 +15,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className="bg-[#0B1215] text-slate-100 min-h-screen antialiased selection:bg-emerald-600 selection:text-white">
+      <body className="bg-[#F8FAF8] text-slate-900 min-h-screen antialiased selection:bg-emerald-600 selection:text-white">
         <VendorShell>{children}</VendorShell>
       </body>
     </html>

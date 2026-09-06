@@ -32,6 +32,9 @@ interface VendorState {
 
   // Profile & Status
   profile: VendorProfile;
+  dutyStatus: "STORE_OPEN" | "BUSY" | "STORE_CLOSED";
+  incomingOrderAlert: Order | null;
+  chatOrder: Order | null;
 
   // Data Collections
   products: Product[];
@@ -52,6 +55,11 @@ interface VendorState {
   setRole: (role: VendorRole) => void;
   toggleSound: () => void;
   toggleVacationMode: () => void;
+  setDutyStatus: (status: "STORE_OPEN" | "BUSY" | "STORE_CLOSED") => void;
+  setIncomingOrderAlert: (order: Order | null) => void;
+  setChatOrder: (order: Order | null) => void;
+  acceptOrder: (orderId: string) => void;
+  declineOrder: (orderId: string) => void;
   updateProfile: (updates: Partial<VendorProfile>) => void;
 
   // Order Operations
@@ -940,6 +948,9 @@ export const useVendorStore = create<VendorState>()(
       language: "bn", // Default to Bengali as requested by Bangladeshi merchants
       currentRole: "OWNER",
       soundEnabled: true,
+      dutyStatus: "STORE_OPEN",
+      incomingOrderAlert: null,
+      chatOrder: null,
       profile: initialProfile,
       products: initialProducts,
       orders: initialOrders,
@@ -961,6 +972,30 @@ export const useVendorStore = create<VendorState>()(
         const next = !get().soundEnabled;
         audioAlert.setSoundEnabled(next);
         set({ soundEnabled: next });
+      },
+
+      setDutyStatus: (status) => {
+        set({ dutyStatus: status });
+        if (typeof window !== "undefined") {
+          localStorage.setItem("tatka_vendor_duty", status);
+          window.dispatchEvent(
+            new CustomEvent("tatka_vendor_duty_change", { detail: { status } })
+          );
+        }
+      },
+
+      setIncomingOrderAlert: (order) => set({ incomingOrderAlert: order }),
+      setChatOrder: (order) => set({ chatOrder: order }),
+
+      acceptOrder: (orderId) => {
+        get().updateOrderStatus(orderId, "PREPARING");
+        set({ incomingOrderAlert: null });
+        audioAlert.playSuccessSound();
+      },
+
+      declineOrder: (orderId) => {
+        get().updateOrderStatus(orderId, "CANCELLED");
+        set({ incomingOrderAlert: null });
       },
 
       toggleVacationMode: () => {
@@ -1158,6 +1193,7 @@ export const useVendorStore = create<VendorState>()(
         set((state) => ({
           orders: [newOrder, ...state.orders],
           notifications: [newNotif, ...state.notifications],
+          incomingOrderAlert: newOrder,
         }));
 
         audioAlert.playNewOrderChime();

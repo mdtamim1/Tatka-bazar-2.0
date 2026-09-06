@@ -43,43 +43,45 @@ export default function StockAdjustModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
       <div
-        className="fixed inset-0 bg-black/75 backdrop-blur-sm"
+        className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm"
         onClick={onClose}
       />
 
-      <div className="relative bg-[#111C20] border border-[#20333B] rounded-xl max-w-md w-full p-6 shadow-2xl z-10">
-        <div className="flex items-center justify-between pb-4 border-b border-[#20333B]">
-          <div className="flex items-center gap-2">
-            <Package className="text-emerald-400" size={20} />
-            <h3 className="text-sm font-bold text-white uppercase tracking-wider">
+      <div className="relative bg-white border border-slate-200 rounded-2xl max-w-md w-full p-6 shadow-2xl z-10">
+        <div className="flex items-center justify-between pb-4 border-b border-slate-100">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+              <Package size={20} />
+            </div>
+            <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider">
               {t.adjustStockBtn}
             </h3>
           </div>
           <button
             onClick={onClose}
-            className="p-1 rounded text-slate-400 hover:text-white"
+            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
           >
             <X size={18} />
           </button>
         </div>
 
-        <div className="mt-4 p-3 rounded-lg bg-[#152227] border border-[#20333B]">
-          <h4 className="text-xs font-bold text-slate-200">
+        <div className="mt-4 p-3.5 rounded-xl bg-slate-50 border border-slate-200">
+          <h4 className="text-xs font-bold text-slate-900">
             {language === "bn" ? product.nameBn : product.name}
           </h4>
-          <div className="flex items-center justify-between mt-1 text-xs text-slate-400 font-mono">
+          <div className="flex items-center justify-between mt-1 text-xs text-slate-500 font-mono">
             <span>SKU: {product.sku}</span>
             <span>
-              {t.previousQty}: <strong className="text-slate-200">{product.stockQty} {product.unit}</strong>
+              {t.previousQty}: <strong className="text-slate-900">{product.stockQty} {product.unit}</strong>
             </span>
           </div>
         </div>
 
         <form onSubmit={handleSubmit} className="mt-4 space-y-4">
           <div>
-            <label className="block text-xs font-semibold text-slate-200 mb-1">
+            <label className="block text-xs font-semibold text-slate-700 mb-1">
               {t.newQty} ({product.unit})
             </label>
             <div className="flex items-center gap-3">
@@ -89,15 +91,15 @@ export default function StockAdjustModal({
                 required
                 value={newQty}
                 onChange={(e) => setNewQty(parseInt(e.target.value) || 0)}
-                className="w-full bg-[#0E171B] border border-[#20333B] focus:border-emerald-500 rounded-lg px-3 py-2 text-base font-mono font-bold text-white focus:outline-none"
+                className="w-full bg-slate-50 border border-slate-200 focus:border-emerald-500 focus:bg-white rounded-xl px-3 py-2 text-base font-mono font-bold text-slate-900 focus:outline-none transition-colors"
               />
               <div
-                className={`px-3 py-2 rounded-lg font-mono text-xs font-bold shrink-0 border ${
+                className={`px-3 py-2 rounded-xl font-mono text-xs font-bold shrink-0 border ${
                   delta > 0
-                    ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30"
+                    ? "bg-emerald-100 text-emerald-800 border-emerald-300"
                     : delta < 0
-                    ? "bg-rose-500/10 text-rose-400 border-rose-500/30"
-                    : "bg-slate-800 text-slate-400 border-slate-700"
+                    ? "bg-rose-100 text-rose-800 border-rose-300"
+                    : "bg-slate-100 text-slate-600 border-slate-200"
                 }`}
               >
                 {delta > 0 ? `+${delta}` : delta}
@@ -106,13 +108,13 @@ export default function StockAdjustModal({
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-200 mb-1">
+            <label className="block text-xs font-semibold text-slate-700 mb-1">
               {t.reasonCol} *
             </label>
             <select
               value={reason}
               onChange={(e) => setReason(e.target.value as StockAdjustmentReason)}
-              className="w-full bg-[#0E171B] border border-[#20333B] rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500"
+              className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-emerald-500 focus:bg-white transition-colors"
             >
               <option value="RESTOCK">{t.reasonRestock}</option>
               <option value="DAMAGED">{t.reasonDamaged}</option>
@@ -123,7 +125,7 @@ export default function StockAdjustModal({
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-200 mb-1">
+            <label className="block text-xs font-semibold text-slate-700 mb-1">
               {language === "bn" ? "অডিট মন্তব্য (ঐচ্ছিক)" : "Audit Notes (Optional)"}
             </label>
             <input
@@ -131,21 +133,22 @@ export default function StockAdjustModal({
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               placeholder="e.g. Crate count mismatch, batch arrival #12"
-              className="w-full bg-[#0E171B] border border-[#20333B] rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500"
-            />
+              className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-emerald-500 focus:bg-white transition-colors"
+            >
+            </input>
           </div>
 
-          <div className="pt-2 border-t border-[#20333B] flex items-center justify-end gap-2.5">
+          <div className="pt-3 border-t border-slate-100 flex items-center justify-end gap-2.5">
             <button
               type="button"
               onClick={onClose}
-              className="py-2 px-3 rounded-lg bg-[#152227] hover:bg-[#1c2c33] border border-[#20333B] text-slate-300 text-xs font-medium"
+              className="py-2.5 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition-colors"
             >
               {t.cancelBtn}
             </button>
             <button
               type="submit"
-              className="py-2 px-4 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold flex items-center gap-1.5 shadow-md shadow-emerald-950"
+              className="py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold flex items-center gap-1.5 shadow-sm transition-all active:scale-95"
             >
               <Save size={15} />
               <span>{t.adjustStockBtn}</span>

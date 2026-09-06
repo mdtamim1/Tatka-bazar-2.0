@@ -8,6 +8,11 @@ import VendorMobileNav from "./VendorMobileNav";
 import NotificationDrawer from "@/components/common/NotificationDrawer";
 import RoleSwitcherModal from "@/components/common/RoleSwitcherModal";
 import KeyboardShortcutsModal from "@/components/common/KeyboardShortcutsModal";
+import IncomingOrderModal from "@/components/common/IncomingOrderModal";
+import RiderChatModal from "@/components/common/RiderChatModal";
+import { useVendorStore } from "@/store/vendorStore";
+import { subscribeSyncEvent } from "@/lib/sync";
+import { audioAlert } from "@/utils/audioAlert";
 
 export default function VendorShell({
   children,
@@ -19,6 +24,17 @@ export default function VendorShell({
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [isRoleModalOpen, setIsRoleModalOpen] = useState(false);
   const [isShortcutsOpen, setIsShortcutsOpen] = useState(false);
+
+  // Live store values
+  const {
+    incomingOrderAlert,
+    acceptOrder,
+    declineOrder,
+    chatOrder,
+    setChatOrder,
+    simulateIncomingOrder,
+    updateOrderStatus,
+  } = useVendorStore();
 
   // Keyboard shortcut listener ('?' for shortcuts modal, '/' for search focus)
   useEffect(() => {
@@ -41,18 +57,31 @@ export default function VendorShell({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
+  // Cross-app sync listener (receives events from storefront, rider, or admin)
+  useEffect(() => {
+    const unsubscribe = subscribeSyncEvent((payload) => {
+      if (payload.type === "NEW_ORDER") {
+        simulateIncomingOrder();
+      } else if (payload.type === "PAYOUT_APPROVED") {
+        audioAlert.playSuccessSound();
+      }
+    });
+
+    return () => unsubscribe();
+  }, [simulateIncomingOrder]);
+
   const isAuthPage = pathname === "/login" || pathname === "/onboarding";
 
   if (isAuthPage) {
     return (
-      <div className="min-h-screen bg-[#0B1215] flex flex-col justify-center">
+      <div className="min-h-screen bg-[#F8FAF8] flex flex-col justify-center text-slate-900">
         {children}
       </div>
     );
   }
 
   return (
-    <div className="flex h-screen overflow-hidden bg-[#0B1215] text-slate-100">
+    <div className="flex h-screen overflow-hidden bg-[#F8FAF8] text-slate-900">
       {/* Desktop Persistent Sidebar */}
       <div className="hidden lg:flex lg:flex-shrink-0">
         <VendorSidebar />
@@ -62,10 +91,10 @@ export default function VendorShell({
       {isMobileSidebarOpen && (
         <div className="fixed inset-0 z-50 lg:hidden flex">
           <div
-            className="fixed inset-0 bg-black/70 backdrop-blur-sm transition-opacity"
+            className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm transition-opacity"
             onClick={() => setIsMobileSidebarOpen(false)}
           />
-          <div className="relative flex-1 flex flex-col max-w-xs w-full bg-[#111C20] border-r border-[#20333B]">
+          <div className="relative flex-1 flex flex-col max-w-xs w-full bg-white border-r border-slate-200">
             <VendorSidebar onClose={() => setIsMobileSidebarOpen(false)} />
           </div>
         </div>
@@ -82,7 +111,7 @@ export default function VendorShell({
         />
 
         {/* Scrollable Content Area */}
-        <main className="flex-1 relative overflow-y-auto px-4 py-4 sm:px-6 sm:py-6 lg:px-8 pb-24 lg:pb-10 bg-[#0B1215]">
+        <main className="flex-1 relative overflow-y-auto px-4 py-4 sm:px-6 sm:py-6 lg:px-8 pb-24 lg:pb-10 bg-[#F8FAF8]">
           <div className="max-w-7xl mx-auto">{children}</div>
         </main>
       </div>
@@ -107,6 +136,20 @@ export default function VendorShell({
       <KeyboardShortcutsModal
         isOpen={isShortcutsOpen}
         onClose={() => setIsShortcutsOpen(false)}
+      />
+
+      {/* ── Incoming Order Alert Modal with 45s Countdown & Chime ── */}
+      <IncomingOrderModal
+        order={incomingOrderAlert}
+        onAccept={acceptOrder}
+        onDecline={declineOrder}
+      />
+
+      {/* ── Live Rider-Vendor Chat Modal ── */}
+      <RiderChatModal
+        isOpen={Boolean(chatOrder)}
+        onClose={() => setChatOrder(null)}
+        orderNumber={chatOrder?.displayId}
       />
     </div>
   );

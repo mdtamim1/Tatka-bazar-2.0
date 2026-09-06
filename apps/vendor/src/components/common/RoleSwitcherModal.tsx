@@ -94,29 +94,31 @@ export default function RoleSwitcherModal({
   ];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
       <div
-        className="fixed inset-0 bg-black/75 backdrop-blur-sm"
+        className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm"
         onClick={onClose}
       />
 
-      <div className="relative bg-[#111C20] border border-[#20333B] rounded-xl max-w-lg w-full p-6 shadow-2xl z-10">
-        <div className="flex items-center justify-between pb-4 border-b border-[#20333B]">
-          <div className="flex items-center gap-2">
-            <UserCheck className="text-emerald-400" size={20} />
-            <h3 className="text-sm font-bold text-white uppercase tracking-wider">
+      <div className="relative bg-white border border-slate-200 rounded-2xl max-w-lg w-full p-6 shadow-2xl z-10">
+        <div className="flex items-center justify-between pb-4 border-b border-slate-100">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+              <UserCheck size={20} />
+            </div>
+            <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider">
               {t.switchRole}
             </h3>
           </div>
           <button
             onClick={onClose}
-            className="p-1 rounded text-slate-400 hover:text-white"
+            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
           >
             <X size={18} />
           </button>
         </div>
 
-        <p className="text-xs text-slate-400 mt-2">
+        <p className="text-xs text-slate-500 mt-2.5">
           {language === "bn"
             ? "সিস্টেমের ভূমিকা পরিবর্তন করে বিভিন্ন কর্মচারীর পারমিশন প্রিভিউ ও টেস্ট করুন।"
             : "Switch roles to preview and test permission-gated operational workflows."}
@@ -134,50 +136,50 @@ export default function RoleSwitcherModal({
                   setRole(role.id);
                   onClose();
                 }}
-                className={`p-3.5 rounded-lg border transition-all cursor-pointer ${
+                className={`p-4 rounded-xl border transition-all cursor-pointer ${
                   isSelected
-                    ? "bg-[#152227] border-emerald-500 shadow-md ring-1 ring-emerald-500/50"
-                    : "bg-[#0E171B] border-[#20333B] hover:border-slate-600 hover:bg-[#152227]/60"
+                    ? "bg-emerald-50/50 border-emerald-500 shadow-sm ring-1 ring-emerald-500/30"
+                    : "bg-slate-50 border-slate-200 hover:border-slate-300 hover:bg-white"
                 }`}
               >
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-3">
                     <div
-                      className={`p-2 rounded-lg ${
+                      className={`p-2.5 rounded-xl ${
                         role.id === "OWNER"
-                          ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
+                          ? "bg-emerald-100 text-emerald-700"
                           : role.id === "MANAGER"
-                          ? "bg-sky-500/10 text-sky-400 border border-sky-500/20"
-                          : "bg-amber-500/10 text-amber-400 border border-amber-500/20"
+                          ? "bg-sky-100 text-sky-700"
+                          : "bg-amber-100 text-amber-700"
                       }`}
                     >
                       <IconComponent size={18} />
                     </div>
                     <div>
-                      <h4 className="text-xs font-bold text-white flex items-center gap-2">
+                      <h4 className="text-xs font-bold text-slate-900 flex items-center gap-2">
                         {role.title}
                         {isSelected && (
-                          <span className="text-[10px] bg-emerald-500/20 text-emerald-400 px-1.5 py-0.2 rounded border border-emerald-500/30">
+                          <span className="text-[10px] bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full font-bold border border-emerald-200">
                             {language === "bn" ? "সক্রিয়" : "Current"}
                           </span>
                         )}
                       </h4>
-                      <p className="text-[11px] text-slate-400 mt-0.5">
+                      <p className="text-[11px] text-slate-500 mt-0.5">
                         {role.description}
                       </p>
                     </div>
                   </div>
                   {isSelected && (
-                    <div className="w-5 h-5 rounded-full bg-emerald-500 text-black flex items-center justify-center shrink-0">
+                    <div className="w-5 h-5 rounded-full bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-2xs">
                       <Check size={12} strokeWidth={3} />
                     </div>
                   )}
                 </div>
 
-                <div className="mt-3 pt-2.5 border-t border-[#20333B]/50 grid grid-cols-1 sm:grid-cols-2 gap-1 text-[11px] text-slate-400">
+                <div className="mt-3 pt-2.5 border-t border-slate-200/60 grid grid-cols-1 sm:grid-cols-2 gap-1.5 text-[11px] text-slate-600">
                   {role.features.map((feat, idx) => (
                     <div key={idx} className="flex items-center gap-1.5">
-                      <span className="w-1 h-1 rounded-full bg-emerald-400" />
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 shrink-0" />
                       <span className="truncate">{feat}</span>
                     </div>
                   ))}

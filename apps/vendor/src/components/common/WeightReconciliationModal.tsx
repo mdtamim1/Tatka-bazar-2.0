@@ -51,50 +51,52 @@ export default function WeightReconciliationModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
       <div
-        className="fixed inset-0 bg-black/75 backdrop-blur-sm"
+        className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm"
         onClick={onClose}
       />
 
-      <div className="relative bg-[#111C20] border border-[#20333B] rounded-xl max-w-md w-full p-6 shadow-2xl z-10">
-        <div className="flex items-center justify-between pb-4 border-b border-[#20333B]">
-          <div className="flex items-center gap-2">
-            <Scale className="text-emerald-400" size={20} />
+      <div className="relative bg-white border border-slate-200 rounded-2xl max-w-md w-full p-6 shadow-2xl z-10">
+        <div className="flex items-center justify-between pb-4 border-b border-slate-100">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+              <Scale size={20} />
+            </div>
             <div>
-              <h3 className="text-sm font-bold text-white uppercase tracking-wider">
+              <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider">
                 {t.weightModalTitle}
               </h3>
-              <p className="text-[11px] text-slate-400">
-                Order #{order.displayId} • {order.customerName}
+              <p className="text-[11px] text-slate-500 font-medium">
+                অর্ডার #{order.displayId} • {order.customerName}
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-1 rounded text-slate-400 hover:text-white"
+            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
           >
             <X size={18} />
           </button>
         </div>
 
-        <div className="mt-4 p-3 rounded-lg bg-[#152227] border border-[#20333B]">
-          <h4 className="text-xs font-bold text-emerald-400">
+        <div className="mt-4 p-3.5 rounded-xl bg-slate-50 border border-slate-200">
+          <h4 className="text-xs font-bold text-emerald-700">
             {language === "bn" ? item.productNameBn : item.productName}
           </h4>
-          <div className="flex items-center justify-between mt-1 text-xs text-slate-400">
+          <div className="flex items-center justify-between mt-1.5 text-xs text-slate-600">
             <span>
-              {t.unitPriceLabel}: <strong className="text-slate-200">৳{item.unitPrice}/{item.unit}</strong>
+              {t.unitPriceLabel}: <strong className="text-slate-900">৳{item.unitPrice}/{item.unit}</strong>
             </span>
             <span>
-              {t.orderedWeightLabel}: <strong className="text-slate-200">{item.weightOrdered} {item.unit}</strong>
+              {t.orderedWeightLabel}: <strong className="text-slate-900">{item.weightOrdered} {item.unit}</strong>
             </span>
           </div>
         </div>
 
         <form onSubmit={handleConfirm} className="mt-4 space-y-4">
           <div>
-            <label className="block text-xs font-semibold text-slate-200 mb-1.5">
+            <label className="block text-xs font-semibold text-slate-700 mb-1.5">
               {t.actualWeightLabel}
             </label>
             <div className="relative">
@@ -106,37 +108,37 @@ export default function WeightReconciliationModal({
                 value={scaleWeight}
                 onChange={(e) => setScaleWeight(e.target.value)}
                 required
-                className="w-full bg-[#0E171B] border border-[#20333B] focus:border-emerald-500 rounded-lg px-3 py-2.5 text-base font-mono font-bold text-emerald-400 focus:outline-none transition-colors"
+                className="w-full bg-slate-50 border border-slate-200 focus:border-emerald-500 focus:bg-white rounded-xl px-3.5 py-2.5 text-base font-mono font-bold text-emerald-700 focus:outline-none transition-all shadow-2xs"
                 placeholder={t.actualWeightPlaceholder}
                 autoFocus
               />
-              <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-xs font-semibold text-slate-400">
+              <div className="absolute inset-y-0 right-0 pr-3.5 flex items-center pointer-events-none text-xs font-bold text-slate-500">
                 {item.unit}
               </div>
             </div>
           </div>
 
           {/* Price Reconciliation Summary Card */}
-          <div className="p-3.5 rounded-lg bg-[#0E171B] border border-[#20333B] space-y-2 text-xs">
-            <div className="flex items-center justify-between text-slate-400">
+          <div className="p-3.5 rounded-xl bg-emerald-50/50 border border-emerald-200/80 space-y-2 text-xs">
+            <div className="flex items-center justify-between text-slate-600">
               <span>{t.originalPriceLabel} ({item.weightOrdered} {item.unit}):</span>
-              <span className="font-mono text-slate-300">৳{originalPrice.toFixed(2)}</span>
+              <span className="font-mono font-medium text-slate-800">৳{originalPrice.toFixed(2)}</span>
             </div>
 
-            <div className="flex items-center justify-between font-semibold text-slate-100">
+            <div className="flex items-center justify-between font-bold text-slate-900">
               <span>{t.adjustedPriceLabel} ({numScaleWeight} {item.unit}):</span>
-              <span className="font-mono text-emerald-400 text-sm">৳{recalculatedPrice.toFixed(2)}</span>
+              <span className="font-mono text-emerald-700 text-sm">৳{recalculatedPrice.toFixed(2)}</span>
             </div>
 
-            <div className="pt-2 border-t border-[#20333B] flex items-center justify-between text-[11px]">
-              <span className="text-slate-400">{t.priceDifference}:</span>
+            <div className="pt-2 border-t border-emerald-200/60 flex items-center justify-between text-[11px]">
+              <span className="text-slate-500 font-medium">{t.priceDifference}:</span>
               <span
                 className={`font-mono font-bold ${
                   priceDiff > 0
-                    ? "text-amber-400"
+                    ? "text-amber-700"
                     : priceDiff < 0
-                    ? "text-sky-400"
-                    : "text-slate-400"
+                    ? "text-emerald-700"
+                    : "text-slate-500"
                 }`}
               >
                 {priceDiff > 0 ? `+৳${priceDiff.toFixed(2)}` : priceDiff < 0 ? `-৳${Math.abs(priceDiff).toFixed(2)}` : "৳0.00"}
@@ -144,19 +146,19 @@ export default function WeightReconciliationModal({
             </div>
           </div>
 
-          <div className="flex items-center gap-2.5 pt-2">
+          <div className="flex items-center gap-3 pt-2">
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 py-2 px-3 rounded-lg bg-[#152227] hover:bg-[#1c2c33] border border-[#20333B] text-slate-300 text-xs font-medium transition-colors"
+              className="flex-1 py-2.5 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition-colors"
             >
               {t.cancelBtn}
             </button>
             <button
               type="submit"
-              className="flex-1 py-2 px-3 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold flex items-center justify-center gap-1.5 shadow-md shadow-emerald-950 transition-colors"
+              className="flex-1 py-2.5 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold flex items-center justify-center gap-1.5 shadow-sm transition-all"
             >
-              <CheckCircle2 size={15} />
+              <CheckCircle2 size={16} />
               <span>{t.reconcileConfirmBtn}</span>
             </button>
           </div>

@@ -30,11 +30,11 @@ export default function PayoutRequestModal({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (amount <= 0) {
-      setError("Please enter an amount greater than zero.");
+      setError("অনুগ্রহ করে শূন্যের চেয়ে বেশি পরিমাণ লিখুন।");
       return;
     }
     if (amount > availableBalance && availableBalance > 0) {
-      setError("Requested amount exceeds withdrawable balance.");
+      setError("উত্তোলনের পরিমাণ উপলব্ধ ব্যালেন্সের চেয়ে বেশি হতে পারবে না।");
       return;
     }
     requestPayout(amount, method, account);
@@ -42,45 +42,47 @@ export default function PayoutRequestModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
       <div
-        className="fixed inset-0 bg-black/75 backdrop-blur-sm"
+        className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm"
         onClick={onClose}
       />
 
-      <div className="relative bg-[#111C20] border border-[#20333B] rounded-xl max-w-md w-full p-6 shadow-2xl z-10">
-        <div className="flex items-center justify-between pb-4 border-b border-[#20333B]">
-          <div className="flex items-center gap-2">
-            <Wallet className="text-emerald-400" size={20} />
-            <h3 className="text-sm font-bold text-white uppercase tracking-wider">
+      <div className="relative bg-white border border-slate-200 rounded-2xl max-w-md w-full p-6 shadow-2xl z-10">
+        <div className="flex items-center justify-between pb-4 border-b border-slate-100">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+              <Wallet size={20} />
+            </div>
+            <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider">
               {t.requestPayoutTitle}
             </h3>
           </div>
           <button
             onClick={onClose}
-            className="p-1 rounded text-slate-400 hover:text-white"
+            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
           >
             <X size={18} />
           </button>
         </div>
 
-        <div className="mt-4 p-3 rounded-lg bg-[#152227] border border-[#20333B] flex items-center justify-between">
-          <span className="text-xs text-slate-400">{t.availableBalance}:</span>
-          <span className="text-base font-mono font-bold text-emerald-400">
+        <div className="mt-4 p-3.5 rounded-xl bg-emerald-50/60 border border-emerald-200/80 flex items-center justify-between">
+          <span className="text-xs font-semibold text-slate-600">{t.availableBalance}:</span>
+          <span className="text-base font-mono font-bold text-emerald-700">
             ৳{availableBalance.toLocaleString()}
           </span>
         </div>
 
         {error && (
-          <div className="mt-3 p-2.5 rounded-lg bg-rose-500/10 border border-rose-500/20 text-xs text-rose-400 flex items-center gap-2">
-            <AlertCircle size={15} />
+          <div className="mt-3 p-3 rounded-xl bg-rose-50 border border-rose-200 text-xs text-rose-700 flex items-center gap-2">
+            <AlertCircle size={15} className="shrink-0" />
             <span>{error}</span>
           </div>
         )}
 
         <form onSubmit={handleSubmit} className="mt-4 space-y-4">
           <div>
-            <label className="block text-xs font-semibold text-slate-200 mb-1">
+            <label className="block text-xs font-semibold text-slate-700 mb-1">
               {t.payoutMethodLabel}
             </label>
             <select
@@ -92,7 +94,7 @@ export default function PayoutRequestModal({
                 else if (m === "NAGAD") setAccount("+8801819000111 (Merchant Nagad)");
                 else setAccount("BRAC Bank A/C #15012039120");
               }}
-              className="w-full bg-[#0E171B] border border-[#20333B] rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500"
+              className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-emerald-500 focus:bg-white transition-colors"
             >
               <option value="BKASH">bKash Merchant Account (তাৎক্ষণিক)</option>
               <option value="NAGAD">Nagad Merchant Account (তাৎক্ষণিক)</option>
@@ -101,11 +103,11 @@ export default function PayoutRequestModal({
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-200 mb-1">
+            <label className="block text-xs font-semibold text-slate-700 mb-1">
               {t.payoutAmountLabel} *
             </label>
             <div className="relative">
-              <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 font-bold">
+              <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400 font-bold">
                 ৳
               </span>
               <input
@@ -118,13 +120,13 @@ export default function PayoutRequestModal({
                   setError(null);
                   setAmount(parseFloat(e.target.value) || 0);
                 }}
-                className="w-full bg-[#0E171B] border border-[#20333B] focus:border-emerald-500 rounded-lg pl-8 pr-3 py-2 text-base font-mono font-bold text-white focus:outline-none"
+                className="w-full bg-slate-50 border border-slate-200 focus:border-emerald-500 focus:bg-white rounded-xl pl-8 pr-3 py-2 text-base font-mono font-bold text-slate-900 focus:outline-none transition-colors"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-200 mb-1">
+            <label className="block text-xs font-semibold text-slate-700 mb-1">
               {t.payoutAccountLabel} *
             </label>
             <input
@@ -132,21 +134,21 @@ export default function PayoutRequestModal({
               required
               value={account}
               onChange={(e) => setAccount(e.target.value)}
-              className="w-full bg-[#0E171B] border border-[#20333B] focus:border-emerald-500 rounded-lg px-3 py-2 text-xs text-white focus:outline-none font-mono"
+              className="w-full bg-slate-50 border border-slate-200 focus:border-emerald-500 focus:bg-white rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none font-mono transition-colors"
             />
           </div>
 
-          <div className="pt-2 border-t border-[#20333B] flex items-center justify-end gap-2.5">
+          <div className="pt-3 border-t border-slate-100 flex items-center justify-end gap-2.5">
             <button
               type="button"
               onClick={onClose}
-              className="py-2 px-3 rounded-lg bg-[#152227] hover:bg-[#1c2c33] border border-[#20333B] text-slate-300 text-xs font-medium"
+              className="py-2.5 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition-colors"
             >
               {t.cancelBtn}
             </button>
             <button
               type="submit"
-              className="py-2 px-4 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold flex items-center gap-1.5 shadow-md shadow-emerald-950"
+              className="py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold flex items-center gap-1.5 shadow-sm transition-all active:scale-95"
             >
               <Send size={14} />
               <span>{t.submitPayoutBtn}</span>
