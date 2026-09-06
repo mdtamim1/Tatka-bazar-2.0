@@ -20,6 +20,7 @@ import { riderRoutes } from "./routes/api/riders.js";
 import { vendorRoutes } from "./routes/api/vendors.js";
 import { paymentRoutes } from "./routes/api/payment.js";
 import { otpRoutes } from "./routes/api/otp.js";
+import { dispatchRoutes } from "./routes/api/dispatch.js";
 import { riderPortalRoutes } from "./routes/rider-portal/index.js";
 import { xssSanitizerHook } from "./middleware/xss-sanitizer.js";
 
@@ -37,6 +38,14 @@ const ALLOWED_ORIGINS = rawOrigins.length
       "http://localhost:3002",
       "http://localhost:3003",
       "http://localhost:3004",
+      "http://localhost:3005",
+      "http://localhost:3006",
+      "http://127.0.0.1:3000",
+      "http://127.0.0.1:3003",
+      "http://127.0.0.1:3006",
+      "https://tatka-bazar-2-0-storefront.vercel.app",
+      "https://tatka-bazar-2-0-rider-seven.vercel.app",
+      "https://tatka-bazar-2-0-vendor.vercel.app",
     ];
 
 async function bootstrap() {
@@ -145,6 +154,7 @@ async function bootstrap() {
   await app.register(paymentRoutes,      { prefix: "/api/payment" });
   await app.register(otpRoutes,          { prefix: "/api/otp" });
   await app.register(riderPortalRoutes,  { prefix: "/rider-portal" });
+  await app.register(dispatchRoutes,     { prefix: "/api/dispatch" });
 
   // ---------------------------------------------------------------------------
   // Global Unified Mobile & Web Error Handler

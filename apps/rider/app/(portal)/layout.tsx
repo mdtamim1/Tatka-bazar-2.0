@@ -30,6 +30,8 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
   const [incomingOrder, setIncomingOrder] = useState<Task | null>(null);
   const [countdown, setCountdown] = useState<number>(TOTAL_COUNTDOWN);
   const countdownTimerRef = useRef<any>(null);
+  const seenTaskIdsRef = useRef<Set<string>>(new Set());
+  const initialLoadRef = useRef(true);
 
   // Real-time Sync state
   const [syncNotice, setSyncNotice] = useState<string | null>(null);
@@ -95,17 +97,45 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
     };
   }, [router]);
 
-  // Poll tasks
+  // Poll tasks every 3 seconds for instant real-time incoming orders
   useEffect(() => {
     const poll = () => {
-      apiFetch<{ data: unknown[] }>("/rider-portal/tasks").then(r => {
-        if (r.success && Array.isArray(r.data)) setTaskCount((r.data as unknown[]).length);
+      apiFetch<Task[]>("/rider-portal/tasks").then(r => {
+        if (r.success && Array.isArray(r.data)) {
+          const taskList = r.data as Task[];
+          setTaskCount(taskList.length);
+
+          if (initialLoadRef.current) {
+            taskList.forEach((t) => {
+              seenTaskIdsRef.current.add(t.id);
+              if (t.orderNumber) seenTaskIdsRef.current.add(t.orderNumber);
+            });
+            initialLoadRef.current = false;
+            return;
+          }
+
+          // Check for newly arrived unhandled tasks
+          const brandNew = taskList.filter(
+            (t) => !seenTaskIdsRef.current.has(t.id) && (!t.orderNumber || !seenTaskIdsRef.current.has(t.orderNumber))
+          );
+
+          if (brandNew.length > 0) {
+            brandNew.forEach((t) => {
+              seenTaskIdsRef.current.add(t.id);
+              if (t.orderNumber) seenTaskIdsRef.current.add(t.orderNumber);
+            });
+
+            if (getDutyStatus() === "ONLINE" && !incomingOrder && brandNew[0]) {
+              showIncomingOrder(brandNew[0]);
+            }
+          }
+        }
       }).catch(() => {});
     };
     poll();
-    const id = setInterval(poll, 15000);
+    const id = setInterval(poll, 3000);
     return () => clearInterval(id);
-  }, []);
+  }, [incomingOrder]);
 
   // Poll notifications
   useEffect(() => {

@@ -1103,6 +1103,43 @@ export async function apiFetch<T = unknown>(
   };
   if (token) headers["Authorization"] = `Bearer ${token}`;
 
+  const method = (options.method || "GET").toUpperCase();
+
+  // 1. Cross-App Dispatch Sync for Tasks (Vercel serverless & local)
+  if (path === "/rider-portal/tasks" && method === "GET") {
+    try {
+      const dispatchRes = await fetch("/api/dispatch");
+      if (dispatchRes.ok) {
+        const dispatchJson = await dispatchRes.json();
+        if (dispatchJson.success && Array.isArray(dispatchJson.data)) {
+          const localTasks = getLocalStore<Task[]>("available_tasks", []);
+          const merged: Task[] = [...(dispatchJson.data as Task[])];
+          for (const lt of localTasks) {
+            if (!merged.some((m) => m.id === lt.id || m.orderNumber === lt.orderNumber)) {
+              merged.push(lt);
+            }
+          }
+          setLocalStore("available_tasks", merged);
+          return { success: true, data: merged as any };
+        }
+      }
+    } catch {}
+  }
+
+  // 2. Cross-App Dispatch Claim Sync (Notify /api/dispatch when rider accepts)
+  if (path.includes("/accept") && method === "POST") {
+    const taskId = path.split("/")[3];
+    if (taskId) {
+      try {
+        fetch("/api/dispatch", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "CLAIM", taskId }),
+        }).catch(() => {});
+      } catch {}
+    }
+  }
+
   try {
     // Only attempt real fetch if API_BASE is reachable and not localhost over https
     const isHttps = typeof window !== "undefined" && window.location.protocol === "https:";

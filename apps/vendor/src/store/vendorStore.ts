@@ -23,7 +23,7 @@ import {
 } from "@/types/vendor";
 import { Language } from "@/utils/translations";
 import { audioAlert } from "@/utils/audioAlert";
-import { broadcastSyncEvent } from "@/lib/sync";
+import { broadcastSyncEvent, dispatchOrderToRiders } from "@/lib/sync";
 
 interface VendorState {
   // Localization & Role
@@ -1283,6 +1283,34 @@ export const useVendorStore = create<VendorState>()(
               riderName: target.riderName || "তানভীর আহমেদ",
               riderPhone: target.riderPhone || "01712-334455",
             });
+
+            // Cross-app live dispatch to Rider Portal (Vercel & Localhost)
+            const dispatchPayload = {
+              id: target.id,
+              orderNumber: target.displayId,
+              customerName: target.customerName.replace(/\[.*?\]/g, "").trim(),
+              customerPhone: target.customerPhone.includes("01") ? target.customerPhone.replace(/\[.*?\]/g, "").trim() : "01729-458921",
+              deliveryAddress: `${target.deliveryZone}, ঢাকা`,
+              deliveryZone: target.deliveryZone,
+              vendorName: state.profile.storeNameBn || state.profile.storeName || "সবুজ খামার গ্রোসারি",
+              itemCount: target.items.reduce((s, i) => s + (i.quantity || 1), 0),
+              subtotal: target.grossTotal,
+              deliveryFee: 60,
+              total: target.grossTotal + 60,
+              earnings: 50,
+              paymentStatus: target.paymentStatus || "COD",
+              paymentMethod: target.paymentMethod || "CASH_ON_DELIVERY",
+              items: target.items.map((it) => ({
+                name: it.productNameBn || it.productName,
+                qty: it.quantity,
+                price: it.finalPrice || it.unitPrice,
+                total: (it.finalPrice || it.unitPrice) * it.quantity,
+              })),
+              createdAt: new Date().toISOString(),
+              status: "READY_FOR_PICKUP",
+            };
+
+            dispatchOrderToRiders(dispatchPayload);
           }
 
           let updatedHistory = state.orderHistory;
