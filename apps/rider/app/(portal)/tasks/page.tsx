@@ -1,12 +1,13 @@
 "use client";
 import React, { useEffect, useState, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { apiFetch, type Task, type ActiveTask } from "@/lib/api";
+import { apiFetch, type Task, type ActiveTask, type RiderProfile } from "@/lib/api";
 
 export default function TasksPage() {
   const router = useRouter();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [active, setActive] = useState<ActiveTask[]>([]);
+  const [profile, setProfile] = useState<RiderProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [accepting, setAccepting] = useState<string | null>(null);
 
@@ -18,14 +19,16 @@ export default function TasksPage() {
 
   const fetchData = useCallback(async () => {
     try {
-      const [t, a] = await Promise.all([
+      const [t, a, p] = await Promise.all([
         apiFetch<Task[]>("/rider-portal/tasks"),
         apiFetch<ActiveTask[]>("/rider-portal/tasks/active"),
+        apiFetch<RiderProfile>("/rider-portal/me"),
       ]);
       if (t.success && Array.isArray(t.data)) setTasks(t.data);
       else if (t.success && !t.data) setTasks([]);
       if (a.success && Array.isArray(a.data)) setActive(a.data);
       else if (a.success && !a.data) setActive([]);
+      if (p.success && p.data) setProfile(p.data);
     } catch {
       // keep current state
     } finally {
@@ -64,7 +67,10 @@ export default function TasksPage() {
     setModalError("");
     setAccepting(modalTask.id);
     closeModal();
-    await apiFetch(`/rider-portal/tasks/${modalTask.id}/accept`, { method: "POST", body: JSON.stringify({ orderNumber: entered }) });
+    await apiFetch(`/rider-portal/tasks/${modalTask.id}/accept`, {
+      method: "POST",
+      body: JSON.stringify({ orderNumber: entered }),
+    });
     await fetchData();
     // Navigate to the latest active task
     const activeRes = await apiFetch<ActiveTask[]>("/rider-portal/tasks/active");
@@ -79,130 +85,223 @@ export default function TasksPage() {
 
   return (
     <>
-      {/* Order ID Verification Modal — Only input from physical package */}
-      {modalTask && (
-        <div
-          style={{
-            position: "fixed", inset: 0, zIndex: 999,
-            background: "rgba(0,0,0,0.75)", backdropFilter: "blur(6px)",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            padding: "20px",
-          }}
-          onClick={(e) => { if (e.target === e.currentTarget) closeModal(); }}
-        >
-          <div style={{
-            background: "var(--bg-card)",
-            borderRadius: "var(--r-xl)",
-            padding: "28px 24px",
-            width: "100%",
-            maxWidth: 360,
-            border: "1px solid var(--border-1)",
-            boxShadow: "0 24px 80px rgba(0,0,0,.5)",
-          }}>
-            <div style={{ fontSize: "2rem", textAlign: "center", marginBottom: 8 }}>📦</div>
-            <div style={{ fontSize: "1.1rem", fontWeight: 700, color: "var(--text-1)", textAlign: "center", marginBottom: 4 }}>
-              পণ্য রিসিভ ও অর্ডার আইডি যাচাই
-            </div>
-            <div style={{ fontSize: ".8rem", color: "var(--text-3)", textAlign: "center", fontFamily: "var(--font-bn)", marginBottom: 18, lineHeight: 1.6 }}>
-              সেলার থেকে পণ্যটি হাতে বুঝে নিন।<br />
-              প্যাকেটের গায়ে লেখা অর্ডার আইডিটি লিখে একসেপ্ট করুন।
-            </div>
+      {/* Order ID Verification Modal with Full Earnings & Balance Impact Preview */}
+      {modalTask && (() => {
+        const isPaid = modalTask.paymentStatus === "PAID";
+        const deliveryFee = Number(modalTask.deliveryFee || 60);
+        const earnings = modalTask.earnings || Math.round(deliveryFee * 0.5);
+        const totalBill = Number(modalTask.total || 1450);
+        const currentBalance = Number(profile?.balance ?? 0);
+        const projectedBalance = isPaid
+          ? currentBalance + earnings
+          : currentBalance + earnings - totalBill;
 
-            <div style={{ marginBottom: 12, fontSize: ".78rem", color: "var(--text-3)", fontFamily: "var(--font-bn)", padding: "10px 14px", background: "var(--bg-base)", borderRadius: "var(--r-md)", border: "1px solid var(--border-1)" }}>
-              🏪 সেলার / ভেন্ডর: <strong style={{ color: "var(--text-1)" }}>{modalTask.vendorName}</strong><br />
-              📍 গন্তব্য: {modalTask.deliveryAddress}
-            </div>
-
-            <label style={{ display: "block", fontSize: ".76rem", color: "var(--text-3)", fontFamily: "var(--font-bn)", marginBottom: 6 }}>
-              প্যাকেটের গায়ের অর্ডার আইডি লিখুন
-            </label>
-            <input
-              ref={inputRef}
-              id="order-id-input"
-              type="text"
-              placeholder="যেমন: TB-XXXX"
-              value={inputOrderNum}
-              onChange={e => { setInputOrderNum(e.target.value); setModalError(""); }}
-              onKeyDown={e => { if (e.key === "Enter") confirmAccept(); if (e.key === "Escape") closeModal(); }}
-              style={{
-                width: "100%",
-                background: "var(--bg-base)",
-                border: `1.5px solid ${modalError ? "#ef4444" : "var(--border-1)"}`,
-                borderRadius: "var(--r-md)",
-                padding: "14px 16px",
-                fontSize: "1.05rem",
-                color: "var(--text-1)",
-                fontFamily: "monospace",
-                letterSpacing: "0.1em",
-                outline: "none",
-                boxSizing: "border-box",
-                marginBottom: 8,
-                transition: "border-color .2s",
-                textTransform: "uppercase",
-              }}
-            />
-
-            {modalError && (
-              <div style={{ fontSize: ".75rem", color: "#ef4444", marginBottom: 12, fontFamily: "var(--font-bn)", lineHeight: 1.5, padding: "8px 12px", background: "rgba(239,68,68,.1)", borderRadius: "var(--r-sm)" }}>
-                {modalError}
+        return (
+          <div
+            style={{
+              position: "fixed", inset: 0, zIndex: 999,
+              background: "rgba(0,0,0,0.8)", backdropFilter: "blur(6px)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              padding: "16px",
+            }}
+            onClick={(e) => { if (e.target === e.currentTarget) closeModal(); }}
+          >
+            <div style={{
+              background: "var(--bg-card)",
+              borderRadius: "var(--r-xl)",
+              padding: "24px 20px",
+              width: "100%",
+              maxWidth: 380,
+              border: "1px solid var(--border-1)",
+              boxShadow: "0 24px 80px rgba(0,0,0,.6)",
+              maxHeight: "92vh",
+              overflowY: "auto",
+            }}>
+              <div style={{ fontSize: "1.8rem", textAlign: "center", marginBottom: 6 }}>📦</div>
+              <div style={{ fontSize: "1.1rem", fontWeight: 800, color: "var(--text-1)", textAlign: "center", marginBottom: 3 }}>
+                পণ্য রিসিভ ও অর্ডার একসেপ্ট
               </div>
-            )}
+              <div style={{ fontSize: ".76rem", color: "var(--text-3)", textAlign: "center", fontFamily: "var(--font-bn)", marginBottom: 14 }}>
+                সেলার থেকে প্যাকেট বুঝে নিয়ে অর্ডার আইডি লিখে একসেপ্ট করুন।
+              </div>
 
-            <div style={{ display: "flex", gap: 10, marginTop: 8 }}>
-              <button
-                onClick={closeModal}
+              {/* Earnings & Wallet Impact Preview Card */}
+              <div className="accept-preview-box">
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid var(--border-1)", paddingBottom: 6 }}>
+                  <span style={{ fontSize: ".76rem", fontWeight: 800, color: "var(--orange)" }}>
+                    💰 আয়ের হিসাব ও ওয়ালেট পূর্বাভাস
+                  </span>
+                  <span style={{ fontSize: ".70rem", fontWeight: 800, color: isPaid ? "#10B981" : "#F59E0B" }}>
+                    {isPaid ? "🟢 অনলাইন পেইড" : "💵 সিওডি (COD)"}
+                  </span>
+                </div>
+
+                <div className="accept-preview-row">
+                  <span style={{ color: "var(--text-3)" }}>রাইডারের ডেলিভারি আয়:</span>
+                  <strong style={{ color: "var(--emerald)" }}>+ ৳ {earnings.toLocaleString()}</strong>
+                </div>
+
+                <div className="accept-preview-row">
+                  <span style={{ color: "var(--text-3)" }}>কাস্টমার থেকে নগদ আদায়:</span>
+                  <strong style={{ color: isPaid ? "#10B981" : "var(--text-1)" }}>
+                    {isPaid ? "৳ ০ (টাকা নেবেন না)" : `৳ ${totalBill.toLocaleString()}`}
+                  </strong>
+                </div>
+
+                <div className="accept-preview-row">
+                  <span style={{ color: "var(--text-3)" }}>ওয়ালেট থেকে বিল সমন্বয়:</span>
+                  <strong style={{ color: isPaid ? "#10B981" : "#EF4444" }}>
+                    {isPaid ? "৳ ০ (কোনো কর্তন নেই)" : `- ৳ ${totalBill.toLocaleString()}`}
+                  </strong>
+                </div>
+
+                {/* Live Projected Balance */}
+                <div className="accept-projection-badge">
+                  <div>
+                    <div style={{ fontSize: ".65rem", color: "var(--text-3)" }}>বর্তমান ব্যালেন্স:</div>
+                    <div style={{ fontSize: ".84rem", fontWeight: 700, color: "var(--text-2)" }}>
+                      ৳ {currentBalance.toLocaleString()}
+                    </div>
+                  </div>
+                  <div style={{ fontSize: "1rem", color: "var(--text-4)" }}>➔</div>
+                  <div style={{ textAlign: "right" }}>
+                    <div style={{ fontSize: ".65rem", color: "var(--orange)", fontWeight: 700 }}>
+                      ডেলিভারি শেষে ব্যালেন্স:
+                    </div>
+                    <div style={{ fontSize: "1.02rem", fontWeight: 900, color: projectedBalance < 0 ? "#EF4444" : "var(--emerald)" }}>
+                      ৳ {projectedBalance.toLocaleString()}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Vendor & Address info */}
+              <div style={{ marginBottom: 12, fontSize: ".76rem", color: "var(--text-3)", fontFamily: "var(--font-bn)", padding: "10px 12px", background: "var(--bg-base)", borderRadius: "var(--r-md)", border: "1px solid var(--border-1)" }}>
+                🏪 সেলার / ভেন্ডর: <strong style={{ color: "var(--text-1)" }}>{modalTask.vendorName}</strong><br />
+                📍 গন্তব্য: {modalTask.deliveryAddress}
+              </div>
+
+              <label style={{ display: "block", fontSize: ".74rem", color: "var(--text-3)", fontFamily: "var(--font-bn)", marginBottom: 6 }}>
+                প্যাকেটের গায়ের অর্ডার আইডি লিখুন
+              </label>
+              <input
+                ref={inputRef}
+                id="order-id-input"
+                type="text"
+                placeholder="যেমন: TB-XXXX"
+                value={inputOrderNum}
+                onChange={e => { setInputOrderNum(e.target.value); setModalError(""); }}
+                onKeyDown={e => { if (e.key === "Enter") confirmAccept(); if (e.key === "Escape") closeModal(); }}
                 style={{
-                  flex: 1, padding: "13px", borderRadius: "var(--r-md)",
-                  background: "var(--bg-base)", border: "1px solid var(--border-1)",
-                  color: "var(--text-2)", cursor: "pointer", fontSize: ".9rem",
-                  fontFamily: "var(--font-bn)",
+                  width: "100%",
+                  background: "var(--bg-base)",
+                  border: `1.5px solid ${modalError ? "#ef4444" : "var(--border-1)"}`,
+                  borderRadius: "var(--r-md)",
+                  padding: "13px 15px",
+                  fontSize: "1.05rem",
+                  color: "var(--text-1)",
+                  fontFamily: "monospace",
+                  letterSpacing: "0.1em",
+                  outline: "none",
+                  boxSizing: "border-box",
+                  marginBottom: 8,
+                  transition: "border-color .2s",
+                  textTransform: "uppercase",
                 }}
-              >
-                বাতিল
-              </button>
-              <button
-                id="confirm-accept-btn"
-                onClick={confirmAccept}
-                disabled={!inputOrderNum.trim()}
-                style={{
-                  flex: 2, padding: "13px", borderRadius: "var(--r-md)",
-                  background: inputOrderNum.trim() ? "var(--orange)" : "var(--bg-card-hover)",
-                  border: "none", color: inputOrderNum.trim() ? "#fff" : "var(--text-3)",
-                  cursor: inputOrderNum.trim() ? "pointer" : "not-allowed",
-                  fontSize: ".95rem", fontWeight: 700, transition: "background .2s",
-                  fontFamily: "var(--font-bn)",
-                }}
-              >
-                ✅ একসেপ্ট করুন
-              </button>
+              />
+
+              {modalError && (
+                <div style={{ fontSize: ".74rem", color: "#ef4444", marginBottom: 10, fontFamily: "var(--font-bn)", lineHeight: 1.5, padding: "8px 12px", background: "rgba(239,68,68,.1)", borderRadius: "var(--r-sm)" }}>
+                  {modalError}
+                </div>
+              )}
+
+              <div style={{ display: "flex", gap: 10, marginTop: 6 }}>
+                <button
+                  type="button"
+                  onClick={closeModal}
+                  style={{
+                    flex: 1, padding: "12px", borderRadius: "var(--r-md)",
+                    background: "var(--bg-base)", border: "1px solid var(--border-1)",
+                    color: "var(--text-2)", cursor: "pointer", fontSize: ".88rem",
+                    fontFamily: "var(--font-bn)",
+                  }}
+                >
+                  বাতিল
+                </button>
+                <button
+                  id="confirm-accept-btn"
+                  type="button"
+                  onClick={confirmAccept}
+                  disabled={!inputOrderNum.trim()}
+                  style={{
+                    flex: 2, padding: "12px", borderRadius: "var(--r-md)",
+                    background: inputOrderNum.trim() ? "var(--orange)" : "var(--bg-card-hover)",
+                    border: "none", color: inputOrderNum.trim() ? "#fff" : "var(--text-3)",
+                    cursor: inputOrderNum.trim() ? "pointer" : "not-allowed",
+                    fontSize: ".92rem", fontWeight: 700, transition: "background .2s",
+                    fontFamily: "var(--font-bn)",
+                  }}
+                >
+                  ✅ একসেপ্ট করুন
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       <div className="page-content">
         {active.length > 0 && (
           <>
             <div className="section-header">
               <div className="section-title">
-                ✅ চলমান ডেলিভারি (রিসিভড অর্ডার)
-                <span className="live-badge"><span className="live-dot" />{active.length}টি</span>
+                ✅ চলমান ডেলিভারি ({active.length}টি)
+                <span className="live-badge"><span className="live-dot" />LIVE</span>
               </div>
             </div>
             {active.map((a, i) => (
-              <div key={a.assignmentId} className="task-card" style={{ animationDelay: `${i * 0.08}s`, borderColor: "rgba(0,214,143,.25)" }}>
+              <div
+                key={a.assignmentId}
+                className="task-card"
+                style={{
+                  animationDelay: `${i * 0.08}s`,
+                  borderColor: a.status === "RETURNING_TO_VENDOR" ? "rgba(239,68,68,.4)" : "rgba(0,214,143,.3)",
+                }}
+              >
                 <div className="task-card-header">
                   <div className="task-vendor">
-                    <div className="task-vendor-icon" style={{ background: "var(--emerald-glass)", border: "1px solid rgba(0,214,143,.3)" }}>🏪</div>
+                    <div
+                      className="task-vendor-icon"
+                      style={{
+                        background: a.status === "RETURNING_TO_VENDOR" ? "rgba(239,68,68,.15)" : "var(--emerald-glass)",
+                        border: `1px solid ${a.status === "RETURNING_TO_VENDOR" ? "rgba(239,68,68,.4)" : "rgba(0,214,143,.3)"}`,
+                      }}
+                    >
+                      {a.status === "RETURNING_TO_VENDOR" ? "🔄" : "🏪"}
+                    </div>
                     <div>
                       <div className="task-vendor-name">{a.order.vendorName}</div>
                       <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 2, flexWrap: "wrap" }}>
                         <span style={{ color: "var(--emerald)", fontWeight: 700, fontFamily: "monospace", fontSize: ".82rem" }}>
                           #{a.order.orderNumber}
                         </span>
-                        <span style={{ fontSize: ".68rem", color: "var(--emerald)", background: "rgba(0,214,143,.12)", padding: "1px 6px", borderRadius: 4, fontWeight: 600 }}>
-                          রিসিভড
-                        </span>
+                        
+                        {/* 3-Stage Stage Chip */}
+                        {a.status === "RETURNING_TO_VENDOR" ? (
+                          <span style={{ fontSize: ".68rem", color: "#EF4444", background: "rgba(239,68,68,.15)", border: "1px solid rgba(239,68,68,.3)", padding: "1px 6px", borderRadius: 4, fontWeight: 700 }}>
+                            🔄 সেলারকে রিটার্ন
+                          </span>
+                        ) : a.status === "ON_THE_WAY" ? (
+                          <span style={{ fontSize: ".68rem", color: "var(--orange)", background: "var(--orange-glass)", border: "1px solid var(--border-orange)", padding: "1px 6px", borderRadius: 4, fontWeight: 700 }}>
+                            🚀 ডেলিভারির পথে
+                          </span>
+                        ) : (
+                          <span style={{ fontSize: ".68rem", color: "var(--emerald)", background: "rgba(0,214,143,.12)", border: "1px solid rgba(0,214,143,.25)", padding: "1px 6px", borderRadius: 4, fontWeight: 700 }}>
+                            📦 পার্সেল রিসিভড
+                          </span>
+                        )}
+
                         {a.order.paymentStatus === "PAID" ? (
                           <span style={{ fontSize: ".68rem", color: "#10B981", background: "rgba(16,185,129,.15)", border: "1px solid rgba(16,185,129,.3)", padding: "1px 6px", borderRadius: 4, fontWeight: 700 }}>
                             🟢 PAID
@@ -222,6 +321,7 @@ export default function TasksPage() {
                     </div>
                   </div>
                 </div>
+
                 {a.order.total && (
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "6px 12px", background: a.order.paymentStatus === "PAID" ? "rgba(16,185,129,.08)" : "var(--bg-base)", borderRadius: 8, fontSize: ".76rem", color: "var(--text-2)", fontFamily: "var(--font-bn)", marginBottom: 4 }}>
                     <span>{a.order.paymentStatus === "PAID" ? "কাস্টমার থেকে নগদ আদায়:" : "কাস্টমার থেকে সংগৃহীত বিল:"}</span>
@@ -230,12 +330,27 @@ export default function TasksPage() {
                     </strong>
                   </div>
                 )}
+
                 <div className="task-address">
                   <svg fill="none" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
                   <span className="task-address-text">{a.order.deliveryAddress}</span>
                 </div>
-                <button id={`detail-btn-${a.assignmentId}`} className="task-deliver-btn" onClick={() => router.push(`/tasks/${a.assignmentId}`)}>
-                  বিস্তারিত দেখুন ও সম্পন্ন করুন →
+
+                <button
+                  id={`detail-btn-${a.assignmentId}`}
+                  className="task-deliver-btn"
+                  onClick={() => router.push(`/tasks/${a.assignmentId}`)}
+                  style={{
+                    background: a.status === "RETURNING_TO_VENDOR"
+                      ? "linear-gradient(135deg, #EF4444, #DC2626)"
+                      : undefined,
+                  }}
+                >
+                  {a.status === "RETURNING_TO_VENDOR"
+                    ? "⚠️ সেলারকে পার্সেল ফেরত দিন →"
+                    : a.status === "ON_THE_WAY"
+                    ? "🎯 কাস্টমার হ্যান্ডওভার ও সম্পন্ন করুন →"
+                    : "🚀 ডেলিভারির পথে রওনা দিন →"}
                 </button>
               </div>
             ))}
@@ -285,6 +400,7 @@ export default function TasksPage() {
                   </div>
                 </div>
               </div>
+
               {/* Order ID is hidden before accepting — revealed only after physical pickup from seller */}
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "6px 0 4px", fontSize: ".75rem", fontFamily: "var(--font-bn)" }}>
                 <span style={{ color: "var(--text-3)", display: "flex", alignItems: "center", gap: 5 }}>

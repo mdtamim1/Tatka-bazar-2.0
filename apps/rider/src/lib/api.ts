@@ -477,7 +477,15 @@ function handleMockFallback<T>(path: string, options: RequestInit): { success: b
   }
 
   // 6. Single Task Detail
-  if (cleanPath.startsWith("/rider-portal/tasks/") && !cleanPath.includes("/accept") && !cleanPath.includes("/pickup") && !cleanPath.includes("/deliver")) {
+  if (
+    cleanPath.startsWith("/rider-portal/tasks/") &&
+    !cleanPath.includes("/accept") &&
+    !cleanPath.includes("/pickup") &&
+    !cleanPath.includes("/transit") &&
+    !cleanPath.includes("/cancel-return") &&
+    !cleanPath.includes("/confirm-return") &&
+    !cleanPath.includes("/deliver")
+  ) {
     const taskId = cleanPath.split("/").pop();
     const available = getLocalStore("available_tasks", SAMPLE_AVAILABLE_TASKS);
     const task = available.find((t) => t.id === taskId) || SAMPLE_AVAILABLE_TASKS[0];
@@ -536,8 +544,9 @@ function handleMockFallback<T>(path: string, options: RequestInit): { success: b
       const active = getLocalStore<ActiveTask[]>("active_tasks", []);
       active.push({
         assignmentId: "asgn-" + Date.now(),
-        status: "ASSIGNED",
+        status: "PICKED_UP",
         assignedAt: new Date().toISOString(),
+        pickedAt: new Date().toISOString(),
         order: {
           id: accepted.id,
           orderNumber: accepted.orderNumber,
@@ -559,16 +568,105 @@ function handleMockFallback<T>(path: string, options: RequestInit): { success: b
     return { success: true, data: { message: "Task accepted" } as any };
   }
 
-  // 8. Pickup / Deliver Task
-  if ((cleanPath.includes("/pickup") || cleanPath.includes("/deliver")) && method === "POST") {
-    const isDeliver = cleanPath.includes("/deliver");
+  // 8a. Start Transit / On The Way (Stage 1 -> Stage 2)
+  if (cleanPath.includes("/transit") && method === "POST") {
+    const taskId = cleanPath.split("/")[3];
     const active = getLocalStore<ActiveTask[]>("active_tasks", []);
+    const idx = active.findIndex((a) => a.assignmentId === taskId || a.order.id === taskId);
+    if (idx !== -1 && active[idx]) {
+      active[idx].status = "ON_THE_WAY";
+      active[idx].transitAt = new Date().toISOString();
+      setLocalStore("active_tasks", active);
+      return { success: true, data: active[idx] as any };
+    }
+    return { success: false, error: "টাস্ক পাওয়া যায়নি" };
+  }
+
+  // 8b. Cancel & Initiate Return to Vendor
+  if (cleanPath.includes("/cancel-return") && method === "POST") {
+    let body: any = {};
+    try { body = JSON.parse(options.body as string); } catch {}
+    const taskId = cleanPath.split("/")[3];
+    const active = getLocalStore<ActiveTask[]>("active_tasks", []);
+    const idx = active.findIndex((a) => a.assignmentId === taskId || a.order.id === taskId);
+    if (idx !== -1 && active[idx]) {
+      active[idx].status = "RETURNING_TO_VENDOR";
+      active[idx].cancellationReason = body.reason || "কাস্টমার পার্সেল রিসিভ করেননি";
+      setLocalStore("active_tasks", active);
+      return { success: true, data: active[idx] as any };
+    }
+    return { success: false, error: "টাস্ক পাওয়া যায়নি" };
+  }
+
+  // 8c. Confirm Return to Vendor (Finances: zero deduction, +৳20 trip fee)
+  if (cleanPath.includes("/confirm-return") && method === "POST") {
+    const taskId = cleanPath.split("/")[3];
+    const active = getLocalStore<ActiveTask[]>("active_tasks", []);
+    const idx = active.findIndex((a) => a.assignmentId === taskId || a.order.id === taskId);
+    if (idx !== -1) {
+      const [done] = active.splice(idx, 1);
+      setLocalStore("active_tasks", active);
+
+      const returnAllowance = 20; // ৳ ২০ return allowance
+      const profile = getLocalStore("profile", DEFAULT_PROFILE);
+      profile.balance = (profile.balance || 0) + returnAllowance;
+      profile.totalEarned = (profile.totalEarned || 0) + returnAllowance;
+      setLocalStore("profile", profile);
+
+      // add history entry
+      const allHistory = getLocalStore<HistoryItem[]>("history", [
+        { id: "h-1", type: "income", amount: 80, orderNumber: "TB-8940", description: "অর্ডার #TB-8940 সফল ডেলিভারি", createdAt: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString() },
+        { id: "h-2", type: "income", amount: 110, orderNumber: "TB-8935", description: "অর্ডার #TB-8935 সফল ডেলিভারি", createdAt: new Date(Date.now() - 1000 * 60 * 60 * 5).toISOString() },
+        { id: "h-3", type: "withdrawal", amount: 1000, description: "bKash উইথড্রয়াল সম্পন্ন", status: "COMPLETED", createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString() },
+        { id: "h-4", type: "income", amount: 95, orderNumber: "TB-8921", description: "অর্ডার #TB-8921 সফল ডেলিভারি", createdAt: new Date(Date.now() - 1000 * 60 * 60 * 28).toISOString() },
+      ]);
+      allHistory.unshift({
+        id: "h-return-" + Date.now(),
+        type: "income",
+        amount: returnAllowance,
+        orderNumber: done?.order.orderNumber,
+        description: `অর্ডার #${done?.order.orderNumber} বাতিল — সেলারকে রিটার্ন সম্পন্ন (রিটার্ন ট্রিপ ফি)`,
+        status: "COMPLETED",
+        createdAt: new Date().toISOString(),
+      });
+      setLocalStore("history", allHistory);
+
+      // add notification
+      const notifs = getLocalStore<RiderNotification[]>("notifications", SAMPLE_NOTIFICATIONS);
+      notifs.unshift({
+        id: "n-return-" + Date.now(),
+        type: "TASK",
+        title: "পার্সেল রিটার্ন সম্পন্ন",
+        body: `অর্ডার #${done?.order.orderNumber}: সেলারকে পার্সেল ফেরত দেওয়া হয়েছে। রিটার্ন ট্রিপ ভাতা ৳ ${returnAllowance} আপনার ওয়ালেটে জমা হয়েছে (কোনো বিল কর্তন নেই)।`,
+        isRead: false,
+        createdAt: new Date().toISOString(),
+      });
+      setLocalStore("notifications", notifs);
+
+      return {
+        success: true,
+        data: {
+          returnAllowance,
+          cashDeduction: 0,
+          message: "সেলারকে পণ্য ফেরত সম্পন্ন হয়েছে",
+        } as any,
+      };
+    }
+    return { success: false, error: "টাস্ক পাওয়া যায়নি" };
+  }
+
+  // 8d. Deliver Task (Handover & Settlement)
+  if (cleanPath.includes("/deliver") && method === "POST") {
+    const taskId = cleanPath.split("/")[3];
+    const active = getLocalStore<ActiveTask[]>("active_tasks", []);
+    let idx = active.findIndex((a) => a.assignmentId === taskId || a.order.id === taskId);
+    if (idx === -1 && active.length > 0) idx = 0;
     let earned = 30;
     let orderTotal = 0;
     let cashDeduction = 0;
     let isPaid = false;
-    if (isDeliver && active.length > 0) {
-      const done = active.shift();
+    if (idx !== -1) {
+      const [done] = active.splice(idx, 1);
       setLocalStore("active_tasks", active);
 
       isPaid = done?.order.paymentStatus === "PAID";
@@ -934,11 +1032,18 @@ export interface Task {
   createdAt: string;
 }
 
+export type DeliveryStage = "ASSIGNED" | "PICKED_UP" | "ON_THE_WAY" | "RETURNING_TO_VENDOR" | "DELIVERED" | "CANCELLED_RETURNED";
+
 export interface ActiveTask {
   assignmentId: string;
-  status: string;
+  status: DeliveryStage | string;
   assignedAt: string;
-  pickedAt?: string;
+  pickedAt?: string | undefined;
+  transitAt?: string | undefined;
+  deliveredAt?: string | undefined;
+  returnedAt?: string | undefined;
+  cancellationReason?: string | undefined;
+  returnTripFee?: number | undefined;
   order: {
     id: string;
     orderNumber: string;
@@ -947,12 +1052,12 @@ export interface ActiveTask {
     deliveryAddress: string;
     vendorName: string;
     items: TaskItem[];
-    subtotal?: number;
-    deliveryFee?: number;
-    total?: number;
+    subtotal?: number | undefined;
+    deliveryFee?: number | undefined;
+    total?: number | undefined;
     earnings: number;
-    paymentStatus?: "PAID" | "COD";
-    paymentMethod?: string;
+    paymentStatus?: "PAID" | "COD" | undefined;
+    paymentMethod?: string | undefined;
   };
 }
 
