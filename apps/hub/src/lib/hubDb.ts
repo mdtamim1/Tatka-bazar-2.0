@@ -149,10 +149,10 @@ export async function getDbRiders(): Promise<HubRider[]> {
         orderBy: { createdAt: "desc" },
       });
 
-      if (records.length > 0) {
+      if (records && (records as any[]).length > 0) {
         const memRiders = getRiders();
-        return records.map((r) => {
-          const mem = memRiders.find((m) => m.id === r.id);
+        return (records as any[]).map((r: any) => {
+          const mem = memRiders.find((m: HubRider) => m.id === r.id);
           const isSuspended = !r.isActive;
           return {
             id: r.id,
@@ -272,10 +272,10 @@ export async function getDbVendors(): Promise<HubVendor[]> {
         orderBy: { createdAt: "desc" },
       });
 
-      if (records.length > 0) {
+      if (records && (records as any[]).length > 0) {
         const memVendors = getVendors();
-        return records.map((v) => {
-          const mem = memVendors.find((m) => m.id === v.id);
+        return (records as any[]).map((v: any) => {
+          const mem = memVendors.find((m: HubVendor) => m.id === v.id);
           const isSuspended = !v.isActive || v.status === "SUSPENDED";
           return {
             id: v.id,
@@ -410,7 +410,7 @@ export async function getDbTeam(): Promise<HubTeamMember[]> {
         orderBy: { createdAt: "asc" },
       });
 
-      if (records.length > 0) {
+      if (records && (records as any[]).length > 0) {
         const roleMap: Record<string, HubRole> = {
           SUPER_ADMIN: "SUPER_ADMIN",
           STAFF: "OPS_MANAGER",
@@ -418,7 +418,7 @@ export async function getDbTeam(): Promise<HubTeamMember[]> {
           FINANCE: "OPS_MANAGER",
         };
 
-        return records.map((a) => ({
+        return (records as any[]).map((a: any) => ({
           id: a.id,
           name: a.name,
           nameBn: a.name,
@@ -472,8 +472,8 @@ export async function getDbActivity(): Promise<HubActivityLog[]> {
         take: 50,
       });
 
-      if (logs.length > 0) {
-        return logs.map((l) => {
+      if (logs && (logs as any[]).length > 0) {
+        return (logs as any[]).map((l: any) => {
           const nv = (l.newValues as any) || {};
           return {
             id: l.id,
@@ -506,8 +506,8 @@ export async function getDbSettlements(): Promise<VendorSettlementRequest[]> {
         orderBy: { createdAt: "desc" },
       });
 
-      if (payouts.length > 0) {
-        return payouts.map((p) => ({
+      if (payouts && (payouts as any[]).length > 0) {
+        return (payouts as any[]).map((p: any) => ({
           id: p.id,
           vendorId: p.vendorId,
           vendorName: p.vendor?.businessName || "Vendor",
