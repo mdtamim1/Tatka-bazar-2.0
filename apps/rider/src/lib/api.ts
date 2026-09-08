@@ -246,7 +246,42 @@ function setLocalStore(key: string, val: any) {
 }
 
 export function generate30DaySampleHistory(): HistoryItem[] {
-  return [];
+  const now = Date.now();
+  const dayMs = 24 * 60 * 60 * 1000;
+
+  const samples = [
+    { daysAgo: 0.1, type: "income" as const, amount: 80, orderNumber: "TB-8940", desc: "অর্ডার #TB-8940 সফল ডেলিভারি" },
+    { daysAgo: 0.3, type: "income" as const, amount: 110, orderNumber: "TB-8935", desc: "অর্ডার #TB-8935 সফল ডেলিভারি" },
+    { daysAgo: 1, type: "withdrawal" as const, amount: 1200, desc: "bKash উইথড্রয়াল সম্পন্ন", status: "COMPLETED" },
+    { daysAgo: 1.5, type: "income" as const, amount: 95, orderNumber: "TB-8921", desc: "অর্ডার #TB-8921 সফল ডেলিভারি" },
+    { daysAgo: 2, type: "income" as const, amount: 45, orderNumber: "TB-8915", desc: "অর্ডার #TB-8915 কাস্টমার বাতিল — সেলারকে রিটার্ন সফল — ট্রিপ ভাতা" },
+    { daysAgo: 3, type: "income" as const, amount: 85, orderNumber: "TB-8902", desc: "অর্ডার #TB-8902 সফল ডেলিভারি" },
+    { daysAgo: 4, type: "income" as const, amount: 120, orderNumber: "TB-8890", desc: "অর্ডার #TB-8890 এক্সপ্রেস ডেলিভারি সম্পন্ন" },
+    { daysAgo: 5, type: "income" as const, amount: 75, orderNumber: "TB-8874", desc: "অর্ডার #TB-8874 সফল ডেলিভারি" },
+    { daysAgo: 6, type: "income" as const, amount: 90, orderNumber: "TB-8861", desc: "অর্ডার #TB-8861 সফল ডেলিভারি" },
+    { daysAgo: 7, type: "withdrawal" as const, amount: 2000, desc: "Nagad উইথড্রয়াল সম্পন্ন", status: "COMPLETED" },
+    { daysAgo: 9, type: "income" as const, amount: 130, orderNumber: "TB-8845", desc: "অর্ডার #TB-8845 গ্রোসারি বাকেট ডেলিভারি" },
+    { daysAgo: 10, type: "income" as const, amount: 40, orderNumber: "TB-8830", desc: "অর্ডার #TB-8830 ভুল ঠিকানা — সেলারকে রিটার্ন সফল — ট্রিপ ভাতা" },
+    { daysAgo: 12, type: "income" as const, amount: 105, orderNumber: "TB-8812", desc: "অর্ডার #TB-8812 সফল ডেলিভারি" },
+    { daysAgo: 14, type: "withdrawal" as const, amount: 1800, desc: "bKash উইথড্রয়াল সম্পন্ন", status: "COMPLETED" },
+    { daysAgo: 16, type: "income" as const, amount: 85, orderNumber: "TB-8795", desc: "অর্ডার #TB-8795 সফল ডেলিভারি" },
+    { daysAgo: 18, type: "income" as const, amount: 115, orderNumber: "TB-8780", desc: "অর্ডার #TB-8780 সফল ডেলিভারি" },
+    { daysAgo: 21, type: "withdrawal" as const, amount: 2500, desc: "ব্যাংক ট্রান্সফার উইথড্রয়াল সম্পন্ন", status: "COMPLETED" },
+    { daysAgo: 23, type: "income" as const, amount: 90, orderNumber: "TB-8750", desc: "অর্ডার #TB-8750 সফল ডেলিভারি" },
+    { daysAgo: 25, type: "income" as const, amount: 45, orderNumber: "TB-8735", desc: "অর্ডার #TB-8735 গ্রাহক অনুপস্থিত — সেলারকে রিটার্ন সফল" },
+    { daysAgo: 27, type: "income" as const, amount: 125, orderNumber: "TB-8710", desc: "অর্ডার #TB-8710 ফ্রেশ মাছ ও মাংস ডেলিভারি" },
+    { daysAgo: 29, type: "income" as const, amount: 95, orderNumber: "TB-8690", desc: "অর্ডার #TB-8690 সফল ডেলিভারি" },
+  ];
+
+  return samples.map((s, idx) => ({
+    id: `hist-sample-${idx + 1}`,
+    type: s.type,
+    amount: s.amount,
+    orderNumber: s.orderNumber,
+    description: s.desc,
+    status: s.status || "COMPLETED",
+    createdAt: new Date(now - s.daysAgo * dayMs).toISOString(),
+  }));
 }
 
 export function syncDailyOrdersReset(): {

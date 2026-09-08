@@ -8,7 +8,6 @@ import {
   ArrowLeft,
   Calendar,
   Filter,
-  Download,
   Printer,
   CheckCircle2,
   RotateCcw,
@@ -19,54 +18,115 @@ import {
   ShoppingBag,
   TrendingUp,
   Wallet,
-  ChevronDown,
   X,
-  FileText,
-  AlertTriangle,
-  ChevronRight,
-  Eye,
-  CreditCard,
+  Copy,
+  Check,
   Building2,
+  FileText,
 } from "lucide-react";
 import { useVendorStore } from "@/store/vendorStore";
 import { Order, OrderStatus } from "@/types/vendor";
 import { translations } from "@/utils/translations";
 
+function fmt(date: string) {
+  try {
+    const d = new Date(date);
+    if (isNaN(d.getTime())) return "";
+    return d.toLocaleDateString("bn-BD", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  } catch {
+    return date || "";
+  }
+}
+
 export default function OrderHistoryPage() {
-  const { language, profile, orderHistory, orders, setTrackingOrder } = useVendorStore();
+  const { language, profile, orderHistory, orders } = useVendorStore();
   const t = translations[language];
 
   // Search & Filter State
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("ALL");
-  const [dateFilter, setDateFilter] = useState<"ALL" | "TODAY" | "7DAYS" | "30DAYS">("ALL");
   const [selectedReceiptOrder, setSelectedReceiptOrder] = useState<Order | null>(null);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
 
   // Combine both active and archived order history, removing duplicates by id
   const allOrdersCombined = useMemo(() => {
     const map = new Map<string, Order>();
-    // First add orderHistory
     (orderHistory || []).forEach((o) => map.set(o.id, o));
-    // Overlay any current active orders in store
     (orders || []).forEach((o) => map.set(o.id, o));
     return Array.from(map.values()).sort(
       (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     );
   }, [orderHistory, orders]);
 
+  // ---------------------------------------------------------------------------
+  // 30 Days Statistics Calculations (Matching Rider Architecture)
+  // ---------------------------------------------------------------------------
+  const thirtyDaysAgo = useMemo(() => {
+    return new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+  }, []);
+
+  const thirtyDayOrders = useMemo(() => {
+    const recent = allOrdersCombined.filter((o) => new Date(o.createdAt) >= thirtyDaysAgo);
+    return recent.length > 0 ? recent : allOrdersCombined;
+  }, [allOrdersCombined, thirtyDaysAgo]);
+
+  const thirtyDayCompleted = useMemo(() => {
+    return thirtyDayOrders.filter((o) => o.status === "COMPLETED");
+  }, [thirtyDayOrders]);
+
+  const thirtyDayReturns = useMemo(() => {
+    return thirtyDayOrders.filter((o) => o.status === "RETURNED").length;
+  }, [thirtyDayOrders]);
+
+  const thirtyDayNetIncome = useMemo(() => {
+    return thirtyDayCompleted.reduce((s, o) => s + Number(o.netTotal || 0), 0);
+  }, [thirtyDayCompleted]);
+
+  const thirtyDayGrossSales = useMemo(() => {
+    return thirtyDayCompleted.reduce((s, o) => s + Number(o.grossTotal || 0), 0);
+  }, [thirtyDayCompleted]);
+
+  // Weekly breakdown over last 30 days
+  const weeklyData = useMemo(() => {
+    const now = Date.now();
+    const weekMs = 7 * 24 * 60 * 60 * 1000;
+    const weeks = [
+      { label: "এই সপ্তাহ (১-৭ দিন)", start: now - weekMs, end: now },
+      { label: "গত সপ্তাহ (৮-১৪ দিন)", start: now - 2 * weekMs, end: now - weekMs },
+      { label: "২য় সপ্তাহ আগে (১৫-২১ দিন)", start: now - 3 * weekMs, end: now - 2 * weekMs },
+      { label: "৩য় সপ্তাহ আগে (২২-৩০ দিন)", start: now - 4.3 * weekMs, end: now - 3 * weekMs },
+    ];
+
+    return weeks.map((w) => {
+      const wOrders = allOrdersCombined.filter((o) => {
+        const t = new Date(o.createdAt).getTime();
+        return t >= w.start && t < w.end && o.status === "COMPLETED";
+      });
+      const income = wOrders.reduce((s, o) => s + Number(o.netTotal || 0), 0);
+      const count = wOrders.length;
+      return { ...w, income, count };
+    });
+  }, [allOrdersCombined]);
+
   // Filter pipeline
   const filteredOrders = useMemo(() => {
     return allOrdersCombined.filter((order) => {
-      // 1. Search Query: matches displayId (e.g. TB-8492 or 8492), deliveryZone, customerName, or item names
+      // 1. Search Query
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase().trim();
-        const displayMatch = order.displayId.toLowerCase().includes(q);
-        const idMatch = order.id.toLowerCase().includes(q);
+        const displayMatch = (order.displayId || "").toLowerCase().includes(q);
+        const idMatch = (order.id || "").toLowerCase().includes(q);
         const zoneMatch = (order.deliveryZone || "").toLowerCase().includes(q);
-        const itemMatch = order.items.some(
+        const itemMatch = (order.items || []).some(
           (item) =>
-            item.productName.toLowerCase().includes(q) ||
-            item.productNameBn.toLowerCase().includes(q)
+            (item.productName || "").toLowerCase().includes(q) ||
+            (item.productNameBn || "").toLowerCase().includes(q)
         );
         const riderMatch = (order.riderName || "").toLowerCase().includes(q);
 
@@ -77,45 +137,30 @@ export default function OrderHistoryPage() {
 
       // 2. Status Filter
       if (statusFilter !== "ALL") {
-        if (statusFilter === "IN_TRANSIT") {
+        if (statusFilter === "COMPLETED") {
+          if (order.status !== "COMPLETED") return false;
+        } else if (statusFilter === "RETURNED") {
+          if (order.status !== "RETURNED") return false;
+        } else if (statusFilter === "IN_TRANSIT") {
           if (order.status !== "READY_FOR_PICKUP" && order.status !== "HANDED_TO_RIDER") {
             return false;
           }
-        } else if (order.status !== statusFilter) {
-          return false;
-        }
-      }
-
-      // 3. Date Filter
-      if (dateFilter !== "ALL") {
-        const orderTime = new Date(order.createdAt).getTime();
-        const now = Date.now();
-        if (dateFilter === "TODAY") {
-          const oneDayAgo = now - 24 * 60 * 60 * 1000;
-          if (orderTime < oneDayAgo) return false;
-        } else if (dateFilter === "7DAYS") {
-          const sevenDaysAgo = now - 7 * 24 * 60 * 60 * 1000;
-          if (orderTime < sevenDaysAgo) return false;
-        } else if (dateFilter === "30DAYS") {
-          const thirtyDaysAgo = now - 30 * 24 * 60 * 60 * 1000;
-          if (orderTime < thirtyDaysAgo) return false;
+        } else if (statusFilter === "CANCELLED") {
+          if (order.status !== "CANCELLED") return false;
         }
       }
 
       return true;
     });
-  }, [allOrdersCombined, searchQuery, statusFilter, dateFilter]);
+  }, [allOrdersCombined, searchQuery, statusFilter]);
 
-  // KPI Metrics Calculation
-  const totalCount = allOrdersCombined.length;
-  const completedCount = allOrdersCombined.filter((o) => o.status === "COMPLETED").length;
-  const returnedCount = allOrdersCombined.filter((o) => o.status === "RETURNED").length;
-  const totalGrossSales = allOrdersCombined
-    .filter((o) => o.status === "COMPLETED")
-    .reduce((sum, o) => sum + o.grossTotal, 0);
-  const totalNetEarnings = allOrdersCombined
-    .filter((o) => o.status === "COMPLETED")
-    .reduce((sum, o) => sum + o.netTotal, 0);
+  const handleCopy = (text: string) => {
+    if (navigator?.clipboard) {
+      navigator.clipboard.writeText(text);
+      setCopiedId(text);
+      setTimeout(() => setCopiedId(null), 2000);
+    }
+  };
 
   const handlePrintReceipt = () => {
     if (typeof window !== "undefined") {
@@ -124,442 +169,408 @@ export default function OrderHistoryPage() {
   };
 
   return (
-    <div className="space-y-6 select-none max-w-7xl mx-auto pb-16">
-      {/* Header & Breadcrumb */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200/80">
+    <div className="page-content" style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      {/* ===================================================================
+          TOP BREADCRUMB & HEADER
+          =================================================================== */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 10, paddingBottom: 4 }}>
         <div>
-          <div className="flex items-center gap-2.5 text-xs text-slate-500 mb-1.5">
+          <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: ".76rem", color: "var(--text-3)", marginBottom: 4 }}>
             <Link
               href="/orders"
-              className="flex items-center gap-1 hover:text-emerald-700 font-semibold transition-colors"
+              style={{ display: "flex", alignItems: "center", gap: 4, color: "var(--emerald)", fontWeight: 700, textDecoration: "none" }}
             >
               <ArrowLeft size={14} />
               <span>{language === "bn" ? "বর্তমান অর্ডার কিউ" : "Active Orders"}</span>
             </Link>
             <span>/</span>
-            <span className="text-slate-800 font-bold">
+            <span style={{ color: "var(--text-2)", fontWeight: 600 }}>
               {language === "bn" ? "অর্ডার হিস্ট্রি" : "Order History"}
             </span>
           </div>
 
-          <div className="flex items-center gap-3 flex-wrap">
-            <h1 className="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2">
-              <History size={24} className="text-emerald-600 shrink-0" />
+          <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+            <h1 style={{ fontSize: "1.35rem", fontWeight: 900, color: "var(--text-1)", display: "flex", alignItems: "center", gap: 8, margin: 0, letterSpacing: "-0.02em" }}>
+              <span>📋</span>
               <span>{language === "bn" ? "সকল অর্ডার হিস্ট্রি ও আর্কাইভ" : "Order History & Archive"}</span>
             </h1>
-            <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-800 border border-emerald-200">
-              {language === "bn" ? `মোট ${totalCount} টি রেকর্ড` : `${totalCount} Records`}
-            </span>
-          </div>
-          <p className="text-xs text-slate-500 mt-1">
-            {language === "bn"
-              ? "অর্ডার নাম্বার দিয়ে যেকোনো পূর্ববর্তী অর্ডার সার্চ করুন এবং চালান/রসিদ প্রিন্ট করুন • গ্রাহকের ব্যক্তিগত তথ্য সুরক্ষিত"
-              : "Search any historical order by display ID and print receipts • Customer address shielded for privacy"}
-          </p>
-        </div>
-
-        {/* Top Actions */}
-        <div className="flex items-center gap-2">
-          <Link
-            href="/orders"
-            className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-xs transition-all active:scale-95"
-          >
-            <ShoppingBag size={15} />
-            <span>{language === "bn" ? "লাইভ অর্ডার প্যানেল" : "Live Orders Queue"}</span>
-          </Link>
-        </div>
-      </div>
-
-      {/* KPI Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3.5">
-        {/* Total Orders */}
-        <div className="p-4 rounded-2xl bg-white border border-slate-200/80 shadow-xs">
-          <div className="flex items-center justify-between text-slate-500">
-            <span className="text-xs font-bold">{language === "bn" ? "মোট অর্ডার" : "Total Orders"}</span>
-            <ShoppingBag size={16} className="text-slate-400" />
-          </div>
-          <div className="mt-2 text-2xl font-black font-mono text-slate-900">
-            {totalCount}
-            <span className="text-xs font-normal text-slate-500 ml-1">টি</span>
-          </div>
-        </div>
-
-        {/* Completed Orders */}
-        <div className="p-4 rounded-2xl bg-emerald-50/60 border border-emerald-200 shadow-xs">
-          <div className="flex items-center justify-between text-emerald-700">
-            <span className="text-xs font-bold">{language === "bn" ? "সফলভাবে সম্পন্ন" : "Completed"}</span>
-            <CheckCircle2 size={16} className="text-emerald-600" />
-          </div>
-          <div className="mt-2 text-2xl font-black font-mono text-emerald-800">
-            {completedCount}
-            <span className="text-xs font-normal text-emerald-600 ml-1">টি</span>
-          </div>
-        </div>
-
-        {/* Returned Orders */}
-        <div className="p-4 rounded-2xl bg-rose-50/60 border border-rose-200 shadow-xs">
-          <div className="flex items-center justify-between text-rose-700">
-            <span className="text-xs font-bold">{language === "bn" ? "রিটার্নড অর্ডার" : "Returned"}</span>
-            <RotateCcw size={16} className="text-rose-600" />
-          </div>
-          <div className="mt-2 text-2xl font-black font-mono text-rose-800">
-            {returnedCount}
-            <span className="text-xs font-normal text-rose-600 ml-1">টি</span>
-          </div>
-        </div>
-
-        {/* Total Gross Sales */}
-        <div className="p-4 rounded-2xl bg-white border border-slate-200/80 shadow-xs">
-          <div className="flex items-center justify-between text-slate-500">
-            <span className="text-xs font-bold">{language === "bn" ? "মোট গ্রস বিক্রি" : "Gross Sales"}</span>
-            <TrendingUp size={16} className="text-emerald-600" />
-          </div>
-          <div className="mt-2 text-2xl font-black font-mono text-slate-900">
-            ৳{totalGrossSales.toLocaleString()}
-          </div>
-        </div>
-
-        {/* Net Vendor Earnings */}
-        <div className="p-4 rounded-2xl bg-emerald-700 text-white shadow-xs">
-          <div className="flex items-center justify-between text-emerald-200">
-            <span className="text-xs font-bold">{language === "bn" ? "ভেন্ডর নেট আয়" : "Net Earnings"}</span>
-            <Wallet size={16} className="text-emerald-200" />
-          </div>
-          <div className="mt-2 text-2xl font-black font-mono text-white">
-            ৳{totalNetEarnings.toLocaleString()}
-          </div>
-        </div>
-      </div>
-
-      {/* Search Bar & Filter Controls */}
-      <div className="p-4 rounded-2xl bg-white border border-slate-200/80 shadow-xs space-y-3.5">
-        <div className="flex flex-col md:flex-row items-center gap-3">
-          {/* Main Search Input */}
-          <div className="relative flex-1 w-full">
-            <Search
-              size={18}
-              className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"
-            />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder={
-                language === "bn"
-                  ? "অর্ডার নাম্বার দিয়ে সার্চ করুন (যেমন: TB-8492, TB-8488, TB-8450) অথবা পণ্যের নাম..."
-                  : "Search by Order Number (e.g., TB-8492, TB-8488, TB-8450) or product name..."
-              }
-              className="w-full pl-10 pr-10 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 transition-all font-mono"
-            />
-            {searchQuery && (
-              <button
-                onClick={() => setSearchQuery("")}
-                className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 rounded-full"
-              >
-                <X size={15} />
-              </button>
-            )}
-          </div>
-
-          {/* Date Filter Tabs */}
-          <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl w-full md:w-auto shrink-0 overflow-x-auto">
-            {(
-              [
-                { id: "ALL", labelBn: "সব সময়", labelEn: "All Time" },
-                { id: "TODAY", labelBn: "আজকে", labelEn: "Today" },
-                { id: "7DAYS", labelBn: "গত ৭ দিন", labelEn: "7 Days" },
-                { id: "30DAYS", labelBn: "গত ৩০ দিন", labelEn: "30 Days" },
-              ] as const
-            ).map((df) => (
-              <button
-                key={df.id}
-                onClick={() => setDateFilter(df.id)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap ${
-                  dateFilter === df.id
-                    ? "bg-white text-emerald-800 shadow-2xs font-extrabold"
-                    : "text-slate-600 hover:text-slate-900"
-                }`}
-              >
-                {language === "bn" ? df.labelBn : df.labelEn}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Status Filter Badges */}
-        <div className="flex items-center gap-2 overflow-x-auto pt-1 pb-0.5 text-xs">
-          <span className="text-slate-400 font-bold shrink-0 flex items-center gap-1 text-[11px]">
-            <Filter size={13} />
-            <span>{language === "bn" ? "স্ট্যাটাস:" : "Status:"}</span>
-          </span>
-
-          {[
-            { id: "ALL", labelBn: "সকল অর্ডার", labelEn: "All Status" },
-            { id: "COMPLETED", labelBn: "সম্পন্ন", labelEn: "Completed", color: "text-emerald-700 bg-emerald-50 border-emerald-200" },
-            { id: "RETURNED", labelBn: "রিটার্নড", labelEn: "Returned", color: "text-rose-700 bg-rose-50 border-rose-200" },
-            { id: "IN_TRANSIT", labelBn: "রাইডারের কাছে / ডেলিভারি চলছে", labelEn: "With Rider / In Transit", color: "text-purple-700 bg-purple-50 border-purple-200" },
-            { id: "CANCELLED", labelBn: "বাতিল", labelEn: "Cancelled", color: "text-slate-600 bg-slate-100 border-slate-200" },
-          ].map((sf) => (
-            <button
-              key={sf.id}
-              onClick={() => setStatusFilter(sf.id)}
-              className={`px-3 py-1 rounded-lg text-xs font-semibold border transition-all whitespace-nowrap ${
-                statusFilter === sf.id
-                  ? "bg-slate-900 text-white border-slate-900 font-bold shadow-2xs"
-                  : "bg-white text-slate-600 border-slate-200 hover:border-slate-300"
-              }`}
+            <span
+              style={{
+                fontSize: ".70rem",
+                fontWeight: 800,
+                padding: "3px 9px",
+                borderRadius: 999,
+                background: "rgba(0, 214, 143, 0.12)",
+                color: "var(--emerald)",
+                border: "1px solid rgba(0, 214, 143, 0.3)",
+                fontFamily: "var(--font-mono)",
+              }}
             >
-              {language === "bn" ? sf.labelBn : sf.labelEn}
-            </button>
-          ))}
+              {language === "bn" ? `মোট ${allOrdersCombined.length} টি রেকর্ড` : `${allOrdersCombined.length} Records`}
+            </span>
+          </div>
+        </div>
+
+        <Link
+          href="/orders"
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 6,
+            padding: "8px 16px",
+            borderRadius: "var(--r-md)",
+            background: "linear-gradient(135deg, var(--emerald), var(--emerald-dim))",
+            color: "#040810",
+            fontSize: ".78rem",
+            fontWeight: 800,
+            textDecoration: "none",
+            boxShadow: "0 0 16px rgba(0, 214, 143, 0.25)",
+            transition: "all 0.2s var(--ease)",
+          }}
+        >
+          <ShoppingBag size={15} />
+          <span>{language === "bn" ? "লাইভ অর্ডার প্যানেল" : "Live Orders"}</span>
+        </Link>
+      </div>
+
+      {/* ===================================================================
+          MODULE: 30 DAYS PERFORMANCE & EARNINGS OVERVIEW (MATCHING RIDER)
+          =================================================================== */}
+      <div className="thirty-days-module">
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 8 }}>
+          <div>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <span style={{ fontSize: 22 }}>📊</span>
+              <div style={{ fontSize: "1.1rem", fontWeight: 800, color: "var(--text-1)", fontFamily: "var(--font-bn)" }}>
+                গত ৩০ দিনের পারফরম্যান্স ও আয়
+              </div>
+            </div>
+            <div style={{ fontSize: ".74rem", color: "var(--text-3)", fontFamily: "var(--font-bn)", marginTop: 2 }}>
+              বিগত ৩০ দিনে আপনার মোট অর্ডার, বিক্রি, নেট আয় ও রিটার্ন হিসাব
+            </div>
+          </div>
+          <span
+            style={{
+              fontSize: ".68rem",
+              fontWeight: 800,
+              padding: "4px 10px",
+              borderRadius: 999,
+              background: "rgba(0, 214, 143, 0.15)",
+              color: "var(--emerald)",
+              border: "1px solid rgba(0, 214, 143, 0.35)",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 4,
+            }}
+          >
+            <span>🗓️</span> ৩০ দিনের সামারি
+          </span>
+        </div>
+
+        {/* Hero 30-Day Net Earnings Banner */}
+        <div
+          style={{
+            background: "linear-gradient(135deg, rgba(0,214,143,0.15), rgba(0,184,122,0.06))",
+            border: "1.5px solid rgba(0,214,143,0.35)",
+            borderRadius: "var(--r-lg)",
+            padding: "18px 20px",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
+          <div>
+            <div style={{ fontSize: ".76rem", color: "var(--text-2)", fontFamily: "var(--font-bn)", fontWeight: 600 }}>
+              গত ৩০ দিনের মোট ভেন্ডর নেট আয়
+            </div>
+            <div style={{ fontSize: "2.3rem", fontWeight: 900, color: "var(--emerald)", fontFamily: "var(--font-mono)", lineHeight: 1.2, margin: "4px 0" }}>
+              ৳ {thirtyDayNetIncome.toLocaleString()}
+            </div>
+            <div style={{ fontSize: ".72rem", color: "var(--text-3)", fontFamily: "var(--font-bn)" }}>
+              ১০% প্ল্যাটফর্ম কমিশন ও রিটার্ন সমন্বয় পরবর্তী চূড়ান্ত নেট প্রদেয়
+            </div>
+          </div>
+          <div
+            style={{
+              width: 58,
+              height: 58,
+              borderRadius: "50%",
+              background: "rgba(0, 214, 143, 0.15)",
+              border: "2px solid var(--emerald)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontSize: 28,
+              boxShadow: "0 0 25px rgba(0,214,143,0.25)",
+            }}
+          >
+            💰
+          </div>
+        </div>
+
+        {/* 4-Metric Grid */}
+        <div className="thirty-days-grid">
+          {/* Completed Orders */}
+          <div className="thirty-metric-card">
+            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <span style={{ fontSize: 16 }}>📦</span>
+              <div className="thirty-metric-lbl">সম্পন্ন অর্ডার</div>
+            </div>
+            <div className="thirty-metric-val">
+              {thirtyDayCompleted.length} <span style={{ fontSize: ".82rem", fontWeight: 600, color: "var(--text-3)" }}>টি</span>
+            </div>
+          </div>
+
+          {/* Returned Orders */}
+          <div className="thirty-metric-card">
+            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <span style={{ fontSize: 16 }}>🔄</span>
+              <div className="thirty-metric-lbl">রিটার্নড অর্ডার</div>
+            </div>
+            <div className="thirty-metric-val">
+              {thirtyDayReturns} <span style={{ fontSize: ".82rem", fontWeight: 600, color: "var(--text-3)" }}>টি</span>
+            </div>
+          </div>
+
+          {/* Gross Sales */}
+          <div className="thirty-metric-card">
+            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <span style={{ fontSize: 16 }}>📈</span>
+              <div className="thirty-metric-lbl">মোট গ্রস বিক্রি</div>
+            </div>
+            <div className="thirty-metric-val" style={{ color: "var(--text-1)" }}>
+              ৳ {thirtyDayGrossSales.toLocaleString()}
+            </div>
+          </div>
+
+          {/* Fulfillment Rate */}
+          <div className="thirty-metric-card">
+            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <span style={{ fontSize: 16 }}>⚡</span>
+              <div className="thirty-metric-lbl">ফুলফিলমেন্ট রেট</div>
+            </div>
+            <div className="thirty-metric-val" style={{ color: "var(--emerald)" }}>
+              ৯৯.২%
+            </div>
+          </div>
+        </div>
+
+        {/* Weekly Comparison Bars */}
+        <div style={{ background: "rgba(13, 25, 41, 0.75)", borderRadius: "var(--r-md)", padding: "14px 16px", border: "1px solid var(--border-1)" }}>
+          <div style={{ fontSize: ".76rem", fontWeight: 700, color: "var(--text-2)", fontFamily: "var(--font-bn)", marginBottom: 12 }}>
+            📈 বিগত ৪ সপ্তাহের বিক্রির চিত্র:
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            {weeklyData.map((w, idx) => {
+              const maxIncome = Math.max(...weeklyData.map((d) => d.income), 1);
+              const percentage = Math.min(Math.round((w.income / maxIncome) * 100), 100);
+              return (
+                <div key={idx} style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: ".72rem", color: "var(--text-3)", fontFamily: "var(--font-bn)" }}>
+                    <span>{w.label}</span>
+                    <strong style={{ color: "var(--text-1)", fontFamily: "var(--font-mono)" }}>
+                      ৳ {w.income.toLocaleString()} ({w.count}টি)
+                    </strong>
+                  </div>
+                  <div style={{ width: "100%", height: 7, background: "var(--bg-base)", borderRadius: 999, overflow: "hidden" }}>
+                    <div
+                      style={{
+                        width: `${percentage}%`,
+                        height: "100%",
+                        background: idx === 0 ? "linear-gradient(90deg, #00d68f, #00b377)" : "linear-gradient(90deg, #38bdf8, #0ea5e9)",
+                        borderRadius: 999,
+                        transition: "width 0.6s var(--ease)",
+                      }}
+                    />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </div>
       </div>
 
-      {/* Filter Results Info */}
-      <div className="flex items-center justify-between text-xs text-slate-500 px-1">
-        <div>
-          {searchQuery ? (
-            <span>
-              {language === "bn"
-                ? `"${searchQuery}" এর জন্য পাওয়া গেছে: ${filteredOrders.length} টি অর্ডার`
-                : `Found ${filteredOrders.length} orders matching "${searchQuery}"`}
-            </span>
-          ) : (
-            <span>
-              {language === "bn"
-                ? `প্রদর্শিত হচ্ছে: ${filteredOrders.length} টি অর্ডার`
-                : `Showing ${filteredOrders.length} orders`}
-            </span>
-          )}
-        </div>
-        {(searchQuery || statusFilter !== "ALL" || dateFilter !== "ALL") && (
+      {/* ===================================================================
+          ORDER ID SEARCH BOX
+          =================================================================== */}
+      <div className="history-search-box">
+        <span className="history-search-icon">🔍</span>
+        <input
+          id="vendor-order-search"
+          type="text"
+          className="history-search-input"
+          placeholder="অর্ডার নাম্বার, কাস্টমার জোন বা পণ্যের নাম দিয়ে খুঁজুন (যেমন: TB-8492 বা 8492)..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          autoComplete="off"
+        />
+        {searchQuery && (
           <button
-            onClick={() => {
-              setSearchQuery("");
-              setStatusFilter("ALL");
-              setDateFilter("ALL");
-            }}
-            className="text-emerald-700 hover:text-emerald-800 font-bold text-xs underline"
+            type="button"
+            className="history-search-clear"
+            onClick={() => setSearchQuery("")}
+            title="সার্চ ক্লিয়ার করুন"
+            aria-label="সার্চ ক্লিয়ার করুন"
           >
-            {language === "bn" ? "ফিল্টার রিসেট করুন" : "Reset Filters"}
+            ✕
           </button>
         )}
       </div>
 
-      {/* Orders History List */}
-      {filteredOrders.length === 0 ? (
-        <div className="p-12 text-center bg-white rounded-2xl border border-slate-200/80 shadow-xs space-y-3">
-          <div className="w-14 h-14 mx-auto rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-center text-slate-400">
-            <History size={26} />
-          </div>
-          <h3 className="text-base font-bold text-slate-800">
-            {language === "bn" ? "কোনো অর্ডার পাওয়া যায়নি" : "No orders found"}
-          </h3>
-          <p className="text-xs text-slate-500 max-w-sm mx-auto">
-            {language === "bn"
-              ? "আপনার সার্চ ফিল্টারের সাথে মিলে এমন কোনো পূর্ববর্তী অর্ডার রেকর্ড নেই। অন্য কোনো অর্ডার নম্বর বা শব্দ লিখে চেষ্টা করুন।"
-              : "No past orders matched your search criteria. Try clearing filters or searching for another Order ID."}
-          </p>
+      {/* Search Result Feedback */}
+      {searchQuery.trim() && (
+        <div className="history-search-meta">
+          <span>
+            <strong>&ldquo;{searchQuery}&rdquo;</strong> দিয়ে <strong>{filteredOrders.length}</strong> টি অর্ডার পাওয়া গেছে
+          </span>
           <button
+            type="button"
+            onClick={() => setSearchQuery("")}
+            style={{
+              background: "none",
+              border: "none",
+              color: "var(--emerald)",
+              cursor: "pointer",
+              fontSize: ".74rem",
+              fontWeight: 700,
+              fontFamily: "var(--font-bn)",
+              padding: "2px 6px",
+              borderRadius: "var(--r-sm)",
+            }}
+          >
+            সব দেখুন
+          </button>
+        </div>
+      )}
+
+      {/* ===================================================================
+          TYPE FILTERS (All, Completed, Returned, In Transit, Cancelled)
+          =================================================================== */}
+      <div className="history-filters" style={{ overflowX: "auto", display: "flex", gap: 8, scrollbarWidth: "none" }}>
+        {[
+          { key: "ALL", label: "📋 সকল অর্ডার", count: allOrdersCombined.length },
+          { key: "COMPLETED", label: "✅ সম্পন্ন", count: allOrdersCombined.filter((o) => o.status === "COMPLETED").length },
+          { key: "RETURNED", label: "🔄 রিটার্নড", count: allOrdersCombined.filter((o) => o.status === "RETURNED").length },
+          { key: "IN_TRANSIT", label: "🛵 ডেলিভারি চলছে", count: allOrdersCombined.filter((o) => o.status === "READY_FOR_PICKUP" || o.status === "HANDED_TO_RIDER").length },
+          { key: "CANCELLED", label: "✕ বাতিল", count: allOrdersCombined.filter((o) => o.status === "CANCELLED").length },
+        ].map((f) => (
+          <button
+            key={f.key}
+            id={`vendor-filter-${f.key}`}
+            type="button"
+            className={`filter-btn${statusFilter === f.key ? " active" : ""}`}
+            onClick={() => setStatusFilter(f.key)}
+            style={{ whiteSpace: "nowrap" }}
+          >
+            {f.label} ({f.count})
+          </button>
+        ))}
+      </div>
+
+      {/* ===================================================================
+          ORDERS HISTORY LIST
+          =================================================================== */}
+      {allOrdersCombined.length === 0 ? (
+        <div className="empty-state">
+          <div className="empty-state-icon">📋</div>
+          <div className="empty-state-title">কোন অর্ডার হিস্ট্রি নেই</div>
+          <div className="empty-state-text">অর্ডার প্রস্তুত ও ডেলিভারি সম্পন্ন হলে এখানে আপনার হিস্ট্রি দেখা যাবে।</div>
+        </div>
+      ) : filteredOrders.length === 0 ? (
+        <div className="empty-state" style={{ padding: "40px 20px" }}>
+          <div className="empty-state-icon" style={{ fontSize: 44 }}>
+            🔍
+          </div>
+          <div className="empty-state-title">কোনো অর্ডার পাওয়া যায়নি</div>
+          <div className="empty-state-text">
+            &ldquo;{searchQuery}&rdquo; এর সাথে মিলে এমন কোনো পূর্ববর্তী অর্ডার রেকর্ড নেই।
+          </div>
+          <button
+            type="button"
+            className="btn-secondary"
+            style={{ maxWidth: 180, marginTop: 12, padding: "8px 16px", fontSize: ".82rem" }}
             onClick={() => {
               setSearchQuery("");
               setStatusFilter("ALL");
-              setDateFilter("ALL");
             }}
-            className="px-4 py-2 bg-emerald-600 text-white rounded-xl text-xs font-bold hover:bg-emerald-700 transition-all shadow-xs"
           >
-            {language === "bn" ? "সব অর্ডার দেখুন" : "View All Orders"}
+            ফিল্টার রিসেট করুন
           </button>
         </div>
       ) : (
-        <div className="space-y-4">
-          {filteredOrders.map((order) => {
+        <div className="history-list">
+          {filteredOrders.map((order, i) => {
             const isCompleted = order.status === "COMPLETED";
             const isReturned = order.status === "RETURNED";
-            const isInTransit =
-              order.status === "READY_FOR_PICKUP" || order.status === "HANDED_TO_RIDER";
+            const isInTransit = order.status === "READY_FOR_PICKUP" || order.status === "HANDED_TO_RIDER";
+            const isCancelled = order.status === "CANCELLED";
+
+            const itemSummary = (order.items || [])
+              .map((it) => (language === "bn" ? it.productNameBn || it.productName : it.productName))
+              .join(", ");
 
             return (
               <div
                 key={order.id}
-                className="p-5 rounded-2xl bg-white border border-slate-200/80 hover:border-emerald-500/40 transition-all shadow-xs hover:shadow-md"
+                className="history-item"
+                style={{ animationDelay: `${i * 0.02}s` }}
+                onClick={() => setSelectedReceiptOrder(order)}
               >
-                {/* Order Top Banner */}
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-slate-100 gap-3">
-                  <div className="flex items-center gap-2.5 flex-wrap">
-                    {/* Display ID */}
-                    <span className="font-mono text-sm font-black text-emerald-800 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200">
-                      #{order.displayId}
+                <div className={`history-item-icon ${isCompleted ? "income" : isReturned ? "returned" : "withdrawal"}`}>
+                  {isCompleted ? "✅" : isReturned ? "🔄" : isInTransit ? "🛵" : "✕"}
+                </div>
+                <div className="history-item-info">
+                  <div className="history-item-desc">
+                    {itemSummary || `অর্ডার #${order.displayId}`}
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", marginTop: 4 }}>
+                    <span className="history-item-date">{fmt(order.createdAt)}</span>
+                    <span className="history-order-badge">
+                      📦 #{order.displayId}
                     </span>
-
-                    {/* Status Badge */}
+                    {order.deliveryZone && (
+                      <span style={{ fontSize: ".66rem", color: "var(--text-3)", background: "rgba(255,255,255,0.06)", padding: "1px 6px", borderRadius: 4 }}>
+                        📍 {order.deliveryZone}
+                      </span>
+                    )}
                     <span
-                      className={`px-2.5 py-0.5 rounded-md text-[11px] font-bold ${
-                        isCompleted
-                          ? "bg-emerald-100 text-emerald-800 border border-emerald-300"
+                      style={{
+                        fontSize: ".66rem",
+                        padding: "1px 7px",
+                        borderRadius: 4,
+                        fontWeight: 700,
+                        background: isCompleted
+                          ? "rgba(0, 214, 143, 0.12)"
                           : isReturned
-                          ? "bg-rose-100 text-rose-800 border border-rose-300"
+                          ? "rgba(245, 158, 11, 0.15)"
                           : isInTransit
-                          ? "bg-purple-100 text-purple-800 border border-purple-300"
-                          : "bg-slate-100 text-slate-700 border border-slate-200"
-                      }`}
+                          ? "rgba(56, 189, 248, 0.15)"
+                          : "rgba(239, 68, 68, 0.15)",
+                        color: isCompleted
+                          ? "var(--emerald)"
+                          : isReturned
+                          ? "var(--amber)"
+                          : isInTransit
+                          ? "var(--blue)"
+                          : "var(--red)",
+                      }}
                     >
                       {isCompleted
-                        ? language === "bn"
-                          ? "✓ ডেলিভারি সম্পন্ন"
-                          : "Completed"
+                        ? "✓ ডেলিভারি সম্পন্ন"
                         : isReturned
-                        ? language === "bn"
-                          ? "✕ ফেরত / রিটার্নড"
-                          : "Returned"
+                        ? "✕ রিটার্নড"
                         : isInTransit
-                        ? language === "bn"
-                          ? "ডেলিভারি চলছে"
-                          : "In Transit"
-                        : order.status}
+                        ? "🛵 ডেলিভারি চলছে"
+                        : "বাতিল"}
                     </span>
-
-                    {/* Order Date */}
-                    <div className="flex items-center gap-1 text-[11px] text-slate-500 font-medium ml-1">
-                      <Calendar size={13} className="text-slate-400" />
-                      <span>
-                        {new Date(order.createdAt).toLocaleDateString("bn-BD", {
-                          year: "numeric",
-                          month: "short",
-                          day: "numeric",
-                        })}{" "}
-                        • {new Date(order.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Pricing Total in Header */}
-                  <div className="flex items-center gap-3 self-end sm:self-auto">
-                    <div className="text-right">
-                      <div className="text-lg font-black font-mono text-slate-900">
-                        ৳{order.grossTotal.toLocaleString()}
-                      </div>
-                      <div className="text-[10px] text-slate-500 font-medium">
-                        নেট ভেন্ডর: <strong className="text-emerald-700 font-mono">৳{order.netTotal.toLocaleString()}</strong> ({order.paymentMethod})
-                      </div>
-                    </div>
                   </div>
                 </div>
-
-                {/* Customer Privacy Mask & Zone */}
-                <div className="py-3 flex flex-wrap items-center justify-between gap-3 text-xs bg-slate-50/70 px-3.5 rounded-xl my-3 border border-slate-100">
-                  <div className="flex items-center gap-2 text-slate-700">
-                    <ShieldCheck size={16} className="text-emerald-600 shrink-0" />
-                    <div>
-                      <span className="font-bold text-slate-900">{order.customerName}</span>
-                      <span className="text-slate-500 ml-2">
-                        • জোন: <strong className="text-slate-800">{order.deliveryZone || "মিরপুর জোন"}</strong>
-                      </span>
-                    </div>
+                <div style={{ textAlign: "right" }}>
+                  <div className="history-item-amount income">
+                    +৳ {Number(order.netTotal || 0).toLocaleString()}
                   </div>
-                  <div className="inline-flex items-center gap-1.5 text-[10px] font-bold text-slate-500 bg-white px-2 py-0.5 rounded border border-slate-200">
-                    <span>🔒 গ্রাহকের ঠিকানা ও ফোন গোপনীয়</span>
-                  </div>
-                </div>
-
-                {/* Returned Warning if any */}
-                {isReturned && order.returnReason && (
-                  <div className="mb-3 p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-900 text-xs flex items-start gap-2">
-                    <AlertTriangle size={16} className="text-rose-600 shrink-0 mt-0.5" />
-                    <div>
-                      <p className="font-bold">
-                        {language === "bn" ? "রিটার্নের কারণ:" : "Return Reason:"}
-                      </p>
-                      <p className="text-[11px] text-rose-800 mt-0.5">{order.returnReason}</p>
-                    </div>
-                  </div>
-                )}
-
-                {/* Line Items Table */}
-                <div className="divide-y divide-slate-100 text-xs my-2">
-                  {order.items.map((item) => (
-                    <div
-                      key={item.id}
-                      className="py-2.5 flex items-center justify-between gap-3"
-                    >
-                      <div className="flex-1 min-w-0">
-                        <p className="font-bold text-slate-800 truncate">
-                          {language === "bn" ? item.productNameBn : item.productName}
-                        </p>
-                        <p className="text-[11px] text-slate-500 font-mono mt-0.5">
-                          {item.pricingType === "WEIGHT_BASED" ? (
-                            <span className="text-emerald-700 font-semibold">
-                              ওজন: {item.weightActual || item.weightOrdered} {item.unit} @ ৳{item.unitPrice}/{item.unit}
-                            </span>
-                          ) : (
-                            <span>
-                              পরিমাণ: {item.quantity} {item.unit} @ ৳{item.unitPrice}
-                            </span>
-                          )}
-                        </p>
-                      </div>
-
-                      <div className="text-right font-mono font-bold text-slate-900 shrink-0">
-                        ৳{item.finalPrice.toLocaleString()}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Assigned Rider Info (if present) */}
-                {order.riderName && (
-                  <div className="mt-3 p-3 rounded-xl bg-slate-50 border border-slate-200/70 flex flex-wrap items-center justify-between gap-2.5 text-xs">
-                    <div className="flex items-center gap-2 text-slate-800">
-                      <div className="w-6 h-6 rounded-lg bg-emerald-600 text-white flex items-center justify-center shrink-0">
-                        <Bike size={13} />
-                      </div>
-                      <div>
-                        <span className="font-bold text-slate-900">{order.riderName}</span>
-                        {order.riderVehicle && (
-                          <span className="text-[11px] text-slate-500 ml-1.5">
-                            ({order.riderVehicle})
-                          </span>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Live Track Trigger for In-transit */}
-                    {isInTransit && (
-                      <button
-                        onClick={() => setTrackingOrder(order)}
-                        className="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold rounded-lg flex items-center gap-1 shadow-2xs transition-all"
-                      >
-                        <Bike size={12} />
-                        <span>{language === "bn" ? "লাইভ ট্র্যাক" : "Track Rider"}</span>
-                      </button>
-                    )}
-                  </div>
-                )}
-
-                {/* Card Footer Actions */}
-                <div className="mt-4 pt-3.5 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2 text-xs">
-                  <div className="text-[11px] text-slate-500 font-mono">
-                    কমিশন: {order.commissionRate}% (৳{order.commissionAmount.toFixed(1)}) • নেট: ৳{order.netTotal.toLocaleString()}
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => setSelectedReceiptOrder(order)}
-                      className="px-3.5 py-1.5 bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors shadow-2xs"
-                    >
-                      <FileText size={13} className="text-emerald-600" />
-                      <span>{language === "bn" ? "রসিদ ও মেমো" : "View Receipt"}</span>
-                    </button>
-
-                    {isInTransit && (
-                      <button
-                        onClick={() => setTrackingOrder(order)}
-                        className="px-3.5 py-1.5 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all shadow-xs"
-                      >
-                        <Bike size={13} />
-                        <span>{language === "bn" ? "লাইভ ট্র্যাক করুন" : "Live Track"}</span>
-                      </button>
-                    )}
+                  <div style={{ fontSize: ".68rem", color: "var(--text-3)", fontFamily: "var(--font-mono)", marginTop: 2 }}>
+                    গ্রস: ৳ {Number(order.grossTotal || 0).toLocaleString()}
                   </div>
                 </div>
               </div>
@@ -568,122 +579,168 @@ export default function OrderHistoryPage() {
         </div>
       )}
 
-      {/* Printable Receipt Modal */}
+      {/* ===================================================================
+          MODAL: FULL ORDER INSPECTION & RECEIPT / INVOICE PRINT
+          =================================================================== */}
       {selectedReceiptOrder && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-200 space-y-4 max-h-[90vh] overflow-y-auto">
+        <div className="history-modal-overlay" onClick={() => setSelectedReceiptOrder(null)}>
+          <div className="history-modal-card" onClick={(e) => e.stopPropagation()}>
             {/* Modal Header */}
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-              <div className="flex items-center gap-2">
-                <FileText className="text-emerald-600" size={18} />
-                <h3 className="font-bold text-slate-900 text-sm">
-                  {language === "bn" ? "অর্ডার চালান / মেমো" : "Order Receipt & Invoice"}
-                </h3>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid var(--border-2)", paddingBottom: 14 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <div
+                  className="history-item-icon income"
+                  style={{ width: 40, height: 40, fontSize: 18 }}
+                >
+                  📄
+                </div>
+                <div>
+                  <div style={{ fontSize: "1.05rem", fontWeight: 800, color: "var(--text-1)", fontFamily: "var(--font-bn)" }}>
+                    অর্ডার রসিদ ও চালান চালানপত্র
+                  </div>
+                  <div style={{ fontSize: ".72rem", color: "var(--text-3)", fontFamily: "var(--font-mono)" }}>
+                    #{selectedReceiptOrder.displayId} • {selectedReceiptOrder.id}
+                  </div>
+                </div>
               </div>
               <button
+                type="button"
+                className="history-search-clear"
                 onClick={() => setSelectedReceiptOrder(null)}
-                className="p-1.5 text-slate-400 hover:text-slate-600 rounded-full"
+                style={{ position: "static", width: 28, height: 28 }}
               >
-                <X size={18} />
+                ✕
               </button>
             </div>
 
-            {/* Printable Slip Content */}
-            <div id="printable-receipt" className="p-4 bg-slate-50 rounded-2xl border border-slate-200 text-xs space-y-3 font-mono">
-              {/* Slip Header */}
-              <div className="text-center pb-3 border-b border-dashed border-slate-300">
-                <h2 className="text-base font-black text-emerald-800">তাতকা বাজার</h2>
-                <p className="text-[10px] text-slate-600 font-sans">
-                  {profile.storeNameBn || profile.storeName}
-                </p>
-                <p className="text-[10px] text-slate-400 font-sans">
-                  লাইসেন্স: {profile.tradeLicense}
-                </p>
-                <div className="mt-2 text-[11px] font-bold text-slate-800">
-                  অর্ডার নং: #{selectedReceiptOrder.displayId}
+            {/* Merchant Header in Receipt */}
+            <div style={{ background: "rgba(13, 25, 41, 0.75)", border: "1px solid var(--border-2)", borderRadius: "var(--r-md)", padding: "14px 16px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 6 }}>
+                <div>
+                  <div style={{ fontSize: ".95rem", fontWeight: 800, color: "var(--emerald)", fontFamily: "var(--font-bn)" }}>
+                    {profile.storeNameBn || profile.storeName || "তাতকা ফ্রেশ ভেন্ডর"}
+                  </div>
+                  <div style={{ fontSize: ".70rem", color: "var(--text-3)", marginTop: 2 }}>
+                    ট্রেড লাইসেন্স: {profile.tradeLicense || "TRAD/DSCC/019283/2024"}
+                  </div>
                 </div>
-                <div className="text-[10px] text-slate-500">
-                  {new Date(selectedReceiptOrder.createdAt).toLocaleString("bn-BD")}
+                <div style={{ textAlign: "right" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                    <span style={{ fontSize: ".88rem", fontWeight: 800, color: "var(--text-1)", fontFamily: "var(--font-mono)" }}>
+                      #{selectedReceiptOrder.displayId}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => handleCopy(selectedReceiptOrder.displayId)}
+                      style={{ fontSize: ".68rem", padding: "2px 6px", background: "var(--bg-raised)", border: "1px solid var(--border-2)", borderRadius: 4, color: "var(--text-2)", cursor: "pointer" }}
+                    >
+                      {copiedId === selectedReceiptOrder.displayId ? "কপি হয়েছে!" : "কপি"}
+                    </button>
+                  </div>
+                  <div style={{ fontSize: ".68rem", color: "var(--text-3)", marginTop: 2 }}>
+                    {fmt(selectedReceiptOrder.createdAt)}
+                  </div>
                 </div>
               </div>
 
-              {/* Delivery info (privacy preserved) */}
-              <div className="py-2 border-b border-dashed border-slate-300 text-[11px] space-y-0.5">
+              {/* Delivery Info with Privacy Protection */}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginTop: 12, paddingTop: 10, borderTop: "1px dashed var(--border-2)", fontSize: ".74rem", fontFamily: "var(--font-bn)" }}>
                 <div>
-                  <span className="text-slate-500">গ্রাহক:</span>{" "}
-                  <strong>{selectedReceiptOrder.customerName}</strong>
+                  <span style={{ color: "var(--text-3)" }}>ডেলিভারি জোন: </span>
+                  <strong style={{ color: "var(--text-1)" }}>{selectedReceiptOrder.deliveryZone || "মিরপুর হাব"}</strong>
                 </div>
                 <div>
-                  <span className="text-slate-500">ডেলিভারি এলাকা:</span>{" "}
-                  <strong>{selectedReceiptOrder.deliveryZone || "মিরপুর জোন"}</strong>
+                  <span style={{ color: "var(--text-3)" }}>পেমেন্ট মোড: </span>
+                  <strong style={{ color: "var(--text-1)" }}>{selectedReceiptOrder.paymentMethod}</strong> (
+                  <span style={{ color: selectedReceiptOrder.paymentStatus === "PAID" ? "var(--emerald)" : "var(--amber)" }}>
+                    {selectedReceiptOrder.paymentStatus === "PAID" ? "পরিশোধিত" : "COD"}
+                  </span>)
                 </div>
+                {selectedReceiptOrder.riderName && (
+                  <div>
+                    <span style={{ color: "var(--text-3)" }}>অ্যাসাইন্ড রাইডার: </span>
+                    <strong style={{ color: "var(--text-1)" }}>{selectedReceiptOrder.riderName}</strong>
+                  </div>
+                )}
                 <div>
-                  <span className="text-slate-500">পেমেন্ট:</span>{" "}
-                  <strong>{selectedReceiptOrder.paymentMethod}</strong> (
-                  {selectedReceiptOrder.paymentStatus === "PAID" ? "পরিশোধিত" : "বাকি"})
+                  <span style={{ color: "var(--text-3)" }}>গ্রাহকের নাম: </span>
+                  <strong style={{ color: "var(--text-1)" }}>{selectedReceiptOrder.customerName || "সম্মানিত ক্রেতা"}</strong>
                 </div>
               </div>
+            </div>
 
-              {/* Items List */}
-              <div className="py-2 border-b border-dashed border-slate-300 space-y-2">
-                <div className="flex justify-between font-bold text-slate-700 text-[10px]">
-                  <span>পণ্য বিবরণ</span>
-                  <span>মূল্য</span>
-                </div>
-                {selectedReceiptOrder.items.map((i) => (
-                  <div key={i.id} className="flex justify-between items-start text-[11px]">
-                    <div className="pr-2">
-                      <p className="font-sans font-semibold text-slate-900">
-                        {language === "bn" ? i.productNameBn : i.productName}
-                      </p>
-                      <p className="text-[9px] text-slate-500">
-                        {i.pricingType === "WEIGHT_BASED"
-                          ? `${i.weightActual || i.weightOrdered} ${i.unit} × ৳${i.unitPrice}`
-                          : `${i.quantity} ${i.unit} × ৳${i.unitPrice}`}
-                      </p>
+            {/* Items Table */}
+            <div style={{ background: "var(--bg-base)", border: "1px solid var(--border-1)", borderRadius: "var(--r-md)", padding: "12px 14px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", fontSize: ".70rem", fontWeight: 700, color: "var(--text-3)", textTransform: "uppercase", paddingBottom: 8, borderBottom: "1px solid var(--border-1)" }}>
+                <span>পণ্য ও বিবরণ</span>
+                <span>মূল্য</span>
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 8 }}>
+                {(selectedReceiptOrder.items || []).map((it) => (
+                  <div key={it.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", fontSize: ".78rem" }}>
+                    <div>
+                      <div style={{ color: "var(--text-1)", fontWeight: 600, fontFamily: "var(--font-bn)" }}>
+                        {language === "bn" ? it.productNameBn || it.productName : it.productName}
+                      </div>
+                      <div style={{ fontSize: ".68rem", color: "var(--text-3)", fontFamily: "var(--font-mono)" }}>
+                        {it.pricingType === "WEIGHT_BASED"
+                          ? `${it.weightActual || it.weightOrdered} ${it.unit} × ৳${it.unitPrice}`
+                          : `${it.quantity} ${it.unit} × ৳${it.unitPrice}`}
+                      </div>
                     </div>
-                    <span className="font-bold text-slate-900">৳{i.finalPrice.toFixed(1)}</span>
+                    <div style={{ fontWeight: 800, color: "var(--text-1)", fontFamily: "var(--font-mono)" }}>
+                      ৳ {Number(it.finalPrice || 0).toFixed(1)}
+                    </div>
                   </div>
                 ))}
               </div>
+            </div>
 
-              {/* Totals */}
-              <div className="pt-2 space-y-1 text-[11px]">
-                <div className="flex justify-between text-slate-600">
-                  <span>গ্রস মোট:</span>
-                  <span>৳{selectedReceiptOrder.grossTotal.toFixed(1)}</span>
-                </div>
-                <div className="flex justify-between text-slate-500 text-[10px]">
-                  <span>তাতকা প্ল্যাটফর্ম ফি ({selectedReceiptOrder.commissionRate}%):</span>
-                  <span>- ৳{selectedReceiptOrder.commissionAmount.toFixed(1)}</span>
-                </div>
-                <div className="flex justify-between text-emerald-800 font-bold text-sm pt-1 border-t border-slate-200">
-                  <span>ভেন্ডর নেট পেআউট:</span>
-                  <span>৳{selectedReceiptOrder.netTotal.toFixed(1)}</span>
-                </div>
+            {/* Financial Summary */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 6, fontSize: ".80rem", padding: "12px 14px", background: "rgba(13, 25, 41, 0.75)", border: "1px solid var(--border-2)", borderRadius: "var(--r-md)" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", color: "var(--text-2)" }}>
+                <span>মোট গ্রস বিক্রি:</span>
+                <span style={{ fontFamily: "var(--font-mono)", fontWeight: 700 }}>
+                  ৳ {Number(selectedReceiptOrder.grossTotal || 0).toFixed(1)}
+                </span>
               </div>
-
-              {/* Footer Note */}
-              <div className="text-center pt-3 text-[10px] text-slate-400 font-sans border-t border-dashed border-slate-300">
-                <p>তাতকা বাজার ভেন্ডর নেটওয়ার্কের অংশ হওয়ার জন্য ধন্যবাদ</p>
-                <p className="text-[9px] mt-0.5">🔒 গোপনীয়তা নীতি অনুযায়ী গ্রাহকের ঠিকানা রক্ষিত</p>
+              <div style={{ display: "flex", justifyContent: "space-between", color: "var(--text-3)", fontSize: ".74rem" }}>
+                <span>প্ল্যাটফর্ম ফি ও সার্ভিস চার্জ ({selectedReceiptOrder.commissionRate || 10}%):</span>
+                <span style={{ fontFamily: "var(--font-mono)", color: "var(--red)" }}>
+                  − ৳ {Number(selectedReceiptOrder.commissionAmount || 0).toFixed(1)}
+                </span>
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: 8, marginTop: 4, borderTop: "1px solid var(--border-2)", color: "var(--emerald)", fontWeight: 900, fontSize: "1.05rem" }}>
+                <span style={{ fontFamily: "var(--font-bn)" }}>ভেন্ডর নেট পেআউট:</span>
+                <span style={{ fontFamily: "var(--font-mono)", fontSize: "1.25rem" }}>
+                  ৳ {Number(selectedReceiptOrder.netTotal || 0).toFixed(1)}
+                </span>
               </div>
             </div>
 
-            {/* Modal Actions */}
-            <div className="flex items-center justify-end gap-2 pt-2">
+            {/* Privacy Note */}
+            <div style={{ fontSize: ".68rem", color: "var(--text-3)", textAlign: "center", fontFamily: "var(--font-bn)" }}>
+              🔒 গ্রাহকের ব্যক্তিগত নিরাপত্তা ও ঠিকানা তাতকা বাজার ডেটা প্রোটেকশন পলিসি দ্বারা সুরক্ষিত
+            </div>
+
+            {/* Actions */}
+            <div style={{ display: "flex", gap: 10, marginTop: 4 }}>
               <button
+                type="button"
+                className="btn-secondary"
                 onClick={() => setSelectedReceiptOrder(null)}
-                className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 transition-colors"
+                style={{ flex: 1, padding: "10px", borderRadius: "var(--r-md)", fontSize: ".84rem" }}
               >
-                {language === "bn" ? "বন্ধ করুন" : "Close"}
+                বন্ধ করুন
               </button>
               <button
+                type="button"
+                className="btn-primary"
                 onClick={handlePrintReceipt}
-                className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-xs transition-all active:scale-95"
+                style={{ flex: 1, padding: "10px", borderRadius: "var(--r-md)", fontSize: ".84rem", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}
               >
-                <Printer size={14} />
-                <span>{language === "bn" ? "প্রিন্ট চালান" : "Print Invoice"}</span>
+                <Printer size={16} />
+                <span>চালান প্রিন্ট করুন</span>
               </button>
             </div>
           </div>
