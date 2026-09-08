@@ -101,44 +101,6 @@ export default function VendorProfilePage() {
       star2: 3,
       star1: 1,
     },
-    recentReviews: [
-      {
-        id: "rev-1",
-        customerName: "সামিয়া রহমান",
-        area: "ধানমন্ডি",
-        rating: 5,
-        comment: "খুবই তাজা ও বিষমুক্ত লাল শাক এবং তরতাজা ইলিশ মাছ পেয়েছি। প্যাকেজিং এবং ডিজিটাল স্কেলের ওজন নিখুঁত ছিল!",
-        date: "আজকে, দুপুর ২:১৫",
-        orderNumber: "TB-8492",
-      },
-      {
-        id: "rev-2",
-        customerName: "কামরুল হাসান",
-        area: "কলাবাগান",
-        rating: 5,
-        comment: "অর্ডার দেওয়ার মাত্র ১০ মিনিটের মধ্যে পারফেক্টলি প্যাক করে রাইডারের হাতে বুঝিয়ে দিয়েছে। সুপার ফাস্ট সার্ভিস!",
-        date: "গতকাল, বিকাল ৪:৩০",
-        orderNumber: "TB-8488",
-      },
-      {
-        id: "rev-3",
-        customerName: "তানভীর আহমেদ",
-        area: "মোহাম্মদপুর",
-        rating: 5,
-        comment: "দেশি গরুর মাংসের প্রতিটি কাটিং ফ্রেশ ছিল। পরিচ্ছন্ন প্যাকেজিং দেখে খুব ভালো লেগেছে।",
-        date: "০২ সেপ্টেম্বর ২০২৬",
-        orderNumber: "TB-8480",
-      },
-      {
-        id: "rev-4",
-        customerName: "ফারহানা হক",
-        area: "পান্থপথ",
-        rating: 5,
-        comment: "প্রতি সপ্তাহেই এখান থেকে কেনাকাটা করি। গুণমান ও ওজনে কোন ঘাটতি থাকে না。",
-        date: "২৮ আগস্ট ২০২৬",
-        orderNumber: "TB-8465",
-      },
-    ],
   };
 
   const handleResetVendorPanel = () => {
@@ -249,36 +211,6 @@ export default function VendorProfilePage() {
               <span style={{ width: 28, textAlign: "right", color: "var(--text-3)", fontSize: ".68rem" }}>{bar.count}</span>
             </div>
           ))}
-        </div>
-
-        {/* Recent Customer Feedback */}
-        <div style={{ marginTop: 16 }}>
-          <div style={{ fontSize: ".82rem", fontWeight: 800, color: "var(--text-1)", marginBottom: 10, display: "flex", alignItems: "center", gap: 6 }}>
-            <span>💬</span>
-            <span>কাস্টমারদের সাম্প্রতিক মন্তব্য ও রিভিউ</span>
-          </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-            {perf.recentReviews.map((rev) => (
-              <div key={rev.id} className="review-item-card">
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                    <span style={{ fontSize: ".82rem", fontWeight: 700, color: "var(--text-1)" }}>{rev.customerName}</span>
-                    <span style={{ fontSize: ".68rem", color: "var(--text-3)" }}>• {rev.area}</span>
-                  </div>
-                  <div style={{ color: "#f59e0b", fontSize: ".76rem", letterSpacing: 1 }}>
-                    {"⭐".repeat(rev.rating)}
-                  </div>
-                </div>
-                <div style={{ fontSize: ".78rem", color: "var(--text-2)", lineHeight: 1.4, fontFamily: "var(--font-bn)", fontStyle: "italic" }}>
-                  “{rev.comment}”
-                </div>
-                <div style={{ fontSize: ".65rem", color: "var(--text-3)", marginTop: 4, display: "flex", justifyContent: "space-between" }}>
-                  <span>অর্ডার #{rev.orderNumber}</span>
-                  <span>{rev.date}</span>
-                </div>
-              </div>
-            ))}
-          </div>
         </div>
       </div>
 
