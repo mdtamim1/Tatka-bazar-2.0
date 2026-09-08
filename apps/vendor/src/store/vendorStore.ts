@@ -1620,6 +1620,9 @@ export const useVendorStore = create<VendorState>()(
             const riderVehicle = matchingTask.riderVehicle || matchingTask.claimedBy?.riderVehicle;
             const taskStatus = matchingTask.status;
 
+            // ─── Status Mapping (Rider dispatch status → Vendor order status) ───
+            // IMPORTANT: ASSIGNED/CLAIMED only updates rider info, never the order status.
+            // Order status is managed by the Vendor's own workflow (accept → prepare → ready).
             let newStatus = order.status;
             if (taskStatus === "DELIVERED" && order.status !== "COMPLETED") {
               newStatus = "COMPLETED";
@@ -1631,16 +1634,13 @@ export const useVendorStore = create<VendorState>()(
               order.status !== "COMPLETED"
             ) {
               newStatus = "HANDED_TO_RIDER";
-            } else if (
-              (taskStatus === "ASSIGNED" || matchingTask.claimed) &&
-              (order.status === "PENDING" || order.status === "RECEIVED" || order.status === "PROCESSING")
-            ) {
-              newStatus = "READY_FOR_PICKUP";
             }
+            // NOTE: taskStatus === "ASSIGNED" → do NOT change order status.
+            // The rider claiming the task does not skip vendor's preparation workflow.
 
-            const finalRiderName = riderName || order.riderName || "তামীম ইকবাল (রাইডার #১০১)";
-            const finalRiderPhone = riderPhone || order.riderPhone || "01700000001";
-            const finalRiderVehicle = riderVehicle || order.riderVehicle || "মোটরসাইকেল (ঢাকা মেট্রো-হ-৪৫-১২৩৪)";
+            const finalRiderName = riderName || order.riderName || undefined;
+            const finalRiderPhone = riderPhone || order.riderPhone || undefined;
+            const finalRiderVehicle = riderVehicle || order.riderVehicle || undefined;
 
             if (
               order.riderName !== finalRiderName ||

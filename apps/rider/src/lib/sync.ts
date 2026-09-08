@@ -18,7 +18,8 @@ export interface SyncPayload {
   timestamp: string;
 }
 
-const CHANNEL_NAME = "tatka_realtime_sync_channel";
+// Rider-specific channel name to avoid collision with Vendor portal's BroadcastChannel
+const CHANNEL_NAME = "tatka_rider_realtime_sync_channel";
 const STORAGE_SYNC_KEY = "tatka_sync_bus_event";
 
 let broadcastChannel: BroadcastChannel | null = null;

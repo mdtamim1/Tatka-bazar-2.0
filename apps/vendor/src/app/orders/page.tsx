@@ -101,7 +101,7 @@ export default function OrdersPage() {
     if (tab === "ALL") return true;
     if (tab === "PENDING") return order.status === "PENDING" || order.status === "RECEIVED";
     if (tab === "PROCESSING") return order.status === "PROCESSING" || order.status === "PREPARING";
-    if (tab === "READY_FOR_PICKUP") return order.status === "READY_FOR_PICKUP";
+    if (tab === "READY_FOR_PICKUP") return order.status === "READY_FOR_PICKUP" || order.status === "HANDED_TO_RIDER";
     if (tab === "COMPLETED") return order.status === "COMPLETED";
     if (tab === "RETURNED") return order.status === "RETURNED";
     return order.status === tab;
@@ -152,6 +152,12 @@ export default function OrdersPage() {
         return (
           <span className="px-2.5 py-0.5 rounded-md text-[11px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-300">
             রেডি ফর পিকআপ (রাইডার অ্যালার্ট)
+          </span>
+        );
+      case "HANDED_TO_RIDER":
+        return (
+          <span className="px-2.5 py-0.5 rounded-md text-[11px] font-bold bg-blue-50 text-blue-800 border border-blue-300">
+            🛵 রাইডারের সাথে (ডেলিভারিতে)
           </span>
         );
       case "COMPLETED":

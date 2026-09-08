@@ -1,4 +1,4 @@
-import { emitSyncEvent } from "./sync";
+﻿import { emitSyncEvent } from "./sync";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
 
@@ -1141,24 +1141,34 @@ export async function apiFetch<T = unknown>(
   const method = (options.method || "GET").toUpperCase();
 
   // 1. Cross-App Dispatch Sync for Tasks (Vercel serverless & local)
+  // Tries own /api/dispatch first, then falls back to vendor's Vercel endpoint
   if (path === "/rider-portal/tasks" && method === "GET") {
-    try {
-      const dispatchRes = await fetch("/api/dispatch");
-      if (dispatchRes.ok) {
-        const dispatchJson = await dispatchRes.json();
-        if (dispatchJson.success && Array.isArray(dispatchJson.data)) {
-          const localTasks = getLocalStore<Task[]>("available_tasks", []);
-          const merged: Task[] = [...(dispatchJson.data as Task[])];
-          for (const lt of localTasks) {
-            if (!merged.some((m) => m.id === lt.id || m.orderNumber === lt.orderNumber)) {
-              merged.push(lt);
+    const dispatchEndpoints = [
+      "/api/dispatch",
+      "https://tatka-bazar-2-0-rider-seven.vercel.app/api/dispatch",
+    ];
+    for (const endpoint of dispatchEndpoints) {
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 3000);
+        const dispatchRes = await fetch(endpoint, { signal: controller.signal });
+        clearTimeout(timeoutId);
+        if (dispatchRes.ok) {
+          const dispatchJson = await dispatchRes.json();
+          if (dispatchJson.success && Array.isArray(dispatchJson.data)) {
+            const localTasks = getLocalStore<Task[]>("available_tasks", []);
+            const merged: Task[] = [...(dispatchJson.data as Task[])];
+            for (const lt of localTasks) {
+              if (!merged.some((m) => m.id === lt.id || m.orderNumber === lt.orderNumber)) {
+                merged.push(lt);
+              }
             }
+            setLocalStore("available_tasks", merged);
+            return { success: true, data: merged as any };
           }
-          setLocalStore("available_tasks", merged);
-          return { success: true, data: merged as any };
         }
-      }
-    } catch {}
+      } catch {}
+    }
   }
 
   // 2. Cross-App Dispatch Claim & Lifecycle Sync (Notify /api/dispatch when rider acts)
@@ -1178,7 +1188,7 @@ export async function apiFetch<T = unknown>(
       const targets = [
         "/api/dispatch",
         "https://tatka-bazar-2-0-vendor.vercel.app/api/dispatch",
-        "http://localhost:3002/api/dispatch",
+        "http://localhost:3006/api/dispatch",
       ];
       targets.forEach((url) => {
         fetch(url, {
@@ -1198,7 +1208,7 @@ export async function apiFetch<T = unknown>(
       const targets = [
         "/api/dispatch",
         "https://tatka-bazar-2-0-vendor.vercel.app/api/dispatch",
-        "http://localhost:3002/api/dispatch",
+        "http://localhost:3006/api/dispatch",
       ];
       targets.forEach((url) => {
         fetch(url, {
@@ -1218,7 +1228,7 @@ export async function apiFetch<T = unknown>(
       const targets = [
         "/api/dispatch",
         "https://tatka-bazar-2-0-vendor.vercel.app/api/dispatch",
-        "http://localhost:3002/api/dispatch",
+        "http://localhost:3006/api/dispatch",
       ];
       targets.forEach((url) => {
         fetch(url, {
@@ -1238,7 +1248,7 @@ export async function apiFetch<T = unknown>(
       const targets = [
         "/api/dispatch",
         "https://tatka-bazar-2-0-vendor.vercel.app/api/dispatch",
-        "http://localhost:3002/api/dispatch",
+        "http://localhost:3006/api/dispatch",
       ];
       targets.forEach((url) => {
         fetch(url, {

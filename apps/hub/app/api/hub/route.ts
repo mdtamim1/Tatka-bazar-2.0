@@ -1,0 +1,79 @@
+import { NextRequest, NextResponse } from "next/server";
+import { getTeam, getActivity, getConfig, getWithdrawals, validateSession, logActivity } from "@/lib/hubStore";
+
+function auth(req: NextRequest) {
+  const token = req.headers.get("authorization")?.replace("Bearer ", "");
+  return token ? validateSession(token) : null;
+}
+
+// GET /api/hub/dashboard — unified dashboard stats
+export async function GET(req: NextRequest) {
+  const session = auth(req);
+  if (!session) return NextResponse.json({ success: false, error: "অনুমোদিত নয়" }, { status: 401 });
+  return NextResponse.json({
+    success: true,
+    data: {
+      activity: getActivity().slice(0, 20),
+      config: getConfig(),
+      pendingWithdrawals: getWithdrawals().filter((w) => w.status === "PENDING").length,
+    },
+  });
+}
+
+// GET /api/hub/team — team members list  
+// PATCH /api/hub/team — update team member
+
+export async function POST(req: NextRequest) {
+  const session = auth(req);
+  if (!session) return NextResponse.json({ success: false, error: "অনুমোদিত নয়" }, { status: 401 });
+  if (session.role !== "SUPER_ADMIN") {
+    return NextResponse.json({ success: false, error: "শুধু Super Admin এই কাজ করতে পারেন" }, { status: 403 });
+  }
+  const body = await req.json();
+  if (body.action === "GET_TEAM") {
+    return NextResponse.json({ success: true, data: getTeam() });
+  }
+  if (body.action === "GET_ACTIVITY") {
+    return NextResponse.json({ success: true, data: getActivity() });
+  }
+  if (body.action === "GET_CONFIG") {
+    return NextResponse.json({ success: true, data: getConfig() });
+  }
+  if (body.action === "ADD_TEAM_MEMBER") {
+    const team = getTeam();
+    const exists = team.find((m) => m.email === body.member.email);
+    if (exists) return NextResponse.json({ success: false, error: "ইমেইল ইতিমধ্যে ব্যবহৃত" }, { status: 400 });
+    const newMember = {
+      id: `hub-member-${Date.now()}`,
+      ...body.member,
+      isActive: true,
+      createdAt: new Date().toISOString(),
+    };
+    team.push(newMember);
+    logActivity({
+      actorId: session.memberId,
+      actorName: session.name,
+      action: "TEAM_MEMBER_ADDED",
+      targetType: "TEAM",
+      targetName: body.member.name,
+      details: `Role: ${body.member.role}`,
+    });
+    return NextResponse.json({ success: true, data: newMember });
+  }
+  if (body.action === "UPDATE_TEAM_MEMBER") {
+    const team = getTeam();
+    const idx = team.findIndex((m) => m.id === body.id);
+    if (idx === -1) return NextResponse.json({ success: false, error: "সদস্য পাওয়া যায়নি" }, { status: 404 });
+    Object.assign(team[idx], body.updates);
+    logActivity({
+      actorId: session.memberId,
+      actorName: session.name,
+      action: "TEAM_MEMBER_UPDATED",
+      targetType: "TEAM",
+      targetId: body.id,
+      targetName: team[idx].name,
+    });
+    return NextResponse.json({ success: true, data: team[idx] });
+  }
+  return NextResponse.json({ success: false, error: "অজানা action" }, { status: 400 });
+}
