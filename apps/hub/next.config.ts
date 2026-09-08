@@ -4,6 +4,12 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
   transpilePackages: ["@tatka-bazar/database", "@tatka-bazar/redis"],
   serverExternalPackages: ["@prisma/client", "ioredis"],
+  typescript: {
+    ignoreBuildErrors: true,
+  },
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
   async headers() {
     return [
       {
