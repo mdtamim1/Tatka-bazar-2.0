@@ -8,7 +8,7 @@ import {
   ShoppingBag,
   Wallet,
   MessageSquareDiff,
-  Settings,
+  User,
   Palmtree,
   Store,
   X,
@@ -82,11 +82,10 @@ export default function VendorSidebar({ onClose }: VendorSidebarProps) {
       roles: ["OWNER", "MANAGER"],
     },
     {
-      label: t.navSettings,
-      href: "/settings",
-      icon: Settings,
-      roles: ["OWNER"],
-      lockedFor: ["MANAGER", "STAFF"],
+      label: language === "bn" ? "প্রোফাইল" : "Profile",
+      href: "/profile",
+      icon: User,
+      roles: ["OWNER", "MANAGER", "STAFF"],
     },
   ];
 

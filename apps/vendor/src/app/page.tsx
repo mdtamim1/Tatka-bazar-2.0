@@ -137,10 +137,10 @@ export default function VendorDashboardPage() {
             <span>{t.vacationActive}</span>
           </div>
           <Link
-            href="/settings"
+            href="/profile"
             style={{ textDecoration: "underline", fontWeight: 700, color: "#FBBF24" }}
           >
-            {language === "bn" ? "সেটিংস দেখুন" : "View Settings"}
+            {language === "bn" ? "প্রোফাইল দেখুন" : "View Profile"}
           </Link>
         </div>
       )}
@@ -149,7 +149,7 @@ export default function VendorDashboardPage() {
       <div
         id="home-tier-pill"
         className="home-tier-pill"
-        onClick={() => router.push("/settings")}
+        onClick={() => router.push("/profile")}
         title="সম্পূর্ণ পারফরম্যান্স ও রেটিং স্কোরকার্ড দেখুন"
       >
         <span>⭐ {profile.rating} (যাচাইকৃত বিক্রেতা)</span>

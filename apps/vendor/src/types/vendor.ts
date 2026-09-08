@@ -282,6 +282,15 @@ export interface VendorProfile {
   deliveryZones: string[];
   logoUrl: string;
   bannerUrl: string;
+  fatherName?: string;
+  motherName?: string;
+  dateOfBirth?: string;
+  presentAddress?: string;
+  permanentAddress?: string;
+  nidFrontUrl?: string;
+  nidBackUrl?: string;
+  photoUrl?: string;
+  kycStatus?: "PENDING" | "SUBMITTED" | "APPROVED" | "REJECTED";
 }
 
 export interface NotificationItem {
