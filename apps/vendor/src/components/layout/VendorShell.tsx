@@ -38,12 +38,10 @@ export default function VendorShell({
     setChatOrder,
     trackingOrder,
     setTrackingOrder,
-    simulateAreaDispatchOrder,
     simulateIncomingOrder,
-    updateOrderStatus,
   } = useVendorStore();
 
-  // Keyboard shortcut listener ('?' for shortcuts modal, '/' for search focus)
+  // Keyboard shortcut listener ('?' for shortcuts modal)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (
@@ -70,7 +68,6 @@ export default function VendorShell({
       if (payload.type === "NEW_ORDER" || payload.type === "ADMIN_DISPATCH_TO_ZONE") {
         simulateIncomingOrder();
       } else if (payload.type === "VENDOR_CLAIM_ORDER") {
-        // If another vendor claimed this order
         if (payload.claimedByVendorId && payload.claimedByVendorId !== profile.id) {
           setClaimLockAlert({
             isOpen: true,
@@ -92,18 +89,22 @@ export default function VendorShell({
     return () => unsubscribe();
   }, [simulateIncomingOrder, profile.id, setClaimLockAlert]);
 
-  const isAuthPage = pathname === "/login" || pathname === "/onboarding";
+  const isAuthPage =
+    pathname === "/login" ||
+    pathname === "/signup" ||
+    pathname === "/register" ||
+    pathname === "/onboarding";
 
   if (isAuthPage) {
     return (
-      <div className="min-h-screen bg-[#F8FAF8] flex flex-col justify-center text-slate-900">
+      <div className="min-h-screen bg-[#050810] text-[#F0F6FF]">
         {children}
       </div>
     );
   }
 
   return (
-    <div className="flex h-screen overflow-hidden bg-[#F8FAF8] text-slate-900">
+    <div className="flex h-screen overflow-hidden bg-[#050810] text-[#F0F6FF]">
       {/* Desktop Persistent Sidebar */}
       <div className="hidden lg:flex lg:flex-shrink-0">
         <VendorSidebar />
@@ -113,18 +114,18 @@ export default function VendorShell({
       {isMobileSidebarOpen && (
         <div className="fixed inset-0 z-50 lg:hidden flex">
           <div
-            className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm transition-opacity"
+            className="fixed inset-0 bg-black/70 backdrop-blur-sm transition-opacity"
             onClick={() => setIsMobileSidebarOpen(false)}
           />
-          <div className="relative flex-1 flex flex-col max-w-xs w-full bg-white border-r border-slate-200">
+          <div className="relative flex-1 flex flex-col max-w-xs w-full bg-[#08111E] border-r border-[rgba(255,255,255,0.08)] shadow-2xl">
             <VendorSidebar onClose={() => setIsMobileSidebarOpen(false)} />
           </div>
         </div>
       )}
 
       {/* Main Operational Surface */}
-      <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
-        {/* Top Header Bar */}
+      <div className="flex flex-col flex-1 min-w-0 overflow-hidden bg-[#050810]">
+        {/* Top Header Bar + Duty Switch Bar */}
         <VendorHeader
           onToggleMobileSidebar={() => setIsMobileSidebarOpen(true)}
           onOpenNotifications={() => setIsNotificationOpen(true)}
@@ -133,12 +134,12 @@ export default function VendorShell({
         />
 
         {/* Scrollable Content Area */}
-        <main className="flex-1 relative overflow-y-auto px-4 py-4 sm:px-6 sm:py-6 lg:px-8 pb-24 lg:pb-10 bg-[#F8FAF8]">
-          <div className="max-w-7xl mx-auto">{children}</div>
+        <main className="flex-1 relative overflow-y-auto pb-24 lg:pb-12 bg-[#050810]">
+          {children}
         </main>
       </div>
 
-      {/* Mobile Bottom Navigation */}
+      {/* Mobile Bottom Navigation (Rider Portal Style) */}
       <VendorMobileNav
         onOpenNotifications={() => setIsNotificationOpen(true)}
         onOpenRoleModal={() => setIsRoleModalOpen(true)}

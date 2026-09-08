@@ -1,236 +1,293 @@
 "use client";
 
 import React, { useState } from "react";
-import {
-  Menu,
-  Search,
-  Bell,
-  Volume2,
-  VolumeX,
-  Zap,
-  HelpCircle,
-  Store,
-  ChevronDown,
-} from "lucide-react";
+import { Menu } from "lucide-react";
 import { useVendorStore } from "@/store/vendorStore";
 import { translations } from "@/utils/translations";
+
+function BellIcon() {
+  return (
+    <svg fill="none" viewBox="0 0 24 24" style={{ width: 18, height: 18, stroke: "currentColor" }}>
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+    </svg>
+  );
+}
+
+function PhoneIcon() {
+  return (
+    <svg fill="none" viewBox="0 0 24 24" style={{ width: 15, height: 15, stroke: "currentColor" }}>
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+    </svg>
+  );
+}
 
 interface VendorHeaderProps {
   onToggleMobileSidebar: () => void;
   onOpenNotifications: () => void;
   onOpenRoleModal?: () => void;
-  onOpenShortcuts: () => void;
+  onOpenShortcuts?: () => void;
 }
 
 export default function VendorHeader({
   onToggleMobileSidebar,
   onOpenNotifications,
-  onOpenShortcuts,
+  onOpenRoleModal,
 }: VendorHeaderProps) {
   const {
     language,
-    soundEnabled,
-    toggleSound,
-    simulateIncomingOrder,
-    notifications,
-    orders,
+    profile,
     dutyStatus,
     setDutyStatus,
+    simulateIncomingOrder,
+    notifications,
   } = useVendorStore();
 
-  const [searchQuery, setSearchQuery] = useState("");
-  const [isDutyMenuOpen, setIsDutyMenuOpen] = useState(false);
-
-  const t = translations[language];
-
+  const [isSosAlert, setIsSosAlert] = useState(false);
   const unreadNotifs = notifications.filter((n) => !n.read).length;
 
-  const todayGrossSales = orders
-    .filter((o) => o.status === "COMPLETED")
-    .reduce((sum, o) => sum + o.grossTotal, 0);
+  const toggleDuty = () => {
+    const next = dutyStatus === "STORE_OPEN" ? "STORE_CLOSED" : "STORE_OPEN";
+    setDutyStatus(next);
+  };
 
-  const pendingPrepCount = orders.filter(
-    (o) => o.status === "RECEIVED" || o.status === "PREPARING"
-  ).length;
-
-  const getDutyColor = () => {
-    switch (dutyStatus) {
-      case "STORE_OPEN":
-        return "bg-emerald-50 text-emerald-800 border-emerald-300";
-      case "BUSY":
-        return "bg-amber-50 text-amber-800 border-amber-300";
-      case "STORE_CLOSED":
-        return "bg-rose-50 text-rose-800 border-rose-300";
+  const handleSos = () => {
+    setIsSosAlert((prev) => !prev);
+    if (!isSosAlert) {
+      alert("🚨 ভেন্ডর জরুরি এসওএস সক্রিয় করা হয়েছে! কন্ট্রোল রুম অবিলম্বে আপনার সাথে যোগাযোগ করবে।");
     }
   };
 
-  const getDutyDot = () => {
-    switch (dutyStatus) {
-      case "STORE_OPEN":
-        return "bg-emerald-500 shadow-sm shadow-emerald-500/50";
-      case "BUSY":
-        return "bg-amber-500 shadow-sm shadow-amber-500/50";
-      case "STORE_CLOSED":
-        return "bg-rose-500 shadow-sm shadow-rose-500/50";
-    }
-  };
+  const storeDisplayName = language === "bn" 
+    ? (profile.storeNameBn || profile.storeName || "তাতকা ভেন্ডর")
+    : (profile.storeName || "Tatka Vendor");
 
   return (
-    <header className="h-16 bg-white border-b border-slate-200/80 flex items-center justify-between px-4 sm:px-6 lg:px-8 select-none z-10 shadow-sm">
-      {/* Left: Mobile Menu & Search */}
-      <div className="flex items-center gap-3 flex-1 max-w-lg">
-        <button
-          onClick={onToggleMobileSidebar}
-          className="p-2 -ml-2 text-slate-500 hover:text-emerald-700 hover:bg-emerald-50 rounded-xl lg:hidden transition-colors"
-          aria-label="Open sidebar"
-        >
-          <Menu size={20} />
-        </button>
-
-        {/* Operational Search Bar */}
-        <div className="relative w-full max-w-sm hidden sm:block">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
-            <Search size={15} />
+    <div>
+      {/* Active SOS Strip if triggered */}
+      {isSosAlert && (
+        <div style={{
+          background: "linear-gradient(90deg, #b91c1c, #ef4444)",
+          color: "#fff",
+          padding: "7px 16px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          fontSize: ".78rem",
+          fontWeight: 800,
+          fontFamily: "var(--font-bn)",
+          zIndex: 1000,
+          animation: "pulse 1.8s infinite",
+        }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            <span>🚨</span>
+            <span>জরুরি সতর্কতা সক্রিয় — তাতকা কন্ট্রোল রুম লাইভ পর্যবেক্ষণ করছে</span>
           </div>
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder={t.searchPlaceholder}
-            className="w-full bg-[#F8FAF8] border border-slate-200 rounded-xl pl-9 pr-8 py-2 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-emerald-600 focus:bg-white transition-all font-sans"
-          />
-          <div className="absolute inset-y-0 right-0 pr-2.5 flex items-center pointer-events-none">
-            <kbd className="px-1.5 py-0.5 text-[10px] font-mono bg-white border border-slate-200 rounded text-slate-400 shadow-xs">
-              /
-            </kbd>
-          </div>
-        </div>
-      </div>
-
-      {/* Center: Live Operational Ticker (Desktop only) */}
-      <div className="hidden xl:flex items-center gap-6 text-xs px-4 py-2 bg-[#F8FAF8] rounded-xl border border-emerald-100/80">
-        <div className="flex items-center gap-2">
-          <span className="text-slate-500 font-medium">{t.todaySales}:</span>
-          <span className="font-bold text-emerald-700 tabular-nums">
-            ৳{todayGrossSales.toLocaleString()}
-          </span>
-        </div>
-        <div className="h-3 w-px bg-slate-300" />
-        <div className="flex items-center gap-2">
-          <span className="text-slate-500 font-medium">{t.pendingOrders}:</span>
-          <span className="font-bold text-amber-600 tabular-nums">
-            {pendingPrepCount}
-          </span>
-        </div>
-      </div>
-
-      {/* Right: Operational Controls & Store Duty Status */}
-      <div className="flex items-center gap-2 sm:gap-2.5 relative">
-        {/* Store Duty Status Dropdown (Like Rider Online/Offline) */}
-        <div className="relative">
           <button
-            type="button"
-            onClick={() => setIsDutyMenuOpen(!isDutyMenuOpen)}
-            className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs font-bold transition-all shadow-xs ${getDutyColor()}`}
+            onClick={() => setIsSosAlert(false)}
+            style={{
+              background: "rgba(0,0,0,0.3)",
+              border: "1px solid rgba(255,255,255,0.4)",
+              color: "#fff",
+              padding: "2px 10px",
+              borderRadius: "999px",
+              fontSize: ".7rem",
+              fontWeight: 700,
+              cursor: "pointer",
+            }}
           >
-            <span className={`w-2.5 h-2.5 rounded-full animate-pulse ${getDutyDot()}`} />
-            <span>
-              {dutyStatus === "STORE_OPEN"
-                ? "দোকান খোলা"
-                : dutyStatus === "BUSY"
-                ? "ব্যস্ত"
-                : "দোকান বন্ধ"}
-            </span>
-            <ChevronDown size={13} className="opacity-70" />
+            ✅ সমাধান হয়েছে
+          </button>
+        </div>
+      )}
+
+      {/* Top Header - Rider Portal Design */}
+      <header className="top-header">
+        <div className="header-logo">
+          <button
+            onClick={onToggleMobileSidebar}
+            className="lg:hidden p-1.5 -ml-2 text-slate-400 hover:text-white rounded-lg transition-colors"
+            aria-label="Open menu"
+          >
+            <Menu size={20} />
           </button>
 
-          {isDutyMenuOpen && (
-            <div className="absolute right-0 mt-2 w-44 bg-white border border-slate-200 rounded-2xl shadow-xl py-1.5 z-50 text-xs font-semibold animate-in fade-in zoom-in-95">
-              <button
-                type="button"
-                onClick={() => {
-                  setDutyStatus("STORE_OPEN");
-                  setIsDutyMenuOpen(false);
+          <div className="header-logo-mark" title="Tatka Bazar Vendor">
+            🏪
+          </div>
+          <div>
+            <div className="header-title">Tatka Vendor</div>
+            <div className="header-subtitle bn">
+              স্বাগতম, {storeDisplayName.split(" ")[0]}!
+            </div>
+          </div>
+        </div>
+
+        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          {/* Emergency SOS Button */}
+          <button
+            id="sos-header-btn"
+            type="button"
+            className="sos-header-btn"
+            onClick={handleSos}
+            title="জরুরি এসওএস বিপদ সংকেত"
+          >
+            🚨 SOS
+          </button>
+
+          {/* Role switcher pill button if provided */}
+          {onOpenRoleModal && (
+            <button
+              type="button"
+              onClick={onOpenRoleModal}
+              className="support-btn"
+              style={{
+                background: "rgba(59, 130, 246, 0.12)",
+                borderColor: "rgba(59, 130, 246, 0.35)",
+                color: "#60a5fa",
+              }}
+              title="রোল পরিবর্তন করুন"
+            >
+              👑 রোল
+            </button>
+          )}
+
+          {/* Central Support Chat Button */}
+          <button
+            id="support-chat-btn"
+            type="button"
+            onClick={() => alert("তাতকা সেন্ট্রাল সাপোর্ট: 01700-000000")}
+            className="support-btn"
+            style={{
+              background: "rgba(0, 214, 143, 0.12)",
+              border: "1px solid rgba(0, 214, 143, 0.35)",
+              color: "#00d68f",
+            }}
+            title="তাতকা সেন্ট্রাল সাপোর্ট চ্যাট"
+          >
+            💬 সাপোর্ট
+          </button>
+
+          {/* Notifications Button with unread badge */}
+          <button
+            id="notifications-btn"
+            aria-label="নোটিফিকেশন"
+            onClick={onOpenNotifications}
+            style={{
+              position: "relative",
+              background: "var(--bg-card)",
+              border: "1px solid var(--border-1)",
+              borderRadius: "50%",
+              width: 38,
+              height: 38,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              cursor: "pointer",
+              color: "var(--text-2)",
+              flexShrink: 0,
+            }}
+          >
+            <BellIcon />
+            {unreadNotifs > 0 && (
+              <span
+                style={{
+                  position: "absolute",
+                  top: -4,
+                  right: -4,
+                  background: "#ef4444",
+                  color: "#fff",
+                  borderRadius: "999px",
+                  fontSize: ".6rem",
+                  fontWeight: 800,
+                  minWidth: 18,
+                  height: 18,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  padding: "0 4px",
+                  lineHeight: 1,
+                  border: "2px solid var(--bg-void)",
                 }}
-                className="w-full text-left px-3.5 py-2 hover:bg-emerald-50 text-emerald-800 flex items-center gap-2"
               >
-                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
-                <span>দোকান খোলা (অর্ডার গ্রহণ)</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setDutyStatus("BUSY");
-                  setIsDutyMenuOpen(false);
-                }}
-                className="w-full text-left px-3.5 py-2 hover:bg-amber-50 text-amber-800 flex items-center gap-2"
-              >
-                <span className="w-2.5 h-2.5 rounded-full bg-amber-500" />
-                <span>ব্যস্ত (সাময়িক পজ)</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setDutyStatus("STORE_CLOSED");
-                  setIsDutyMenuOpen(false);
-                }}
-                className="w-full text-left px-3.5 py-2 hover:bg-rose-50 text-rose-800 flex items-center gap-2"
-              >
-                <span className="w-2.5 h-2.5 rounded-full bg-rose-500" />
-                <span>দোকান বন্ধ (অফলাইন)</span>
-              </button>
+                {unreadNotifs > 9 ? "9+" : unreadNotifs}
+              </span>
+            )}
+          </button>
+
+          {/* Helpline Call */}
+          <a href="tel:+8801700000000" className="support-btn" title="হেল্পলাইনে কল করুন">
+            <PhoneIcon />
+            <span className="hidden sm:inline">কল</span>
+          </a>
+        </div>
+      </header>
+
+      {/* Duty Status Bar (Online/Offline Switch + Store Status Indicator + Sound Test) */}
+      <div className="duty-switch-bar">
+        <div className="duty-toggle-group">
+          <div
+            id="duty-status-toggle"
+            className={`duty-status-pill ${dutyStatus === "STORE_OPEN" ? "online" : "offline"}`}
+            onClick={toggleDuty}
+            title="অন/অফ-ডিউটি পরিবর্তন করুন"
+          >
+            <div className="duty-pulse-dot" />
+            <span>
+              {dutyStatus === "STORE_OPEN" ? "🟢 দোকান খোলা (সক্রিয়)" : "⚪ দোকান বন্ধ (বিশ্রামে)"}
+            </span>
+            <span style={{ fontSize: ".68rem", opacity: 0.75, marginLeft: 2 }}>
+              {dutyStatus === "STORE_OPEN" ? "• টগল" : "• চালু করুন"}
+            </span>
+          </div>
+
+          {/* Live Store Indicator */}
+          {dutyStatus === "STORE_OPEN" && (
+            <div
+              title="লাইভ স্টোর সক্রিয় — ক্রেতা ও রাইডার আপনার স্টোর ও পণ্য দেখতে পাচ্ছেন"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 5,
+                padding: "4px 10px",
+                borderRadius: 999,
+                background: "rgba(0, 214, 143, 0.1)",
+                border: "1px solid rgba(0, 214, 143, 0.35)",
+                fontSize: ".68rem",
+                fontWeight: 700,
+                color: "#00d68f",
+                animation: "gps-blink 2s ease-in-out infinite",
+              }}
+            >
+              <span style={{ fontSize: 11 }}>🏪</span>
+              <span>STORE LIVE</span>
             </div>
           )}
         </div>
 
-        {/* Simulate Incoming Order Button */}
+        {/* Sound Test / Simulation Trigger */}
         <button
+          id="sound-test-btn"
           onClick={simulateIncomingOrder}
-          title={t.simulateOrderBtn}
-          className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-extrabold shadow-sm shadow-emerald-600/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
+          style={{
+            background: "rgba(255, 107, 43, 0.12)",
+            border: "1px solid rgba(255, 107, 43, 0.35)",
+            color: "#FF6B2B",
+            borderRadius: "999px",
+            padding: "5px 14px",
+            fontSize: ".72rem",
+            fontWeight: 700,
+            fontFamily: "var(--font-bn)",
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 5,
+            cursor: "pointer",
+            transition: "all .2s ease",
+          }}
+          title="নতুন অর্ডারের সাউন্ড ও ৪৫ সেকেন্ড অ্যালার্ট টেস্ট করুন"
         >
-          <Zap size={14} className="text-amber-300 fill-amber-300" />
-          <span className="hidden md:inline">
-            {language === "bn" ? "+নতুন অর্ডার টেস্ট" : "+Test Order"}
-          </span>
-        </button>
-
-        {/* Audio Alert Toggle */}
-        <button
-          onClick={toggleSound}
-          title={soundEnabled ? t.soundEnabled : t.soundDisabled}
-          className={`p-2 rounded-xl border transition-all ${
-            soundEnabled
-              ? "bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100"
-              : "bg-rose-50 border-rose-200 text-rose-600 hover:bg-rose-100"
-          }`}
-        >
-          {soundEnabled ? <Volume2 size={16} /> : <VolumeX size={16} />}
-        </button>
-
-        {/* Notifications Bell */}
-        <button
-          onClick={onOpenNotifications}
-          className="relative p-2 rounded-xl bg-white border border-slate-200 text-slate-600 hover:text-emerald-700 hover:border-emerald-300 transition-all shadow-xs"
-          aria-label="View notifications"
-        >
-          <Bell size={16} />
-          {unreadNotifs > 0 && (
-            <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-rose-500 text-white text-[10px] font-black flex items-center justify-center border-2 border-white">
-              {unreadNotifs}
-            </span>
-          )}
-        </button>
-
-        {/* Keyboard Shortcuts Help */}
-        <button
-          onClick={onOpenShortcuts}
-          className="p-2 rounded-xl text-slate-400 hover:text-emerald-700 hover:bg-emerald-50 transition-colors hidden sm:block"
-          title="Keyboard Shortcuts (?)"
-        >
-          <HelpCircle size={16} />
+          <span>🔔</span> সাউন্ড টেস্ট
         </button>
       </div>
-    </header>
+    </div>
   );
 }

@@ -1,17 +1,50 @@
 "use client";
 
 import React from "react";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
-import {
-  LayoutDashboard,
-  ShoppingBag,
-  History,
-  Wallet,
-  Settings,
-} from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
 import { useVendorStore } from "@/store/vendorStore";
 import { translations } from "@/utils/translations";
+
+function HomeIcon() {
+  return (
+    <svg fill="none" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+    </svg>
+  );
+}
+
+function OrdersIcon() {
+  return (
+    <svg fill="none" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+    </svg>
+  );
+}
+
+function HistoryIcon() {
+  return (
+    <svg fill="none" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>
+  );
+}
+
+function WalletIcon() {
+  return (
+    <svg fill="none" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+    </svg>
+  );
+}
+
+function SettingsIcon() {
+  return (
+    <svg fill="none" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+    </svg>
+  );
+}
 
 interface VendorMobileNavProps {
   onOpenNotifications?: () => void;
@@ -20,6 +53,7 @@ interface VendorMobileNavProps {
 
 export default function VendorMobileNav({}: VendorMobileNavProps) {
   const pathname = usePathname();
+  const router = useRouter();
   const { language, orders } = useVendorStore();
   const t = translations[language];
 
@@ -27,67 +61,37 @@ export default function VendorMobileNav({}: VendorMobileNavProps) {
     (o) => o.status === "RECEIVED" || o.status === "PREPARING"
   ).length;
 
-  const tabs = [
-    {
-      label: t.navDashboard,
-      href: "/",
-      icon: LayoutDashboard,
-    },
-    {
-      label: t.navOrders,
-      href: "/orders",
-      icon: ShoppingBag,
-      badge: pendingOrders > 0 ? pendingOrders : undefined,
-    },
-    {
-      label: t.navHistory,
-      href: "/orders/history",
-      icon: History,
-    },
-    {
-      label: t.navSettlements,
-      href: "/settlements",
-      icon: Wallet,
-    },
-    {
-      label: t.navSettings,
-      href: "/settings",
-      icon: Settings,
-    },
+  const nav = [
+    { href: "/", label: "হোম", icon: <HomeIcon /> },
+    { href: "/orders", label: "অর্ডার", icon: <OrdersIcon />, badge: pendingOrders },
+    { href: "/orders/history", label: "হিস্ট্রি", icon: <HistoryIcon /> },
+    { href: "/settlements", label: "খতিয়ান", icon: <WalletIcon /> },
+    { href: "/settings", label: "সেটিংস", icon: <SettingsIcon /> },
   ];
 
   return (
-    <nav className="fixed bottom-0 inset-x-0 bg-white/95 backdrop-blur-md border-t border-slate-200 lg:hidden z-40 px-2 py-1 select-none shadow-lg">
-      <div className="flex items-center justify-around">
-        {tabs.map((tab) => {
-          const isActive = pathname === tab.href;
-          const Icon = tab.icon;
+    <nav className="bottom-nav lg:hidden" role="navigation" aria-label="মূল নেভিগেশন">
+      {nav.map((item) => {
+        const isActive = pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href));
 
-          return (
-            <Link
-              key={tab.href}
-              href={tab.href}
-              className={`flex flex-col items-center justify-center py-2 px-3 min-w-[64px] min-h-[48px] rounded-xl transition-all relative ${
-                isActive
-                  ? "text-emerald-700 font-extrabold"
-                  : "text-slate-500 hover:text-slate-800"
-              }`}
-            >
-              <div className="relative">
-                <Icon size={20} className={isActive ? "text-emerald-600" : "text-slate-400"} />
-                {tab.badge !== undefined && (
-                  <span className="absolute -top-1.5 -right-2.5 w-4 h-4 bg-emerald-600 text-white text-[9px] font-black rounded-full flex items-center justify-center border-2 border-white">
-                    {tab.badge}
-                  </span>
-                )}
+        return (
+          <button
+            key={item.href}
+            id={`nav-${item.href === "/" ? "home" : item.href.slice(1).replace("/", "-")}`}
+            className={`nav-item${isActive ? " active" : ""}`}
+            onClick={() => router.push(item.href)}
+            aria-label={item.label}
+          >
+            {item.badge !== undefined && item.badge > 0 ? (
+              <div className="nav-badge">
+                {item.badge > 9 ? "9+" : item.badge}
               </div>
-              <span className="text-[10px] mt-1 truncate max-w-[70px]">
-                {tab.label}
-              </span>
-            </Link>
-          );
-        })}
-      </div>
+            ) : null}
+            {item.icon}
+            <span>{item.label}</span>
+          </button>
+        );
+      })}
     </nav>
   );
 }

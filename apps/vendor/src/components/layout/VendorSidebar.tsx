@@ -57,7 +57,7 @@ export default function VendorSidebar({ onClose }: VendorSidebarProps) {
       href: "/orders",
       icon: ShoppingBag,
       badge: pendingOrdersCount > 0 ? pendingOrdersCount : undefined,
-      badgeColor: "bg-emerald-600 text-white font-bold",
+      badgeColor: "bg-[#FF6B2B] text-white font-bold",
       roles: ["OWNER", "MANAGER", "STAFF"],
     },
     {
@@ -91,23 +91,23 @@ export default function VendorSidebar({ onClose }: VendorSidebarProps) {
   ];
 
   return (
-    <div className="flex flex-col w-64 bg-white border-r border-slate-200/80 h-full select-none shadow-xs">
+    <div className="flex flex-col w-64 bg-[#08111E] border-r border-[rgba(255,255,255,0.08)] h-full select-none shadow-2xl">
       {/* Brand Header */}
-      <div className="flex items-center justify-between px-5 h-16 border-b border-slate-200/80 bg-white">
+      <div className="flex items-center justify-between px-5 h-16 border-b border-[rgba(255,255,255,0.06)] bg-[#050810]/60">
         <Link href="/" className="flex items-center gap-2.5">
-          <div className="w-10 h-10 rounded-2xl bg-emerald-600 flex items-center justify-center text-white font-black shadow-md shadow-emerald-600/25">
-            <Store size={22} />
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#FF6B2B] to-[#E05520] flex items-center justify-center text-white font-black shadow-md shadow-[#FF6B2B]/30 text-lg">
+            🏪
           </div>
           <div>
             <div className="flex items-center gap-1.5">
-              <span className="font-extrabold text-base tracking-tight text-slate-900">
+              <span className="font-extrabold text-sm tracking-tight text-[#F0F6FF]">
                 {t.appName}
               </span>
-              <span className="text-[10px] uppercase font-extrabold tracking-wider px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200">
+              <span className="text-[10px] uppercase font-extrabold tracking-wider px-1.5 py-0.2 rounded-full bg-[rgba(255,107,43,0.15)] text-[#FF6B2B] border border-[rgba(255,107,43,0.3)]">
                 Vendor
               </span>
             </div>
-            <p className="text-[11px] text-emerald-700 font-semibold">
+            <p className="text-[10px] text-[#00D68F] font-semibold font-bn">
               {language === "bn" ? "ভেন্ডর অপারেশন কনসোল" : "Operations Console"}
             </p>
           </div>
@@ -115,29 +115,29 @@ export default function VendorSidebar({ onClose }: VendorSidebarProps) {
         {onClose && (
           <button
             onClick={onClose}
-            className="p-1 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 lg:hidden"
+            className="p-1 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 lg:hidden"
           >
-            <X size={20} />
+            <X size={18} />
           </button>
         )}
       </div>
 
       {/* Store Identity Card */}
-      <div className="p-3.5 mx-3 my-3 rounded-2xl bg-[#F8FAF8] border border-emerald-100/90 shadow-xs">
+      <div className="p-3.5 mx-3 my-3 rounded-2xl bg-[#0F1E32]/90 border border-[rgba(255,255,255,0.07)] shadow-lg">
         <div className="flex items-start justify-between">
           <div className="min-w-0 flex-1">
-            <h4 className="text-xs font-bold text-slate-900 truncate">
-              {language === "bn" ? profile.storeNameBn : profile.storeName}
+            <h4 className="text-xs font-bold text-[#F0F6FF] truncate font-bn">
+              {language === "bn" ? (profile.storeNameBn || profile.storeName) : profile.storeName}
             </h4>
-            <p className="text-[11px] text-slate-500 truncate mt-0.5">
+            <p className="text-[10.5px] text-[#A8C0D8]/70 truncate mt-0.5">
               {profile.address.split(",")[1]?.trim() || "ধানমন্ডি, ঢাকা"}
             </p>
           </div>
         </div>
 
-        <div className="mt-2.5 flex items-center justify-between pt-2 border-t border-emerald-100/80 text-[11px]">
-          <div className="flex items-center gap-1 text-emerald-700 font-bold">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+        <div className="mt-2.5 flex items-center justify-between pt-2 border-t border-[rgba(255,255,255,0.06)] text-[11px]">
+          <div className="flex items-center gap-1.5 text-[#00D68F] font-bold">
+            <span className="w-2 h-2 rounded-full bg-[#00D68F] animate-pulse" />
             <span>★ {profile.rating}</span>
             <span className="text-slate-400 text-[10px] font-normal">
               ({language === "bn" ? "ভেরিফাইড" : "Verified"})
@@ -146,10 +146,10 @@ export default function VendorSidebar({ onClose }: VendorSidebarProps) {
           <span
             className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${
               dutyStatus === "STORE_OPEN"
-                ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                ? "bg-[rgba(0,214,143,0.12)] text-[#00D68F] border-[rgba(0,214,143,0.3)]"
                 : dutyStatus === "BUSY"
-                ? "bg-amber-50 text-amber-700 border-amber-200"
-                : "bg-rose-50 text-rose-700 border-rose-200"
+                ? "bg-[rgba(245,158,11,0.12)] text-[#F59E0B] border-[rgba(245,158,11,0.3)]"
+                : "bg-[rgba(239,68,68,0.12)] text-[#FCA5A5] border-[rgba(239,68,68,0.3)]"
             }`}
           >
             {dutyStatus === "STORE_OPEN"
@@ -164,7 +164,7 @@ export default function VendorSidebar({ onClose }: VendorSidebarProps) {
       {/* Navigation Links */}
       <div className="flex-1 overflow-y-auto px-3 py-1 space-y-1">
         {navItems.map((item) => {
-          const isActive = pathname === item.href;
+          const isActive = pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href));
           const isAllowed = item.roles.includes(currentRole);
           const isLocked = item.lockedFor?.includes(currentRole);
 
@@ -174,14 +174,14 @@ export default function VendorSidebar({ onClose }: VendorSidebarProps) {
             return (
               <div
                 key={item.href}
-                className="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-medium text-slate-400 opacity-60 cursor-not-allowed"
+                className="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-medium text-slate-500 opacity-50 cursor-not-allowed"
                 title={`${item.label} (${t.accessRestricted})`}
               >
                 <div className="flex items-center gap-3">
-                  <IconComponent size={17} className="text-slate-400" />
+                  <IconComponent size={17} className="text-slate-500" />
                   <span>{item.label}</span>
                 </div>
-                <Lock size={13} className="text-slate-400" />
+                <Lock size={13} className="text-slate-500" />
               </div>
             );
           }
@@ -195,16 +195,16 @@ export default function VendorSidebar({ onClose }: VendorSidebarProps) {
               onClick={onClose}
               className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all ${
                 isActive
-                  ? "bg-emerald-50 text-emerald-800 shadow-xs border border-emerald-200/80"
-                  : "text-slate-600 hover:text-slate-900 hover:bg-[#F8FAF8]"
+                  ? "bg-[rgba(255,107,43,0.12)] text-[#FF6B2B] shadow-sm border border-[rgba(255,107,43,0.35)]"
+                  : "text-[#A8C0D8] hover:text-white hover:bg-[rgba(255,255,255,0.05)]"
               }`}
             >
               <div className="flex items-center gap-3">
                 <IconComponent
-                  size={18}
-                  className={isActive ? "text-emerald-700" : "text-slate-400"}
+                  size={17}
+                  className={isActive ? "text-[#FF6B2B]" : "text-[#5E7A96]"}
                 />
-                <span className="truncate">{item.label}</span>
+                <span className="truncate font-bn">{item.label}</span>
               </div>
               {item.badge !== undefined && (
                 <span
@@ -219,31 +219,31 @@ export default function VendorSidebar({ onClose }: VendorSidebarProps) {
       </div>
 
       {/* Vacation Mode & Quick Utility Footer */}
-      <div className="p-3.5 border-t border-slate-200/80 bg-[#FBFBF9] space-y-2">
+      <div className="p-3.5 border-t border-[rgba(255,255,255,0.06)] bg-[#050810]/50 space-y-2">
         <button
           onClick={toggleVacationMode}
           className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs transition-all border ${
             profile.vacationMode
-              ? "bg-amber-50 border-amber-200 text-amber-800 font-bold"
-              : "bg-white border-slate-200 text-slate-600 hover:text-slate-900 hover:border-emerald-200"
+              ? "bg-[rgba(245,158,11,0.12)] border-[rgba(245,158,11,0.35)] text-[#F59E0B] font-bold"
+              : "bg-[#0F1E32]/60 border-[rgba(255,255,255,0.07)] text-[#A8C0D8] hover:text-white hover:border-[rgba(255,107,43,0.3)]"
           }`}
         >
           <div className="flex items-center gap-2">
             <Palmtree
               size={15}
-              className={profile.vacationMode ? "text-amber-500" : "text-slate-400"}
+              className={profile.vacationMode ? "text-[#F59E0B]" : "text-[#5E7A96]"}
             />
-            <span className="text-[11px] font-bold">{t.vacationModeTitle}</span>
+            <span className="text-[11px] font-bold font-bn">{t.vacationModeTitle}</span>
           </div>
           <span
             className={`w-2 h-2 rounded-full ${
-              profile.vacationMode ? "bg-amber-500" : "bg-slate-300"
+              profile.vacationMode ? "bg-[#F59E0B]" : "bg-slate-600"
             }`}
           />
         </button>
 
-        <div className="text-[10px] text-slate-400 text-center font-medium">
-          Tatka Bazar v2.4 • Vendor Console
+        <div className="text-[10px] text-[#5E7A96] text-center font-medium">
+          Tatka Bazar • Vendor Partner
         </div>
       </div>
     </div>
