@@ -1,11 +1,13 @@
 "use client";
 import React, { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
-import { Settings, Save, Globe, Percent, DollarSign } from "lucide-react";
+import { Settings, Save, Globe, Percent, DollarSign, RotateCcw } from "lucide-react";
 
 export default function SettingsPage() {
   const { session } = useAuth();
   const [saved, setSaved] = useState(false);
+  const [resetting, setResetting] = useState(false);
+  const [resetMessage, setResetMessage] = useState("");
 
   // Local state for config (in production, fetched from /api/hub)
   const [deliveryFee, setDeliveryFee] = useState("60");
@@ -16,6 +18,29 @@ export default function SettingsPage() {
   function save() {
     setSaved(true);
     setTimeout(() => setSaved(false), 2500);
+  }
+
+  async function handleResetHub() {
+    if (!confirm("Are you sure you want to completely reset Hub portal data, logs, and database records?")) return;
+    setResetting(true);
+    try {
+      const res = await fetch("/api/hub/reset", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(session?.token ? { Authorization: `Bearer ${session.token}` } : {}),
+        },
+      });
+      const data = await res.json();
+      if (data.success) {
+        setResetMessage("✅ Hub portal, stores, and database have been fully reset.");
+        setTimeout(() => setResetMessage(""), 4000);
+      }
+    } catch {
+      setResetMessage("❌ Reset failed. Please check network/server.");
+    } finally {
+      setResetting(false);
+    }
   }
 
   if (!session || (session.role !== "SUPER_ADMIN" && session.role !== "OPS_MANAGER")) {
@@ -99,6 +124,43 @@ export default function SettingsPage() {
             <span className="info-label">Cross-tab Sync</span>
             <span className="info-value">tatka_hub_command_channel (BroadcastChannel)</span>
           </div>
+        </div>
+
+        {/* System Reset / Danger Zone */}
+        <div className="card" style={{ borderColor: "rgba(255, 77, 77, 0.3)" }}>
+          <div className="card-title" style={{ marginBottom: 8, color: "#ff4d4d" }}>
+            ⚠️ System Reset & Data Purge
+          </div>
+          <p style={{ fontSize: 13, color: "var(--text-secondary)", marginBottom: 16, lineHeight: 1.5 }}>
+            Reset Hub portal in-memory state, clear test activity logs, and restore clean default seed values.
+          </p>
+
+          {resetMessage && (
+            <div style={{
+              padding: "10px 14px",
+              borderRadius: "var(--radius-sm)",
+              background: resetMessage.startsWith("✅") ? "rgba(0,214,143,0.1)" : "rgba(255,77,77,0.1)",
+              border: `1px solid ${resetMessage.startsWith("✅") ? "rgba(0,214,143,0.3)" : "rgba(255,77,77,0.3)"}`,
+              fontSize: 13,
+              marginBottom: 14,
+            }}>
+              {resetMessage}
+            </div>
+          )}
+
+          <button
+            onClick={handleResetHub}
+            disabled={resetting}
+            className="btn btn-secondary"
+            style={{
+              borderColor: "rgba(255, 77, 77, 0.4)",
+              color: "#ff4d4d",
+              alignSelf: "flex-start",
+            }}
+          >
+            <RotateCcw size={14} />
+            <span>{resetting ? "Resetting..." : "Reset Hub Portal & Database"}</span>
+          </button>
         </div>
 
         <button onClick={save} className="btn btn-primary" style={{ alignSelf: "flex-start" }}>

@@ -307,6 +307,19 @@ export function initHubStore() {
   if (!g._hub_config) g._hub_config = { ...DEFAULT_CONFIG };
 }
 
+export function resetHubStore() {
+  g._hub_team = [...DEFAULT_TEAM];
+  g._hub_sessions = new Map();
+  g._hub_activity = [];
+  g._hub_riders = [...SEED_RIDERS];
+  g._hub_deposits = [...SEED_DEPOSITS];
+  g._hub_withdrawals = [];
+  g._hub_vendors = [...SEED_VENDORS];
+  g._hub_settlements = [...SEED_SETTLEMENTS];
+  g._hub_broadcasts = [];
+  g._hub_config = { ...DEFAULT_CONFIG };
+}
+
 // ─── Accessors ─────────────────────────────────────────────────
 export function getTeam() { initHubStore(); return g._hub_team!; }
 export function getSessions() { initHubStore(); return g._hub_sessions!; }

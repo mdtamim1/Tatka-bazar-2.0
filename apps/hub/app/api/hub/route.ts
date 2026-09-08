@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getTeam, getConfig, getWithdrawals, validateSession, logActivity } from "@/lib/hubStore";
-import { getDbActivity, getDbTeam, logDbActivity } from "@/lib/hubDb";
+import { getDbActivity, getDbTeam, logDbActivity, resetDbHubData } from "@/lib/hubDb";
 
 function auth(req: NextRequest) {
   const token = req.headers.get("authorization")?.replace("Bearer ", "");
@@ -42,6 +42,10 @@ export async function POST(req: NextRequest) {
   }
   if (body.action === "GET_CONFIG") {
     return NextResponse.json({ success: true, data: getConfig() });
+  }
+  if (body.action === "RESET_HUB") {
+    const result = await resetDbHubData();
+    return NextResponse.json(result);
   }
   if (body.action === "ADD_TEAM_MEMBER") {
     const team = getTeam();

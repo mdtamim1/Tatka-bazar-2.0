@@ -1,4 +1,4 @@
-﻿import { emitSyncEvent } from "./sync";
+import { emitSyncEvent } from "./sync";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
 
@@ -171,31 +171,54 @@ const SAMPLE_NOTIFICATIONS: RiderNotification[] = [
 
 const SAMPLE_AVAILABLE_TASKS: Task[] = [];
 
-const RIDER_DATA_VERSION = "v3_full_reset_clean_zero";
+const RIDER_DATA_VERSION = "v4_full_portal_reset";
 
 export function checkAndPurgeDemoData() {
   if (typeof window === "undefined") return;
   try {
     const currentVersion = localStorage.getItem("tatka_rider_reset_ver");
     if (currentVersion !== RIDER_DATA_VERSION) {
-      localStorage.removeItem("tb_demo_profile");
-      localStorage.removeItem("tb_demo_available_tasks");
-      localStorage.removeItem("tb_demo_active_tasks");
-      localStorage.removeItem("tb_demo_history");
-      localStorage.removeItem("tb_demo_tatka_today_completed_orders");
-      localStorage.removeItem("tb_demo_tatka_today_returned_orders");
-      localStorage.removeItem("tb_demo_deposit_requests");
-      localStorage.removeItem("tb_demo_notifications");
-      localStorage.removeItem("tatka_today_completed_orders");
-      localStorage.removeItem("tatka_today_returned_orders");
-      localStorage.removeItem("tatka_rider_today_date");
-      localStorage.removeItem("tatka_rider_performance");
-      localStorage.removeItem("tatka_chat_task-01");
+      // Purge all legacy storage items
+      const keysToClear = [
+        "tb_demo_profile",
+        "tb_demo_available_tasks",
+        "tb_demo_active_tasks",
+        "tb_demo_history",
+        "tb_demo_tatka_today_completed_orders",
+        "tb_demo_tatka_today_returned_orders",
+        "tb_demo_deposit_requests",
+        "tb_demo_notifications",
+        "tatka_today_completed_orders",
+        "tatka_today_returned_orders",
+        "tatka_rider_today_date",
+        "tatka_rider_performance",
+        "tatka_chat_task-01",
+        "rider_duty_status",
+        "rider_active_task",
+        "tatka_active_sos",
+        "tatka_active_orders",
+        "tatka_order_events",
+      ];
+      keysToClear.forEach((k) => localStorage.removeItem(k));
+
+      // Clear all dynamic rider keys
+      Object.keys(localStorage).forEach((k) => {
+        if (
+          k.startsWith("rider_gps_") ||
+          k.startsWith("tatka_chat_") ||
+          k.startsWith("tb_demo_") ||
+          k.startsWith("rider_task_")
+        ) {
+          localStorage.removeItem(k);
+        }
+      });
 
       localStorage.setItem("tb_demo_profile", JSON.stringify(DEFAULT_PROFILE));
       localStorage.setItem("tb_demo_available_tasks", JSON.stringify([]));
       localStorage.setItem("tb_demo_active_tasks", JSON.stringify([]));
       localStorage.setItem("tb_demo_history", JSON.stringify([]));
+      localStorage.setItem("tb_demo_deposit_requests", JSON.stringify([]));
+      localStorage.setItem("rider_duty_status", "OFFLINE");
       localStorage.setItem("tatka_rider_reset_ver", RIDER_DATA_VERSION);
     }
   } catch {}
@@ -204,24 +227,45 @@ export function checkAndPurgeDemoData() {
 export function fullyResetRiderPanel() {
   if (typeof window === "undefined") return;
   try {
-    localStorage.removeItem("tb_demo_profile");
-    localStorage.removeItem("tb_demo_available_tasks");
-    localStorage.removeItem("tb_demo_active_tasks");
-    localStorage.removeItem("tb_demo_history");
-    localStorage.removeItem("tb_demo_tatka_today_completed_orders");
-    localStorage.removeItem("tb_demo_tatka_today_returned_orders");
-    localStorage.removeItem("tb_demo_deposit_requests");
-    localStorage.removeItem("tb_demo_notifications");
-    localStorage.removeItem("tatka_today_completed_orders");
-    localStorage.removeItem("tatka_today_returned_orders");
-    localStorage.removeItem("tatka_rider_today_date");
-    localStorage.removeItem("tatka_rider_performance");
-    localStorage.removeItem("tatka_chat_task-01");
+    const keysToClear = [
+      "tb_demo_profile",
+      "tb_demo_available_tasks",
+      "tb_demo_active_tasks",
+      "tb_demo_history",
+      "tb_demo_tatka_today_completed_orders",
+      "tb_demo_tatka_today_returned_orders",
+      "tb_demo_deposit_requests",
+      "tb_demo_notifications",
+      "tatka_today_completed_orders",
+      "tatka_today_returned_orders",
+      "tatka_rider_today_date",
+      "tatka_rider_performance",
+      "tatka_chat_task-01",
+      "rider_duty_status",
+      "rider_active_task",
+      "tatka_active_sos",
+      "tatka_active_orders",
+      "tatka_order_events",
+    ];
+    keysToClear.forEach((k) => localStorage.removeItem(k));
+
+    Object.keys(localStorage).forEach((k) => {
+      if (
+        k.startsWith("rider_gps_") ||
+        k.startsWith("tatka_chat_") ||
+        k.startsWith("tb_demo_") ||
+        k.startsWith("rider_task_")
+      ) {
+        localStorage.removeItem(k);
+      }
+    });
 
     localStorage.setItem("tb_demo_profile", JSON.stringify(DEFAULT_PROFILE));
     localStorage.setItem("tb_demo_available_tasks", JSON.stringify([]));
     localStorage.setItem("tb_demo_active_tasks", JSON.stringify([]));
     localStorage.setItem("tb_demo_history", JSON.stringify([]));
+    localStorage.setItem("tb_demo_deposit_requests", JSON.stringify([]));
+    localStorage.setItem("rider_duty_status", "OFFLINE");
     localStorage.setItem("tatka_rider_reset_ver", RIDER_DATA_VERSION);
     window.dispatchEvent(new CustomEvent("tatka_rider_reset"));
   } catch {}

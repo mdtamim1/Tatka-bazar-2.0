@@ -120,6 +120,9 @@ interface VendorState {
   // Notifications
   markNotificationRead: (id: string) => void;
   markAllNotificationsRead: () => void;
+
+  // Full Portal Reset
+  fullResetVendorStore: () => void;
 }
 
 // Initial Mock Seed Data
@@ -1871,9 +1874,46 @@ export const useVendorStore = create<VendorState>()(
           notifications: state.notifications.map((n) => ({ ...n, read: true })),
         }));
       },
+
+      fullResetVendorStore: () => {
+        if (typeof window !== "undefined") {
+          try {
+            localStorage.removeItem("tatka-vendor-store");
+            localStorage.removeItem("tatka-vendor-store-v1");
+            localStorage.removeItem("tatka-vendor-store-v2");
+            localStorage.removeItem("tatka_vendor_storage");
+            localStorage.removeItem("tatka_dispatch_tasks");
+          } catch {}
+        }
+        set(() => ({
+          language: "bn",
+          currentRole: "OWNER",
+          soundEnabled: true,
+          dutyStatus: "STORE_OPEN",
+          incomingOrderAlert: null,
+          chatOrder: null,
+          trackingOrder: null,
+          claimLockAlert: null,
+          profile: initialProfile,
+          products: initialProducts,
+          orders: initialOrders,
+          orderHistory: [],
+          stockLogs: initialStockLogs,
+          commissionLedger: initialCommissionLedger,
+          payouts: initialPayouts,
+          reviews: initialReviews,
+          refundDisputes: initialRefundDisputes,
+          staffAccounts: initialStaffAccounts,
+          staffLogs: initialStaffLogs,
+          wholesaleBuyers: initialWholesaleBuyers,
+          coupons: initialCoupons,
+          notifications: initialNotifications,
+          shiftStartedAt: new Date().toISOString(),
+        }));
+      },
     }),
     {
-      name: "tatka-vendor-store-v1",
+      name: "tatka-vendor-store-v2",
       partialize: (state) => ({
         language: state.language,
         currentRole: state.currentRole,

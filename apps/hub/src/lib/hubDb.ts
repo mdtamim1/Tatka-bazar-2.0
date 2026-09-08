@@ -16,6 +16,7 @@ import {
   logActivity,
   getSessions,
   generateToken,
+  resetHubStore,
 } from "./hubStore";
 import type {
   HubRider,
@@ -561,6 +562,37 @@ export async function updateDbSettlement(id: string, action: "APPROVE" | "REJECT
 
 export async function getDbDeposits(): Promise<RiderDepositRequest[]> {
   return getDeposits();
+}
+
+export async function resetDbHubData(): Promise<{ success: boolean; message: string }> {
+  // 1. Reset in-memory store
+  resetHubStore();
+
+  // 2. Reset database state if connected
+  try {
+    if (await isDbAvailable()) {
+      await prisma.auditLog.deleteMany({});
+      await prisma.vendorPayout.deleteMany({});
+      await prisma.deliveryRider.updateMany({
+        data: {
+          status: "AVAILABLE",
+          isActive: true,
+          balance: 0,
+          totalEarned: 0,
+        },
+      });
+      await prisma.vendor.updateMany({
+        data: {
+          status: "APPROVED",
+          isActive: true,
+        },
+      });
+    }
+  } catch (err) {
+    console.warn("[Hub DB] resetDbHubData note:", (err as Error).message);
+  }
+
+  return { success: true, message: "Hub portal and database reset successfully." };
 }
 
 export { getSessions, generateToken };

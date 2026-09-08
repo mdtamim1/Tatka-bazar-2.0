@@ -7,7 +7,7 @@ import { translations } from "@/utils/translations";
 const STEPS = ["দোকান ও ব্যক্তিগত তথ্য", "ঠিকানা ও ডেলিভারি হাব", "পরিচয়পত্র ও লাইসেন্স"];
 
 export default function VendorProfilePage() {
-  const { language, profile, updateProfile } = useVendorStore();
+  const { language, profile, updateProfile, fullResetVendorStore } = useVendorStore();
   const t = translations[language];
 
   const [step, setStep] = useState(0);
@@ -105,11 +105,7 @@ export default function VendorProfilePage() {
 
   const handleResetVendorPanel = () => {
     if (confirm("আপনি কি নিশ্চিতভাবে ভেন্ডর প্যানেলের সকল ডেমো ডাটা ও সেটিংস রিসেট করতে চান?")) {
-      try {
-        localStorage.removeItem("tatka-vendor-store");
-        localStorage.removeItem("tatka_vendor_storage");
-        localStorage.removeItem("tatka_dispatch_tasks");
-      } catch {}
+      fullResetVendorStore();
       window.location.reload();
     }
   };

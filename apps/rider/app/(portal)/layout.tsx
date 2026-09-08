@@ -397,28 +397,6 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
               {duty === "ONLINE" ? "• টগল" : "• চালু করুন"}
             </span>
           </div>
-          {/* GPS Live Indicator */}
-          {duty === "ONLINE" && (
-            <div
-              title="লাইভ GPS ট্র্যাকিং সক্রিয় — অ্যাডমিন আপনার লোকেশন দেখতে পাচ্ছেন"
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 5,
-                padding: "4px 10px",
-                borderRadius: 999,
-                background: "rgba(0, 214, 143, 0.1)",
-                border: "1px solid rgba(0, 214, 143, 0.35)",
-                fontSize: ".68rem",
-                fontWeight: 700,
-                color: "#00d68f",
-                animation: "gps-blink 2s ease-in-out infinite",
-              }}
-            >
-              <span style={{ fontSize: 10 }}>📡</span>
-              <span>GPS LIVE</span>
-            </div>
-          )}
         </div>
 
         <button
