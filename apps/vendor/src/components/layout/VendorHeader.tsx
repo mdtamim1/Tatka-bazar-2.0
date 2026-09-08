@@ -197,9 +197,9 @@ export default function VendorHeader({
           id="sound-test-btn"
           onClick={simulateIncomingOrder}
           style={{
-            background: "rgba(255, 107, 43, 0.12)",
-            border: "1px solid rgba(255, 107, 43, 0.35)",
-            color: "#FF6B2B",
+            background: "rgba(0, 214, 143, 0.12)",
+            border: "1px solid rgba(0, 214, 143, 0.35)",
+            color: "#00D68F",
             borderRadius: "999px",
             padding: "5px 14px",
             fontSize: ".72rem",

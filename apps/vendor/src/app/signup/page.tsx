@@ -17,7 +17,7 @@ function Orbs() {
           borderRadius: "50%",
           top: "-60px",
           right: "-60px",
-          background: "radial-gradient(circle, rgba(255,107,43,.22) 0%, transparent 70%)",
+          background: "radial-gradient(circle, rgba(0,214,143,.22) 0%, transparent 70%)",
           animation: "orbFloat1 9s ease-in-out infinite",
         }}
       />
@@ -147,16 +147,16 @@ export default function SignupPage() {
         }
         .reg-input::placeholder { color: rgba(168,192,216,.38); }
         .reg-input:focus {
-          border-color: rgba(255,107,43,.6);
-          background: rgba(255,107,43,.06);
-          box-shadow: 0 0 0 3px rgba(255,107,43,.12);
+          border-color: rgba(0,214,143,.6);
+          background: rgba(0,214,143,.06);
+          box-shadow: 0 0 0 3px rgba(0,214,143,.12);
         }
         .reg-input-pw { padding-right: 50px; }
 
         .reg-btn {
           width: 100%;
           padding: 16px;
-          background: linear-gradient(135deg, #FF6B2B, #E05520);
+          background: linear-gradient(135deg, #00D68F, #00B87A);
           color: #fff;
           border: none;
           border-radius: 14px;
@@ -167,14 +167,14 @@ export default function SignupPage() {
           align-items: center;
           justify-content: center;
           gap: 8px;
-          box-shadow: 0 8px 30px rgba(255,107,43,.4);
+          box-shadow: 0 8px 30px rgba(0,214,143,.4);
           transition: all .25s cubic-bezier(.34,1.56,.64,1);
           font-family: var(--font-bn), inherit;
           letter-spacing: .02em;
         }
         .reg-btn:hover:not(:disabled) {
           transform: translateY(-2px) scale(1.01);
-          box-shadow: 0 14px 40px rgba(255,107,43,.5);
+          box-shadow: 0 14px 40px rgba(0,214,143,.5);
         }
         .reg-btn:active:not(:disabled) { transform: scale(.97); }
         .reg-btn:disabled { opacity: .55; cursor: not-allowed; }
@@ -196,11 +196,11 @@ export default function SignupPage() {
           font-family: inherit;
         }
         .reg-category-btn.active {
-          border-color: rgba(255,107,43,.7);
-          background: rgba(255,107,43,.12);
+          border-color: rgba(0,214,143,.7);
+          background: rgba(0,214,143,.12);
           color: #FF8C5A;
           font-weight: 700;
-          box-shadow: 0 0 18px rgba(255,107,43,.2);
+          box-shadow: 0 0 18px rgba(0,214,143,.2);
         }
         .reg-category-btn:hover:not(.active) {
           border-color: rgba(255,255,255,.25);
@@ -221,13 +221,13 @@ export default function SignupPage() {
           user-select: none;
         }
         .reg-terms-box:hover {
-          background: rgba(255,107,43,.05);
-          border-color: rgba(255,107,43,.25);
+          background: rgba(0,214,143,.05);
+          border-color: rgba(0,214,143,.25);
         }
         .reg-terms-box.checked {
-          background: rgba(255,107,43,.07);
-          border-color: rgba(255,107,43,.45);
-          box-shadow: 0 0 16px rgba(255,107,43,.1);
+          background: rgba(0,214,143,.07);
+          border-color: rgba(0,214,143,.45);
+          box-shadow: 0 0 16px rgba(0,214,143,.1);
         }
         .reg-checkbox {
           width: 18px;
@@ -243,9 +243,9 @@ export default function SignupPage() {
           transition: all .2s ease;
         }
         .reg-checkbox.checked {
-          background: linear-gradient(135deg, #FF6B2B, #E05520);
-          border-color: #FF6B2B;
-          box-shadow: 0 0 12px rgba(255,107,43,.4);
+          background: linear-gradient(135deg, #00D68F, #00B87A);
+          border-color: #00D68F;
+          box-shadow: 0 0 12px rgba(0,214,143,.4);
         }
       `}</style>
 
@@ -349,13 +349,13 @@ export default function SignupPage() {
                 width: 68,
                 height: 68,
                 borderRadius: 20,
-                background: "linear-gradient(135deg, #FF6B2B, #E05520)",
+                background: "linear-gradient(135deg, #00D68F, #00B87A)",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
                 margin: "0 auto 12px",
                 fontSize: "2rem",
-                boxShadow: "0 12px 36px rgba(255,107,43,.4)",
+                boxShadow: "0 12px 36px rgba(0,214,143,.4)",
               }}
             >
               🏪
@@ -520,8 +520,8 @@ export default function SignupPage() {
               </div>
               <span style={{ fontSize: ".78rem", color: "rgba(168,192,216,.8)", lineHeight: 1.4 }}>
                 আমি Tatka Bazar এর{" "}
-                <span style={{ color: "#FF6B2B", fontWeight: 700 }}>Terms & Conditions</span> এবং{" "}
-                <span style={{ color: "#FF6B2B", fontWeight: 700 }}>Privacy Policy</span> মেনে নিচ্ছি
+                <span style={{ color: "#00D68F", fontWeight: 700 }}>Terms & Conditions</span> এবং{" "}
+                <span style={{ color: "#00D68F", fontWeight: 700 }}>Privacy Policy</span> মেনে নিচ্ছি
               </span>
             </div>
 
@@ -537,9 +537,9 @@ export default function SignupPage() {
               type="button"
               onClick={handleQuickFill}
               style={{
-                background: "rgba(255,107,43,.08)",
-                border: "1px solid rgba(255,107,43,.2)",
-                color: "#FF6B2B",
+                background: "rgba(0,214,143,.08)",
+                border: "1px solid rgba(0,214,143,.2)",
+                color: "#00D68F",
                 fontSize: ".76rem",
                 fontWeight: 700,
                 cursor: "pointer",
@@ -555,7 +555,7 @@ export default function SignupPage() {
           {/* Footer */}
           <div style={{ marginTop: 24, textAlign: "center", fontSize: ".82rem", color: "rgba(168,192,216,.5)" }}>
             ইতিমধ্যে একাউন্ট আছে?{" "}
-            <Link href="/login" style={{ color: "#FF6B2B", fontWeight: 700, textDecoration: "none" }}>
+            <Link href="/login" style={{ color: "#00D68F", fontWeight: 700, textDecoration: "none" }}>
               লগইন করুন
             </Link>
           </div>

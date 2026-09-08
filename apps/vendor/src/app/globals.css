@@ -17,11 +17,11 @@
   --bg-card: #0F1E32; 
   --bg-hover: #172540;
 
-  --orange: #FF6B2B; 
-  --orange-dim: #E05520;
-  --orange-glow: rgba(255,107,43,.30); 
-  --orange-glass: rgba(255,107,43,.10); 
-  --orange-100: rgba(255,107,43,.08);
+  --orange: #00D68F; 
+  --orange-dim: #00B87A;
+  --orange-glow: rgba(0,214,143,.30); 
+  --orange-glass: rgba(0,214,143,.10); 
+  --orange-100: rgba(0,214,143,.08);
 
   --emerald: #00D68F; 
   --emerald-dim: #00B87A;
@@ -48,7 +48,7 @@
   --border-1: rgba(255,255,255,.05); 
   --border-2: rgba(255,255,255,.09);
   --border-3: rgba(255,255,255,.14); 
-  --border-orange: rgba(255,107,43,.35);
+  --border-orange: rgba(0,214,143,.35);
   --border-emerald: rgba(0,214,143,.35);
 
   --font: 'Inter','Hind Siliguri',system-ui,sans-serif;
@@ -316,9 +316,9 @@ input, textarea, select {
   font-family: var(--font-bn);
 }
 .home-tier-pill:hover {
-  border-color: var(--border-orange);
+  border-color: var(--border-emerald);
   background: var(--bg-raised);
-  box-shadow: 0 0 16px rgba(255,107,43,.12);
+  box-shadow: 0 0 16px rgba(0,214,143,.15);
 }
 
 /* 3D Balance Card */
@@ -328,25 +328,25 @@ input, textarea, select {
 
 .balance-card {
   position: relative;
-  background: linear-gradient(135deg, #0E2040 0%, #152D50 50%, #0E2040 100%);
-  border: 1px solid rgba(255, 107, 43, 0.20);
+  background: linear-gradient(135deg, #0A1E2E 0%, #0E2E38 50%, #081B26 100%);
+  border: 1px solid rgba(0, 214, 143, 0.25);
   border-radius: var(--r-xl);
   padding: 28px 24px;
   overflow: hidden;
   transform-style: preserve-3d;
   transition: transform .5s var(--ease), box-shadow .5s var(--ease);
-  box-shadow: 0 20px 60px rgba(0,0,0,.5), 0 0 40px rgba(255,107,43,.08);
+  box-shadow: 0 20px 60px rgba(0,0,0,.5), 0 0 40px rgba(0,214,143,.10);
   user-select: none;
 }
 .balance-card:hover {
   transform: rotateX(3deg) rotateY(-3deg) translateY(-4px);
-  box-shadow: 0 30px 80px rgba(0,0,0,.6), 0 0 60px rgba(255,107,43,.15);
+  box-shadow: 0 30px 80px rgba(0,0,0,.6), 0 0 60px rgba(0,214,143,.20);
 }
 
 .balance-card-bg {
   position: absolute;
   inset: 0;
-  background: radial-gradient(ellipse at 80% 20%, rgba(255,107,43,.15) 0%, transparent 60%),
+  background: radial-gradient(ellipse at 80% 20%, rgba(0,214,143,.18) 0%, transparent 60%),
               radial-gradient(ellipse at 10% 80%, rgba(0,214,143,.10) 0%, transparent 50%);
   pointer-events: none;
 }
@@ -354,7 +354,7 @@ input, textarea, select {
 .balance-label {
   font-size: 0.78rem;
   font-weight: 600;
-  color: rgba(255, 107, 43, 0.9);
+  color: #00D68F;
   letter-spacing: .10em;
   text-transform: uppercase;
   font-family: var(--font-bn);
@@ -435,11 +435,6 @@ input, textarea, select {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 12px;
-}
-@media (min-width: 768px) {
-  .stat-row {
-    grid-template-columns: repeat(4, 1fr);
-  }
 }
 
 .stat-card {
@@ -883,7 +878,7 @@ input, textarea, select {
   content: '';
   position: absolute;
   inset: 0;
-  background: radial-gradient(ellipse at 50% 0%, rgba(255, 107, 43, 0.12), transparent 60%);
+  background: radial-gradient(ellipse at 50% 0%, rgba(0, 214, 143, 0.15), transparent 60%);
   pointer-events: none;
 }
 
@@ -892,15 +887,15 @@ input, textarea, select {
   height: 80px;
   border-radius: 50%;
   margin: 0 auto 14px;
-  background: linear-gradient(135deg, var(--orange), var(--orange-dim));
+  background: linear-gradient(135deg, var(--emerald), var(--emerald-dim));
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 2rem;
   font-weight: 800;
   color: white;
-  border: 3px solid rgba(255, 107, 43, 0.4);
-  box-shadow: 0 0 30px var(--orange-glow);
+  border: 3px solid rgba(0, 214, 143, 0.4);
+  box-shadow: 0 0 30px var(--emerald-glow);
   overflow: hidden;
 }
 

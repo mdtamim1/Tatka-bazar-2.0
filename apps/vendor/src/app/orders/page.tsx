@@ -216,7 +216,7 @@ export default function OrdersPage() {
 
           <button
             onClick={simulateAreaDispatchOrder}
-            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-gradient-to-r from-[#FF6B2B] to-[#E05520] hover:opacity-90 text-white text-xs font-bold shadow-md shadow-[#FF6B2B]/20 transition-all active:scale-95"
+            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-gradient-to-r from-[#00D68F] to-[#00B87A] hover:opacity-90 text-white text-xs font-bold shadow-md shadow-[#00D68F]/20 transition-all active:scale-95"
             title="অ্যাডমিন থেকে ৫টি ভেন্ডরের কাছে এলাকাভিত্তিক অর্ডার পাঠানো টেস্ট করুন"
           >
             <Zap size={14} className="text-white" />
@@ -299,18 +299,18 @@ export default function OrdersPage() {
           onClick={() => setActiveTab("READY_FOR_PICKUP")}
           className={`p-3.5 rounded-2xl border text-left transition-all ${
             activeTab === "READY_FOR_PICKUP"
-              ? "bg-gradient-to-r from-[#FF6B2B] to-[#E05520] text-white border-[#FF6B2B] shadow-lg shadow-[#FF6B2B]/25 font-bold"
-              : "bg-[#0F1E32] text-[#A8C0D8] border-[rgba(255,255,255,0.08)] hover:border-[rgba(255,107,43,0.3)] hover:bg-[#122035]"
+              ? "bg-gradient-to-r from-[#00D68F] to-[#00B87A] text-white border-[#00D68F] shadow-lg shadow-[#00D68F]/25 font-bold"
+              : "bg-[#0F1E32] text-[#A8C0D8] border-[rgba(255,255,255,0.08)] hover:border-[rgba(0,214,143,0.3)] hover:bg-[#122035]"
           }`}
         >
           <div className="flex items-center justify-between">
             <span className={`text-[11px] font-bold ${activeTab === "READY_FOR_PICKUP" ? "text-white" : "text-[#A8C0D8]"}`}>
               রেডি ফর পিকআপ
             </span>
-            <Bike size={15} className={activeTab === "READY_FOR_PICKUP" ? "text-white" : "text-[#FF6B2B]"} />
+            <Bike size={15} className={activeTab === "READY_FOR_PICKUP" ? "text-white" : "text-[#00D68F]"} />
           </div>
           <div className="mt-2 flex items-baseline gap-1.5">
-            <span className="text-xl font-black font-mono" style={{ color: activeTab === "READY_FOR_PICKUP" ? "white" : "#FF6B2B" }}>
+            <span className="text-xl font-black font-mono" style={{ color: activeTab === "READY_FOR_PICKUP" ? "white" : "#00D68F" }}>
               {countReady}
             </span>
             <span className={`text-[10px] ${activeTab === "READY_FOR_PICKUP" ? "text-white/80" : "text-[#5E7A96]"}`}>রাইডার অ্যালার্ট</span>
@@ -376,7 +376,7 @@ export default function OrdersPage() {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="অর্ডার আইডি (যেমন TB-8492), পণ্য বা জোন খুঁজুন..."
-            className="w-full bg-[#0F1E32] border border-[rgba(255,255,255,0.08)] rounded-xl pl-9 pr-3.5 py-2 text-xs text-[#F0F6FF] placeholder-slate-400 focus:outline-none focus:border-[#FF6B2B] shadow-2xs"
+            className="w-full bg-[#0F1E32] border border-[rgba(255,255,255,0.08)] rounded-xl pl-9 pr-3.5 py-2 text-xs text-[#F0F6FF] placeholder-slate-400 focus:outline-none focus:border-[#00D68F] shadow-2xs"
           />
         </div>
 
@@ -397,7 +397,7 @@ export default function OrdersPage() {
           </p>
           <button
             onClick={simulateAreaDispatchOrder}
-            className="px-4 py-2 bg-gradient-to-r from-[#FF6B2B] to-[#E05520] hover:opacity-90 text-white rounded-xl font-bold shadow-md transition-all"
+            className="px-4 py-2 bg-gradient-to-r from-[#00D68F] to-[#00B87A] hover:opacity-90 text-white rounded-xl font-bold shadow-md transition-all"
           >
             টেস্ট অর্ডার পাঠান (অ্যাডমিন ডিসপ্যাচ)
           </button>
@@ -412,13 +412,13 @@ export default function OrdersPage() {
             return (
               <div
                 key={order.id}
-                className="bg-[#0F1E32] border border-[rgba(255,255,255,0.08)] rounded-2xl p-5 hover:border-[#FF6B2B]/40 transition-all shadow-md font-bn"
+                className="bg-[#0F1E32] border border-[rgba(255,255,255,0.08)] rounded-2xl p-5 hover:border-[#00D68F]/40 transition-all shadow-md font-bn"
               >
                 {/* Header Row */}
                 <div className="flex flex-wrap items-start justify-between gap-3 pb-4 border-b border-[rgba(255,255,255,0.06)]">
                   <div className="space-y-1.5">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <span className="font-mono text-base font-bold text-[#FF6B2B] bg-[rgba(255,107,43,0.12)] px-2.5 py-0.5 rounded-md border border-[rgba(255,107,43,0.3)]">
+                      <span className="font-mono text-base font-bold text-[#00D68F] bg-[rgba(0,214,143,0.12)] px-2.5 py-0.5 rounded-md border border-[rgba(0,214,143,0.3)]">
                         #{order.displayId}
                       </span>
                       {getStatusBadge(order.status)}
@@ -652,7 +652,7 @@ export default function OrdersPage() {
                         </button>
                         <button
                           onClick={() => acceptOrder(order.id)}
-                          className="px-4 py-2 bg-gradient-to-r from-[#FF6B2B] to-[#E05520] hover:opacity-90 text-white rounded-xl font-bold transition-all shadow-md active:scale-95"
+                          className="px-4 py-2 bg-gradient-to-r from-[#00D68F] to-[#00B87A] hover:opacity-90 text-white rounded-xl font-bold transition-all shadow-md active:scale-95"
                         >
                           অর্ডার গ্রহণ করুন (প্রসেসিং শুরু)
                         </button>

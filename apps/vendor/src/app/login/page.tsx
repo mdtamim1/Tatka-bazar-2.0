@@ -17,7 +17,7 @@ function Orbs() {
           borderRadius: "50%",
           top: "-80px",
           left: "-80px",
-          background: "radial-gradient(circle, rgba(255,107,43,.25) 0%, transparent 70%)",
+          background: "radial-gradient(circle, rgba(0,214,143,.25) 0%, transparent 70%)",
           animation: "orbFloat1 8s ease-in-out infinite",
         }}
       />
@@ -135,9 +135,9 @@ export default function LoginPage() {
         }
         .login-input::placeholder { color: rgba(168,192,216,.4); }
         .login-input:focus {
-          border-color: rgba(255,107,43,.6);
-          background: rgba(255,107,43,.06);
-          box-shadow: 0 0 0 3px rgba(255,107,43,.12);
+          border-color: rgba(0,214,143,.6);
+          background: rgba(0,214,143,.06);
+          box-shadow: 0 0 0 3px rgba(0,214,143,.12);
         }
         .login-input-pw {
           padding-right: 52px;
@@ -145,7 +145,7 @@ export default function LoginPage() {
         .login-btn-primary {
           width: 100%;
           padding: 16px;
-          background: linear-gradient(135deg, #FF6B2B, #E05520);
+          background: linear-gradient(135deg, #00D68F, #00B87A);
           color: #fff;
           border: none;
           border-radius: 14px;
@@ -156,14 +156,14 @@ export default function LoginPage() {
           align-items: center;
           justify-content: center;
           gap: 8px;
-          box-shadow: 0 8px 30px rgba(255,107,43,.4);
+          box-shadow: 0 8px 30px rgba(0,214,143,.4);
           transition: all .25s cubic-bezier(.34,1.56,.64,1);
           font-family: var(--font-bn), inherit;
           letter-spacing: .02em;
         }
         .login-btn-primary:hover:not(:disabled) {
           transform: translateY(-2px) scale(1.01);
-          box-shadow: 0 14px 40px rgba(255,107,43,.5);
+          box-shadow: 0 14px 40px rgba(0,214,143,.5);
         }
         .login-btn-primary:active:not(:disabled) { transform: scale(.97); }
         .login-btn-primary:disabled { opacity: .6; cursor: not-allowed; }
@@ -176,10 +176,10 @@ export default function LoginPage() {
           transition: all .2s ease; font-family: inherit;
         }
         .login-tab.active {
-          background: rgba(255,107,43,.15);
-          color: #FF6B2B;
+          background: rgba(0,214,143,.15);
+          color: #00D68F;
           font-weight: 700;
-          box-shadow: 0 0 16px rgba(255,107,43,.15);
+          box-shadow: 0 0 16px rgba(0,214,143,.15);
         }
         .login-social-btn {
           width: 100%;
@@ -327,12 +327,12 @@ export default function LoginPage() {
                 width: 72,
                 height: 72,
                 borderRadius: 20,
-                background: "linear-gradient(135deg, #FF6B2B, #E05520)",
+                background: "linear-gradient(135deg, #00D68F, #00B87A)",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
                 margin: "0 auto 16px",
-                boxShadow: "0 12px 40px rgba(255,107,43,.45), 0 0 0 1px rgba(255,107,43,.2)",
+                boxShadow: "0 12px 40px rgba(0,214,143,.45), 0 0 0 1px rgba(0,214,143,.2)",
                 fontSize: "2rem",
               }}
             >
@@ -519,7 +519,7 @@ export default function LoginPage() {
                   style={{
                     background: "none",
                     border: "none",
-                    color: "#FF6B2B",
+                    color: "#00D68F",
                     fontSize: ".82rem",
                     fontWeight: 700,
                     cursor: "pointer",
@@ -542,7 +542,7 @@ export default function LoginPage() {
                     {loginType === "STAFF" ? "৪-ডিজিট স্টাফ পিন" : "পাসওয়ার্ড"}
                   </label>
                   <span
-                    style={{ fontSize: ".75rem", color: "rgba(255,107,43,.8)", cursor: "pointer" }}
+                    style={{ fontSize: ".75rem", color: "rgba(0,214,143,.8)", cursor: "pointer" }}
                     onClick={() => alert("পাসওয়ার্ড ভুলে গেলে এডমিনের সাথে যোগাযোগ করুন: 01700-000000")}
                   >
                     ভুলে গেছেন?
@@ -632,9 +632,9 @@ export default function LoginPage() {
               onClick={handleQuickDemo}
               disabled={loading}
               style={{
-                background: "rgba(255,107,43,.08)",
-                border: "1px solid rgba(255,107,43,.2)",
-                color: "#FF6B2B",
+                background: "rgba(0,214,143,.08)",
+                border: "1px solid rgba(0,214,143,.2)",
+                color: "#00D68F",
                 fontSize: ".78rem",
                 fontWeight: 700,
                 cursor: "pointer",
@@ -657,7 +657,7 @@ export default function LoginPage() {
             }}
           >
             নতুন ভেন্ডর?{" "}
-            <Link href="/signup" style={{ color: "#FF6B2B", fontWeight: 700, textDecoration: "none" }}>
+            <Link href="/signup" style={{ color: "#00D68F", fontWeight: 700, textDecoration: "none" }}>
               রেজিস্ট্রেশন করুন
             </Link>
           </div>

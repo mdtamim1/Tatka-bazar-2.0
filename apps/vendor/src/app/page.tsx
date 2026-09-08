@@ -212,10 +212,10 @@ export default function VendorDashboardPage() {
         </div>
       </div>
 
-      {/* 2. Stat Cards Row (Rider Portal Style) */}
+      {/* 2. Stat Cards Row (2 Cards - Clean Rider Portal Matching Style) */}
       <div className="stat-row">
         <div className="stat-card" onClick={() => router.push("/orders")}>
-          <div className="stat-card-icon orange">🚴</div>
+          <div className="stat-card-icon emerald">🚴</div>
           <div className="stat-card-label">আজকের ডেলিভারি সম্পন্ন</div>
           <div className="stat-card-value">{completedOrders.length}</div>
         </div>
@@ -225,22 +225,6 @@ export default function VendorDashboardPage() {
           <div className="stat-card-label">আজকের মোট সেলস</div>
           <div className="stat-card-value text-emerald">
             ৳ {todayGrossSales.toLocaleString("bn-BD")}
-          </div>
-        </div>
-
-        <div className="stat-card" onClick={() => router.push("/orders")}>
-          <div className="stat-card-icon amber">📦</div>
-          <div className="stat-card-label">অপেক্ষমাণ অর্ডার কিউ</div>
-          <div className="stat-card-value" style={{ color: "#F59E0B" }}>
-            {pendingOrders.length}
-          </div>
-        </div>
-
-        <div className="stat-card" onClick={() => router.push("/inventory")}>
-          <div className="stat-card-icon red">⚠️</div>
-          <div className="stat-card-label">লো-স্টক সতর্কতা</div>
-          <div className="stat-card-value" style={{ color: "#EF4444" }}>
-            {lowStockItems.length}
           </div>
         </div>
       </div>
@@ -274,7 +258,7 @@ export default function VendorDashboardPage() {
         <button
           id="test-order-alert-btn"
           className="btn-secondary"
-          style={{ borderColor: "rgba(255,107,43,0.35)", color: "#FF6B2B" }}
+          style={{ borderColor: "rgba(0,214,143,0.35)", color: "#00D68F" }}
           onClick={simulateIncomingOrder}
         >
           ⚡ নতুন অর্ডার সাউন্ড টেস্ট (৪৫ সে.)
@@ -296,7 +280,7 @@ export default function VendorDashboardPage() {
           href="/orders"
           style={{
             fontSize: ".75rem",
-            color: "#FF6B2B",
+            color: "#00D68F",
             fontWeight: 700,
             display: "flex",
             alignItems: "center",
@@ -345,13 +329,13 @@ export default function VendorDashboardPage() {
             onClick={simulateIncomingOrder}
             style={{
               padding: "10px 20px",
-              background: "linear-gradient(135deg, var(--orange), var(--orange-dim))",
+              background: "linear-gradient(135deg, var(--emerald), var(--emerald-dim))",
               borderRadius: "var(--r-full)",
               color: "#fff",
               fontSize: ".82rem",
               fontWeight: 700,
               cursor: "pointer",
-              boxShadow: "0 4px 16px var(--orange-glow)",
+              boxShadow: "0 4px 16px var(--emerald-glow)",
               fontFamily: "var(--font-bn)",
             }}
           >
@@ -378,9 +362,9 @@ export default function VendorDashboardPage() {
                         <span style={{
                           fontSize: ".82rem",
                           fontWeight: 800,
-                          color: "#FF6B2B",
-                          background: "rgba(255, 107, 43, 0.12)",
-                          border: "1px solid rgba(255, 107, 43, 0.3)",
+                          color: "#00D68F",
+                          background: "rgba(0, 214, 143, 0.12)",
+                          border: "1px solid rgba(0, 214, 143, 0.3)",
                           padding: "2px 8px",
                           borderRadius: 6,
                           fontFamily: "var(--font-mono)",

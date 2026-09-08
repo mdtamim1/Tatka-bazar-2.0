@@ -57,7 +57,7 @@ export default function VendorSidebar({ onClose }: VendorSidebarProps) {
       href: "/orders",
       icon: ShoppingBag,
       badge: pendingOrdersCount > 0 ? pendingOrdersCount : undefined,
-      badgeColor: "bg-[#FF6B2B] text-white font-bold",
+      badgeColor: "bg-[#00D68F] text-black font-extrabold",
       roles: ["OWNER", "MANAGER", "STAFF"],
     },
     {
@@ -94,7 +94,7 @@ export default function VendorSidebar({ onClose }: VendorSidebarProps) {
       {/* Brand Header */}
       <div className="flex items-center justify-between px-5 h-16 border-b border-[rgba(255,255,255,0.06)] bg-[#050810]/60">
         <Link href="/" className="flex items-center gap-2.5">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#FF6B2B] to-[#E05520] flex items-center justify-center text-white font-black shadow-md shadow-[#FF6B2B]/30 text-lg">
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#00D68F] to-[#00B87A] flex items-center justify-center text-white font-black shadow-md shadow-[#00D68F]/30 text-lg">
             🏪
           </div>
           <div>
@@ -102,7 +102,7 @@ export default function VendorSidebar({ onClose }: VendorSidebarProps) {
               <span className="font-extrabold text-sm tracking-tight text-[#F0F6FF]">
                 {t.appName}
               </span>
-              <span className="text-[10px] uppercase font-extrabold tracking-wider px-1.5 py-0.2 rounded-full bg-[rgba(255,107,43,0.15)] text-[#FF6B2B] border border-[rgba(255,107,43,0.3)]">
+              <span className="text-[10px] uppercase font-extrabold tracking-wider px-1.5 py-0.2 rounded-full bg-[rgba(0,214,143,0.15)] text-[#00D68F] border border-[rgba(0,214,143,0.3)]">
                 Vendor
               </span>
             </div>
@@ -194,14 +194,14 @@ export default function VendorSidebar({ onClose }: VendorSidebarProps) {
               onClick={onClose}
               className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all ${
                 isActive
-                  ? "bg-[rgba(255,107,43,0.12)] text-[#FF6B2B] shadow-sm border border-[rgba(255,107,43,0.35)]"
+                  ? "bg-[rgba(0,214,143,0.12)] text-[#00D68F] shadow-sm border border-[rgba(0,214,143,0.35)]"
                   : "text-[#A8C0D8] hover:text-white hover:bg-[rgba(255,255,255,0.05)]"
               }`}
             >
               <div className="flex items-center gap-3">
                 <IconComponent
                   size={17}
-                  className={isActive ? "text-[#FF6B2B]" : "text-[#5E7A96]"}
+                  className={isActive ? "text-[#00D68F]" : "text-[#5E7A96]"}
                 />
                 <span className="truncate font-bn">{item.label}</span>
               </div>
@@ -224,7 +224,7 @@ export default function VendorSidebar({ onClose }: VendorSidebarProps) {
           className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs transition-all border ${
             profile.vacationMode
               ? "bg-[rgba(245,158,11,0.12)] border-[rgba(245,158,11,0.35)] text-[#F59E0B] font-bold"
-              : "bg-[#0F1E32]/60 border-[rgba(255,255,255,0.07)] text-[#A8C0D8] hover:text-white hover:border-[rgba(255,107,43,0.3)]"
+              : "bg-[#0F1E32]/60 border-[rgba(255,255,255,0.07)] text-[#A8C0D8] hover:text-white hover:border-[rgba(0,214,143,0.3)]"
           }`}
         >
           <div className="flex items-center gap-2">

@@ -192,9 +192,9 @@ export default function VendorProfilePage() {
         {/* Tier Perks Note */}
         <div style={{
           marginTop: 12, padding: "10px 12px", borderRadius: "var(--r-md)",
-          background: "linear-gradient(135deg, rgba(245,158,11,.08) 0%, rgba(255,107,43,.08) 100%)",
-          border: "1px solid rgba(245,158,11,.25)",
-          fontSize: ".74rem", color: "#fbbf24", fontFamily: "var(--font-bn)",
+          background: "linear-gradient(135deg, rgba(0,214,143,.08) 0%, rgba(16,185,129,.08) 100%)",
+          border: "1px solid rgba(0,214,143,.25)",
+          fontSize: ".74rem", color: "#00D68F", fontFamily: "var(--font-bn)",
           display: "flex", alignItems: "center", gap: 8
         }}>
           <span style={{ fontSize: "1.2rem" }}>🎁</span>
@@ -463,11 +463,11 @@ export default function VendorProfilePage() {
                   {profile.deliveryZones.map((zone) => (
                     <span key={zone} style={{
                       padding: "4px 10px",
-                      background: "rgba(255,107,43,0.12)",
-                      border: "1px solid rgba(255,107,43,0.3)",
+                      background: "rgba(0,214,143,0.12)",
+                      border: "1px solid rgba(0,214,143,0.3)",
                       borderRadius: "var(--r-full)",
                       fontSize: ".72rem",
-                      color: "#FF6B2B",
+                      color: "#00D68F",
                       fontWeight: 600,
                     }}>
                       📍 {zone}
