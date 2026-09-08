@@ -42,19 +42,11 @@ export default function VendorHeader({
     notifications,
   } = useVendorStore();
 
-  const [isSosAlert, setIsSosAlert] = useState(false);
   const unreadNotifs = notifications.filter((n) => !n.read).length;
 
   const toggleDuty = () => {
     const next = dutyStatus === "STORE_OPEN" ? "STORE_CLOSED" : "STORE_OPEN";
     setDutyStatus(next);
-  };
-
-  const handleSos = () => {
-    setIsSosAlert((prev) => !prev);
-    if (!isSosAlert) {
-      alert("🚨 ভেন্ডর জরুরি এসওএস সক্রিয় করা হয়েছে! কন্ট্রোল রুম অবিলম্বে আপনার সাথে যোগাযোগ করবে।");
-    }
   };
 
   const storeDisplayName = language === "bn" 
@@ -63,43 +55,6 @@ export default function VendorHeader({
 
   return (
     <div>
-      {/* Active SOS Strip if triggered */}
-      {isSosAlert && (
-        <div style={{
-          background: "linear-gradient(90deg, #b91c1c, #ef4444)",
-          color: "#fff",
-          padding: "7px 16px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          fontSize: ".78rem",
-          fontWeight: 800,
-          fontFamily: "var(--font-bn)",
-          zIndex: 1000,
-          animation: "pulse 1.8s infinite",
-        }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-            <span>🚨</span>
-            <span>জরুরি সতর্কতা সক্রিয় — তাতকা কন্ট্রোল রুম লাইভ পর্যবেক্ষণ করছে</span>
-          </div>
-          <button
-            onClick={() => setIsSosAlert(false)}
-            style={{
-              background: "rgba(0,0,0,0.3)",
-              border: "1px solid rgba(255,255,255,0.4)",
-              color: "#fff",
-              padding: "2px 10px",
-              borderRadius: "999px",
-              fontSize: ".7rem",
-              fontWeight: 700,
-              cursor: "pointer",
-            }}
-          >
-            ✅ সমাধান হয়েছে
-          </button>
-        </div>
-      )}
-
       {/* Top Header - Rider Portal Design */}
       <header className="top-header">
         <div className="header-logo">
@@ -123,33 +78,6 @@ export default function VendorHeader({
         </div>
 
         <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-          {/* Emergency SOS Button */}
-          <button
-            id="sos-header-btn"
-            type="button"
-            className="sos-header-btn"
-            onClick={handleSos}
-            title="জরুরি এসওএস বিপদ সংকেত"
-          >
-            🚨 SOS
-          </button>
-
-          {/* Role switcher pill button if provided */}
-          {onOpenRoleModal && (
-            <button
-              type="button"
-              onClick={onOpenRoleModal}
-              className="support-btn"
-              style={{
-                background: "rgba(59, 130, 246, 0.12)",
-                borderColor: "rgba(59, 130, 246, 0.35)",
-                color: "#60a5fa",
-              }}
-              title="রোল পরিবর্তন করুন"
-            >
-              👑 রোল
-            </button>
-          )}
 
           {/* Central Support Chat Button */}
           <button

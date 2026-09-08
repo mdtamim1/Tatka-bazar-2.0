@@ -250,9 +250,6 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
 
   return (
     <div className="app-shell">
-      {/* PWA Installation Prompt & Offline Detector */}
-      <PwaPrompt />
-
       {/* Real-time Sync Flash Toast */}
       {syncNotice && (
         <div
@@ -308,16 +305,6 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
           </div>
         </div>
         <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-          {/* Emergency SOS Button */}
-          <button
-            id="sos-header-btn"
-            type="button"
-            className="sos-header-btn"
-            onClick={() => setIsSosModalOpen(true)}
-            title="জরুরি এসওএস বিপদ সংকেত"
-          >
-            🚨 SOS
-          </button>
 
           {/* Central Support Chat Button */}
           <button
