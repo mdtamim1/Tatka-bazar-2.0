@@ -1,165 +1,166 @@
 "use client";
 
 import React, { useState } from "react";
-import { Tag, Plus, Sparkles, Calendar, CheckCircle, Percent, DollarSign } from "lucide-react";
+import { Tag, Plus, X, Check, ToggleLeft, ToggleRight, Percent, DollarSign } from "lucide-react";
 import { useAdmin } from "@/context/AdminContext";
+import { AdminCoupon } from "@/types";
 
-export default function AdminMarketingPage() {
-  const { coupons, addCoupon } = useAdmin();
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [couponForm, setCouponForm] = useState({
-    code: "",
-    type: "PERCENTAGE" as "PERCENTAGE" | "FLAT",
-    value: 10,
-    minOrderAmount: 300,
-    usageLimit: 500,
-    expiresAt: "2026-12-31",
+function CouponModal({ onClose }: { onClose: () => void }) {
+  const { addCoupon } = useAdmin();
+  const [form, setForm] = useState({
+    code: "", type: "FLAT" as "FLAT" | "PERCENTAGE",
+    value: 0, minOrderAmount: 500, usageLimit: 100, expiresAt: "",
     isActive: true,
   });
-
-  const handleAddCoupon = (e: React.FormEvent) => {
-    e.preventDefault();
-    addCoupon({
-      ...couponForm,
-      code: couponForm.code.toUpperCase(),
-    });
-    setIsModalOpen(false);
-  };
+  const set = (k: string, v: any) => setForm(p => ({ ...p, [k]: v }));
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <div>
-          <h1 style={{ fontSize: "1.4rem", fontWeight: 800, color: "var(--text-main)" }}>
-            Marketing Campaigns, Coupons & Promotions
-          </h1>
-          <p style={{ fontSize: "0.82rem", color: "var(--text-muted)", marginTop: "2px" }}>
-            Create discount coupons, set usage thresholds, and manage promotional offers
-          </p>
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: "460px" }}>
+        <div className="modal-header">
+          <div className="modal-title">➕ Create Coupon</div>
+          <button className="admin-btn admin-btn-ghost admin-btn-icon" onClick={onClose}><X size={16} /></button>
         </div>
-        <button onClick={() => setIsModalOpen(true)} className="admin-btn admin-btn-primary">
-          <Plus size={16} />
-          <span>+ Create New Coupon</span>
-        </button>
-      </div>
-
-      <div className="admin-card">
-        <table className="admin-table">
-          <thead>
-            <tr>
-              <th>Coupon Code</th>
-              <th>Discount Type & Value</th>
-              <th>Min Order Amount</th>
-              <th>Usage Count / Limit</th>
-              <th>Expiry Date</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            {coupons.map((c) => (
-              <tr key={c.id}>
-                <td>
-                  <span style={{ fontWeight: 800, color: "var(--primary-dark)", background: "var(--primary-light)", padding: "4px 8px", borderRadius: "6px", fontFamily: "var(--font-mono)", fontSize: "0.9rem" }}>
-                    🏷️ {c.code}
-                  </span>
-                </td>
-                <td>
-                  <span style={{ fontWeight: 700 }}>
-                    {c.type === "PERCENTAGE" ? `${c.value}% Discount` : `৳${c.value} Flat Discount`}
-                  </span>
-                </td>
-                <td>
-                  <span style={{ fontWeight: 600 }}>৳{c.minOrderAmount}</span>
-                </td>
-                <td>
-                  <div style={{ fontSize: "0.82rem" }}>
-                    <strong>{c.usedCount}</strong> / {c.usageLimit} redeemed
-                  </div>
-                  <div style={{ width: "120px", height: "5px", background: "#F1F5F9", borderRadius: "999px", marginTop: "4px", overflow: "hidden" }}>
-                    <div style={{ width: `${(c.usedCount / c.usageLimit) * 100}%`, height: "100%", background: "var(--primary)" }} />
-                  </div>
-                </td>
-                <td>
-                  <span style={{ fontSize: "0.82rem", color: "var(--text-muted)" }}>{c.expiresAt}</span>
-                </td>
-                <td>
-                  <span className={`status-badge ${c.isActive ? "success" : "neutral"}`}>
-                    {c.isActive ? "Active" : "Inactive"}
-                  </span>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Modal */}
-      {isModalOpen && (
-        <div className="modal-overlay" onClick={() => setIsModalOpen(false)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: "460px" }}>
-            <h2 style={{ fontSize: "1.2rem", fontWeight: 800, marginBottom: "16px" }}>Create New Promo Code</h2>
-            <form onSubmit={handleAddCoupon} style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
-              <div>
-                <label style={{ fontSize: "0.8rem", fontWeight: 700, display: "block", marginBottom: "4px" }}>Coupon Code (e.g. WELCOME10) *</label>
-                <input
-                  type="text"
-                  required
-                  value={couponForm.code}
-                  onChange={(e) => setCouponForm({ ...couponForm, code: e.target.value })}
-                  style={{ width: "100%", padding: "8px 12px", borderRadius: "var(--radius-md)", border: "1px solid var(--border-medium)", textTransform: "uppercase" }}
-                />
-              </div>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
-                <div>
-                  <label style={{ fontSize: "0.8rem", fontWeight: 700, display: "block", marginBottom: "4px" }}>Discount Type</label>
-                  <select
-                    value={couponForm.type}
-                    onChange={(e) => setCouponForm({ ...couponForm, type: e.target.value as any })}
-                    style={{ width: "100%", padding: "8px 12px", borderRadius: "var(--radius-md)", border: "1px solid var(--border-medium)", background: "#FFF" }}
-                  >
-                    <option value="PERCENTAGE">Percentage (%)</option>
-                    <option value="FLAT">Flat Amount (৳)</option>
-                  </select>
-                </div>
-                <div>
-                  <label style={{ fontSize: "0.8rem", fontWeight: 700, display: "block", marginBottom: "4px" }}>Discount Value *</label>
-                  <input
-                    type="number"
-                    required
-                    value={couponForm.value}
-                    onChange={(e) => setCouponForm({ ...couponForm, value: Number(e.target.value) })}
-                    style={{ width: "100%", padding: "8px 12px", borderRadius: "var(--radius-md)", border: "1px solid var(--border-medium)" }}
-                  />
-                </div>
-              </div>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
-                <div>
-                  <label style={{ fontSize: "0.8rem", fontWeight: 700, display: "block", marginBottom: "4px" }}>Min Order Amount (৳)</label>
-                  <input
-                    type="number"
-                    value={couponForm.minOrderAmount}
-                    onChange={(e) => setCouponForm({ ...couponForm, minOrderAmount: Number(e.target.value) })}
-                    style={{ width: "100%", padding: "8px 12px", borderRadius: "var(--radius-md)", border: "1px solid var(--border-medium)" }}
-                  />
-                </div>
-                <div>
-                  <label style={{ fontSize: "0.8rem", fontWeight: 700, display: "block", marginBottom: "4px" }}>Max Redemptions Limit</label>
-                  <input
-                    type="number"
-                    value={couponForm.usageLimit}
-                    onChange={(e) => setCouponForm({ ...couponForm, usageLimit: Number(e.target.value) })}
-                    style={{ width: "100%", padding: "8px 12px", borderRadius: "var(--radius-md)", border: "1px solid var(--border-medium)" }}
-                  />
-                </div>
-              </div>
-              <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px", marginTop: "10px" }}>
-                <button type="button" onClick={() => setIsModalOpen(false)} className="admin-btn admin-btn-secondary">Cancel</button>
-                <button type="submit" className="admin-btn admin-btn-primary">Publish Coupon</button>
-              </div>
-            </form>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+          <div style={{ gridColumn: "1/-1" }}>
+            <label className="admin-label">Coupon Code *</label>
+            <input className="admin-input" value={form.code} onChange={e => set("code", e.target.value.toUpperCase())} placeholder="e.g. SAVE50" style={{ textTransform: "uppercase", fontFamily: "var(--font-mono)", fontWeight: 700 }} />
+          </div>
+          <div>
+            <label className="admin-label">Type</label>
+            <select className="admin-select" value={form.type} onChange={e => set("type", e.target.value)}>
+              <option value="FLAT">৳ Flat Discount</option>
+              <option value="PERCENTAGE">% Percentage</option>
+            </select>
+          </div>
+          <div>
+            <label className="admin-label">Value ({form.type === "FLAT" ? "৳" : "%"})</label>
+            <input className="admin-input" type="number" min="0" value={form.value} onChange={e => set("value", parseFloat(e.target.value))} />
+          </div>
+          <div>
+            <label className="admin-label">Min Order (৳)</label>
+            <input className="admin-input" type="number" min="0" value={form.minOrderAmount} onChange={e => set("minOrderAmount", parseFloat(e.target.value))} />
+          </div>
+          <div>
+            <label className="admin-label">Usage Limit</label>
+            <input className="admin-input" type="number" min="1" value={form.usageLimit} onChange={e => set("usageLimit", parseInt(e.target.value))} />
+          </div>
+          <div>
+            <label className="admin-label">Expires At</label>
+            <input className="admin-input" type="date" value={form.expiresAt} onChange={e => set("expiresAt", e.target.value)} />
           </div>
         </div>
-      )}
+        <div className="modal-footer">
+          <button className="admin-btn admin-btn-secondary" onClick={onClose}>Cancel</button>
+          <button className="admin-btn admin-btn-primary" disabled={!form.code || form.value <= 0}
+            onClick={() => {
+              addCoupon({ code: form.code, type: form.type, value: form.value, minOrderAmount: form.minOrderAmount, usageLimit: form.usageLimit, expiresAt: form.expiresAt, isActive: true });
+              onClose();
+            }}>
+            <Check size={14} /> Create Coupon
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function MarketingPage() {
+  const { coupons, toggleCoupon } = useAdmin();
+  const [showForm, setShowForm] = useState(false);
+
+  const active = coupons.filter(c => c.isActive);
+  const expired = coupons.filter(c => !c.isActive);
+  const totalSaved = coupons.reduce((s, c) => s + c.usedCount * (c.type === "FLAT" ? c.value : c.value * 5), 0); // approx
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: "22px" }}>
+      <div className="page-header">
+        <div>
+          <h1 className="page-title">Marketing & Coupons</h1>
+          <p className="page-subtitle">{active.length} active coupons · {coupons.reduce((s, c) => s + c.usedCount, 0)} total uses</p>
+        </div>
+        <button className="admin-btn admin-btn-primary" onClick={() => setShowForm(true)}><Plus size={14} /> Create Coupon</button>
+      </div>
+
+      {/* Stats */}
+      <div className="kpi-grid" style={{ gridTemplateColumns: "repeat(3, 1fr)" }}>
+        {[
+          { label: "Active Coupons", value: active.length, color: "var(--green)", glow: "var(--green-glass)" },
+          { label: "Total Redemptions", value: coupons.reduce((s, c) => s + c.usedCount, 0), color: "var(--indigo)", glow: "var(--indigo-glass)" },
+          { label: "Expired / Disabled", value: expired.length, color: "var(--text-3)", glow: "var(--bg-elevated)" },
+        ].map(s => (
+          <div key={s.label} className="kpi-card" style={{ "--kpi-accent": s.color, "--kpi-glow": s.glow } as React.CSSProperties}>
+            <div style={{ fontSize: "1.6rem", fontWeight: 900, color: "var(--text-0)" }}>{s.value}</div>
+            <div style={{ fontSize: "0.78rem", color: "var(--text-3)", marginTop: "4px" }}>{s.label}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Coupons */}
+      <div className="admin-card">
+        <div style={{ padding: "18px 22px", borderBottom: "1px solid var(--border-1)", fontWeight: 800, color: "var(--text-0)" }}>All Coupons</div>
+        <div className="admin-table-wrap">
+          <table className="admin-table">
+            <thead>
+              <tr>
+                <th>Code</th>
+                <th>Type</th>
+                <th>Value</th>
+                <th>Min Order</th>
+                <th>Used</th>
+                <th>Limit</th>
+                <th>Expires</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {coupons.map(c => (
+                <tr key={c.id}>
+                  <td>
+                    <span className="mono" style={{ fontWeight: 800, fontSize: "0.9rem", color: "var(--text-0)", background: "var(--bg-elevated)", padding: "3px 8px", borderRadius: "var(--r-sm)" }}>
+                      {c.code}
+                    </span>
+                  </td>
+                  <td>
+                    <span className={`status-badge ${c.type === "PERCENTAGE" ? "info" : "purple"}`}>
+                      {c.type === "FLAT" ? "৳ Flat" : "% Off"}
+                    </span>
+                  </td>
+                  <td>
+                    <span className="mono" style={{ fontWeight: 700, color: "var(--green-bright)" }}>
+                      {c.type === "FLAT" ? `৳${c.value}` : `${c.value}%`}
+                    </span>
+                  </td>
+                  <td>৳{c.minOrderAmount}</td>
+                  <td>
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                      <span style={{ fontWeight: 700 }}>{c.usedCount}</span>
+                      <div className="progress-bar-wrap" style={{ width: "60px" }}>
+                        <div className="progress-bar-fill" style={{
+                          width: `${Math.min(100, (c.usedCount / c.usageLimit) * 100)}%`,
+                          background: c.usedCount >= c.usageLimit ? "var(--red)" : "var(--green)",
+                        }} />
+                      </div>
+                    </div>
+                  </td>
+                  <td>{c.usageLimit}</td>
+                  <td style={{ fontSize: "0.78rem", color: "var(--text-3)" }}>{c.expiresAt || "No expiry"}</td>
+                  <td><span className={`status-badge ${c.isActive ? "success" : "neutral"}`}>{c.isActive ? "Active" : "Disabled"}</span></td>
+                  <td>
+                    <button className="admin-btn admin-btn-ghost admin-btn-sm" onClick={() => toggleCoupon(c.id)}>
+                      {c.isActive ? <ToggleRight size={14} color="var(--green)" /> : <ToggleLeft size={14} />}
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {showForm && <CouponModal onClose={() => setShowForm(false)} />}
     </div>
   );
 }

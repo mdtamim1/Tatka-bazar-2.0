@@ -1,236 +1,193 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import {
-  Store,
-  CheckCircle,
-  XCircle,
-  AlertCircle,
-  Search,
-  DollarSign,
-  Star,
-  MapPin,
-  FileText,
-  ShieldCheck,
+  Store, Plus, Search, X, Check, Phone, Mail, MapPin, Star,
+  ShieldCheck, ShieldX, DollarSign, Eye, Edit, Package, BarChart3,
 } from "lucide-react";
 import { useAdmin } from "@/context/AdminContext";
 import { AdminVendor } from "@/types";
 
-export default function AdminVendorsPage() {
-  const { vendors, approveVendor, suspendVendor, settleVendorPayout } = useAdmin();
-  const [search, setSearch] = useState("");
-  const [filterStatus, setFilterStatus] = useState<string>("all");
-
-  const [payoutModalVendor, setPayoutModalVendor] = useState<AdminVendor | null>(null);
-  const [payoutAmount, setPayoutAmount] = useState<number>(0);
-
-  const filteredVendors = vendors.filter((v) => {
-    if (filterStatus !== "all" && v.status !== filterStatus) return false;
-    if (search.trim()) {
-      const q = search.toLowerCase();
-      return (
-        (v.nameEn && v.nameEn.toLowerCase().includes(q)) ||
-        (v.nameBn && v.nameBn.toLowerCase().includes(q)) ||
-        v.contactName.toLowerCase().includes(q) ||
-        v.phone.includes(q)
-      );
-    }
-    return true;
-  });
-
-  const handleOpenPayout = (v: AdminVendor) => {
-    setPayoutModalVendor(v);
-    setPayoutAmount(v.payableBalance);
-  };
-
-  const handleConfirmPayout = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!payoutModalVendor || payoutAmount <= 0) return;
-    settleVendorPayout(payoutModalVendor.id, payoutAmount);
-    setPayoutModalVendor(null);
-  };
+function VendorDrawer({ vendor, onClose }: { vendor: AdminVendor; onClose: () => void }) {
+  const { approveVendor, suspendVendor, settleVendorPayout } = useAdmin();
+  const [payAmount, setPayAmount] = useState("");
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
-      
-      {/* Header */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "12px" }}>
+    <>
+      <div className="drawer-overlay" onClick={onClose} />
+      <div className="drawer-panel">
+        <div className="drawer-header">
+          <div>
+            <div style={{ fontWeight: 800, fontSize: "1rem", color: "var(--text-0)" }}>{vendor.nameEn}</div>
+            <span className={`status-badge ${vendor.status === "APPROVED" ? "success" : vendor.status === "PENDING" ? "warning" : "danger"}`} style={{ marginTop: "4px" }}>
+              {vendor.status}
+            </span>
+          </div>
+          <button className="admin-btn admin-btn-ghost admin-btn-icon" onClick={onClose}><X size={16} /></button>
+        </div>
+        <div className="drawer-body">
+          <div className="section-label"><Store size={11} /> Business Info</div>
+          <div className="detail-row"><span className="detail-label">Contact</span><span className="detail-value">{vendor.contactName}</span></div>
+          <div className="detail-row"><span className="detail-label">Phone</span><span className="detail-value mono">{vendor.phone}</span></div>
+          <div className="detail-row"><span className="detail-label">Email</span><span className="detail-value">{vendor.email}</span></div>
+          <div className="detail-row"><span className="detail-label">Trade License</span><span className="detail-value mono" style={{ fontSize: "0.78rem" }}>{vendor.tradeLicense}</span></div>
+          <div className="detail-row"><span className="detail-label">Location</span><span className="detail-value">{vendor.location}</span></div>
+          <div className="detail-row"><span className="detail-label">Area</span><span className="detail-value">{vendor.area}, {vendor.city}</span></div>
+          <div className="detail-row"><span className="detail-label">Joined</span><span className="detail-value">{vendor.joinedDate}</span></div>
+
+          <div className="admin-divider" />
+          <div className="section-label"><BarChart3 size={11} /> Performance</div>
+          <div className="detail-row"><span className="detail-label">Total Sales</span><span className="detail-value mono" style={{ color: "var(--green-bright)", fontWeight: 700 }}>৳{vendor.totalSales.toLocaleString()}</span></div>
+          <div className="detail-row"><span className="detail-label">Commission</span><span className="detail-value">{vendor.commissionRate}%</span></div>
+          <div className="detail-row"><span className="detail-label">Products</span><span className="detail-value">{vendor.totalProducts}</span></div>
+          <div className="detail-row"><span className="detail-label">Rating</span><span className="detail-value">{vendor.rating > 0 ? `⭐ ${vendor.rating.toFixed(1)}` : "No reviews yet"}</span></div>
+          <div className="detail-row"><span className="detail-label">Active Orders</span><span className="detail-value">{vendor.activeOrders}</span></div>
+
+          <div className="admin-divider" />
+          <div className="section-label"><DollarSign size={11} /> Payable Balance</div>
+          <div style={{
+            background: "var(--green-glass)", border: "1px solid var(--border-green)",
+            borderRadius: "var(--r-md)", padding: "14px 16px", marginBottom: "16px",
+          }}>
+            <div style={{ fontSize: "1.6rem", fontWeight: 900, color: "var(--green-bright)" }}>
+              ৳{vendor.payableBalance.toLocaleString()}
+            </div>
+            <div style={{ fontSize: "0.75rem", color: "var(--text-3)" }}>Outstanding payout</div>
+          </div>
+          {vendor.status === "APPROVED" && vendor.payableBalance > 0 && (
+            <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+              <div className="admin-input-group" style={{ flex: 1 }}>
+                <span className="admin-input-prefix">৳</span>
+                <input className="admin-input" type="number" placeholder="Amount to settle" value={payAmount} onChange={e => setPayAmount(e.target.value)} />
+              </div>
+              <button className="admin-btn admin-btn-primary" onClick={() => { if (payAmount) { settleVendorPayout(vendor.id, Number(payAmount)); setPayAmount(""); } }}>
+                Settle
+              </button>
+            </div>
+          )}
+        </div>
+        <div className="drawer-footer">
+          {vendor.status === "PENDING" && (
+            <button className="admin-btn admin-btn-primary" onClick={() => { approveVendor(vendor.id); onClose(); }}>
+              <ShieldCheck size={14} /> Approve Vendor
+            </button>
+          )}
+          {vendor.status === "APPROVED" && (
+            <button className="admin-btn admin-btn-danger" onClick={() => { if (confirm("Suspend this vendor?")) { suspendVendor(vendor.id); onClose(); } }}>
+              <ShieldX size={14} /> Suspend
+            </button>
+          )}
+          {vendor.status === "SUSPENDED" && (
+            <button className="admin-btn admin-btn-primary" onClick={() => { approveVendor(vendor.id); onClose(); }}>
+              <ShieldCheck size={14} /> Reactivate
+            </button>
+          )}
+          <button className="admin-btn admin-btn-secondary" onClick={onClose}>Close</button>
+        </div>
+      </div>
+    </>
+  );
+}
+
+export default function VendorsPage() {
+  const { vendors } = useAdmin();
+  const [selected, setSelected] = useState<AdminVendor | null>(null);
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("ALL");
+
+  const filtered = useMemo(() => vendors.filter(v => {
+    const ms = !search || v.nameEn.toLowerCase().includes(search.toLowerCase()) || v.contactName.toLowerCase().includes(search.toLowerCase()) || v.area.toLowerCase().includes(search.toLowerCase());
+    const mst = statusFilter === "ALL" || v.status === statusFilter;
+    return ms && mst;
+  }), [vendors, search, statusFilter]);
+
+  const totalPayable = vendors.filter(v => v.status === "APPROVED").reduce((s, v) => s + v.payableBalance, 0);
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: "22px" }}>
+      <div className="page-header">
         <div>
-          <h1 style={{ fontSize: "1.4rem", fontWeight: 800, color: "var(--text-main)" }}>
-            Vendor Partner & Commission Management
-          </h1>
-          <p style={{ fontSize: "0.82rem", color: "var(--text-muted)", marginTop: "2px" }}>
-            Approve partner applications, set platform commission rates, and manage disbursement settlements
+          <h1 className="page-title">Vendors</h1>
+          <p className="page-subtitle">
+            {vendors.filter(v => v.status === "APPROVED").length} approved · {vendors.filter(v => v.status === "PENDING").length} pending
+            {totalPayable > 0 && <span style={{ color: "var(--amber)", marginLeft: "12px" }}>৳{totalPayable.toLocaleString()} payable</span>}
           </p>
         </div>
+        <button className="admin-btn admin-btn-primary"><Plus size={14} /> Invite Vendor</button>
       </div>
 
-      {/* Filter & Search Bar */}
-      <div className="admin-card" style={{ padding: "14px 18px", display: "flex", gap: "14px", alignItems: "center", flexWrap: "wrap" }}>
-        <div style={{ position: "relative", flex: 1, minWidth: "240px" }}>
-          <Search size={16} color="var(--text-muted)" style={{ position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)" }} />
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search by vendor name, owner, or trade license..."
-            style={{ width: "100%", padding: "7px 12px 7px 36px", borderRadius: "var(--radius-md)", border: "1px solid var(--border-medium)", outline: "none" }}
-          />
+      <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+        <div className="search-wrap" style={{ flex: 1, minWidth: "220px" }}>
+          <Search size={14} className="search-icon" />
+          <input className="search-input" placeholder="Search vendor, contact, area…" value={search} onChange={e => setSearch(e.target.value)} />
         </div>
-
-        <select
-          value={filterStatus}
-          onChange={(e) => setFilterStatus(e.target.value)}
-          style={{ padding: "7px 12px", borderRadius: "var(--radius-md)", border: "1px solid var(--border-medium)", background: "#FFF" }}
-        >
-          <option value="all">All Vendor Statuses</option>
-          <option value="PENDING">PENDING (New Application)</option>
-          <option value="APPROVED">APPROVED (Active Partner)</option>
-          <option value="SUSPENDED">SUSPENDED</option>
-        </select>
+        <div className="tab-bar">
+          {["ALL", "APPROVED", "PENDING", "SUSPENDED"].map(s => (
+            <button key={s} className={`tab-pill ${statusFilter === s ? "active" : ""}`} onClick={() => setStatusFilter(s)}>
+              {s === "ALL" ? "All" : s.charAt(0) + s.slice(1).toLowerCase()}
+              <span className="tab-count">{s === "ALL" ? vendors.length : vendors.filter(v => v.status === s).length}</span>
+            </button>
+          ))}
+        </div>
       </div>
 
-      {/* Vendors Table */}
       <div className="admin-card">
-        <div style={{ overflowX: "auto" }}>
+        <div className="admin-table-wrap">
           <table className="admin-table">
             <thead>
               <tr>
-                <th>Shop Name & Location</th>
-                <th>Owner & Contact</th>
-                <th>Trade License</th>
-                <th>Commission Rate</th>
-                <th>Total Sales & Payable</th>
+                <th>Vendor</th>
+                <th>Contact</th>
+                <th>Area</th>
+                <th>Total Sales</th>
+                <th>Commission</th>
+                <th>Payable</th>
+                <th>Rating</th>
                 <th>Status</th>
-                <th>Actions</th>
+                <th></th>
               </tr>
             </thead>
             <tbody>
-              {filteredVendors.map((v) => (
-                <tr key={v.id}>
+              {filtered.map(v => (
+                <tr key={v.id} className="clickable" onClick={() => setSelected(v)}>
                   <td>
-                    <div style={{ fontWeight: 800, color: "var(--text-main)" }}>{v.nameEn || v.nameBn}</div>
-                    <div style={{ fontSize: "0.72rem", color: "var(--text-muted)", display: "flex", alignItems: "center", gap: "3px", marginTop: "2px" }}>
-                      <MapPin size={12} color="var(--accent)" />
-                      <span>{v.location}</span>
+                    <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                      <div style={{
+                        width: "36px", height: "36px", borderRadius: "var(--r-md)",
+                        background: "linear-gradient(135deg, var(--indigo), var(--purple))",
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        fontWeight: 800, fontSize: "0.85rem", color: "#fff",
+                      }}>
+                        {v.nameEn[0]}
+                      </div>
+                      <div>
+                        <div style={{ fontWeight: 700, fontSize: "0.84rem" }}>{v.nameEn}</div>
+                        <div style={{ fontSize: "0.70rem", color: "var(--text-3)" }}>{v.totalProducts} products</div>
+                      </div>
                     </div>
                   </td>
                   <td>
-                    <div style={{ fontWeight: 700 }}>{v.contactName}</div>
-                    <div style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>{v.phone}</div>
-                    <div style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}>{v.email}</div>
+                    <div style={{ fontSize: "0.80rem" }}>{v.contactName}</div>
+                    <div style={{ fontSize: "0.70rem", color: "var(--text-3)" }}>{v.phone}</div>
                   </td>
-                  <td>
-                    <span style={{ fontSize: "0.78rem", fontFamily: "var(--font-mono)", background: "#F1F5F9", padding: "2px 6px", borderRadius: "4px" }}>
-                      {v.tradeLicense}
-                    </span>
-                  </td>
-                  <td>
-                    <span style={{ fontWeight: 800, color: "var(--primary-dark)", fontSize: "0.9rem" }}>
-                      {v.commissionRate}%
-                    </span>
-                  </td>
-                  <td>
-                    <div style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>Sales: ৳{v.totalSales.toLocaleString()}</div>
-                    <div style={{ fontWeight: 800, color: v.payableBalance > 0 ? "var(--accent)" : "var(--text-main)", fontSize: "0.95rem" }}>
-                      Payable: ৳{v.payableBalance.toLocaleString()}
-                    </div>
-                  </td>
-                  <td>
-                    <span className={`status-badge ${v.status === "APPROVED" ? "success" : v.status === "PENDING" ? "warning" : "danger"}`}>
-                      {v.status}
-                    </span>
-                  </td>
-                  <td>
-                    <div style={{ display: "flex", gap: "6px" }}>
-                      {v.status === "PENDING" && (
-                        <button
-                          onClick={() => approveVendor(v.id)}
-                          className="admin-btn admin-btn-primary"
-                          style={{ padding: "5px 10px", fontSize: "0.75rem" }}
-                        >
-                          <CheckCircle size={14} />
-                          <span>Approve</span>
-                        </button>
-                      )}
-
-                      {v.status === "APPROVED" && (
-                        <>
-                          <button
-                            onClick={() => handleOpenPayout(v)}
-                            className="admin-btn admin-btn-secondary"
-                            style={{ padding: "5px 8px", fontSize: "0.75rem" }}
-                            title="Settle Payout"
-                          >
-                            <DollarSign size={14} color="var(--primary)" />
-                            <span>Payout</span>
-                          </button>
-                          <button
-                            onClick={() => suspendVendor(v.id)}
-                            style={{ padding: "5px 8px", borderRadius: "6px", background: "#FEE2E2", color: "var(--danger)", fontSize: "0.75rem", fontWeight: 600 }}
-                          >
-                            Suspend
-                          </button>
-                        </>
-                      )}
-
-                      {v.status === "SUSPENDED" && (
-                        <button
-                          onClick={() => approveVendor(v.id)}
-                          className="admin-btn admin-btn-primary"
-                          style={{ padding: "5px 10px", fontSize: "0.75rem" }}
-                        >
-                          Reactivate
-                        </button>
-                      )}
-                    </div>
+                  <td style={{ fontSize: "0.82rem" }}>{v.area}</td>
+                  <td><span className="mono" style={{ color: "var(--green-bright)", fontWeight: 700 }}>৳{(v.totalSales / 1000).toFixed(0)}K</span></td>
+                  <td style={{ fontSize: "0.82rem" }}>{v.commissionRate}%</td>
+                  <td><span className="mono" style={{ color: v.payableBalance > 0 ? "var(--amber)" : "var(--text-3)" }}>৳{v.payableBalance.toLocaleString()}</span></td>
+                  <td style={{ fontSize: "0.82rem" }}>{v.rating > 0 ? `⭐ ${v.rating.toFixed(1)}` : "—"}</td>
+                  <td><span className={`status-badge ${v.status === "APPROVED" ? "success" : v.status === "PENDING" ? "warning" : "danger"}`}>{v.status}</span></td>
+                  <td onClick={e => e.stopPropagation()}>
+                    <button className="admin-btn admin-btn-ghost admin-btn-sm" onClick={() => setSelected(v)}><Eye size={13} /></button>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
+          {filtered.length === 0 && <div className="empty-state"><div className="empty-state-icon">🏪</div><div className="empty-state-title">No vendors found</div></div>}
         </div>
       </div>
 
-      {/* Settle Payout Modal */}
-      {payoutModalVendor && (
-        <div className="modal-overlay" onClick={() => setPayoutModalVendor(null)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: "440px" }}>
-            <h2 style={{ fontSize: "1.15rem", fontWeight: 800, marginBottom: "8px" }}>
-              💵 Settle Vendor Payout
-            </h2>
-            <p style={{ fontSize: "0.82rem", color: "var(--text-muted)", marginBottom: "16px" }}>
-              Confirm disbursement for {payoutModalVendor.nameEn || payoutModalVendor.nameBn}.
-            </p>
-
-            <form onSubmit={handleConfirmPayout} style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
-              <div>
-                <label style={{ fontSize: "0.8rem", fontWeight: 700, display: "block", marginBottom: "4px" }}>
-                  Disbursement Amount (৳) *
-                </label>
-                <input
-                  type="number"
-                  required
-                  max={payoutModalVendor.payableBalance}
-                  value={payoutAmount}
-                  onChange={(e) => setPayoutAmount(Number(e.target.value))}
-                  style={{ width: "100%", padding: "10px", borderRadius: "var(--radius-md)", border: "1px solid var(--border-medium)" }}
-                />
-              </div>
-
-              <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px", marginTop: "6px" }}>
-                <button type="button" onClick={() => setPayoutModalVendor(null)} className="admin-btn admin-btn-secondary">
-                  Cancel
-                </button>
-                <button type="submit" className="admin-btn admin-btn-primary">
-                  Confirm Settlement
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
+      {selected && <VendorDrawer vendor={selected} onClose={() => setSelected(null)} />}
     </div>
   );
 }

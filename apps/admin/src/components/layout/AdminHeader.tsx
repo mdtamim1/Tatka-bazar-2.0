@@ -1,344 +1,176 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
+import React, { useState } from "react";
+import { usePathname } from "next/navigation";
 import {
-  Search, Bell, ExternalLink, Shield, X,
-  ShoppingBag, Package, AlertTriangle,
-  ChevronDown, Clock, Zap, LogOut,
+  Bell, BellRing, Volume2, VolumeX, Search, RefreshCw,
+  ChevronRight, X, ShoppingBag, MapPin, Clock,
 } from "lucide-react";
 import { useAdmin } from "@/context/AdminContext";
-import { AdminRole } from "@/types";
+
+const PAGE_MAP: Record<string, string> = {
+  "/dashboard":  "Dashboard",
+  "/dispatch":   "Live Dispatch",
+  "/orders":     "Orders",
+  "/products":   "Products",
+  "/categories": "Categories",
+  "/inventory":  "Inventory",
+  "/vendors":    "Vendors",
+  "/b2b":        "B2B Accounts",
+  "/riders":     "Riders",
+  "/customers":  "Customers",
+  "/branches":   "Branches",
+  "/marketing":  "Marketing",
+  "/reviews":    "Reviews",
+  "/reports":    "Reports",
+  "/staff":      "Staff",
+  "/settings":   "Settings",
+  "/audit":      "Audit Log",
+};
 
 export function AdminHeader() {
-  const router = useRouter();
-  const { currentUser, setCurrentRole, vendors, orders, products } = useAdmin();
-  const [showNotifs, setShowNotifs] = useState(false);
-  const [showRole, setShowRole]     = useState(false);
-  const [searchQ, setSearchQ]       = useState("");
-  const [timeStr, setTimeStr]       = useState("");
-  const notifsRef = useRef<HTMLDivElement>(null);
-  const roleRef   = useRef<HTMLDivElement>(null);
+  const pathname = usePathname();
+  const { newOrderAlert, dismissAlert, playTestSound, orders } = useAdmin();
+  const [soundEnabled, setSoundEnabled] = useState(true);
+  const [showSearch, setShowSearch] = useState(false);
 
-  const pendingOrders  = orders.filter(o => o.status === "PENDING" || o.status === "CONFIRMED").length;
-  const pendingVendors = vendors.filter(v => v.status === "PENDING").length;
-  const lowStock       = products.filter(p => p.stock <= p.lowStockAlert).length;
-  const totalBadge     = pendingOrders + pendingVendors + lowStock;
+  const pendingCount = orders.filter((o) => o.status === "PENDING").length;
 
-  useEffect(() => {
-    const update = () => setTimeStr(new Date().toLocaleTimeString("en-BD", {
-      hour: "2-digit", minute: "2-digit", timeZone: "Asia/Dhaka",
-    }));
-    update();
-    const id = setInterval(update, 60000);
-    return () => clearInterval(id);
-  }, []);
+  // Build breadcrumb
+  const segments = pathname.split("/").filter(Boolean);
+  const currentPage = PAGE_MAP[`/${segments[0]}`] || segments[0] || "Dashboard";
+  const subPage = segments[1] ? `#${segments[1].substring(0, 8).toUpperCase()}` : null;
 
-  useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (notifsRef.current && !notifsRef.current.contains(e.target as Node)) setShowNotifs(false);
-      if (roleRef.current && !roleRef.current.contains(e.target as Node)) setShowRole(false);
-    };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, []);
-
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (searchQ.trim()) {
-      router.push(`/orders?search=${encodeURIComponent(searchQ.trim())}`);
-      setSearchQ("");
-    }
+  const toggleSound = () => {
+    setSoundEnabled((v) => !v);
+    if (!soundEnabled) playTestSound();
   };
 
-  const ROLES: { value: AdminRole; label: string; icon: string }[] = [
-    { value: "SUPER_ADMIN",         label: "Super Admin",          icon: "👑" },
-    { value: "MANAGER",             label: "Store Manager",        icon: "👔" },
-    { value: "INVENTORY_STAFF",     label: "Inventory Staff",      icon: "📦" },
-    { value: "SUPPORT_STAFF",       label: "Support Staff",        icon: "🎧" },
-    { value: "DELIVERY_COORDINATOR",label: "Delivery Coordinator", icon: "🛵" },
-  ];
-  const currentRoleObj = ROLES.find(r => r.value === currentUser.role) ?? ROLES[0]!;
-
   return (
-    <header style={{
-      background: "var(--bg-surface)",
-      borderBottom: "1px solid var(--border-1)",
-      padding: "10px 24px",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "space-between",
-      gap: "16px",
-      position: "sticky",
-      top: 0,
-      zIndex: 90,
-      backdropFilter: "blur(12px)",
-    }}>
-
-      {/* ── Global Search ──────────────────────────────────── */}
-      <form onSubmit={handleSearch} style={{ flex: 1, maxWidth: "380px" }}>
-        <div className="search-wrap">
-          <Search size={15} className="search-icon" />
-          <input
-            className="search-input"
-            type="text"
-            placeholder="Search by Order ID, Customer, Phone..."
-            value={searchQ}
-            onChange={e => setSearchQ(e.target.value)}
-          />
+    <>
+      <header className="admin-header">
+        {/* Breadcrumb */}
+        <div className="header-breadcrumb">
+          <span className="header-breadcrumb-item">Admin</span>
+          <ChevronRight size={12} className="header-breadcrumb-sep" />
+          <span className="header-breadcrumb-current">{currentPage}</span>
+          {subPage && (
+            <>
+              <ChevronRight size={12} style={{ color: "var(--text-4)", fontSize: "0.72rem" }} />
+              <span className="mono" style={{ fontSize: "0.78rem" }}>{subPage}</span>
+            </>
+          )}
         </div>
-      </form>
 
-      {/* ── Right Controls ─────────────────────────────────── */}
-      <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+        {/* Actions */}
+        <div className="header-actions">
+          {/* Search toggle */}
+          <button
+            className="header-icon-btn"
+            onClick={() => setShowSearch((v) => !v)}
+            title="Search"
+          >
+            <Search size={15} />
+          </button>
 
-        {/* Live Clock */}
+          {/* Sound toggle */}
+          <button
+            className="header-icon-btn"
+            onClick={toggleSound}
+            title={soundEnabled ? "Mute alerts" : "Enable alerts"}
+          >
+            {soundEnabled ? <Volume2 size={15} /> : <VolumeX size={15} color="var(--red)" />}
+          </button>
+
+          {/* Pending orders bell */}
+          <button
+            className="header-icon-btn"
+            onClick={() => { if (typeof window !== "undefined") window.location.href = "/dispatch"; }}
+            title={`${pendingCount} pending orders`}
+          >
+            {pendingCount > 0 ? <BellRing size={15} color="var(--amber)" /> : <Bell size={15} />}
+            {pendingCount > 0 && <span className="notif-dot" />}
+          </button>
+
+          {/* Refresh */}
+          <button
+            className="header-icon-btn"
+            onClick={() => window.location.reload()}
+            title="Refresh data"
+          >
+            <RefreshCw size={15} />
+          </button>
+        </div>
+      </header>
+
+      {/* Inline search bar */}
+      {showSearch && (
         <div style={{
-          display: "flex", alignItems: "center", gap: "6px",
-          padding: "6px 12px",
+          position: "fixed",
+          top: "60px",
+          left: "var(--sidebar-w)",
+          right: 0,
+          padding: "12px 32px",
           background: "var(--bg-raised)",
-          border: "1px solid var(--border-1)",
-          borderRadius: "var(--r-md)",
-          fontSize: "0.8rem", color: "var(--text-2)",
-          fontFamily: "var(--font-mono)",
+          borderBottom: "1px solid var(--border-1)",
+          zIndex: 140,
+          display: "flex",
+          alignItems: "center",
+          gap: "12px",
         }}>
-          <Clock size={13} style={{ color: "var(--green)" }} />
-          <span>{timeStr}</span>
-          <span style={{ color: "var(--text-4)", fontSize: "0.72rem" }}>BDT</span>
-        </div>
-
-        {/* Role Switcher */}
-        <div ref={roleRef} style={{ position: "relative" }}>
-          <button
-            onClick={() => setShowRole(!showRole)}
-            style={{
-              display: "flex", alignItems: "center", gap: "7px",
-              padding: "6px 12px",
-              background: "var(--green-glass)",
-              border: "1px solid var(--border-green)",
-              borderRadius: "var(--r-md)",
-              color: "var(--green)",
-              fontSize: "0.8rem", fontWeight: 700,
-              cursor: "pointer", fontFamily: "var(--font)",
-            }}
-          >
-            <Shield size={13} />
-            <span>{currentRoleObj.icon} {currentRoleObj.label}</span>
-            <ChevronDown size={12} style={{ opacity: 0.7 }} />
+          <div className="search-wrap" style={{ flex: 1 }}>
+            <Search size={15} className="search-icon" />
+            <input
+              className="search-input"
+              placeholder="Search orders, products, customers, vendors..."
+              autoFocus
+            />
+          </div>
+          <button className="admin-btn admin-btn-ghost admin-btn-sm" onClick={() => setShowSearch(false)}>
+            <X size={14} /> Close
           </button>
-          {showRole && (
-            <div style={{
-              position: "absolute", top: "calc(100% + 8px)", right: 0,
-              background: "var(--bg-surface)",
-              border: "1px solid var(--border-2)",
-              borderRadius: "var(--r-lg)",
-              boxShadow: "var(--shadow-lg)",
-              padding: "6px",
-              width: "220px",
-              zIndex: 200,
-              animation: "fadeOverlay 0.15s ease",
-            }}>
-              {ROLES.map(r => (
-                <button
-                  key={r.value}
-                  onClick={() => { setCurrentRole(r.value); setShowRole(false); }}
-                  style={{
-                    width: "100%", display: "flex", alignItems: "center", gap: "8px",
-                    padding: "8px 12px", borderRadius: "var(--r-md)",
-                    background: r.value === currentUser.role ? "var(--green-glass)" : "transparent",
-                    color: r.value === currentUser.role ? "var(--green)" : "var(--text-2)",
-                    border: "none", cursor: "pointer",
-                    fontSize: "0.83rem", fontWeight: r.value === currentUser.role ? 700 : 500,
-                    textAlign: "left", fontFamily: "var(--font)",
-                    transition: "all var(--t-fast)",
-                  }}
-                  onMouseEnter={e => { if (r.value !== currentUser.role) e.currentTarget.style.background = "var(--bg-hover)"; }}
-                  onMouseLeave={e => { if (r.value !== currentUser.role) e.currentTarget.style.background = "transparent"; }}
-                >
-                  <span>{r.icon}</span>
-                  <span>{r.label}</span>
-                </button>
-              ))}
-            </div>
-          )}
         </div>
+      )}
 
-        {/* Live Storefront Link */}
-        <a
-          href="http://localhost:3000"
-          target="_blank"
-          rel="noreferrer"
-          className="admin-btn admin-btn-ghost"
-          style={{ fontSize: "0.8rem", gap: "5px" }}
-        >
-          <span>Storefront</span>
-          <ExternalLink size={13} />
-        </a>
-
-        {/* Notifications */}
-        <div ref={notifsRef} style={{ position: "relative" }}>
-          <button
-            onClick={() => setShowNotifs(!showNotifs)}
-            style={{
-              position: "relative",
-              padding: "8px",
-              background: "var(--bg-raised)",
-              border: "1px solid var(--border-1)",
+      {/* New Order Toast Alert */}
+      {newOrderAlert && (
+        <div className="new-order-toast" onClick={dismissAlert}>
+          <div style={{ display: "flex", alignItems: "flex-start", gap: "12px" }}>
+            <div style={{
+              width: "38px", height: "38px",
               borderRadius: "var(--r-md)",
-              color: "var(--text-2)",
+              background: "var(--amber-glass)",
+              border: "1px solid var(--border-amber)",
               display: "flex", alignItems: "center", justifyContent: "center",
-              cursor: "pointer",
-              transition: "all var(--t-fast)",
-            }}
-            onMouseEnter={e => { e.currentTarget.style.borderColor = "var(--border-2)"; e.currentTarget.style.color = "var(--text-1)"; }}
-            onMouseLeave={e => { e.currentTarget.style.borderColor = "var(--border-1)"; e.currentTarget.style.color = "var(--text-2)"; }}
-          >
-            <Bell size={17} />
-            {totalBadge > 0 && (
-              <span style={{
-                position: "absolute", top: "-5px", right: "-5px",
-                width: "18px", height: "18px", borderRadius: "50%",
-                background: "var(--red)", color: "#fff",
-                fontSize: "0.65rem", fontWeight: 800,
-                display: "flex", alignItems: "center", justifyContent: "center",
-                border: "2px solid var(--bg-deep)",
-                animation: "livePulseRed 2s infinite",
-              }}>
-                {totalBadge}
-              </span>
-            )}
-          </button>
-
-          {showNotifs && (
-            <div style={{
-              position: "absolute", top: "calc(100% + 10px)", right: 0,
-              width: "300px",
-              background: "var(--bg-surface)",
-              border: "1px solid var(--border-2)",
-              borderRadius: "var(--r-lg)",
-              boxShadow: "var(--shadow-lg)",
-              padding: "0",
-              zIndex: 200,
-              overflow: "hidden",
-              animation: "fadeOverlay 0.18s ease",
+              flexShrink: 0,
             }}>
-              <div style={{
-                padding: "14px 16px",
-                borderBottom: "1px solid var(--border-1)",
-                display: "flex", alignItems: "center", justifyContent: "space-between",
-              }}>
-                <div style={{ fontWeight: 700, fontSize: "0.875rem", color: "var(--text-1)" }}>
-                  Notifications ({totalBadge})
-                </div>
-                <button onClick={() => setShowNotifs(false)} style={{ color: "var(--text-3)", padding: "2px" }}>
-                  <X size={14} />
-                </button>
-              </div>
-              <div style={{ padding: "8px", display: "flex", flexDirection: "column", gap: "4px" }}>
-                {pendingOrders > 0 && (
-                  <Link href="/orders" onClick={() => setShowNotifs(false)} style={{
-                    display: "flex", alignItems: "center", gap: "10px",
-                    padding: "10px 12px", borderRadius: "var(--r-md)",
-                    background: "var(--blue-glass)", border: "1px solid rgba(59,130,246,0.2)",
-                    color: "var(--blue)", fontSize: "0.82rem",
-                  }}>
-                    <ShoppingBag size={15} style={{ flexShrink: 0 }} />
-                    <span><strong>{pendingOrders}</strong> orders pending confirmation</span>
-                  </Link>
-                )}
-                {pendingVendors > 0 && (
-                  <Link href="/vendors" onClick={() => setShowNotifs(false)} style={{
-                    display: "flex", alignItems: "center", gap: "10px",
-                    padding: "10px 12px", borderRadius: "var(--r-md)",
-                    background: "var(--amber-glass)", border: "1px solid rgba(245,158,11,0.2)",
-                    color: "var(--amber)", fontSize: "0.82rem",
-                  }}>
-                    <Zap size={15} style={{ flexShrink: 0 }} />
-                    <span><strong>{pendingVendors}</strong> vendors pending approval</span>
-                  </Link>
-                )}
-                {lowStock > 0 && (
-                  <Link href="/inventory" onClick={() => setShowNotifs(false)} style={{
-                    display: "flex", alignItems: "center", gap: "10px",
-                    padding: "10px 12px", borderRadius: "var(--r-md)",
-                    background: "var(--red-glass)", border: "1px solid rgba(239,68,68,0.2)",
-                    color: "var(--red)", fontSize: "0.82rem",
-                  }}>
-                    <AlertTriangle size={15} style={{ flexShrink: 0 }} />
-                    <span><strong>{lowStock}</strong> products low on stock</span>
-                  </Link>
-                )}
-                {totalBadge === 0 && (
-                  <div style={{ padding: "16px", textAlign: "center", color: "var(--text-3)", fontSize: "0.82rem" }}>
-                    ✅ Everything is in order!
-                  </div>
-                )}
-              </div>
+              <ShoppingBag size={18} color="var(--amber)" />
             </div>
-          )}
-        </div>
-
-        {/* Admin Avatar */}
-        <div style={{
-          display: "flex", alignItems: "center", gap: "10px",
-          paddingLeft: "10px",
-          borderLeft: "1px solid var(--border-1)",
-        }}>
-          <div style={{
-            width: "34px", height: "34px", borderRadius: "50%",
-            background: "linear-gradient(135deg, #22C55E, #0EA472)",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            color: "#fff", fontWeight: 800, fontSize: "0.88rem",
-            boxShadow: "0 0 12px rgba(34,197,94,0.35)",
-            flexShrink: 0,
-          }}>
-            {currentUser.name.charAt(0)}
-          </div>
-          <div>
-            <div style={{ fontWeight: 700, fontSize: "0.82rem", color: "var(--text-1)", lineHeight: 1.2 }}>
-              Admin
-            </div>
-            <div style={{ fontSize: "0.68rem", color: "var(--text-3)" }}>
-              {currentUser.role.replace("_", " ")}
+            <div style={{ flex: 1 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "3px" }}>
+                <div className="live-dot amber" />
+                <span style={{ fontSize: "0.72rem", fontWeight: 800, color: "var(--amber)", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+                  New Order
+                </span>
+              </div>
+              <div style={{ fontWeight: 700, fontSize: "0.875rem", color: "var(--text-0)" }}>
+                #{newOrderAlert.orderNumber}
+              </div>
+              <div style={{ display: "flex", gap: "10px", marginTop: "4px" }}>
+                <span style={{ fontSize: "0.75rem", color: "var(--text-3)", display: "flex", alignItems: "center", gap: "4px" }}>
+                  <MapPin size={10} /> {newOrderAlert.area}
+                </span>
+                <span className="mono" style={{ fontSize: "0.78rem", color: "var(--green)" }}>
+                  ৳{newOrderAlert.totalAmount.toLocaleString()}
+                </span>
+              </div>
+              <div style={{ fontSize: "0.72rem", color: "var(--text-3)", marginTop: "6px" }}>
+                {newOrderAlert.customerName} · Click to dismiss
+              </div>
             </div>
           </div>
         </div>
-
-        {/* Logout Button */}
-        <button
-          onClick={() => {
-            if (typeof window !== "undefined") {
-              localStorage.removeItem("tatka_admin_token");
-            }
-            router.push("/login");
-          }}
-          title="Logout"
-          style={{
-            padding: "8px",
-            background: "var(--bg-raised)",
-            border: "1px solid var(--border-1)",
-            borderRadius: "var(--r-md)",
-            color: "var(--text-3)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            cursor: "pointer",
-            transition: "all var(--t-fast)",
-          }}
-          onMouseEnter={e => {
-            e.currentTarget.style.borderColor = "var(--red)";
-            e.currentTarget.style.color = "var(--red)";
-          }}
-          onMouseLeave={e => {
-            e.currentTarget.style.borderColor = "var(--border-1)";
-            e.currentTarget.style.color = "var(--text-3)";
-          }}
-        >
-          <LogOut size={16} />
-        </button>
-
-      </div>
-    </header>
+      )}
+    </>
   );
 }

@@ -1,97 +1,111 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+
 import {
-  AdminUser,
-  AdminRole,
-  AdminOrder,
-  AdminProduct,
-  AdminVendor,
-  AdminB2BAccount,
-  AdminRider,
-  AdminBranch,
-  AdminCoupon,
-  AdminReview,
-  AuditLogEntry,
-  OrderStatus,
+  AdminUser, AdminRole, AdminOrder, AdminProduct, AdminCategory,
+  AdminVendor, AdminB2BAccount, AdminRider, AdminBranch, AdminCoupon,
+  AdminReview, AuditLogEntry, OrderStatus, StaffMember, AdminCustomer,
 } from "@/types";
+
 import {
-  INITIAL_ADMIN_USER,
-  INITIAL_ORDERS,
-  INITIAL_PRODUCTS,
-  INITIAL_VENDORS,
-  INITIAL_B2B_ACCOUNTS,
-  INITIAL_RIDERS,
-  INITIAL_BRANCHES,
-  INITIAL_COUPONS,
-  INITIAL_REVIEWS,
-  INITIAL_AUDIT_LOGS,
+  INITIAL_ADMIN_USER, INITIAL_ORDERS, INITIAL_PRODUCTS, INITIAL_VENDORS,
+  INITIAL_B2B_ACCOUNTS, INITIAL_RIDERS, INITIAL_BRANCHES, INITIAL_COUPONS,
+  INITIAL_REVIEWS, INITIAL_AUDIT_LOGS, INITIAL_STAFF, INITIAL_CUSTOMERS,
+  INITIAL_CATEGORIES,
 } from "@/lib/admin-data";
+
 import { audioAlert } from "../utils/audioAlert";
+
+// ── Context Type ─────────────────────────────────────────────────────────────
 
 interface AdminContextType {
   currentUser: AdminUser;
   setCurrentRole: (role: AdminRole) => void;
-  
+
   // Orders
   orders: AdminOrder[];
   updateOrderStatus: (orderId: string, status: OrderStatus) => void;
+  confirmOrder: (orderId: string) => void;
+  assignVendorToOrder: (orderId: string, vendorId: string, vendorName: string) => void;
   assignRiderToOrder: (orderId: string, riderId: string, riderName: string) => void;
   updateOrder: (orderId: string, updates: Partial<AdminOrder>) => void;
   createOrder: (data: Omit<AdminOrder, "id" | "createdAt" | "subOrders">) => void;
-  
+  cancelOrder: (orderId: string) => void;
+
   // Products
   products: AdminProduct[];
   addProduct: (product: Omit<AdminProduct, "id">) => void;
   updateProduct: (id: string, product: Partial<AdminProduct>) => void;
   deleteProduct: (id: string) => void;
   toggleProductPublish: (id: string) => void;
-  
+
+  // Categories
+  categories: AdminCategory[];
+  updateCategory: (id: string, updates: Partial<AdminCategory>) => void;
+
   // Vendors
   vendors: AdminVendor[];
   approveVendor: (id: string) => void;
   suspendVendor: (id: string) => void;
   settleVendorPayout: (id: string, amount: number) => void;
-  
+
   // B2B
   b2bAccounts: AdminB2BAccount[];
   approveB2BAccount: (id: string, creditLimit: number) => void;
   rejectB2BAccount: (id: string) => void;
-  
+
   // Riders
   riders: AdminRider[];
   approveRider: (id: string) => void;
-  addRider: (rider: Omit<AdminRider, "id" | "activeDeliveriesCount" | "totalDeliveriesCompleted" | "rating" | "balancePayable">) => void;
-  
+  addRider: (rider: Omit<AdminRider, "id" | "activeDeliveriesCount" | "totalDeliveriesCompleted" | "rating" | "balancePayable" | "totalEarned">) => void;
+
   // Branches
   branches: AdminBranch[];
   addBranch: (branch: Omit<AdminBranch, "id">) => void;
-  
+  updateBranch: (id: string, updates: Partial<AdminBranch>) => void;
+
   // Coupons
   coupons: AdminCoupon[];
   addCoupon: (coupon: Omit<AdminCoupon, "id" | "usedCount">) => void;
-  
+  toggleCoupon: (id: string) => void;
+
   // Reviews
   reviews: AdminReview[];
   moderateReview: (id: string, status: "APPROVED" | "REJECTED") => void;
-  
+
   // Audit Logs
   auditLogs: AuditLogEntry[];
   addAuditLog: (action: string, module: string, targetId: string, details: string) => void;
 
-  newOrderAlert: { orderNumber: string; customerName: string; totalAmount: number } | null;
+  // Staff
+  staff: StaffMember[];
+  inviteStaff: (email: string, name: string, role: AdminRole, phone?: string) => void;
+  updateStaffRole: (id: string, role: AdminRole) => void;
+  suspendStaff: (id: string) => void;
+  activateStaff: (id: string) => void;
+  removeStaff: (id: string) => void;
+
+  // Customers
+  customers: AdminCustomer[];
+
+  // New Order Alert
+  newOrderAlert: { orderNumber: string; customerName: string; totalAmount: number; area: string } | null;
   dismissAlert: () => void;
   playTestSound: () => void;
 }
 
 const AdminContext = createContext<AdminContextType | undefined>(undefined);
 
+// ── Provider ─────────────────────────────────────────────────────────────────
+
 export function AdminProvider({ children }: { children: React.ReactNode }) {
   const [currentUser, setCurrentUser] = useState<AdminUser>(INITIAL_ADMIN_USER);
   const [orders, setOrders] = useState<AdminOrder[]>(INITIAL_ORDERS);
   const [products, setProducts] = useState<AdminProduct[]>(INITIAL_PRODUCTS);
+  const [categories, setCategories] = useState<AdminCategory[]>(INITIAL_CATEGORIES);
   const [vendors, setVendors] = useState<AdminVendor[]>(INITIAL_VENDORS);
   const [b2bAccounts, setB2bAccounts] = useState<AdminB2BAccount[]>(INITIAL_B2B_ACCOUNTS);
   const [riders, setRiders] = useState<AdminRider[]>(INITIAL_RIDERS);
@@ -99,66 +113,66 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
   const [coupons, setCoupons] = useState<AdminCoupon[]>(INITIAL_COUPONS);
   const [reviews, setReviews] = useState<AdminReview[]>(INITIAL_REVIEWS);
   const [auditLogs, setAuditLogs] = useState<AuditLogEntry[]>(INITIAL_AUDIT_LOGS);
-  const [knownOrderIds, setKnownOrderIds] = useState<Set<string>>(new Set(INITIAL_ORDERS.map(o => o.id)));
-  const [newOrderAlert, setNewOrderAlert] = useState<{ orderNumber: string; customerName: string; totalAmount: number } | null>(null);
+  const [staff, setStaff] = useState<StaffMember[]>(INITIAL_STAFF);
+  const [customers, setCustomers] = useState<AdminCustomer[]>(INITIAL_CUSTOMERS);
+  const [knownOrderIds, setKnownOrderIds] = useState<Set<string>>(
+    new Set(INITIAL_ORDERS.map((o) => o.id))
+  );
+  const [newOrderAlert, setNewOrderAlert] = useState<{
+    orderNumber: string; customerName: string; totalAmount: number; area: string;
+  } | null>(null);
 
-  // Fetch live initial data from backend API with periodic polling for sound alert
+  // ── Live API polling ─────────────────────────────────────────────────────
   useEffect(() => {
     let isMounted = true;
 
     async function loadLiveData() {
       try {
-        const [ordRes, riderRes, vendorRes, prodRes] = await Promise.allSettled([
-          fetch(`${API_BASE}/api/orders`).then(r => r.json()),
-          fetch(`${API_BASE}/api/riders`).then(r => r.json()),
-          fetch(`${API_BASE}/api/vendors`).then(r => r.json()),
-          fetch(`${API_BASE}/api/products`).then(r => r.json()),
+        const [ordRes, riderRes, vendorRes] = await Promise.allSettled([
+          fetch(`${API_BASE}/api/orders`).then((r) => r.json()),
+          fetch(`${API_BASE}/api/riders`).then((r) => r.json()),
+          fetch(`${API_BASE}/api/vendors`).then((r) => r.json()),
         ]);
 
-        if (ordRes.status === "fulfilled" && ordRes.value.success && Array.isArray(ordRes.value.data) && isMounted) {
-          const freshOrders = ordRes.value.data;
-          
-          // Detect brand new incoming orders
+        if (ordRes.status === "fulfilled" && ordRes.value?.success && Array.isArray(ordRes.value.data) && isMounted) {
+          const freshOrders: AdminOrder[] = ordRes.value.data;
           setKnownOrderIds((prevKnown) => {
-            const newlyArrived = freshOrders.filter((o: any) => !prevKnown.has(o.id));
+            const newlyArrived = freshOrders.filter((o) => !prevKnown.has(o.id));
             if (newlyArrived.length > 0 && newlyArrived[0]) {
               const latest = newlyArrived[0];
-              // 🔔 Trigger sweet Ting-Tong Audio Chime!
-              audioAlert.playOrderAssignedSound();
+              audioAlert.playOrderAssignedSound?.();
               setNewOrderAlert({
                 orderNumber: latest.orderNumber,
                 customerName: latest.customerName,
                 totalAmount: latest.totalAmount,
+                area: latest.deliveryArea,
               });
             }
-            return new Set([...prevKnown, ...freshOrders.map((o: any) => o.id)]);
+            return new Set([...prevKnown, ...freshOrders.map((o) => o.id)]);
           });
-
           setOrders(freshOrders);
         }
-        if (riderRes.status === "fulfilled" && riderRes.value.success && riderRes.value.data?.length > 0 && isMounted) {
+        if (riderRes.status === "fulfilled" && riderRes.value?.success && riderRes.value.data?.length > 0 && isMounted) {
           setRiders(riderRes.value.data);
         }
-        if (vendorRes.status === "fulfilled" && vendorRes.value.success && vendorRes.value.data?.length > 0 && isMounted) {
+        if (vendorRes.status === "fulfilled" && vendorRes.value?.success && vendorRes.value.data?.length > 0 && isMounted) {
           setVendors(vendorRes.value.data);
         }
-      } catch (err) {
-        console.warn("API sync fallback to mock dataset:", err);
+      } catch {
+        // Fallback to mock data — silent
       }
     }
 
     loadLiveData();
-    const interval = setInterval(loadLiveData, 6000); // 6s polling for live orders
-    return () => {
-      isMounted = false;
-      clearInterval(interval);
-    };
+    const interval = setInterval(loadLiveData, 8000);
+    return () => { isMounted = false; clearInterval(interval); };
   }, []);
 
   const dismissAlert = () => setNewOrderAlert(null);
-  const playTestSound = () => audioAlert.playOrderAssignedSound();
+  const playTestSound = () => audioAlert.playOrderAssignedSound?.();
 
-  const addAuditLog = (action: string, module: string, targetId: string, details: string) => {
+  // ── Audit Log ────────────────────────────────────────────────────────────
+  const addAuditLog = useCallback((action: string, module: string, targetId: string, details: string) => {
     const newLog: AuditLogEntry = {
       id: `aud-${Date.now()}`,
       actorName: currentUser.name,
@@ -167,67 +181,87 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
       module,
       targetId,
       details,
-      timestamp: new Date().toLocaleString("en-GB", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }),
+      timestamp: new Date().toLocaleString("en-GB", {
+        day: "numeric", month: "short", year: "numeric",
+        hour: "2-digit", minute: "2-digit",
+      }),
     };
-    setAuditLogs((prev) => [newLog, ...prev]);
-  };
+    setAuditLogs((prev) => [newLog, ...prev].slice(0, 500));
+  }, [currentUser]);
 
   const setCurrentRole = (role: AdminRole) => {
     setCurrentUser((prev) => ({ ...prev, role }));
     addAuditLog("ROLE_SWITCH", "System", currentUser.id, `Role switched to ${role}`);
   };
 
-  // Orders Handlers
-  const updateOrderStatus = (orderId: string, status: OrderStatus) => {
-    setOrders((prev) =>
-      prev.map((ord) => (ord.id === orderId ? { ...ord, status } : ord))
-    );
-    addAuditLog("ORDER_STATUS_UPDATE", "Orders", orderId, `Order status updated to ${status}`);
+  // ── Order Actions ────────────────────────────────────────────────────────
 
-    // Sync to API
+  const updateOrderStatus = useCallback((orderId: string, status: OrderStatus) => {
+    setOrders((prev) => prev.map((o) => o.id === orderId ? { ...o, status } : o));
+    addAuditLog("ORDER_STATUS_UPDATE", "Orders", orderId, `Status updated to ${status}`);
     fetch(`${API_BASE}/api/orders/${orderId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ status }),
-    }).catch(err => console.warn("API order status update error:", err));
-  };
+    }).catch(() => {});
+  }, [addAuditLog]);
 
-  const assignRiderToOrder = (orderId: string, riderId: string, riderName: string) => {
-    setOrders((prev) =>
-      prev.map((ord) =>
-        ord.id === orderId
-          ? { ...ord, assignedRiderId: riderId, assignedRiderName: riderName, status: "OUT_FOR_DELIVERY" }
-          : ord
-      )
-    );
-    addAuditLog("RIDER_ASSIGNMENT", "Orders", orderId, `Assigned order to rider: ${riderName}`);
+  const confirmOrder = useCallback((orderId: string) => {
+    const ts = new Date().toLocaleString("en-GB", {
+      day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit",
+    });
+    setOrders((prev) => prev.map((o) =>
+      o.id === orderId ? { ...o, status: "CONFIRMED", confirmedAt: ts } : o
+    ));
+    addAuditLog("ORDER_CONFIRM", "Dispatch", orderId, "Order confirmed by admin — ready for vendor assignment");
+    fetch(`${API_BASE}/api/orders/${orderId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status: "CONFIRMED" }),
+    }).catch(() => {});
+  }, [addAuditLog]);
 
-    // Sync to API
+  const assignVendorToOrder = useCallback((orderId: string, vendorId: string, vendorName: string) => {
+    setOrders((prev) => prev.map((o) =>
+      o.id === orderId
+        ? { ...o, status: "VENDOR_ASSIGNED", assignedVendorId: vendorId, assignedVendorName: vendorName }
+        : o
+    ));
+    addAuditLog("VENDOR_ASSIGNMENT", "Dispatch", orderId, `Assigned to vendor: ${vendorName}`);
+    fetch(`${API_BASE}/api/orders/${orderId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status: "VENDOR_ASSIGNED", assignedVendorId: vendorId }),
+    }).catch(() => {});
+  }, [addAuditLog]);
+
+  const assignRiderToOrder = useCallback((orderId: string, riderId: string, riderName: string) => {
+    setOrders((prev) => prev.map((o) =>
+      o.id === orderId
+        ? { ...o, assignedRiderId: riderId, assignedRiderName: riderName, status: "OUT_FOR_DELIVERY" }
+        : o
+    ));
+    addAuditLog("RIDER_ASSIGNMENT", "Dispatch", orderId, `Assigned to rider: ${riderName}`);
     fetch(`${API_BASE}/api/orders/${orderId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ assignedRiderId: riderId, status: "OUT_FOR_DELIVERY" }),
-    }).catch(err => console.warn("API rider assignment error:", err));
-  };
+    }).catch(() => {});
+  }, [addAuditLog]);
 
-  const updateOrder = (orderId: string, updates: Partial<AdminOrder>) => {
-    setOrders((prev) =>
-      prev.map((ord) => (ord.id === orderId ? { ...ord, ...updates } : ord))
-    );
-    addAuditLog("ORDER_UPDATE", "Orders", orderId, `Order details updated`);
-
-    // Sync to API
+  const updateOrder = useCallback((orderId: string, updates: Partial<AdminOrder>) => {
+    setOrders((prev) => prev.map((o) => o.id === orderId ? { ...o, ...updates } : o));
+    addAuditLog("ORDER_UPDATE", "Orders", orderId, "Order details updated");
     fetch(`${API_BASE}/api/orders/${orderId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(updates),
-    }).catch(err => console.warn("API order update error:", err));
-  };
+    }).catch(() => {});
+  }, [addAuditLog]);
 
-  const createOrder = (data: Omit<AdminOrder, "id" | "createdAt" | "subOrders">) => {
+  const createOrder = useCallback((data: Omit<AdminOrder, "id" | "createdAt" | "subOrders">) => {
     const ts = new Date().toLocaleString("en-GB", {
-      day: "numeric", month: "short", year: "numeric",
-      hour: "2-digit", minute: "2-digit",
+      day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit",
     });
     const newOrder: AdminOrder = {
       ...data,
@@ -236,31 +270,42 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
       subOrders: [],
     };
     setOrders((prev) => [newOrder, ...prev]);
+    audioAlert.playOrderAssignedSound?.();
+    setNewOrderAlert({
+      orderNumber: newOrder.orderNumber,
+      customerName: newOrder.customerName,
+      totalAmount: newOrder.totalAmount,
+      area: newOrder.deliveryArea,
+    });
     addAuditLog("ORDER_CREATE", "Orders", newOrder.id, `New order created: ${newOrder.orderNumber}`);
-
-    // Sync to API
     fetch(`${API_BASE}/api/orders`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
-    }).catch(err => console.warn("API create order error:", err));
-  };
+    }).catch(() => {});
+  }, [addAuditLog]);
 
-  // Products Handlers
+  const cancelOrder = useCallback((orderId: string) => {
+    setOrders((prev) => prev.map((o) => o.id === orderId ? { ...o, status: "CANCELLED" } : o));
+    addAuditLog("ORDER_CANCEL", "Orders", orderId, "Order cancelled by admin");
+    fetch(`${API_BASE}/api/orders/${orderId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status: "CANCELLED" }),
+    }).catch(() => {});
+  }, [addAuditLog]);
+
+  // ── Product Actions ──────────────────────────────────────────────────────
+
   const addProduct = (productData: Omit<AdminProduct, "id">) => {
-    const newProd: AdminProduct = {
-      ...productData,
-      id: `prod-${Date.now()}`,
-    };
+    const newProd: AdminProduct = { ...productData, id: `prod-${Date.now()}` };
     setProducts((prev) => [newProd, ...prev]);
-    addAuditLog("PRODUCT_CREATE", "Products", newProd.id, `Created product: ${newProd.nameEn} (${newProd.sku})`);
+    addAuditLog("PRODUCT_CREATE", "Products", newProd.id, `Created: ${newProd.nameEn} (${newProd.sku})`);
   };
 
   const updateProduct = (id: string, productData: Partial<AdminProduct>) => {
-    setProducts((prev) =>
-      prev.map((p) => (p.id === id ? { ...p, ...productData } : p))
-    );
-    addAuditLog("PRODUCT_UPDATE", "Products", id, `Updated product details for ID: ${id}`);
+    setProducts((prev) => prev.map((p) => p.id === id ? { ...p, ...productData } : p));
+    addAuditLog("PRODUCT_UPDATE", "Products", id, `Updated product ID: ${id}`);
   };
 
   const deleteProduct = (id: string) => {
@@ -269,61 +314,56 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
   };
 
   const toggleProductPublish = (id: string) => {
-    setProducts((prev) =>
-      prev.map((p) => (p.id === id ? { ...p, isPublished: !p.isPublished } : p))
-    );
-    addAuditLog("PRODUCT_VISIBILITY", "Products", id, `Toggled product visibility status`);
+    setProducts((prev) => prev.map((p) =>
+      p.id === id ? { ...p, isPublished: !p.isPublished } : p
+    ));
+    addAuditLog("PRODUCT_VISIBILITY", "Products", id, `Toggled product visibility`);
   };
 
-  // Vendors Handlers
+  // ── Category Actions ─────────────────────────────────────────────────────
+  const updateCategory = (id: string, updates: Partial<AdminCategory>) => {
+    setCategories((prev) => prev.map((c) => c.id === id ? { ...c, ...updates } : c));
+    addAuditLog("CATEGORY_UPDATE", "Categories", id, `Updated category`);
+  };
+
+  // ── Vendor Actions ───────────────────────────────────────────────────────
+
   const approveVendor = (id: string) => {
-    setVendors((prev) =>
-      prev.map((v) => (v.id === id ? { ...v, status: "APPROVED" } : v))
-    );
-    addAuditLog("VENDOR_APPROVE", "Vendors", id, `Approved vendor application ID: ${id}`);
+    setVendors((prev) => prev.map((v) => v.id === id ? { ...v, status: "APPROVED" } : v));
+    addAuditLog("VENDOR_APPROVE", "Vendors", id, `Approved vendor ID: ${id}`);
   };
 
   const suspendVendor = (id: string) => {
-    setVendors((prev) =>
-      prev.map((v) => (v.id === id ? { ...v, status: "SUSPENDED" } : v))
-    );
+    setVendors((prev) => prev.map((v) => v.id === id ? { ...v, status: "SUSPENDED" } : v));
     addAuditLog("VENDOR_SUSPEND", "Vendors", id, `Suspended vendor ID: ${id}`);
   };
 
   const settleVendorPayout = (id: string, amount: number) => {
-    setVendors((prev) =>
-      prev.map((v) =>
-        v.id === id
-          ? { ...v, payableBalance: Math.max(0, v.payableBalance - amount) }
-          : v
-      )
-    );
-    addAuditLog("VENDOR_PAYOUT", "Vendors", id, `Settled payout of ৳${amount} for vendor`);
+    setVendors((prev) => prev.map((v) =>
+      v.id === id ? { ...v, payableBalance: Math.max(0, v.payableBalance - amount) } : v
+    ));
+    addAuditLog("VENDOR_PAYOUT", "Vendors", id, `Settled ৳${amount} payout`);
   };
 
-  // B2B Handlers
+  // ── B2B Actions ──────────────────────────────────────────────────────────
+
   const approveB2BAccount = (id: string, creditLimit: number) => {
-    setB2bAccounts((prev) =>
-      prev.map((b) =>
-        b.id === id ? { ...b, status: "APPROVED", creditLimit } : b
-      )
-    );
-    addAuditLog("B2B_APPROVE", "B2B", id, `Approved B2B Account with credit limit ৳${creditLimit}`);
+    setB2bAccounts((prev) => prev.map((b) =>
+      b.id === id ? { ...b, status: "APPROVED", creditLimit } : b
+    ));
+    addAuditLog("B2B_APPROVE", "B2B", id, `Approved B2B with credit ৳${creditLimit}`);
   };
 
   const rejectB2BAccount = (id: string) => {
-    setB2bAccounts((prev) =>
-      prev.map((b) => (b.id === id ? { ...b, status: "REJECTED" } : b))
-    );
-    addAuditLog("B2B_REJECT", "B2B", id, `Rejected B2B Account application`);
+    setB2bAccounts((prev) => prev.map((b) => b.id === id ? { ...b, status: "REJECTED" } : b));
+    addAuditLog("B2B_REJECT", "B2B", id, `Rejected B2B application`);
   };
 
-  // Riders Handlers
+  // ── Rider Actions ────────────────────────────────────────────────────────
+
   const approveRider = (id: string) => {
-    setRiders((prev) =>
-      prev.map((r) => (r.id === id ? { ...r, status: "ACTIVE" } : r))
-    );
-    addAuditLog("RIDER_APPROVE", "Riders", id, `Approved rider account ID: ${id}`);
+    setRiders((prev) => prev.map((r) => r.id === id ? { ...r, status: "ACTIVE", kycStatus: "APPROVED" } : r));
+    addAuditLog("RIDER_APPROVE", "Riders", id, `Approved rider ID: ${id}`);
   };
 
   const addRider = (riderData: any) => {
@@ -332,80 +372,105 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
       id: `rider-${Date.now()}`,
       activeDeliveriesCount: 0,
       totalDeliveriesCompleted: 0,
-      rating: 5.0,
+      rating: 0,
       balancePayable: 0,
+      totalEarned: 0,
+      kycStatus: "PENDING",
     };
     setRiders((prev) => [newRider, ...prev]);
     addAuditLog("RIDER_CREATE", "Riders", newRider.id, `Created rider: ${newRider.name}`);
   };
 
-  // Branches Handlers
+  // ── Branch Actions ───────────────────────────────────────────────────────
+
   const addBranch = (branchData: Omit<AdminBranch, "id">) => {
-    const newBranch: AdminBranch = {
-      ...branchData,
-      id: `branch-${Date.now()}`,
-    };
+    const newBranch: AdminBranch = { ...branchData, id: `branch-${Date.now()}` };
     setBranches((prev) => [...prev, newBranch]);
-    addAuditLog("BRANCH_CREATE", "Branches", newBranch.id, `Created fulfillment branch: ${newBranch.nameEn}`);
+    addAuditLog("BRANCH_CREATE", "Branches", newBranch.id, `Created branch: ${newBranch.nameEn}`);
   };
 
-  // Coupons Handlers
+  const updateBranch = (id: string, updates: Partial<AdminBranch>) => {
+    setBranches((prev) => prev.map((b) => b.id === id ? { ...b, ...updates } : b));
+    addAuditLog("BRANCH_UPDATE", "Branches", id, `Updated branch`);
+  };
+
+  // ── Coupon Actions ───────────────────────────────────────────────────────
+
   const addCoupon = (couponData: Omit<AdminCoupon, "id" | "usedCount">) => {
-    const newCoupon: AdminCoupon = {
-      ...couponData,
-      id: `coup-${Date.now()}`,
-      usedCount: 0,
-    };
+    const newCoupon: AdminCoupon = { ...couponData, id: `coup-${Date.now()}`, usedCount: 0 };
     setCoupons((prev) => [newCoupon, ...prev]);
-    addAuditLog("COUPON_CREATE", "Marketing", newCoupon.id, `Created promo coupon: ${newCoupon.code}`);
+    addAuditLog("COUPON_CREATE", "Marketing", newCoupon.id, `Created coupon: ${newCoupon.code}`);
   };
 
-  // Reviews Handlers
-  const moderateReview = (id: string, status: "APPROVED" | "REJECTED") => {
-    setReviews((prev) =>
-      prev.map((r) => (r.id === id ? { ...r, status } : r))
-    );
-    addAuditLog("REVIEW_MODERATION", "Reviews", id, `Moderated review status: ${status}`);
+  const toggleCoupon = (id: string) => {
+    setCoupons((prev) => prev.map((c) => c.id === id ? { ...c, isActive: !c.isActive } : c));
+    addAuditLog("COUPON_TOGGLE", "Marketing", id, `Toggled coupon status`);
   };
+
+  // ── Review Actions ───────────────────────────────────────────────────────
+
+  const moderateReview = (id: string, status: "APPROVED" | "REJECTED") => {
+    setReviews((prev) => prev.map((r) => r.id === id ? { ...r, status } : r));
+    addAuditLog("REVIEW_MODERATION", "Reviews", id, `Moderated review: ${status}`);
+  };
+
+  // ── Staff Actions ────────────────────────────────────────────────────────
+
+  const inviteStaff = (email: string, name: string, role: AdminRole, phone?: string) => {
+    const newMember: StaffMember = {
+      id: `staff-${Date.now()}`,
+      name,
+      email,
+      role,
+      status: "PENDING",
+      ...(phone ? { phone } : {}),
+      invitedAt: new Date().toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }),
+      invitedBy: currentUser.name,
+    };
+    setStaff((prev) => [newMember, ...prev]);
+    addAuditLog("STAFF_INVITE", "Staff", newMember.id, `Invited ${name} as ${role}`);
+  };
+
+  const updateStaffRole = (id: string, role: AdminRole) => {
+    setStaff((prev) => prev.map((s) => s.id === id ? { ...s, role } : s));
+    addAuditLog("STAFF_ROLE_UPDATE", "Staff", id, `Updated staff role to ${role}`);
+  };
+
+  const suspendStaff = (id: string) => {
+    setStaff((prev) => prev.map((s) => s.id === id ? { ...s, status: "SUSPENDED" } : s));
+    addAuditLog("STAFF_SUSPEND", "Staff", id, `Suspended staff member`);
+  };
+
+  const activateStaff = (id: string) => {
+    setStaff((prev) => prev.map((s) => s.id === id ? { ...s, status: "ACTIVE" } : s));
+    addAuditLog("STAFF_ACTIVATE", "Staff", id, `Reactivated staff member`);
+  };
+
+  const removeStaff = (id: string) => {
+    setStaff((prev) => prev.filter((s) => s.id !== id));
+    addAuditLog("STAFF_REMOVE", "Staff", id, `Removed staff member`);
+  };
+
+  // ── Provider Value ───────────────────────────────────────────────────────
 
   return (
-    <AdminContext.Provider
-      value={{
-        currentUser,
-        setCurrentRole,
-        orders,
-        updateOrderStatus,
-        assignRiderToOrder,
-        updateOrder,
-        createOrder,
-        products,
-        addProduct,
-        updateProduct,
-        deleteProduct,
-        toggleProductPublish,
-        vendors,
-        approveVendor,
-        suspendVendor,
-        settleVendorPayout,
-        b2bAccounts,
-        approveB2BAccount,
-        rejectB2BAccount,
-        riders,
-        approveRider,
-        addRider,
-        branches,
-        addBranch,
-        coupons,
-        addCoupon,
-        reviews,
-        moderateReview,
-        auditLogs,
-        addAuditLog,
-        newOrderAlert,
-        dismissAlert,
-        playTestSound,
-      }}
-    >
+    <AdminContext.Provider value={{
+      currentUser, setCurrentRole,
+      orders, updateOrderStatus, confirmOrder, assignVendorToOrder,
+      assignRiderToOrder, updateOrder, createOrder, cancelOrder,
+      products, addProduct, updateProduct, deleteProduct, toggleProductPublish,
+      categories, updateCategory,
+      vendors, approveVendor, suspendVendor, settleVendorPayout,
+      b2bAccounts, approveB2BAccount, rejectB2BAccount,
+      riders, approveRider, addRider,
+      branches, addBranch, updateBranch,
+      coupons, addCoupon, toggleCoupon,
+      reviews, moderateReview,
+      auditLogs, addAuditLog,
+      staff, inviteStaff, updateStaffRole, suspendStaff, activateStaff, removeStaff,
+      customers,
+      newOrderAlert, dismissAlert, playTestSound,
+    }}>
       {children}
     </AdminContext.Provider>
   );
@@ -413,8 +478,6 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
 
 export function useAdmin() {
   const context = useContext(AdminContext);
-  if (!context) {
-    throw new Error("useAdmin must be used within an AdminProvider");
-  }
+  if (!context) throw new Error("useAdmin must be used within an AdminProvider");
   return context;
 }
