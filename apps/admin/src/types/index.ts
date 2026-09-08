@@ -19,27 +19,75 @@ export interface AdminUser {
   lastLogin: string;
 }
 
+export type StaffKYCStatus = "PENDING_KYC" | "SUBMITTED" | "VERIFIED" | "REJECTED";
+
+export interface StaffKYC {
+  nidNumber: string;
+  nidFrontUrl?: string;
+  nidBackUrl?: string;
+  presentAddress: string;
+  permanentAddress: string;
+  district: string;
+  thana: string;
+  emergencyContactName: string;
+  emergencyContactPhone: string;
+  submittedAt?: string;
+  verifiedAt?: string;
+  rejectionReason?: string;
+}
+
+export interface StaffDailySession {
+  loginTime?: string;
+  logoutTime?: string;
+  activeMinutesToday: number;
+  lastActiveDate: string;
+  isCurrentlyOnline: boolean;
+}
+
 export interface StaffMember {
   id: string;
   name: string;
   email: string;
   role: AdminRole;
   status: "ACTIVE" | "PENDING" | "SUSPENDED";
-  lastLogin?: string;
+  kycStatus: StaffKYCStatus;
+  avatar?: string;
+  phone?: string;
+  address?: string;
+  department?: string;
+  assignedBranch?: string;
+  joinedDate: string;
   invitedAt: string;
   invitedBy: string;
-  phone?: string;
+  lastLogin?: string;
+  ordersCollectedToday: number;
+  ordersCollectedLast30Days: number;
+  ordersCollectedLifetime: number;
+  dailySession: StaffDailySession;
+  kyc?: StaffKYC;
 }
 
 export type OrderStatus =
   | "PENDING"
   | "CONFIRMED"
+  | "PROCESSING"
   | "VENDOR_ASSIGNED"
   | "PREPARING"
   | "READY_FOR_PICKUP"
   | "OUT_FOR_DELIVERY"
+  | "SHIPPED"
   | "DELIVERED"
-  | "CANCELLED";
+  | "CANCELLED"
+  | "RETURNED";
+
+export interface OrderItem {
+  id: string;
+  name: string;
+  sku?: string;
+  size?: string;
+  price: number;
+  quantity: number;
+}
 
 export interface SubOrder {
   id: string;
@@ -53,25 +101,67 @@ export interface SubOrder {
   acceptedAt?: string;
 }
 
+export interface OrderHistoryEntry {
+  id: string;
+  timestamp: string;
+  actorName: string;
+  actorRole: string;
+  action: "ORDER_SYNC" | "STAFF_ASSIGNED" | "STAFF_REASSIGNED" | "STATUS_UPDATE" | "NOTE_ADDED" | "VENDOR_SHIFT" | string;
+  details: string;
+}
+
 export interface AdminOrder {
   id: string;
   orderNumber: string;
+  storeName?: string;
   customerName: string;
   customerPhone: string;
   customerAddress: string;
+  email?: string;
   deliveryArea: string;
   deliveryZone?: string;
   deliverySlot: string;
+  courier?: string;
+  assignedModerator?: string;
+  assignedStaffId?: string;
+  assignedStaffName?: string;
+  assignedStaffAvatar?: string;
+  district?: string;
+  thana?: string;
+  areaNeighborhood?: string;
+  customerNote?: string;
+  shopNote?: string;
+  items?: OrderItem[];
+  subtotalAmount?: number;
+  deliveryCharge?: number;
+  couponCode?: string;
+  discountAmount?: number;
+  paidAmount?: number;
+  memoTransactionNo?: string;
   totalAmount: number;
-  paymentMethod: "BKASH" | "NAGAD" | "SSLCOMMERZ" | "COD";
+  paymentMethod: "BKASH" | "NAGAD" | "SSLCOMMERZ" | "COD" | string;
   paymentStatus: "PAID" | "UNPAID" | "REFUNDED";
   status: OrderStatus;
   createdAt: string;
   confirmedAt?: string;
   assignedRiderId?: string;
   assignedRiderName?: string;
+  riderAvatar?: string;
+  riderPhone?: string;
+  riderTrackingStatus?: string;
+  riderCustomerConversation?: Array<{ time: string; sender: "RIDER" | "CUSTOMER" | "SYSTEM"; message: string }>;
   assignedVendorId?: string;
   assignedVendorName?: string;
+  vendorOwnerName?: string;
+  vendorPhone?: string;
+  vendorAvatar?: string;
+  vendorParcelsToday?: number;
+  vendorPendingOrders?: number;
+  vendorHandoverAt?: string;
+  vendorRiderTimeline?: Array<{ time: string; sender: "VENDOR" | "RIDER" | "SYSTEM"; message: string }>;
+  canceledBy?: "ADMIN" | "CUSTOMER" | "VENDOR" | "RIDER";
+  canceledReason?: string;
+  orderHistory?: OrderHistoryEntry[];
   subOrders: SubOrder[];
   internalNotes?: string;
   source: "STOREFRONT" | "ADMIN_MANUAL" | "B2B" | "APP";
@@ -152,11 +242,14 @@ export interface AdminVendor {
   nameEn: string;
   slug: string;
   contactName: string;
+  ownerName?: string;
   phone: string;
   email: string;
   tradeLicense: string;
   location: string;
   area: string;
+  district?: string;
+  thana?: string;
   city: string;
   status: "APPROVED" | "PENDING" | "SUSPENDED" | "REJECTED";
   commissionRate: number; // %
@@ -166,7 +259,10 @@ export interface AdminVendor {
   joinedDate: string;
   rating: number;
   activeOrders: number;
+  parcelsToday?: number;
+  pendingOrdersCount?: number;
   logo?: string;
+  avatar?: string;
 }
 
 export interface AdminB2BAccount {

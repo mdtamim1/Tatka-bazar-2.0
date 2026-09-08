@@ -1,11 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import { usePathname } from "next/navigation";
-import {
-  Bell, BellRing, Volume2, VolumeX, Search, RefreshCw,
-  ChevronRight, X, ShoppingBag, MapPin, Clock,
-} from "lucide-react";
+import { ChevronRight, ShoppingBag, MapPin } from "lucide-react";
 import { useAdmin } from "@/context/AdminContext";
 
 const PAGE_MAP: Record<string, string> = {
@@ -30,21 +27,12 @@ const PAGE_MAP: Record<string, string> = {
 
 export function AdminHeader() {
   const pathname = usePathname();
-  const { newOrderAlert, dismissAlert, playTestSound, orders } = useAdmin();
-  const [soundEnabled, setSoundEnabled] = useState(true);
-  const [showSearch, setShowSearch] = useState(false);
-
-  const pendingCount = orders.filter((o) => o.status === "PENDING").length;
+  const { newOrderAlert, dismissAlert } = useAdmin();
 
   // Build breadcrumb
   const segments = pathname.split("/").filter(Boolean);
   const currentPage = PAGE_MAP[`/${segments[0]}`] || segments[0] || "Dashboard";
   const subPage = segments[1] ? `#${segments[1].substring(0, 8).toUpperCase()}` : null;
-
-  const toggleSound = () => {
-    setSoundEnabled((v) => !v);
-    if (!soundEnabled) playTestSound();
-  };
 
   return (
     <>
@@ -62,75 +50,7 @@ export function AdminHeader() {
           )}
         </div>
 
-        {/* Actions */}
-        <div className="header-actions">
-          {/* Search toggle */}
-          <button
-            className="header-icon-btn"
-            onClick={() => setShowSearch((v) => !v)}
-            title="Search"
-          >
-            <Search size={15} />
-          </button>
-
-          {/* Sound toggle */}
-          <button
-            className="header-icon-btn"
-            onClick={toggleSound}
-            title={soundEnabled ? "Mute alerts" : "Enable alerts"}
-          >
-            {soundEnabled ? <Volume2 size={15} /> : <VolumeX size={15} color="var(--red)" />}
-          </button>
-
-          {/* Pending orders bell */}
-          <button
-            className="header-icon-btn"
-            onClick={() => { if (typeof window !== "undefined") window.location.href = "/dispatch"; }}
-            title={`${pendingCount} pending orders`}
-          >
-            {pendingCount > 0 ? <BellRing size={15} color="var(--amber)" /> : <Bell size={15} />}
-            {pendingCount > 0 && <span className="notif-dot" />}
-          </button>
-
-          {/* Refresh */}
-          <button
-            className="header-icon-btn"
-            onClick={() => window.location.reload()}
-            title="Refresh data"
-          >
-            <RefreshCw size={15} />
-          </button>
-        </div>
       </header>
-
-      {/* Inline search bar */}
-      {showSearch && (
-        <div style={{
-          position: "fixed",
-          top: "60px",
-          left: "var(--sidebar-w)",
-          right: 0,
-          padding: "12px 32px",
-          background: "var(--bg-raised)",
-          borderBottom: "1px solid var(--border-1)",
-          zIndex: 140,
-          display: "flex",
-          alignItems: "center",
-          gap: "12px",
-        }}>
-          <div className="search-wrap" style={{ flex: 1 }}>
-            <Search size={15} className="search-icon" />
-            <input
-              className="search-input"
-              placeholder="Search orders, products, customers, vendors..."
-              autoFocus
-            />
-          </div>
-          <button className="admin-btn admin-btn-ghost admin-btn-sm" onClick={() => setShowSearch(false)}>
-            <X size={14} /> Close
-          </button>
-        </div>
-      )}
 
       {/* New Order Toast Alert */}
       {newOrderAlert && (

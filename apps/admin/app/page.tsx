@@ -14,12 +14,15 @@ import { AdminOrder, OrderStatus } from "@/types";
 const STATUS_META: Record<OrderStatus, { label: string; cls: string }> = {
   PENDING:           { label: "Pending",          cls: "warning"  },
   CONFIRMED:         { label: "Confirmed",        cls: "info"     },
+  PROCESSING:        { label: "Processing",       cls: "info"     },
   VENDOR_ASSIGNED:   { label: "Vendor Assigned",  cls: "indigo"   },
   PREPARING:         { label: "Preparing",        cls: "purple"   },
   READY_FOR_PICKUP:  { label: "Ready",            cls: "cyan"     },
   OUT_FOR_DELIVERY:  { label: "On Delivery",      cls: "cyan"     },
+  SHIPPED:           { label: "Shipped",          cls: "cyan"     },
   DELIVERED:         { label: "Delivered",        cls: "success"  },
   CANCELLED:         { label: "Cancelled",        cls: "danger"   },
+  RETURNED:          { label: "Returned",         cls: "danger"   },
 };
 
 function StatusBadge({ status }: { status: OrderStatus }) {

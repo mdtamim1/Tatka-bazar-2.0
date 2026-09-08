@@ -82,11 +82,15 @@ interface AdminContextType {
 
   // Staff
   staff: StaffMember[];
-  inviteStaff: (email: string, name: string, role: AdminRole, phone?: string) => void;
+  inviteStaff: (data: { email: string; name: string; role: AdminRole; phone?: string; address?: string; department?: string; avatar?: string }) => void;
   updateStaffRole: (id: string, role: AdminRole) => void;
   suspendStaff: (id: string) => void;
   activateStaff: (id: string) => void;
+  toggleStaffStatus: (id: string) => void;
   removeStaff: (id: string) => void;
+  approveStaffKYC: (id: string) => void;
+  rejectStaffKYC: (id: string, reason: string) => void;
+  updateStaffProfile: (id: string, updates: Partial<StaffMember>) => void;
 
   // Customers
   customers: AdminCustomer[];
@@ -416,19 +420,45 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
 
   // ── Staff Actions ────────────────────────────────────────────────────────
 
-  const inviteStaff = (email: string, name: string, role: AdminRole, phone?: string) => {
+  const inviteStaff = (data: { email: string; name: string; role: AdminRole; phone?: string; address?: string; department?: string; avatar?: string }) => {
+    const today = new Date().toISOString().slice(0, 10);
     const newMember: StaffMember = {
       id: `staff-${Date.now()}`,
-      name,
-      email,
-      role,
+      name: data.name,
+      email: data.email,
+      role: data.role,
       status: "PENDING",
-      ...(phone ? { phone } : {}),
+      kycStatus: "SUBMITTED",
+      avatar: data.avatar || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80",
+      ...(data.phone ? { phone: data.phone } : {}),
+      ...(data.address ? { address: data.address } : {}),
+      ...(data.department ? { department: data.department } : { department: "Operations" }),
+      joinedDate: new Date().toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }),
       invitedAt: new Date().toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }),
       invitedBy: currentUser.name,
+      ordersCollectedToday: 0,
+      ordersCollectedLast30Days: 0,
+      ordersCollectedLifetime: 0,
+      dailySession: {
+        loginTime: "Awaiting Approval",
+        logoutTime: "Inactive",
+        activeMinutesToday: 0,
+        lastActiveDate: today,
+        isCurrentlyOnline: false,
+      },
+      kyc: {
+        nidNumber: "Pending Verification",
+        presentAddress: data.address || "Pending Verification",
+        permanentAddress: data.address || "Pending Verification",
+        district: "Dhaka",
+        thana: "Central",
+        emergencyContactName: "Not Specified",
+        emergencyContactPhone: data.phone || "01700000000",
+        submittedAt: new Date().toLocaleString("en-GB"),
+      },
     };
     setStaff((prev) => [newMember, ...prev]);
-    addAuditLog("STAFF_INVITE", "Staff", newMember.id, `Invited ${name} as ${role}`);
+    addAuditLog("STAFF_INVITE", "Staff", newMember.id, `Invited ${data.name} as ${data.role}`);
   };
 
   const updateStaffRole = (id: string, role: AdminRole) => {
@@ -444,6 +474,45 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
   const activateStaff = (id: string) => {
     setStaff((prev) => prev.map((s) => s.id === id ? { ...s, status: "ACTIVE" } : s));
     addAuditLog("STAFF_ACTIVATE", "Staff", id, `Reactivated staff member`);
+  };
+
+  const toggleStaffStatus = (id: string) => {
+    setStaff((prev) => prev.map((s) => {
+      if (s.id !== id) return s;
+      const nextStatus = s.status === "ACTIVE" ? "SUSPENDED" : "ACTIVE";
+      addAuditLog("STAFF_TOGGLE_STATUS", "Staff", id, `Staff status changed to ${nextStatus}`);
+      return { ...s, status: nextStatus };
+    }));
+  };
+
+  const approveStaffKYC = (id: string) => {
+    setStaff((prev) => prev.map((s) => {
+      if (s.id !== id) return s;
+      addAuditLog("STAFF_KYC_APPROVE", "Staff", id, `Approved KYC for ${s.name}. Role access unlocked.`);
+      return {
+        ...s,
+        kycStatus: "VERIFIED",
+        status: "ACTIVE",
+        ...(s.kyc ? { kyc: { ...s.kyc, verifiedAt: new Date().toLocaleString("en-GB") } } : {}),
+      };
+    }));
+  };
+
+  const rejectStaffKYC = (id: string, reason: string) => {
+    setStaff((prev) => prev.map((s) => {
+      if (s.id !== id) return s;
+      addAuditLog("STAFF_KYC_REJECT", "Staff", id, `Rejected KYC for ${s.name}: ${reason}`);
+      return {
+        ...s,
+        kycStatus: "REJECTED",
+        ...(s.kyc ? { kyc: { ...s.kyc, rejectionReason: reason } } : {}),
+      };
+    }));
+  };
+
+  const updateStaffProfile = (id: string, updates: Partial<StaffMember>) => {
+    setStaff((prev) => prev.map((s) => s.id === id ? { ...s, ...updates } : s));
+    addAuditLog("STAFF_PROFILE_UPDATE", "Staff", id, `Updated staff profile`);
   };
 
   const removeStaff = (id: string) => {
@@ -467,7 +536,8 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
       coupons, addCoupon, toggleCoupon,
       reviews, moderateReview,
       auditLogs, addAuditLog,
-      staff, inviteStaff, updateStaffRole, suspendStaff, activateStaff, removeStaff,
+      staff, inviteStaff, updateStaffRole, suspendStaff, activateStaff, toggleStaffStatus, removeStaff,
+      approveStaffKYC, rejectStaffKYC, updateStaffProfile,
       customers,
       newOrderAlert, dismissAlert, playTestSound,
     }}>

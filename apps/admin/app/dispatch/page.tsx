@@ -14,12 +14,15 @@ import { AdminOrder, AdminVendor, AdminRider, OrderStatus } from "@/types";
 const STATUS_META: Record<OrderStatus, { label: string; cls: string; step: number }> = {
   PENDING:          { label: "Pending",        cls: "warning", step: 0 },
   CONFIRMED:        { label: "Confirmed",      cls: "info",    step: 1 },
+  PROCESSING:       { label: "Processing",     cls: "info",    step: 1 },
   VENDOR_ASSIGNED:  { label: "Vendor Assigned",cls: "indigo",  step: 2 },
   PREPARING:        { label: "Preparing",      cls: "purple",  step: 3 },
   READY_FOR_PICKUP: { label: "Ready",          cls: "cyan",    step: 4 },
   OUT_FOR_DELIVERY: { label: "On Delivery",    cls: "cyan",    step: 5 },
+  SHIPPED:          { label: "Shipped",        cls: "cyan",    step: 5 },
   DELIVERED:        { label: "Delivered",      cls: "success", step: 6 },
   CANCELLED:        { label: "Cancelled",      cls: "danger",  step: -1 },
+  RETURNED:         { label: "Returned",       cls: "danger",  step: -1 },
 };
 
 const DISPATCH_STATUSES: OrderStatus[] = [

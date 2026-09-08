@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard, ShoppingBag, Package, FolderTree, Warehouse,
-  Store, Building2, Bike, Users, MapPin, Tag, Star, BarChart3,
+  Store, Bike, Users, MapPin, Tag, Star, BarChart3,
   Settings, History, Zap, Radio, UserCog, LogOut, ChevronRight,
   ShoppingCart,
 } from "lucide-react";
@@ -32,7 +32,6 @@ const NAV = [
     title: "PEOPLE",
     items: [
       { label: "Vendors",          href: "/vendors",    icon: Store,       badgeKey: "pendingVendors" },
-      { label: "B2B Accounts",     href: "/b2b",        icon: Building2,   badgeKey: "pendingB2B" },
       { label: "Riders",           href: "/riders",     icon: Bike,        badgeKey: "pendingRiders" },
       { label: "Customers",        href: "/customers",  icon: Users },
     ],
