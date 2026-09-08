@@ -1,17 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import {
-  getTeam, getSessions, generateToken, logActivity,
-} from "@/lib/hubStore";
+import { getSessions, generateToken } from "@/lib/hubStore";
+import { authenticateDbAdmin, logDbActivity } from "@/lib/hubDb";
 
 // POST /api/auth/login
 export async function POST(req: NextRequest) {
   const { email, password } = await req.json();
-  const team = getTeam();
-  const member = team.find(
-    (m) => m.email === email && m.password === password && m.isActive
-  );
+  const member = await authenticateDbAdmin(email, password);
   if (!member) {
-    return NextResponse.json({ success: false, error: "ইমেইল বা পাসওয়ার্ড সঠিক নয়" }, { status: 401 });
+    return NextResponse.json({ success: false, error: "Invalid email or password" }, { status: 401 });
   }
   const token = generateToken();
   const session = {
@@ -23,8 +19,7 @@ export async function POST(req: NextRequest) {
     expiresAt: new Date(Date.now() + 8 * 60 * 60 * 1000).toISOString(), // 8 hours
   };
   getSessions().set(token, session);
-  member.lastLoginAt = new Date().toISOString();
-  logActivity({
+  await logDbActivity({
     actorId: member.id,
     actorName: member.name,
     action: "LOGIN",

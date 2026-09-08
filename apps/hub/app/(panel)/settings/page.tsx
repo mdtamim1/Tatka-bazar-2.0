@@ -23,7 +23,7 @@ export default function SettingsPage() {
       <div className="hub-content">
         <div className="card"><div className="empty-state">
           <div className="empty-state-icon">🔒</div>
-          <div className="empty-state-title font-bn">এই পেইজটি শুধু Admin-দের জন্য</div>
+          <div className="empty-state-title">This page is restricted to Admins only</div>
         </div></div>
       </div>
     );
@@ -32,8 +32,8 @@ export default function SettingsPage() {
   return (
     <div className="hub-content">
       <div className="page-header">
-        <h1 className="page-title"><Settings size={22} /><span className="font-bn">Hub সেটিংস</span></h1>
-        <p className="page-subtitle font-bn">গ্লোবাল কনফিগারেশন এবং ডিফল্ট মান</p>
+        <h1 className="page-title"><Settings size={22} /><span>Hub Settings</span></h1>
+        <p className="page-subtitle">Global configuration and default parameters</p>
       </div>
 
       {saved && (
@@ -43,21 +43,21 @@ export default function SettingsPage() {
           color: "var(--accent-green)", padding: "12px 16px", borderRadius: "var(--radius-sm)",
           fontSize: 13, marginBottom: 20,
         }}>
-          <span className="font-bn">✅ সেটিংস সংরক্ষিত হয়েছে</span>
+          <span>✅ Settings saved successfully</span>
         </div>
       )}
 
       <div style={{ display: "flex", flexDirection: "column", gap: 20, maxWidth: 600 }}>
         {/* Delivery Settings */}
         <div className="card">
-          <div className="card-title font-bn" style={{ marginBottom: 16 }}>💰 ডেলিভারি ও কমিশন</div>
+          <div className="card-title" style={{ marginBottom: 16 }}>💰 Delivery & Commission</div>
           <div className="grid-2" style={{ gap: 16 }}>
             <div className="form-group" style={{ marginBottom: 0 }}>
-              <label className="form-label font-bn">ডিফল্ট ডেলিভারি ফি (৳)</label>
+              <label className="form-label">Default Delivery Fee (Tk.)</label>
               <input type="number" className="form-input" value={deliveryFee} onChange={(e) => setDeliveryFee(e.target.value)} />
             </div>
             <div className="form-group" style={{ marginBottom: 0 }}>
-              <label className="form-label font-bn">ডিফল্ট কমিশন রেট (%)</label>
+              <label className="form-label">Default Commission Rate (%)</label>
               <input type="number" className="form-input" value={commissionRate} onChange={(e) => setCommissionRate(e.target.value)} />
             </div>
           </div>
@@ -65,7 +65,7 @@ export default function SettingsPage() {
 
         {/* Portal URLs */}
         <div className="card">
-          <div className="card-title font-bn" style={{ marginBottom: 16 }}>🌐 Portal URLs (Dispatch Bridge)</div>
+          <div className="card-title" style={{ marginBottom: 16 }}>🌐 Portal URLs (Dispatch Bridge)</div>
           <div className="form-group">
             <label className="form-label">Rider Portal URL (Production)</label>
             <input type="url" className="form-input" value={riderUrl} onChange={(e) => setRiderUrl(e.target.value)} />
@@ -78,32 +78,32 @@ export default function SettingsPage() {
 
         {/* Hub Info */}
         <div className="card">
-          <div className="card-title font-bn" style={{ marginBottom: 16 }}>ℹ️ Hub তথ্য</div>
+          <div className="card-title" style={{ marginBottom: 16 }}>ℹ️ Hub Information</div>
           <div className="info-row">
-            <span className="info-label font-bn">Subdomain</span>
+            <span className="info-label">Subdomain</span>
             <span className="info-value">hub.tatkabazar.com</span>
           </div>
           <div className="info-row">
-            <span className="info-label font-bn">Local Port</span>
+            <span className="info-label">Local Port</span>
             <span className="info-value">3004</span>
           </div>
           <div className="info-row">
-            <span className="info-label font-bn">Auth Type</span>
+            <span className="info-label">Auth Type</span>
             <span className="info-value">Hub-local (globalThis session)</span>
           </div>
           <div className="info-row">
-            <span className="info-label font-bn">Dispatch Bridge</span>
+            <span className="info-label">Dispatch Bridge</span>
             <span className="info-value">HTTP Proxy (Rider + Vendor APIs)</span>
           </div>
           <div className="info-row">
-            <span className="info-label font-bn">Cross-tab Sync</span>
+            <span className="info-label">Cross-tab Sync</span>
             <span className="info-value">tatka_hub_command_channel (BroadcastChannel)</span>
           </div>
         </div>
 
         <button onClick={save} className="btn btn-primary" style={{ alignSelf: "flex-start" }}>
           <Save size={14} />
-          <span className="font-bn">সেটিংস সংরক্ষণ করুন</span>
+          <span>Save Settings</span>
         </button>
       </div>
     </div>

@@ -44,8 +44,8 @@ export default function KycPage() {
   return (
     <div className="hub-content">
       <div className="page-header">
-        <h1 className="page-title"><FileCheck size={22} /><span className="font-bn">KYC অনুমোদন কিউ</span></h1>
-        <p className="page-subtitle font-bn">মোট {riders.length}টি KYC অনুমোদনের অপেক্ষায়</p>
+        <h1 className="page-title"><FileCheck size={22} /><span>KYC Verification Queue</span></h1>
+        <p className="page-subtitle">Total {riders.length} KYC submissions pending review</p>
       </div>
 
       {loading ? (
@@ -56,7 +56,7 @@ export default function KycPage() {
         <div className="card">
           <div className="empty-state">
             <div className="empty-state-icon">✅</div>
-            <div className="empty-state-title font-bn">সব KYC অনুমোদন সম্পন্ন</div>
+            <div className="empty-state-title">All KYC submissions processed</div>
           </div>
         </div>
       ) : (
@@ -66,17 +66,17 @@ export default function KycPage() {
               <div className="flex-between" style={{ flexWrap: "wrap", gap: 12 }}>
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: 16, fontWeight: 700, color: "var(--text-primary)", marginBottom: 4 }}>
-                    {r.nameBn || r.name}
+                    {r.name}
                   </div>
                   <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
                     <span className="text-sm text-muted">📞 {r.phone}</span>
-                    <span className="text-sm text-muted font-bn">📍 {r.zone}</span>
+                    <span className="text-sm text-muted">📍 {r.zone}</span>
                     <span className="text-sm text-muted">🚗 {r.vehicleType}</span>
                     <span className="text-sm text-muted">📋 {r.vehicleNumber}</span>
                   </div>
                   {r.kycSubmittedAt && (
-                    <div className="text-xs text-muted mt-1 font-bn">
-                      জমা দেওয়া হয়েছে: {new Date(r.kycSubmittedAt).toLocaleDateString("bn-BD")}
+                    <div className="text-xs text-muted mt-1">
+                      Submitted: {new Date(r.kycSubmittedAt).toLocaleDateString()}
                     </div>
                   )}
                 </div>
@@ -87,7 +87,7 @@ export default function KycPage() {
                     className="btn btn-danger btn-sm"
                   >
                     <XCircle size={14} />
-                    <span className="font-bn">বাতিল</span>
+                    <span>Reject</span>
                   </button>
                   <button
                     onClick={() => handleKYC(r, "APPROVED")}
@@ -95,7 +95,7 @@ export default function KycPage() {
                     className="btn btn-primary btn-sm"
                   >
                     <CheckCircle2 size={14} />
-                    <span className="font-bn">অনুমোদন দিন</span>
+                    <span>Approve</span>
                   </button>
                 </div>
               </div>
@@ -108,26 +108,26 @@ export default function KycPage() {
       {rejectModal && (
         <div className="modal-overlay" onClick={() => setRejectModal(null)}>
           <div className="modal" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-title font-bn">❌ KYC বাতিল</div>
-            <div className="modal-subtitle font-bn">{rejectModal.nameBn || rejectModal.name}</div>
+            <div className="modal-title">❌ Reject KYC</div>
+            <div className="modal-subtitle">{rejectModal.name}</div>
             <div className="form-group">
-              <label className="form-label font-bn">বাতিলের কারণ</label>
+              <label className="form-label">Rejection Reason</label>
               <input
                 type="text"
-                className="form-input font-bn"
-                placeholder="কারণ লিখুন..."
+                className="form-input"
+                placeholder="Enter reason..."
                 value={rejectReason}
                 onChange={(e) => setRejectReason(e.target.value)}
               />
             </div>
             <div className="modal-actions">
-              <button onClick={() => setRejectModal(null)} className="btn btn-ghost">বাতিল</button>
+              <button onClick={() => setRejectModal(null)} className="btn btn-ghost">Cancel</button>
               <button
                 onClick={() => handleKYC(rejectModal, "REJECTED", rejectReason)}
                 disabled={!rejectReason || processing === rejectModal.id}
                 className="btn btn-danger"
               >
-                নিশ্চিত করুন
+                Confirm
               </button>
             </div>
           </div>

@@ -6,7 +6,9 @@ export type SyncEventType =
   | "CANCELLATION_APPROVED"
   | "TASK_STATUS_CHANGED"
   | "DUTY_STATUS_CHANGED"
-  | "SOS_ALERT";
+  | "SOS_ALERT"
+  | "RIDER_SUSPENDED"
+  | "RIDER_ACTIVATED";
 
 export interface SyncPayload {
   type: SyncEventType;
@@ -15,6 +17,8 @@ export interface SyncPayload {
   taskId?: string | undefined;
   amount?: number | undefined;
   message?: string | undefined;
+  suspendReason?: string | undefined;
+  suspendedAt?: string | undefined;
   timestamp: string;
 }
 

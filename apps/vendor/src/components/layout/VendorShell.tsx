@@ -14,6 +14,8 @@ import VendorOrderTrackModal from "@/components/common/VendorOrderTrackModal";
 import { useVendorStore } from "@/store/vendorStore";
 import { subscribeSyncEvent } from "@/lib/sync";
 import { audioAlert } from "@/utils/audioAlert";
+import VendorSuspendedModal from "@/components/common/VendorSuspendedModal";
+import { useVendorSessionGuard } from "@/hooks/useVendorSessionGuard";
 
 export default function VendorShell({
   children,
@@ -40,6 +42,12 @@ export default function VendorShell({
     setTrackingOrder,
     simulateIncomingOrder,
   } = useVendorStore();
+
+  // Real-time Session Guard (Auto-detects Hub suspension and triggers auto-logout)
+  const { isSuspended, suspendReason, suspendedAt, handleLogout } = useVendorSessionGuard(
+    profile?.id || "vnd-dhaka-089",
+    profile?.storeName || profile?.storeNameBn
+  );
 
   // Keyboard shortcut listener ('?' for shortcuts modal)
   useEffect(() => {
@@ -185,6 +193,15 @@ export default function VendorShell({
         order={trackingOrder}
         onClose={() => setTrackingOrder(null)}
         onOpenChat={(ord) => setChatOrder(ord)}
+      />
+
+      {/* ── Unclosable Real-time Vendor Suspension Modal ── */}
+      <VendorSuspendedModal
+        isOpen={isSuspended}
+        storeName={profile?.storeName || profile?.storeNameBn}
+        reason={suspendReason}
+        suspendedAt={suspendedAt}
+        onLogout={handleLogout}
       />
     </div>
   );

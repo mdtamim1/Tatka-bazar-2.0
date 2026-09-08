@@ -9,7 +9,7 @@ function auth(req: NextRequest) {
 // GET /api/proxy/dispatch — fetch active tasks from Rider portal
 export async function GET(req: NextRequest) {
   const session = auth(req);
-  if (!session) return NextResponse.json({ success: false, error: "অনুমোদিত নয়" }, { status: 401 });
+  if (!session) return NextResponse.json({ success: false, error: "Unauthorized access" }, { status: 401 });
   const config = getConfig();
   const endpoints = [
     `${config.riderLocalUrl}/api/dispatch`,
@@ -33,7 +33,7 @@ export async function GET(req: NextRequest) {
 // POST /api/proxy/dispatch — send action to Rider dispatch
 export async function POST(req: NextRequest) {
   const session = auth(req);
-  if (!session) return NextResponse.json({ success: false, error: "অনুমোদিত নয়" }, { status: 401 });
+  if (!session) return NextResponse.json({ success: false, error: "Unauthorized access" }, { status: 401 });
   const body = await req.json();
   const config = getConfig();
   const endpoints = [

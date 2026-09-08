@@ -8,12 +8,12 @@ const STATUS_BADGE: Record<string, string> = {
   ACTIVE: "badge-green", SUSPENDED: "badge-red",
   PENDING_APPROVAL: "badge-orange", REJECTED: "badge-red",
 };
-const STATUS_BN: Record<string, string> = {
-  ACTIVE: "সক্রিয়", SUSPENDED: "স্থগিত",
-  PENDING_APPROVAL: "অনুমোদন বাকি", REJECTED: "বাতিল",
+const STATUS_LABEL: Record<string, string> = {
+  ACTIVE: "Active", SUSPENDED: "Suspended",
+  PENDING_APPROVAL: "Pending Approval", REJECTED: "Rejected",
 };
-const TIER_BN: Record<string, string> = {
-  STANDARD: "⬜ স্ট্যান্ডার্ড", TRUSTED: "🔵 ট্রাস্টেড", PREMIUM: "💜 প্রিমিয়াম",
+const TIER_LABEL: Record<string, string> = {
+  STANDARD: "⬜ Standard", TRUSTED: "🔵 Trusted", PREMIUM: "💜 Premium",
 };
 
 function CommissionModal({ vendor, token, onClose, onDone }: {
@@ -36,10 +36,10 @@ function CommissionModal({ vendor, token, onClose, onDone }: {
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-title font-bn">⚙️ কমিশন রেট পরিবর্তন</div>
-        <div className="modal-subtitle font-bn">{vendor.storeNameBn || vendor.storeName}</div>
+        <div className="modal-title">⚙️ Change Commission Rate</div>
+        <div className="modal-subtitle">{vendor.storeName}</div>
         <div className="form-group">
-          <label className="form-label font-bn">বর্তমান রেট: {vendor.commissionRate}%</label>
+          <label className="form-label">Current Rate: {vendor.commissionRate}%</label>
           <input
             type="number"
             className="form-input"
@@ -49,9 +49,9 @@ function CommissionModal({ vendor, token, onClose, onDone }: {
           />
         </div>
         <div className="modal-actions">
-          <button onClick={onClose} className="btn btn-ghost">বাতিল</button>
+          <button onClick={onClose} className="btn btn-ghost">Cancel</button>
           <button onClick={submit} disabled={loading} className="btn btn-purple">
-            {loading ? "..." : "আপডেট করুন"}
+            {loading ? "..." : "Update Rate"}
           </button>
         </div>
       </div>
@@ -80,15 +80,15 @@ function SuspendVendorModal({ vendor, token, onClose, onDone }: {
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-title font-bn">🚫 ভেন্ডর স্থগিত করুন</div>
-        <div className="modal-subtitle font-bn">{vendor.storeNameBn}</div>
+        <div className="modal-title">🚫 Suspend Vendor</div>
+        <div className="modal-subtitle">{vendor.storeName}</div>
         <div className="form-group">
-          <label className="form-label font-bn">কারণ</label>
-          <input type="text" className="form-input font-bn" placeholder="কারণ লিখুন..." value={reason} onChange={(e) => setReason(e.target.value)} />
+          <label className="form-label">Reason</label>
+          <input type="text" className="form-input" placeholder="Enter reason..." value={reason} onChange={(e) => setReason(e.target.value)} />
         </div>
         <div className="modal-actions">
-          <button onClick={onClose} className="btn btn-ghost">বাতিল</button>
-          <button onClick={submit} disabled={loading || !reason} className="btn btn-danger">স্থগিত করুন</button>
+          <button onClick={onClose} className="btn btn-ghost">Cancel</button>
+          <button onClick={submit} disabled={loading || !reason} className="btn btn-danger">Suspend Vendor</button>
         </div>
       </div>
     </div>
@@ -148,8 +148,8 @@ export default function VendorsPage() {
       <div className="page-header">
         <div className="flex-between">
           <div>
-            <h1 className="page-title"><Store size={22} /><span className="font-bn">সকল ভেন্ডর</span></h1>
-            <p className="page-subtitle font-bn">মোট {vendors.length}টি ভেন্ডর নিবন্ধিত</p>
+            <h1 className="page-title"><Store size={22} /><span>All Vendors</span></h1>
+            <p className="page-subtitle">Total {vendors.length} registered vendors</p>
           </div>
           <button onClick={fetchVendors} className="btn btn-ghost btn-sm"><RefreshCw size={13} /></button>
         </div>
@@ -159,16 +159,16 @@ export default function VendorsPage() {
         <div className="search-input-wrap" style={{ maxWidth: 300 }}>
           <Search size={14} />
           <input
-            type="text" className="form-input search-input font-bn"
-            placeholder="দোকানের নাম বা মালিক..."
+            type="text" className="form-input search-input"
+            placeholder="Search by store or owner..."
             value={search} onChange={(e) => setSearch(e.target.value)}
           />
         </div>
         <select className="form-input" style={{ maxWidth: 180 }} value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}>
-          <option value="ALL">সব স্ট্যাটাস</option>
-          <option value="ACTIVE">সক্রিয়</option>
-          <option value="PENDING_APPROVAL">অনুমোদন বাকি</option>
-          <option value="SUSPENDED">স্থগিত</option>
+          <option value="ALL">All Statuses</option>
+          <option value="ACTIVE">Active</option>
+          <option value="PENDING_APPROVAL">Pending Approval</option>
+          <option value="SUSPENDED">Suspended</option>
         </select>
       </div>
 
@@ -176,15 +176,15 @@ export default function VendorsPage() {
         <table>
           <thead>
             <tr>
-              <th>দোকান / মালিক</th>
-              <th>ফোন</th>
-              <th>স্ট্যাটাস</th>
-              <th>টায়ার</th>
-              <th>কমিশন</th>
-              <th>অর্ডার</th>
-              <th>ব্যালেন্স</th>
-              <th>ভ্যাকেশন</th>
-              <th>অ্যাকশন</th>
+              <th>Store / Owner</th>
+              <th>Phone</th>
+              <th>Status</th>
+              <th>Tier</th>
+              <th>Commission</th>
+              <th>Orders</th>
+              <th>Balance</th>
+              <th>Vacation</th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -198,24 +198,24 @@ export default function VendorsPage() {
               <tr><td colSpan={9}>
                 <div className="empty-state">
                   <div className="empty-state-icon">🏪</div>
-                  <div className="empty-state-title font-bn">কোনো ভেন্ডর পাওয়া যায়নি</div>
+                  <div className="empty-state-title">No vendors found</div>
                 </div>
               </td></tr>
             ) : filtered.map((v) => (
               <tr key={v.id}>
                 <td>
-                  <div className="td-name font-bn">{v.storeNameBn || v.storeName}</div>
+                  <div className="td-name">{v.storeName}</div>
                   <div className="td-sub">{v.ownerName}</div>
                 </td>
                 <td><span style={{ fontSize: 13 }}>{v.phone}</span></td>
                 <td>
                   <span className={`badge ${STATUS_BADGE[v.status] || "badge-gray"}`}>
-                    <span className="font-bn">{STATUS_BN[v.status] || v.status}</span>
+                    <span>{STATUS_LABEL[v.status] || v.status}</span>
                   </span>
                 </td>
                 <td>
                   <span className={`tier-${v.tier}`} style={{ fontSize: 12, fontWeight: 600 }}>
-                    {TIER_BN[v.tier] || v.tier}
+                    {TIER_LABEL[v.tier] || v.tier}
                   </span>
                 </td>
                 <td>
@@ -223,30 +223,30 @@ export default function VendorsPage() {
                 </td>
                 <td>
                   <span style={{ fontWeight: 600 }}>{v.totalOrders}</span>
-                  <div className="td-sub">৳{v.totalRevenue.toLocaleString()}</div>
+                  <div className="td-sub">Tk.{v.totalRevenue.toLocaleString()}</div>
                 </td>
                 <td>
-                  <span style={{ fontWeight: 600, color: "var(--accent-green)" }}>৳{v.settlementBalance.toLocaleString()}</span>
+                  <span style={{ fontWeight: 600, color: "var(--accent-green)" }}>Tk.{v.settlementBalance.toLocaleString()}</span>
                 </td>
                 <td>
                   <button
                     onClick={() => toggleVacation(v)}
                     className={`toggle ${v.vacationMode ? "on" : ""}`}
-                    title={v.vacationMode ? "ভ্যাকেশন মোড চালু" : "ভ্যাকেশন মোড বন্ধ"}
+                    title={v.vacationMode ? "Vacation mode active" : "Vacation mode off"}
                     style={{ background: v.vacationMode ? "var(--accent-orange)" : undefined }}
                   />
                 </td>
                 <td>
                   <div style={{ display: "flex", gap: 4 }}>
-                    <button onClick={() => setCommModal(v)} className="btn-icon" title="কমিশন পরিবর্তন">
+                    <button onClick={() => setCommModal(v)} className="btn-icon" title="Change Commission">
                       <Settings size={13} />
                     </button>
                     {v.status === "SUSPENDED" ? (
-                      <button onClick={() => activate(v.id)} className="btn-icon" style={{ color: "var(--accent-green)" }} title="সক্রিয় করুন">
+                      <button onClick={() => activate(v.id)} className="btn-icon" style={{ color: "var(--accent-green)" }} title="Activate">
                         <CheckCircle2 size={13} />
                       </button>
                     ) : v.status === "ACTIVE" ? (
-                      <button onClick={() => setSuspModal(v)} className="btn-icon" style={{ color: "var(--danger)" }} title="স্থগিত">
+                      <button onClick={() => setSuspModal(v)} className="btn-icon" style={{ color: "var(--danger)" }} title="Suspend">
                         <Ban size={13} />
                       </button>
                     ) : null}

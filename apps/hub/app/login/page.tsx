@@ -22,7 +22,7 @@ export default function LoginPage() {
     if (result.success) {
       router.replace("/dashboard");
     } else {
-      setError(result.error || "লগইন ব্যর্থ হয়েছে");
+      setError(result.error || "Login failed");
     }
   }
 
@@ -35,7 +35,7 @@ export default function LoginPage() {
       <div className="login-card">
         <div className="login-logo">🛡️</div>
         <h1 className="login-title">Tatka Bazar Hub</h1>
-        <p className="login-subtitle font-bn">
+        <p className="login-subtitle">
           hub.tatkabazar.com — Control Panel
         </p>
 
@@ -48,7 +48,7 @@ export default function LoginPage() {
 
         <form onSubmit={handleSubmit}>
           <div className="form-group">
-            <label className="form-label">ইমেইল (Hub Email)</label>
+            <label className="form-label">Hub Email</label>
             <input
               id="hub-email"
               type="email"
@@ -61,7 +61,7 @@ export default function LoginPage() {
             />
           </div>
           <div className="form-group">
-            <label className="form-label">পাসওয়ার্ড</label>
+            <label className="form-label">Password</label>
             <div style={{ position: "relative" }}>
               <input
                 id="hub-password"
@@ -97,12 +97,12 @@ export default function LoginPage() {
             {loading ? (
               <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 <span style={{ width: 14, height: 14, border: "2px solid rgba(0,0,0,0.3)", borderTopColor: "#000", borderRadius: "50%", animation: "spin 0.6s linear infinite", display: "inline-block" }} />
-                লগইন হচ্ছে...
+                Logging in...
               </span>
             ) : (
               <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 <Shield size={15} />
-                Hub-এ প্রবেশ করুন
+                Sign in to Hub
               </span>
             )}
           </button>

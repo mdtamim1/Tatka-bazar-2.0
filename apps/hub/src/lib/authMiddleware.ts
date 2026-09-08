@@ -8,9 +8,9 @@ export function getSessionFromRequest(req: NextRequest) {
 }
 
 export function unauthorized() {
-  return NextResponse.json({ success: false, error: "অনুমোদিত নয়" }, { status: 401 });
+  return NextResponse.json({ success: false, error: "Unauthorized access" }, { status: 401 });
 }
 
 export function forbidden() {
-  return NextResponse.json({ success: false, error: "এই কাজ করার অনুমতি নেই" }, { status: 403 });
+  return NextResponse.json({ success: false, error: "Forbidden: Access denied" }, { status: 403 });
 }

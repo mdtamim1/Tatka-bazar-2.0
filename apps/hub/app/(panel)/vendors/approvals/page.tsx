@@ -38,8 +38,8 @@ export default function VendorApprovalsPage() {
   return (
     <div className="hub-content">
       <div className="page-header">
-        <h1 className="page-title"><AlertTriangle size={22} /><span className="font-bn">ভেন্ডর অনুমোদন কিউ</span></h1>
-        <p className="page-subtitle font-bn">{vendors.length}টি ভেন্ডর অনুমোদনের অপেক্ষায়</p>
+        <h1 className="page-title"><AlertTriangle size={22} /><span>Vendor Approval Queue</span></h1>
+        <p className="page-subtitle">{vendors.length} vendors pending approval</p>
       </div>
 
       {loading ? (
@@ -49,7 +49,7 @@ export default function VendorApprovalsPage() {
       ) : vendors.length === 0 ? (
         <div className="card"><div className="empty-state">
           <div className="empty-state-icon">✅</div>
-          <div className="empty-state-title font-bn">সব ভেন্ডর অনুমোদন সম্পন্ন</div>
+          <div className="empty-state-title">All vendor applications processed</div>
         </div></div>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
@@ -58,8 +58,7 @@ export default function VendorApprovalsPage() {
               <div className="flex-between" style={{ flexWrap: "wrap", gap: 12 }}>
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: 16, fontWeight: 700, color: "var(--text-primary)", marginBottom: 6 }}>
-                    <span className="font-bn">{v.storeNameBn || v.storeName}</span>
-                    <span style={{ fontSize: 12, color: "var(--text-muted)", fontWeight: 400, marginLeft: 8 }}>{v.storeName}</span>
+                    <span>{v.storeName}</span>
                   </div>
                   <div style={{ display: "flex", gap: 16, flexWrap: "wrap", marginBottom: 4 }}>
                     <span className="text-sm text-muted">👤 {v.ownerName}</span>
@@ -72,15 +71,15 @@ export default function VendorApprovalsPage() {
                     <span className="text-sm text-muted">💳 {v.payoutMethod}: {v.payoutAccount}</span>
                   </div>
                   <div className="text-xs text-muted mt-1">
-                    আবেদন: {new Date(v.joinedAt).toLocaleDateString("bn-BD")}
+                    Applied: {new Date(v.joinedAt).toLocaleDateString()}
                   </div>
                 </div>
                 <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
                   <button onClick={() => setRejectModal(v)} disabled={processing === v.id} className="btn btn-danger btn-sm">
-                    <XCircle size={14} /><span className="font-bn">বাতিল</span>
+                    <XCircle size={14} /><span>Reject</span>
                   </button>
                   <button onClick={() => handleVendor(v.id, "ACTIVE")} disabled={processing === v.id} className="btn btn-primary btn-sm">
-                    <CheckCircle2 size={14} /><span className="font-bn">অনুমোদন দিন</span>
+                    <CheckCircle2 size={14} /><span>Approve</span>
                   </button>
                 </div>
               </div>
@@ -92,15 +91,15 @@ export default function VendorApprovalsPage() {
       {rejectModal && (
         <div className="modal-overlay" onClick={() => setRejectModal(null)}>
           <div className="modal" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-title font-bn">❌ ভেন্ডর আবেদন বাতিল</div>
-            <div className="modal-subtitle font-bn">{rejectModal.storeNameBn}</div>
+            <div className="modal-title">❌ Reject Vendor Application</div>
+            <div className="modal-subtitle">{rejectModal.storeName}</div>
             <div className="form-group">
-              <label className="form-label font-bn">বাতিলের কারণ</label>
-              <input type="text" className="form-input font-bn" placeholder="কারণ..." value={rejectReason} onChange={(e) => setRejectReason(e.target.value)} />
+              <label className="form-label">Rejection Reason</label>
+              <input type="text" className="form-input" placeholder="Reason..." value={rejectReason} onChange={(e) => setRejectReason(e.target.value)} />
             </div>
             <div className="modal-actions">
-              <button onClick={() => setRejectModal(null)} className="btn btn-ghost">বাতিল</button>
-              <button onClick={() => handleVendor(rejectModal.id, "REJECTED", rejectReason)} disabled={!rejectReason} className="btn btn-danger">নিশ্চিত</button>
+              <button onClick={() => setRejectModal(null)} className="btn btn-ghost">Cancel</button>
+              <button onClick={() => handleVendor(rejectModal.id, "REJECTED", rejectReason)} disabled={!rejectReason} className="btn btn-danger">Confirm</button>
             </div>
           </div>
         </div>

@@ -45,19 +45,19 @@ export default function DepositsPage() {
       <div className="page-header">
         <div className="flex-between">
           <div>
-            <h1 className="page-title"><ArrowDownToLine size={22} /><span className="font-bn">ডিপোজিট অনুমোদন</span></h1>
-            <p className="page-subtitle font-bn">
-              {pendingCount}টি অনুমোদন বাকি — মোট ৳{pendingTotal.toLocaleString()} অপেক্ষায়
+            <h1 className="page-title"><ArrowDownToLine size={22} /><span>Deposit Approvals</span></h1>
+            <p className="page-subtitle">
+              {pendingCount} pending approvals — Total Tk.{pendingTotal.toLocaleString()} pending
             </p>
           </div>
         </div>
       </div>
 
       <div className="tabs">
-        {([["PENDING", `বাকি (${pendingCount})`], ["ALL", `সব (${deposits.length})`]] as const).map(([val, label]) => (
+        {([["PENDING", `Pending (${pendingCount})`], ["ALL", `All (${deposits.length})`]] as const).map(([val, label]) => (
           <button
             key={val}
-            className={`tab-btn font-bn${tab === val ? " active" : ""}`}
+            className={`tab-btn${tab === val ? " active" : ""}`}
             onClick={() => setTab(val)}
           >
             {label}
@@ -73,7 +73,7 @@ export default function DepositsPage() {
         <div className="card">
           <div className="empty-state">
             <div className="empty-state-icon">✅</div>
-            <div className="empty-state-title font-bn">কোনো পেন্ডিং ডিপোজিট নেই</div>
+            <div className="empty-state-title">No pending deposits</div>
           </div>
         </div>
       ) : (
@@ -83,21 +83,21 @@ export default function DepositsPage() {
               <div className="flex-between" style={{ flexWrap: "wrap", gap: 12 }}>
                 <div style={{ flex: 1 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
-                    <span style={{ fontSize: 22, fontWeight: 800, color: "var(--accent-green)" }}>৳{d.amount.toLocaleString()}</span>
+                    <span style={{ fontSize: 22, fontWeight: 800, color: "var(--accent-green)" }}>Tk.{d.amount.toLocaleString()}</span>
                     <span className={`badge ${d.status === "PENDING" ? "badge-orange" : d.status === "APPROVED" ? "badge-green" : "badge-red"}`}>
-                      <span className="font-bn">{d.status === "PENDING" ? "বাকি" : d.status === "APPROVED" ? "অনুমোদিত" : "বাতিল"}</span>
+                      <span>{d.status === "PENDING" ? "Pending" : d.status === "APPROVED" ? "Approved" : "Rejected"}</span>
                     </span>
                   </div>
                   <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
-                    <span className="text-sm font-bn text-muted">🧑 {d.riderName}</span>
+                    <span className="text-sm text-muted">🧑 {d.riderName}</span>
                     <span className="text-sm text-muted">📞 {d.riderPhone}</span>
                     <span className="text-sm text-muted">💳 {d.paymentMethod}</span>
                     <span className="text-sm text-muted">TXN: {d.transactionId}</span>
-                    <span className="text-sm text-muted">শেষ ৪ সংখ্যা: {d.lastFour}</span>
+                    <span className="text-sm text-muted">Last 4 digits: {d.lastFour}</span>
                   </div>
                   <div className="text-xs text-muted mt-1">
-                    {new Date(d.requestedAt).toLocaleString("bn-BD")}
-                    {d.processedBy && ` • প্রক্রিয়া: ${d.processedBy}`}
+                    {new Date(d.requestedAt).toLocaleString()}
+                    {d.processedBy && ` • Processed by: ${d.processedBy}`}
                   </div>
                 </div>
                 {d.status === "PENDING" && (
@@ -108,7 +108,7 @@ export default function DepositsPage() {
                       className="btn btn-danger btn-sm"
                     >
                       <XCircle size={14} />
-                      <span className="font-bn">বাতিল</span>
+                      <span>Reject</span>
                     </button>
                     <button
                       onClick={() => handleDeposit(d.id, "APPROVE")}
@@ -116,7 +116,7 @@ export default function DepositsPage() {
                       className="btn btn-primary btn-sm"
                     >
                       <CheckCircle2 size={14} />
-                      <span className="font-bn">অনুমোদন</span>
+                      <span>Approve</span>
                     </button>
                   </div>
                 )}
@@ -129,15 +129,15 @@ export default function DepositsPage() {
       {rejectModal && (
         <div className="modal-overlay" onClick={() => setRejectModal(null)}>
           <div className="modal" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-title font-bn">❌ ডিপোজিট বাতিল</div>
-            <div className="modal-subtitle font-bn">{rejectModal.riderName} — ৳{rejectModal.amount}</div>
+            <div className="modal-title">❌ Reject Deposit</div>
+            <div className="modal-subtitle">{rejectModal.riderName} — Tk.{rejectModal.amount}</div>
             <div className="form-group">
-              <label className="form-label font-bn">বাতিলের কারণ</label>
-              <input type="text" className="form-input font-bn" placeholder="কারণ..." value={rejectReason} onChange={(e) => setRejectReason(e.target.value)} />
+              <label className="form-label">Rejection Reason</label>
+              <input type="text" className="form-input" placeholder="Reason..." value={rejectReason} onChange={(e) => setRejectReason(e.target.value)} />
             </div>
             <div className="modal-actions">
-              <button onClick={() => setRejectModal(null)} className="btn btn-ghost">বাতিল</button>
-              <button onClick={() => handleDeposit(rejectModal.id, "REJECT", rejectReason)} disabled={!rejectReason} className="btn btn-danger">নিশ্চিত</button>
+              <button onClick={() => setRejectModal(null)} className="btn btn-ghost">Cancel</button>
+              <button onClick={() => handleDeposit(rejectModal.id, "REJECT", rejectReason)} disabled={!rejectReason} className="btn btn-danger">Confirm</button>
             </div>
           </div>
         </div>

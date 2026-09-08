@@ -19,6 +19,7 @@
     "@fastify/sensible": "^6.0.3",
     "@fastify/under-pressure": "^9.1.0",
     "@tatka-bazar/database": "workspace:*",
+    "@tatka-bazar/redis": "workspace:*",
     "@tatka-bazar/shared": "workspace:*",
     "bcryptjs": "^3.0.2",
     "fastify": "^5.4.0",

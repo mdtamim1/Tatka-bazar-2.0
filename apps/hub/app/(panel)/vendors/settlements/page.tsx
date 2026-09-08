@@ -39,15 +39,15 @@ export default function SettlementsPage() {
   return (
     <div className="hub-content">
       <div className="page-header">
-        <h1 className="page-title"><Banknote size={22} /><span className="font-bn">সেটেলমেন্ট পেমেন্ট</span></h1>
-        <p className="page-subtitle font-bn">
-          {pendingCount}টি বাকি — মোট ৳{pendingTotal.toLocaleString()} অপেক্ষায়
+        <h1 className="page-title"><Banknote size={22} /><span>Vendor Settlements</span></h1>
+        <p className="page-subtitle">
+          {pendingCount} pending — Total Tk.{pendingTotal.toLocaleString()} pending
         </p>
       </div>
 
       <div className="tabs">
-        {([["PENDING", `বাকি (${pendingCount})`], ["ALL", `সব (${settlements.length})`]] as const).map(([val, label]) => (
-          <button key={val} className={`tab-btn font-bn${tab === val ? " active" : ""}`} onClick={() => setTab(val)}>{label}</button>
+        {([["PENDING", `Pending (${pendingCount})`], ["ALL", `All (${settlements.length})`]] as const).map(([val, label]) => (
+          <button key={val} className={`tab-btn${tab === val ? " active" : ""}`} onClick={() => setTab(val)}>{label}</button>
         ))}
       </div>
 
@@ -58,7 +58,7 @@ export default function SettlementsPage() {
       ) : filtered.length === 0 ? (
         <div className="card"><div className="empty-state">
           <div className="empty-state-icon">✅</div>
-          <div className="empty-state-title font-bn">কোনো সেটেলমেন্ট বাকি নেই</div>
+          <div className="empty-state-title">No pending settlements</div>
         </div></div>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
@@ -67,29 +67,29 @@ export default function SettlementsPage() {
               <div className="flex-between" style={{ flexWrap: "wrap", gap: 12 }}>
                 <div style={{ flex: 1 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
-                    <span style={{ fontSize: 22, fontWeight: 800, color: "var(--accent-green)" }}>৳{s.amount.toLocaleString()}</span>
+                    <span style={{ fontSize: 22, fontWeight: 800, color: "var(--accent-green)" }}>Tk.{s.amount.toLocaleString()}</span>
                     <span className={`badge ${s.status === "PENDING" ? "badge-orange" : s.status === "APPROVED" ? "badge-green" : "badge-red"}`}>
-                      <span className="font-bn">{s.status === "PENDING" ? "বাকি" : s.status === "APPROVED" ? "পরিশোধিত" : "বাতিল"}</span>
+                      <span>{s.status === "PENDING" ? "Pending" : s.status === "APPROVED" ? "Paid" : "Rejected"}</span>
                     </span>
                   </div>
                   <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
-                    <span className="text-sm font-bn text-muted">🏪 {s.vendorName}</span>
+                    <span className="text-sm text-muted">🏪 {s.vendorName}</span>
                     <span className="text-sm text-muted">📞 {s.vendorPhone}</span>
                     <span className="text-sm text-muted">💳 {s.payoutMethod}: {s.payoutAccount}</span>
-                    <span className="text-sm text-muted font-bn">📦 {s.ordersCount}টি অর্ডার</span>
+                    <span className="text-sm text-muted">📦 {s.ordersCount} orders</span>
                   </div>
                   <div className="text-xs text-muted mt-1">
-                    {new Date(s.requestedAt).toLocaleString("bn-BD")}
-                    {s.processedBy && ` • পরিশোধ: ${s.processedBy}`}
+                    {new Date(s.requestedAt).toLocaleString()}
+                    {s.processedBy && ` • Processed by: ${s.processedBy}`}
                   </div>
                 </div>
                 {s.status === "PENDING" && (
                   <div style={{ display: "flex", gap: 8 }}>
                     <button onClick={() => handle(s.id, "REJECT")} disabled={processing === s.id} className="btn btn-danger btn-sm">
-                      <XCircle size={14} /><span className="font-bn">বাতিল</span>
+                      <XCircle size={14} /><span>Reject</span>
                     </button>
                     <button onClick={() => handle(s.id, "APPROVE")} disabled={processing === s.id} className="btn btn-primary btn-sm">
-                      <CheckCircle2 size={14} /><span className="font-bn">পরিশোধ করুন</span>
+                      <CheckCircle2 size={14} /><span>Mark Paid</span>
                     </button>
                   </div>
                 )}

@@ -62,9 +62,18 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [mounted, setMounted] = useState(false);
+  const [suspendedNotice, setSuspendedNotice] = useState<string | null>(null);
 
   useEffect(() => {
     setMounted(true);
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("reason") === "suspended") {
+        setSuspendedNotice(
+          params.get("message") || "আপনার ভেন্ডর শপটি Hub অ্যাডমিন কর্তৃক সাময়িকভাবে স্থগিত (Suspended) করা হয়েছে।"
+        );
+      }
+    }
   }, []);
 
   function handleNext(e: React.FormEvent) {
@@ -85,6 +94,26 @@ export default function LoginPage() {
     setStep("password");
   }
 
+  async function checkVendorSuspension(vendorIdOrPhone: string): Promise<string | null> {
+    try {
+      const localRes = await fetch(`/api/sync/events?vendorId=${encodeURIComponent(vendorIdOrPhone)}`);
+      if (localRes.ok) {
+        const localJson = await localRes.json();
+        if (localJson.isSuspended) {
+          return localJson.data?.suspendReason || "ভেন্ডর শপ স্থগিত করা হয়েছে";
+        }
+      }
+      const hubRes = await fetch(`http://localhost:3004/api/public/status?type=vendor&id=${encodeURIComponent(vendorIdOrPhone)}`);
+      if (hubRes.ok) {
+        const hubJson = await hubRes.json();
+        if (hubJson.success && hubJson.data?.isSuspended) {
+          return hubJson.data.suspendReason || "Hub অ্যাডমিন কর্তৃক সাময়িক স্থগিত করা হয়েছে";
+        }
+      }
+    } catch {}
+    return null;
+  }
+
   async function handleLoginSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!password) {
@@ -94,21 +123,38 @@ export default function LoginPage() {
     setLoading(true);
     setError("");
 
+    // Suspension check
+    const suspendReason = await checkVendorSuspension(identifier.trim());
+    if (suspendReason) {
+      setError(`🚫 শপ স্থগিত: ${suspendReason}। সহায়তার জন্য ভেন্ডর সাপোর্টে যোগাযোগ করুন: 01700-000000`);
+      setLoading(false);
+      return;
+    }
+
     setTimeout(() => {
       setRole(loginType);
       router.replace("/");
     }, 600);
   }
 
-  function handleQuickDemo() {
+  async function handleQuickDemo() {
     setLoading(true);
     setError("");
+
+    // Suspension check on demo store
+    const suspendReason = await checkVendorSuspension("vnd-dhaka-089");
+    if (suspendReason) {
+      setError(`🚫 ডেমো ভেন্ডর স্থগিত: ${suspendReason}। Hub থেকে অ্যাক্টিভ করে আবার চেষ্টা করুন।`);
+      setLoading(false);
+      return;
+    }
+
     setIdentifier("01711223344");
     setPassword("password123");
     setRole("OWNER");
     setTimeout(() => {
       router.replace("/");
-    }, 500);
+    }, 400);
   }
 
   return (
@@ -404,6 +450,38 @@ export default function LoginPage() {
               👥 কর্মী / সাব-লগইন
             </button>
           </div>
+
+          {/* Suspended Notice Banner */}
+          {suspendedNotice && (
+            <div
+              style={{
+                background: "rgba(239,68,68,.18)",
+                border: "1px solid rgba(239,68,68,.5)",
+                boxShadow: "0 0 20px rgba(239,68,68,.2)",
+                borderRadius: 14,
+                padding: "12px 16px",
+                fontSize: ".84rem",
+                color: "#FCA5A5",
+                textAlign: "left",
+                marginBottom: 16,
+                fontFamily: "var(--font-bn)",
+                display: "flex",
+                gap: 10,
+                alignItems: "flex-start",
+              }}
+            >
+              <span style={{ fontSize: "20px", flexShrink: 0 }}>🚫</span>
+              <div>
+                <div style={{ fontWeight: 800, color: "#FEE2E2", marginBottom: 2 }}>
+                  ভেন্ডর শপ স্থগিত করা হয়েছে
+                </div>
+                <div>{suspendedNotice}</div>
+                <div style={{ fontSize: ".76rem", color: "#A8C0D8", marginTop: 4 }}>
+                  সহায়তার জন্য ভেন্ডর হেল্পডেস্কে যোগাযোগ করুন: 01700-000000
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Error Message */}
           {error && (

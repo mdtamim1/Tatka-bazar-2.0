@@ -12,10 +12,10 @@ export default function NotificationsPage() {
   const [sent, setSent] = useState(false);
   const [broadcasts, setBroadcasts] = useState<{ title: string; body: string; targetType: string; sentAt: string }[]>([]);
 
-  const TARGET_BN: Record<string, string> = {
-    ALL_RIDERS: "সকল রাইডার",
-    ALL_VENDORS: "সকল ভেন্ডর",
-    ALL: "সবাই (Riders + Vendors)",
+  const TARGET_LABEL: Record<string, string> = {
+    ALL_RIDERS: "All Riders",
+    ALL_VENDORS: "All Vendors",
+    ALL: "Everyone (Riders + Vendors)",
   };
 
   async function send() {
@@ -37,15 +37,15 @@ export default function NotificationsPage() {
   return (
     <div className="hub-content">
       <div className="page-header">
-        <h1 className="page-title"><Bell size={22} /><span className="font-bn">ব্রডকাস্ট নোটিফিকেশন</span></h1>
-        <p className="page-subtitle font-bn">সকল রাইডার ও ভেন্ডরকে বার্তা পাঠান</p>
+        <h1 className="page-title"><Bell size={22} /><span>Broadcast Notifications</span></h1>
+        <p className="page-subtitle">Send announcements to all riders and vendors</p>
       </div>
 
       <div className="grid-2" style={{ gap: 20 }}>
         {/* Send Form */}
         <div className="card">
           <div className="card-header">
-            <div className="card-title font-bn">📢 নতুন ব্রডকাস্ট</div>
+            <div className="card-title">📢 New Broadcast</div>
           </div>
           {sent && (
             <div style={{
@@ -55,30 +55,30 @@ export default function NotificationsPage() {
               fontSize: 13, marginBottom: 16,
             }}>
               <CheckCircle2 size={15} />
-              <span className="font-bn">বার্তা পাঠানো হয়েছে!</span>
+              <span>Notification sent successfully!</span>
             </div>
           )}
           <div className="form-group">
-            <label className="form-label font-bn">পাঠানোর লক্ষ্য</label>
-            <select className="form-input font-bn" value={targetType} onChange={(e) => setTargetType(e.target.value as any)}>
-              <option value="ALL_RIDERS">সকল রাইডার</option>
-              <option value="ALL_VENDORS">সকল ভেন্ডর</option>
-              <option value="ALL">সবাই</option>
+            <label className="form-label">Target Audience</label>
+            <select className="form-input" value={targetType} onChange={(e) => setTargetType(e.target.value as any)}>
+              <option value="ALL_RIDERS">All Riders</option>
+              <option value="ALL_VENDORS">All Vendors</option>
+              <option value="ALL">Everyone</option>
             </select>
           </div>
           <div className="form-group">
-            <label className="form-label font-bn">শিরোনাম</label>
+            <label className="form-label">Title</label>
             <input
-              type="text" className="form-input font-bn"
-              placeholder="বার্তার শিরোনাম..."
+              type="text" className="form-input"
+              placeholder="Notification title..."
               value={title} onChange={(e) => setTitle(e.target.value)}
             />
           </div>
           <div className="form-group">
-            <label className="form-label font-bn">বিস্তারিত বার্তা</label>
+            <label className="form-label">Message Body</label>
             <textarea
-              className="form-input font-bn"
-              placeholder="বিস্তারিত লিখুন..."
+              className="form-input"
+              placeholder="Write message details..."
               rows={4}
               value={body} onChange={(e) => setBody(e.target.value)}
               style={{ resize: "vertical" }}
@@ -94,15 +94,15 @@ export default function NotificationsPage() {
               padding: 14, marginBottom: 16,
             }}>
               <div style={{ fontSize: 10, color: "var(--text-muted)", marginBottom: 6, fontWeight: 600, textTransform: "uppercase" }}>
-                প্রিভিউ
+                PREVIEW
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
                 <span style={{ fontSize: 20 }}>🔔</span>
-                <span style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)" }}>{title || "শিরোনাম..."}</span>
+                <span style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)" }}>{title || "Notification title..."}</span>
               </div>
-              <div className="font-bn" style={{ fontSize: 13, color: "var(--text-secondary)" }}>{body || "বার্তার বিস্তারিত..."}</div>
-              <div style={{ marginTop: 6, fontSize: 11, color: "var(--text-muted)" }} className="font-bn">
-                → {TARGET_BN[targetType]}
+              <div style={{ fontSize: 13, color: "var(--text-secondary)" }}>{body || "Message details..."}</div>
+              <div style={{ marginTop: 6, fontSize: 11, color: "var(--text-muted)" }}>
+                → {TARGET_LABEL[targetType]}
               </div>
             </div>
           )}
@@ -113,19 +113,19 @@ export default function NotificationsPage() {
             style={{ justifyContent: "center" }}
           >
             <Send size={14} />
-            <span className="font-bn">{sending ? "পাঠানো হচ্ছে..." : "ব্রডকাস্ট পাঠান"}</span>
+            <span>{sending ? "Sending..." : "Send Broadcast"}</span>
           </button>
         </div>
 
         {/* Broadcast History */}
         <div className="card">
           <div className="card-header">
-            <div className="card-title font-bn">📋 পাঠানো বার্তার ইতিহাস</div>
+            <div className="card-title">📋 Broadcast History</div>
           </div>
           {broadcasts.length === 0 ? (
             <div className="empty-state" style={{ padding: "40px 20px" }}>
               <div className="empty-state-icon">📭</div>
-              <div className="empty-state-title font-bn">এখনো কোনো বার্তা পাঠানো হয়নি</div>
+              <div className="empty-state-title">No broadcasts sent yet</div>
             </div>
           ) : (
             <div className="activity-feed">
@@ -134,15 +134,15 @@ export default function NotificationsPage() {
                   <div className="activity-dot" />
                   <div className="activity-text">
                     <div style={{ fontWeight: 600, color: "var(--text-primary)", fontSize: 13 }}>{b.title}</div>
-                    <div className="font-bn" style={{ marginTop: 2 }}>{b.body}</div>
+                    <div style={{ marginTop: 2 }}>{b.body}</div>
                     <div style={{ marginTop: 4 }}>
                       <span className="badge badge-blue" style={{ fontSize: 10 }}>
-                        <span className="font-bn">{TARGET_BN[b.targetType]}</span>
+                        <span>{TARGET_LABEL[b.targetType]}</span>
                       </span>
                     </div>
                   </div>
-                  <div className="activity-time font-bn">
-                    {new Date(b.sentAt).toLocaleTimeString("bn-BD")}
+                  <div className="activity-time">
+                    {new Date(b.sentAt).toLocaleTimeString()}
                   </div>
                 </div>
               ))}

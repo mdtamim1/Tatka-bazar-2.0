@@ -11,11 +11,11 @@ import type { HubRider, HubVendor, RiderDepositRequest, VendorSettlementRequest 
 function timeAgo(ts: string) {
   const diff = Date.now() - new Date(ts).getTime();
   const m = Math.floor(diff / 60000);
-  if (m < 1) return "এইমাত্র";
-  if (m < 60) return `${m} মি. আগে`;
+  if (m < 1) return "Just now";
+  if (m < 60) return `${m}m ago`;
   const h = Math.floor(m / 60);
-  if (h < 24) return `${h} ঘণ্টা আগে`;
-  return `${Math.floor(h / 24)} দিন আগে`;
+  if (h < 24) return `${h}h ago`;
+  return `${Math.floor(h / 24)}d ago`;
 }
 
 export default function DashboardPage() {
@@ -67,34 +67,34 @@ export default function DashboardPage() {
 
   const KPIs = [
     {
-      label: "অনলাইন রাইডার", value: onlineRiders.length, total: riders.length,
+      label: "Online Riders", value: onlineRiders.length, total: riders.length,
       icon: Bike, accent: "green",
       badge: `${riders.length} total`, badgeCls: "neutral",
     },
     {
-      label: "সক্রিয় ভেন্ডর", value: activeVendors.length, total: vendors.length,
+      label: "Active Vendors", value: activeVendors.length, total: vendors.length,
       icon: Store, accent: "purple",
       badge: `${pendingVendors.length} pending`, badgeCls: pendingVendors.length > 0 ? "down" : "neutral",
     },
     {
-      label: "ডিসপ্যাচ চলছে", value: dispatchActive.length, total: null,
+      label: "Active Dispatch", value: dispatchActive.length, total: null,
       icon: Zap, accent: "orange",
       badge: "live", badgeCls: "up",
     },
     {
-      label: "পেন্ডিং ডিপোজিট", value: pendingDeposits.length, total: null,
+      label: "Pending Deposits", value: pendingDeposits.length, total: null,
       icon: CreditCard, accent: "blue",
-      badge: `৳${pendingDeposits.reduce((s, d) => s + d.amount, 0).toLocaleString("bn-BD")}`, badgeCls: "neutral",
+      badge: `Tk.${pendingDeposits.reduce((s, d) => s + d.amount, 0).toLocaleString()}`, badgeCls: "neutral",
     },
     {
-      label: "KYC অনুমোদন বাকি", value: pendingKYC.length, total: null,
+      label: "Pending KYC", value: pendingKYC.length, total: null,
       icon: FileCheck, accent: "danger",
-      badge: pendingKYC.length > 0 ? "জরুরি" : "ঠিক আছে", badgeCls: pendingKYC.length > 0 ? "down" : "up",
+      badge: pendingKYC.length > 0 ? "Urgent" : "Good", badgeCls: pendingKYC.length > 0 ? "down" : "up",
     },
     {
-      label: "সেটেলমেন্ট বাকি", value: pendingSettlements.length, total: null,
+      label: "Pending Settlements", value: pendingSettlements.length, total: null,
       icon: TrendingUp, accent: "pink",
-      badge: `৳${pendingSettlements.reduce((s, d) => s + d.amount, 0).toLocaleString("bn-BD")}`, badgeCls: "neutral",
+      badge: `Tk.${pendingSettlements.reduce((s, d) => s + d.amount, 0).toLocaleString()}`, badgeCls: "neutral",
     },
   ];
 
@@ -120,15 +120,15 @@ export default function DashboardPage() {
           <div>
             <h1 className="page-title">
               <span>📊</span>
-              <span className="font-bn">ড্যাশবোর্ড ওভারভিউ</span>
+              <span>Dashboard Overview</span>
             </h1>
-            <p className="page-subtitle font-bn">
-              স্বাগতম, {session?.name} — সর্বশেষ আপডেট: {lastRefresh.toLocaleTimeString("bn-BD")}
+            <p className="page-subtitle">
+              Welcome, {session?.name} — Last updated: {lastRefresh.toLocaleTimeString()}
             </p>
           </div>
           <button onClick={fetchAll} className="btn btn-ghost btn-sm" disabled={loading}>
             <RefreshCw size={13} className={loading ? "spin" : ""} />
-            <span className="font-bn">রিফ্রেশ</span>
+            <span>Refresh</span>
           </button>
         </div>
       </div>
@@ -146,15 +146,15 @@ export default function DashboardPage() {
                 <Icon size={18} style={{ color: ACCENT_CLR[k.accent] }} />
               </div>
               <div className="kpi-value">{loading ? "—" : k.value}</div>
-              <div className="kpi-label font-bn">{k.label}</div>
+              <div className="kpi-label">{k.label}</div>
               {k.total !== null && !loading && (
-                <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 2 }} className="font-bn">
-                  মোট {k.total} জন
+                <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 2 }}>
+                  Total: {k.total}
                 </div>
               )}
               <div className={`kpi-badge ${k.badgeCls}`}>
                 {k.badgeCls === "up" && <ArrowUpRight size={11} />}
-                <span className="font-bn">{k.badge}</span>
+                <span>{k.badge}</span>
               </div>
             </div>
           );
@@ -167,20 +167,20 @@ export default function DashboardPage() {
         <div className="card">
           <div className="card-header">
             <div>
-              <div className="card-title font-bn">⚡ জরুরি পদক্ষেপ</div>
-              <div className="card-subtitle font-bn">অনুমোদন প্রয়োজন</div>
+              <div className="card-title">⚡ Action Required</div>
+              <div className="card-subtitle">Pending approval</div>
             </div>
             {(pendingKYC.length + pendingVendors.length + pendingDeposits.length + pendingSettlements.length) > 0 && (
               <span className="badge badge-red">
-                {pendingKYC.length + pendingVendors.length + pendingDeposits.length + pendingSettlements.length} বাকি
+                {pendingKYC.length + pendingVendors.length + pendingDeposits.length + pendingSettlements.length} pending
               </span>
             )}
           </div>
           {[
-            { label: "KYC অনুমোদন বাকি", count: pendingKYC.length, href: "/riders/kyc", icon: "📋", color: "var(--accent-orange)" },
-            { label: "ভেন্ডর অনুমোদন বাকি", count: pendingVendors.length, href: "/vendors/approvals", icon: "🏪", color: "var(--accent-purple)" },
-            { label: "রাইডার ডিপোজিট বাকি", count: pendingDeposits.length, href: "/riders/deposits", icon: "💳", color: "var(--accent-blue)" },
-            { label: "ভেন্ডর সেটেলমেন্ট বাকি", count: pendingSettlements.length, href: "/vendors/settlements", icon: "💰", color: "var(--accent-green)" },
+            { label: "Pending KYC", count: pendingKYC.length, href: "/riders/kyc", icon: "📋", color: "var(--accent-orange)" },
+            { label: "Pending Vendors", count: pendingVendors.length, href: "/vendors/approvals", icon: "🏪", color: "var(--accent-purple)" },
+            { label: "Pending Deposits", count: pendingDeposits.length, href: "/riders/deposits", icon: "💳", color: "var(--accent-blue)" },
+            { label: "Pending Settlements", count: pendingSettlements.length, href: "/vendors/settlements", icon: "💰", color: "var(--accent-green)" },
           ].map((item) => (
             <a
               key={item.label}
@@ -193,7 +193,7 @@ export default function DashboardPage() {
             >
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                 <span style={{ fontSize: 18 }}>{item.icon}</span>
-                <span className="font-bn" style={{ fontSize: 13, color: "var(--text-secondary)" }}>{item.label}</span>
+                <span style={{ fontSize: 13, color: "var(--text-secondary)" }}>{item.label}</span>
               </div>
               <span
                 className="badge"
@@ -213,8 +213,8 @@ export default function DashboardPage() {
         <div className="card">
           <div className="card-header">
             <div>
-              <div className="card-title font-bn">🛵 রাইডার স্ট্যাটাস</div>
-              <div className="card-subtitle font-bn">সকল রাইডারের সংক্ষিপ্ত চিত্র</div>
+              <div className="card-title">🛵 Rider Status</div>
+              <div className="card-subtitle">Overview of all riders</div>
             </div>
           </div>
           {loading ? (
@@ -226,15 +226,15 @@ export default function DashboardPage() {
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
               {[
-                { label: "ONLINE (ডিউটিতে)", count: onlineRiders.length, color: "var(--accent-green)", dot: "dot-green dot-pulse" },
-                { label: "OFFLINE (অফলাইন)", count: riders.filter(r=>r.dutyStatus==="OFFLINE").length, color: "var(--text-muted)", dot: "dot-gray" },
-                { label: "Suspended (স্থগিত)", count: suspendedRiders.length, color: "var(--danger)", dot: "dot-red" },
-                { label: "KYC Pending (অপেক্ষমাণ)", count: pendingKYC.length, color: "var(--accent-orange)", dot: "dot-orange" },
+                { label: "Online (On Duty)", count: onlineRiders.length, color: "var(--accent-green)", dot: "dot-green dot-pulse" },
+                { label: "Offline", count: riders.filter(r=>r.dutyStatus==="OFFLINE").length, color: "var(--text-muted)", dot: "dot-gray" },
+                { label: "Suspended", count: suspendedRiders.length, color: "var(--danger)", dot: "dot-red" },
+                { label: "KYC Pending", count: pendingKYC.length, color: "var(--accent-orange)", dot: "dot-orange" },
               ].map((s) => (
                 <div key={s.label} className="info-row" style={{ paddingLeft: 4 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 10, flex: 1 }}>
                     <span className={`dot ${s.dot}`} />
-                    <span className="font-bn" style={{ fontSize: 13, color: "var(--text-secondary)" }}>{s.label}</span>
+                    <span style={{ fontSize: 13, color: "var(--text-secondary)" }}>{s.label}</span>
                   </div>
                   <span style={{ fontWeight: 700, fontSize: 16, color: s.color }}>{s.count}</span>
                 </div>
@@ -247,8 +247,8 @@ export default function DashboardPage() {
         <div className="card">
           <div className="card-header">
             <div>
-              <div className="card-title font-bn">🏪 ভেন্ডর স্ট্যাটাস</div>
-              <div className="card-subtitle font-bn">সকল ভেন্ডরের সংক্ষিপ্ত চিত্র</div>
+              <div className="card-title">🏪 Vendor Status</div>
+              <div className="card-subtitle">Overview of all vendors</div>
             </div>
           </div>
           {loading ? (
@@ -258,13 +258,13 @@ export default function DashboardPage() {
           ) : (
             <div>
               {[
-                { label: "সক্রিয় (Active)", count: vendors.filter(v=>v.status==="ACTIVE").length, color: "var(--accent-green)" },
-                { label: "অনুমোদন বাকি", count: pendingVendors.length, color: "var(--accent-orange)" },
-                { label: "স্থগিত (Suspended)", count: vendors.filter(v=>v.status==="SUSPENDED").length, color: "var(--danger)" },
-                { label: "ভ্যাকেশন মোডে", count: vendors.filter(v=>v.vacationMode).length, color: "var(--accent-blue)" },
+                { label: "Active", count: vendors.filter(v=>v.status==="ACTIVE").length, color: "var(--accent-green)" },
+                { label: "Pending Approval", count: pendingVendors.length, color: "var(--accent-orange)" },
+                { label: "Suspended", count: vendors.filter(v=>v.status==="SUSPENDED").length, color: "var(--danger)" },
+                { label: "Vacation Mode", count: vendors.filter(v=>v.vacationMode).length, color: "var(--accent-blue)" },
               ].map((s) => (
                 <div key={s.label} className="info-row">
-                  <span className="font-bn info-label">{s.label}</span>
+                  <span className="info-label">{s.label}</span>
                   <span style={{ fontWeight: 700, fontSize: 15, color: s.color }}>{s.count}</span>
                 </div>
               ))}
@@ -276,8 +276,8 @@ export default function DashboardPage() {
         <div className="card">
           <div className="card-header">
             <div>
-              <div className="card-title font-bn">📦 লাইভ ডিসপ্যাচ</div>
-              <div className="card-subtitle font-bn">চলমান অর্ডারসমূহ</div>
+              <div className="card-title">📦 Live Dispatch</div>
+              <div className="card-subtitle">Active ongoing orders</div>
             </div>
             <span className="badge badge-green" style={{ fontSize: 10 }}>
               <span className="dot dot-green dot-pulse" style={{ width: 6, height: 6 }} />
@@ -287,7 +287,7 @@ export default function DashboardPage() {
           {dispatch.length === 0 ? (
             <div className="empty-state" style={{ padding: "30px 20px" }}>
               <div className="empty-state-icon">📭</div>
-              <div className="empty-state-title font-bn">কোনো সক্রিয় অর্ডার নেই</div>
+              <div className="empty-state-title">No active orders</div>
             </div>
           ) : (
             <div>
@@ -295,16 +295,16 @@ export default function DashboardPage() {
                 <div key={t.id || t.orderNumber} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 0", borderBottom: "1px solid var(--border)" }}>
                   <div>
                     <div style={{ fontSize: 13, fontWeight: 600, color: "var(--text-primary)" }}>#{t.orderNumber}</div>
-                    <div className="font-bn" style={{ fontSize: 11, color: "var(--text-muted)" }}>{t.deliveryAddress || t.deliveryZone || "ঠিকানা নেই"}</div>
+                    <div style={{ fontSize: 11, color: "var(--text-muted)" }}>{t.deliveryAddress || t.deliveryZone || "No address"}</div>
                   </div>
                   <span className={`badge ${t.claimed ? "badge-blue" : "badge-orange"}`}>
-                    <span className="font-bn">{t.claimed ? "ক্লেইমড" : "অপেক্ষমাণ"}</span>
+                    <span>{t.claimed ? "Claimed" : "Pending"}</span>
                   </span>
                 </div>
               ))}
               {dispatch.length > 5 && (
-                <a href="/dispatch" style={{ display: "block", marginTop: 10, fontSize: 12, color: "var(--accent-green)", textAlign: "center" }} className="font-bn">
-                  আরও {dispatch.length - 5}টি দেখুন →
+                <a href="/dispatch" style={{ display: "block", marginTop: 10, fontSize: 12, color: "var(--accent-green)", textAlign: "center" }}>
+                  View {dispatch.length - 5} more →
                 </a>
               )}
             </div>

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getSettlements, getVendors, logActivity, validateSession } from "@/lib/hubStore";
+import { validateSession } from "@/lib/hubStore";
+import { getDbSettlements, updateDbSettlement, logDbActivity } from "@/lib/hubDb";
 
 function auth(req: NextRequest) {
   const token = req.headers.get("authorization")?.replace("Bearer ", "");
@@ -9,49 +10,43 @@ function auth(req: NextRequest) {
 // GET /api/vendors/settlements
 export async function GET(req: NextRequest) {
   const session = auth(req);
-  if (!session) return NextResponse.json({ success: false, error: "অনুমোদিত নয়" }, { status: 401 });
-  return NextResponse.json({ success: true, data: getSettlements() });
+  if (!session) return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+  const settlements = await getDbSettlements();
+  return NextResponse.json({ success: true, data: settlements });
 }
 
 // PATCH /api/vendors/settlements
 export async function PATCH(req: NextRequest) {
   const session = auth(req);
-  if (!session) return NextResponse.json({ success: false, error: "অনুমোদিত নয়" }, { status: 401 });
+  if (!session) return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
   if (session.role === "VIEWER" || session.role === "SUPPORT_AGENT") {
-    return NextResponse.json({ success: false, error: "অনুমতি নেই" }, { status: 403 });
+    return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
   }
   const body = await req.json();
-  const settlements = getSettlements();
+  const settlements = await getDbSettlements();
   const idx = settlements.findIndex((s) => s.id === body.id);
-  if (idx === -1) return NextResponse.json({ success: false, error: "সেটেলমেন্ট পাওয়া যায়নি" }, { status: 404 });
+  if (idx === -1) return NextResponse.json({ success: false, error: "Settlement not found" }, { status: 404 });
 
   const settlement = settlements[idx];
   if (settlement.status !== "PENDING") {
-    return NextResponse.json({ success: false, error: "ইতোমধ্যে প্রক্রিয়া হয়েছে" }, { status: 400 });
+    return NextResponse.json({ success: false, error: "Already processed" }, { status: 400 });
   }
 
-  settlement.status = body.action === "APPROVE" ? "APPROVED" : "REJECTED";
-  settlement.processedAt = new Date().toISOString();
-  settlement.processedBy = session.name;
+  const updated = await updateDbSettlement(
+    body.id,
+    body.action === "APPROVE" ? "APPROVE" : "REJECT",
+    session.name
+  );
 
-  // Deduct from vendor balance
-  if (body.action === "APPROVE") {
-    const vendors = getVendors();
-    const vIdx = vendors.findIndex((v) => v.id === settlement.vendorId);
-    if (vIdx !== -1) {
-      vendors[vIdx].settlementBalance = Math.max(0, (vendors[vIdx].settlementBalance || 0) - settlement.amount);
-    }
-  }
-
-  logActivity({
+  await logDbActivity({
     actorId: session.memberId,
     actorName: session.name,
-    action: `SETTLEMENT_${settlement.status}`,
+    action: `SETTLEMENT_${body.action === "APPROVE" ? "APPROVED" : "REJECTED"}`,
     targetType: "VENDOR",
     targetId: settlement.vendorId,
     targetName: settlement.vendorName,
-    details: `৳${settlement.amount} via ${settlement.payoutMethod}`,
+    details: `Tk.${settlement.amount} via ${settlement.payoutMethod}`,
   });
 
-  return NextResponse.json({ success: true, data: settlement });
+  return NextResponse.json({ success: true, data: updated || settlement });
 }

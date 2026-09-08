@@ -17,9 +17,14 @@ export interface SyncPayload {
     | "PAYOUT_REJECTED"
     | "RIDER_ASSIGNED"
     | "ORDER_CANCELLED"
-    | "STOCK_ALERT";
+    | "STOCK_ALERT"
+    | "VENDOR_SUSPENDED"
+    | "VENDOR_ACTIVATED";
   amount?: number;
   orderId?: string;
+  vendorId?: string;
+  suspendReason?: string;
+  suspendedAt?: string;
   claimedByVendorId?: string;
   claimedByStoreName?: string;
   deliveryZone?: string;

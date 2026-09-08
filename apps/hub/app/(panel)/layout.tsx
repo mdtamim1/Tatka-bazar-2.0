@@ -21,18 +21,18 @@ interface NavItem {
 }
 
 const NAV: NavItem[] = [
-  { section: "OVERVIEW", label: "Dashboard", labelBn: "ড্যাশবোর্ড", href: "/dashboard", icon: LayoutDashboard },
-  { section: "RIDERS", label: "All Riders", labelBn: "সকল রাইডার", href: "/riders", icon: Bike },
-  { label: "KYC Queue", labelBn: "KYC অনুমোদন", href: "/riders/kyc", icon: FileCheck },
-  { label: "Deposits", labelBn: "ডিপোজিট অনুমোদন", href: "/riders/deposits", icon: ArrowDownToLine },
-  { label: "Withdrawals", labelBn: "উইথড্রয়াল", href: "/riders/withdrawals", icon: CreditCard },
-  { section: "VENDORS", label: "All Vendors", labelBn: "সকল ভেন্ডর", href: "/vendors", icon: Store },
-  { label: "Approvals", labelBn: "ভেন্ডর অনুমোদন", href: "/vendors/approvals", icon: AlertTriangle },
-  { label: "Settlements", labelBn: "সেটেলমেন্ট", href: "/vendors/settlements", icon: Banknote },
-  { section: "OPERATIONS", label: "Live Dispatch", labelBn: "লাইভ ডিসপ্যাচ", href: "/dispatch", icon: Radio },
-  { label: "Notifications", labelBn: "নোটিফিকেশন", href: "/notifications", icon: Bell },
-  { section: "SYSTEM", label: "Settings", labelBn: "সেটিংস", href: "/settings", icon: Settings },
-  { label: "Team", labelBn: "টিম ম্যানেজমেন্ট", href: "/settings/team", icon: UserCog },
+  { section: "OVERVIEW", label: "Dashboard", labelBn: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+  { section: "RIDERS", label: "All Riders", labelBn: "All Riders", href: "/riders", icon: Bike },
+  { label: "KYC Queue", labelBn: "KYC Queue", href: "/riders/kyc", icon: FileCheck },
+  { label: "Deposits", labelBn: "Deposits", href: "/riders/deposits", icon: ArrowDownToLine },
+  { label: "Withdrawals", labelBn: "Withdrawals", href: "/riders/withdrawals", icon: CreditCard },
+  { section: "VENDORS", label: "All Vendors", labelBn: "All Vendors", href: "/vendors", icon: Store },
+  { label: "Approvals", labelBn: "Approvals", href: "/vendors/approvals", icon: AlertTriangle },
+  { label: "Settlements", labelBn: "Settlements", href: "/vendors/settlements", icon: Banknote },
+  { section: "OPERATIONS", label: "Live Dispatch", labelBn: "Live Dispatch", href: "/dispatch", icon: Radio },
+  { label: "Notifications", labelBn: "Notifications", href: "/notifications", icon: Bell },
+  { section: "SYSTEM", label: "Settings", labelBn: "Settings", href: "/settings", icon: Settings },
+  { label: "Team", labelBn: "Team Management", href: "/settings/team", icon: UserCog },
 ];
 
 export default function PanelLayout({ children }: { children: React.ReactNode }) {
@@ -60,17 +60,17 @@ function PanelShell({ children }: { children: React.ReactNode }) {
       <div className="flex-center" style={{ minHeight: "100vh", color: "var(--text-muted)" }}>
         <div style={{ textAlign: "center" }}>
           <div style={{ fontSize: 32, marginBottom: 12 }}>🛡️</div>
-          <p className="font-bn" style={{ fontSize: 14 }}>লোড হচ্ছে...</p>
+          <p style={{ fontSize: 14 }}>Loading...</p>
         </div>
       </div>
     );
   }
 
   const ROLE_LABELS: Record<string, string> = {
-    SUPER_ADMIN: "সুপার অ্যাডমিন",
-    OPS_MANAGER: "অপস ম্যানেজার",
-    SUPPORT_AGENT: "সাপোর্ট এজেন্ট",
-    VIEWER: "ভিউয়ার",
+    SUPER_ADMIN: "Super Admin",
+    OPS_MANAGER: "Ops Manager",
+    SUPPORT_AGENT: "Support Agent",
+    VIEWER: "Viewer",
   };
 
   let lastSection = "";
@@ -121,7 +121,7 @@ function PanelShell({ children }: { children: React.ReactNode }) {
                 >
                   <Icon size={16} strokeWidth={2} />
                   {!collapsed && (
-                    <span className="font-bn">{item.labelBn}</span>
+                    <span>{item.label}</span>
                   )}
                   {!collapsed && item.badge !== undefined && item.badge > 0 && (
                     <span className={`sidebar-badge${item.badgeColor ? ` ${item.badgeColor}` : ""}`}>
@@ -145,7 +145,7 @@ function PanelShell({ children }: { children: React.ReactNode }) {
             {!collapsed && (
               <div className="sidebar-user-info">
                 <div className="sidebar-user-name">{session.name}</div>
-                <div className="sidebar-user-role font-bn">
+                <div className="sidebar-user-role">
                   {ROLE_LABELS[session.role] || session.role}
                 </div>
               </div>

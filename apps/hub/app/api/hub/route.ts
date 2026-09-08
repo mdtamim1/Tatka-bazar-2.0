@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getTeam, getActivity, getConfig, getWithdrawals, validateSession, logActivity } from "@/lib/hubStore";
+import { getTeam, getConfig, getWithdrawals, validateSession, logActivity } from "@/lib/hubStore";
+import { getDbActivity, getDbTeam, logDbActivity } from "@/lib/hubDb";
 
 function auth(req: NextRequest) {
   const token = req.headers.get("authorization")?.replace("Bearer ", "");
@@ -9,11 +10,12 @@ function auth(req: NextRequest) {
 // GET /api/hub/dashboard — unified dashboard stats
 export async function GET(req: NextRequest) {
   const session = auth(req);
-  if (!session) return NextResponse.json({ success: false, error: "অনুমোদিত নয়" }, { status: 401 });
+  if (!session) return NextResponse.json({ success: false, error: "Unauthorized access" }, { status: 401 });
+  const activity = await getDbActivity();
   return NextResponse.json({
     success: true,
     data: {
-      activity: getActivity().slice(0, 20),
+      activity: activity.slice(0, 20),
       config: getConfig(),
       pendingWithdrawals: getWithdrawals().filter((w) => w.status === "PENDING").length,
     },
@@ -25,16 +27,18 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   const session = auth(req);
-  if (!session) return NextResponse.json({ success: false, error: "অনুমোদিত নয়" }, { status: 401 });
+  if (!session) return NextResponse.json({ success: false, error: "Unauthorized access" }, { status: 401 });
   if (session.role !== "SUPER_ADMIN") {
-    return NextResponse.json({ success: false, error: "শুধু Super Admin এই কাজ করতে পারেন" }, { status: 403 });
+    return NextResponse.json({ success: false, error: "Only Super Admin can perform this action" }, { status: 403 });
   }
   const body = await req.json();
   if (body.action === "GET_TEAM") {
-    return NextResponse.json({ success: true, data: getTeam() });
+    const team = await getDbTeam();
+    return NextResponse.json({ success: true, data: team });
   }
   if (body.action === "GET_ACTIVITY") {
-    return NextResponse.json({ success: true, data: getActivity() });
+    const activity = await getDbActivity();
+    return NextResponse.json({ success: true, data: activity });
   }
   if (body.action === "GET_CONFIG") {
     return NextResponse.json({ success: true, data: getConfig() });
@@ -42,7 +46,7 @@ export async function POST(req: NextRequest) {
   if (body.action === "ADD_TEAM_MEMBER") {
     const team = getTeam();
     const exists = team.find((m) => m.email === body.member.email);
-    if (exists) return NextResponse.json({ success: false, error: "ইমেইল ইতিমধ্যে ব্যবহৃত" }, { status: 400 });
+    if (exists) return NextResponse.json({ success: false, error: "Email already in use" }, { status: 400 });
     const newMember = {
       id: `hub-member-${Date.now()}`,
       ...body.member,
@@ -50,7 +54,7 @@ export async function POST(req: NextRequest) {
       createdAt: new Date().toISOString(),
     };
     team.push(newMember);
-    logActivity({
+    await logDbActivity({
       actorId: session.memberId,
       actorName: session.name,
       action: "TEAM_MEMBER_ADDED",
@@ -63,9 +67,9 @@ export async function POST(req: NextRequest) {
   if (body.action === "UPDATE_TEAM_MEMBER") {
     const team = getTeam();
     const idx = team.findIndex((m) => m.id === body.id);
-    if (idx === -1) return NextResponse.json({ success: false, error: "সদস্য পাওয়া যায়নি" }, { status: 404 });
+    if (idx === -1) return NextResponse.json({ success: false, error: "Member not found" }, { status: 404 });
     Object.assign(team[idx], body.updates);
-    logActivity({
+    await logDbActivity({
       actorId: session.memberId,
       actorName: session.name,
       action: "TEAM_MEMBER_UPDATED",
@@ -75,5 +79,5 @@ export async function POST(req: NextRequest) {
     });
     return NextResponse.json({ success: true, data: team[idx] });
   }
-  return NextResponse.json({ success: false, error: "অজানা action" }, { status: 400 });
+  return NextResponse.json({ success: false, error: "Unknown action" }, { status: 400 });
 }

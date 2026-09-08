@@ -40,8 +40,19 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [mounted, setMounted] = useState(false);
+  const [suspendedNotice, setSuspendedNotice] = useState<string | null>(null);
 
-  useEffect(() => { setMounted(true); }, []);
+  useEffect(() => {
+    setMounted(true);
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("reason") === "suspended") {
+        setSuspendedNotice(
+          params.get("message") || "আপনার অ্যাকাউন্টটি Hub অ্যাডমিন কর্তৃক সাময়িকভাবে স্থগিত (Suspended) করা হয়েছে।"
+        );
+      }
+    }
+  }, []);
 
   function handleNext(e: React.FormEvent) {
     e.preventDefault();
@@ -61,14 +72,53 @@ export default function LoginPage() {
     setStep("password");
   }
 
+  async function checkRiderSuspension(riderIdOrPhone: string): Promise<string | null> {
+    try {
+      const localRes = await fetch(`/api/sync/events?riderId=${encodeURIComponent(riderIdOrPhone)}`);
+      if (localRes.ok) {
+        const localJson = await localRes.json();
+        if (localJson.isSuspended) {
+          return localJson.data?.suspendReason || "অ্যাকাউন্ট স্থগিত করা হয়েছে";
+        }
+      }
+      const hubRes = await fetch(`http://localhost:3004/api/public/status?type=rider&id=${encodeURIComponent(riderIdOrPhone)}`);
+      if (hubRes.ok) {
+        const hubJson = await hubRes.json();
+        if (hubJson.success && hubJson.data?.isSuspended) {
+          return hubJson.data.suspendReason || "Hub অ্যাডমিন কর্তৃক সাময়িক স্থগিত করা হয়েছে";
+        }
+      }
+    } catch {}
+    return null;
+  }
+
   async function handleLoginSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!password) { setError("পাসওয়ার্ড দিন"); return; }
     setLoading(true);
     setError("");
+
+    // Suspension check before logging in
+    const suspendReason = await checkRiderSuspension(identifier.trim());
+    if (suspendReason) {
+      setError(`🚫 অ্যাকাউন্ট স্থগিত: ${suspendReason}। সহায়তার জন্য সাপোর্টে যোগাযোগ করুন: 01700-000000`);
+      setLoading(false);
+      return;
+    }
+
     try {
       const res = await login(identifier.trim(), password);
       if (res.success) {
+        // Double check user id returned
+        const idToCheck = res.data?.user?.id || identifier.trim();
+        const secondCheck = await checkRiderSuspension(idToCheck);
+        if (secondCheck) {
+          setError(`🚫 অ্যাকাউন্ট স্থগিত: ${secondCheck}। সহায়তার জন্য সাপোর্টে যোগাযোগ করুন: 01700-000000`);
+          localStorage.removeItem("rider_token");
+          localStorage.removeItem("rider_user");
+          setLoading(false);
+          return;
+        }
         router.replace("/home");
       } else {
         setError(res.error || "লগইন ব্যর্থ। আবার চেষ্টা করুন।");
@@ -82,6 +132,15 @@ export default function LoginPage() {
   async function handleQuickDemo() {
     setLoading(true);
     setError("");
+
+    // Suspension check on demo account
+    const suspendReason = await checkRiderSuspension("rider-demo-01");
+    if (suspendReason) {
+      setError(`🚫 ডেমো রাইডার স্থগিত: ${suspendReason}। Hub থেকে অ্যাক্টিভ করে আবার চেষ্টা করুন।`);
+      setLoading(false);
+      return;
+    }
+
     try {
       const res = await login("01700000001", "password123");
       if (res.success) {
@@ -293,6 +352,31 @@ export default function LoginPage() {
               Tatka Bazar Delivery Partner
             </p>
           </div>
+
+          {/* Suspended Notice Banner */}
+          {suspendedNotice && (
+            <div style={{
+              background: "rgba(239,68,68,.18)",
+              border: "1px solid rgba(239,68,68,.5)",
+              boxShadow: "0 0 20px rgba(239,68,68,.2)",
+              borderRadius: 14, padding: "12px 16px",
+              fontSize: ".84rem", color: "#FCA5A5",
+              textAlign: "left", marginBottom: 16,
+              fontFamily: "var(--font-bn)",
+              display: "flex", gap: 10, alignItems: "flex-start",
+            }}>
+              <span style={{ fontSize: "20px", flexShrink: 0 }}>🚫</span>
+              <div>
+                <div style={{ fontWeight: 800, color: "#FEE2E2", marginBottom: 2 }}>
+                  অ্যাকাউন্ট স্থগিত করা হয়েছে
+                </div>
+                <div>{suspendedNotice}</div>
+                <div style={{ fontSize: ".76rem", color: "#A8C0D8", marginTop: 4 }}>
+                  সহায়তার জন্য অ্যাডমিন বা সাপোর্টে যোগাযোগ করুন: 01700-000000
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Error */}
           {error && (

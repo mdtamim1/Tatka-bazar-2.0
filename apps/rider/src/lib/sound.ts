@@ -175,6 +175,13 @@ class SoundManager {
       osc.stop(now + 0.46);
     } catch {}
   }
+
+  /**
+   * Plays an urgent warning alert for account suspension
+   */
+  public playUrgentAlert() {
+    this.playSosSiren();
+  }
 }
 
 export const sound = new SoundManager();
