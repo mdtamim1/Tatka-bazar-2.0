@@ -18,11 +18,11 @@ function StatusBadge({ status }: { status: string }) {
 }
 
 function OTPModal({
-  isOpen, onClose, onVerify, riderName, amount, otpForDemo,
+  isOpen, onClose, onVerify, riderName, amount,
 }: {
   isOpen: boolean; onClose: () => void;
   onVerify: (otp: string) => boolean;
-  riderName?: string; amount: number; otpForDemo?: string;
+  riderName?: string; amount: number;
 }) {
   const [otp, setOtp] = useState("");
   const [error, setError] = useState("");
@@ -60,19 +60,6 @@ function OTPModal({
             <br />রাইডারের কাছ থেকে ৬-ডিজিটের OTP নিন।
           </p>
         </div>
-
-        {otpForDemo && (
-          <div style={{
-            background: "rgba(245,158,11,.08)", border: "1px dashed rgba(245,158,11,.4)",
-            borderRadius: 12, padding: "10px 14px", textAlign: "center",
-            fontSize: ".78rem", color: "var(--amber)", fontFamily: "var(--font-bn)"
-          }}>
-            🎭 <strong>Demo OTP (রাইডার সিমুলেশন):</strong>{" "}
-            <span style={{ fontFamily: "var(--font-mono)", fontSize: "1.1rem", fontWeight: 800, letterSpacing: 4 }}>
-              {otpForDemo}
-            </span>
-          </div>
-        )}
 
         {error && (
           <div style={{
@@ -144,7 +131,7 @@ function RequestStepper({ statusKeys, labels, descs, currentStatus }:
 function WithdrawTab() {
   const {
     commissionLedger, profile, withdrawRequests,
-    requestWithdraw, approveWithdrawSimulate, verifyWithdrawOTP,
+    requestWithdraw, verifyWithdrawOTP,
   } = useVendorStore();
 
   const [amount, setAmount] = useState("");
@@ -164,12 +151,6 @@ function WithdrawTab() {
     if (amt < 100) { setFormError("সর্বনিম্ন উত্তোলন ৳১০০।"); return; }
     requestWithdraw(amt, method, account);
     setAmount(""); setFormError("");
-  };
-
-  const handleApproveSimulate = (id: string) => {
-    const otp = approveWithdrawSimulate(id) as unknown as string;
-    const req = useVendorStore.getState().withdrawRequests.find((r) => r.id === id);
-    if (req) setOtpModal({ requestId: id, amount: req.amount, otp });
   };
 
   const handleOTPVerify = (otp: string) => {
@@ -265,13 +246,8 @@ function WithdrawTab() {
                 currentStatus={req.status}
               />
 
-              {req.status === "PENDING" && (
-                <button className="btn-secondary" style={{ fontSize: ".78rem" }} onClick={() => handleApproveSimulate(req.id)}>
-                  🎭 অ্যাডমিন অনুমোদন সিমুলেট করুন (Demo)
-                </button>
-              )}
               {req.status === "OTP_SENT" && (
-                <button className="btn-primary" onClick={() => setOtpModal({ requestId: req.id, amount: req.amount, otp: req.otp })}>
+                <button className="btn-primary" onClick={() => setOtpModal({ requestId: req.id, amount: req.amount })}>
                   🔐 OTP যাচাই করুন
                 </button>
               )}
@@ -288,7 +264,7 @@ function WithdrawTab() {
       <OTPModal
         isOpen={!!otpModal} onClose={() => setOtpModal(null)} onVerify={handleOTPVerify}
         riderName={otpModal ? withdrawRequests.find((r) => r.id === otpModal.requestId)?.riderName : undefined}
-        amount={otpModal?.amount || 0} otpForDemo={otpModal?.otp}
+        amount={otpModal?.amount || 0}
       />
     </div>
   );
@@ -298,11 +274,11 @@ function WithdrawTab() {
 function SettlementTab() {
   const {
     commissionLedger, settlementRequests,
-    requestSettlement, approveSettlementSimulate, verifySettlementOTP,
+    requestSettlement, verifySettlementOTP,
   } = useVendorStore();
 
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  const [otpModal, setOtpModal] = useState<{ requestId: string; amount: number; otp?: string } | null>(null);
+  const [otpModal, setOtpModal] = useState<{ requestId: string; amount: number } | null>(null);
 
   const pendingLedger = commissionLedger.filter((c) => c.settlementStatus === "PENDING");
   const totalSelected = pendingLedger.filter((c) => selectedIds.has(c.id)).reduce((s, c) => s + c.netPayable, 0);
@@ -315,12 +291,6 @@ function SettlementTab() {
     const sel = pendingLedger.filter((c) => selectedIds.has(c.id));
     requestSettlement(sel.map((c) => c.orderId), sel.map((c) => c.displayId), sel.reduce((s, c) => s + c.netPayable, 0));
     setSelectedIds(new Set());
-  };
-
-  const handleApproveSimulate = (id: string) => {
-    const otp = approveSettlementSimulate(id) as unknown as string;
-    const req = useVendorStore.getState().settlementRequests.find((r) => r.id === id);
-    if (req) setOtpModal({ requestId: id, amount: req.totalAmount, otp });
   };
 
   const handleOTPVerify = (otp: string) => {
@@ -430,13 +400,8 @@ function SettlementTab() {
                 currentStatus={req.status === "RIDER_DISPATCHED" ? "OTP_SENT" : req.status}
               />
 
-              {req.status === "PENDING" && (
-                <button className="btn-secondary" style={{ fontSize: ".78rem" }} onClick={() => handleApproveSimulate(req.id)}>
-                  🎭 অ্যাডমিন অনুমোদন সিমুলেট করুন (Demo)
-                </button>
-              )}
               {(req.status === "OTP_SENT" || req.status === "RIDER_DISPATCHED") && (
-                <button className="btn-primary" onClick={() => setOtpModal({ requestId: req.id, amount: req.totalAmount, otp: req.otp })}>
+                <button className="btn-primary" onClick={() => setOtpModal({ requestId: req.id, amount: req.totalAmount })}>
                   🔐 OTP যাচাই করুন
                 </button>
               )}
@@ -453,7 +418,7 @@ function SettlementTab() {
       <OTPModal
         isOpen={!!otpModal} onClose={() => setOtpModal(null)} onVerify={handleOTPVerify}
         riderName={otpModal ? settlementRequests.find((r) => r.id === otpModal.requestId)?.riderName : undefined}
-        amount={otpModal?.amount || 0} otpForDemo={otpModal?.otp}
+        amount={otpModal?.amount || 0}
       />
     </div>
   );

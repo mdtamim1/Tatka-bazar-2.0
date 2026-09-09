@@ -38,7 +38,6 @@ export default function VendorHeader({
     profile,
     dutyStatus,
     setDutyStatus,
-    simulateIncomingOrder,
     notifications,
   } = useVendorStore();
 
@@ -191,30 +190,6 @@ export default function VendorHeader({
             </div>
           )}
         </div>
-
-        {/* Sound Test / Simulation Trigger */}
-        <button
-          id="sound-test-btn"
-          onClick={simulateIncomingOrder}
-          style={{
-            background: "rgba(34, 197, 94, 0.12)",
-            border: "1px solid rgba(34, 197, 94, 0.35)",
-            color: "#22C55E",
-            borderRadius: "999px",
-            padding: "5px 14px",
-            fontSize: ".72rem",
-            fontWeight: 700,
-            fontFamily: "var(--font-bn)",
-            display: "inline-flex",
-            alignItems: "center",
-            gap: 5,
-            cursor: "pointer",
-            transition: "all .2s ease",
-          }}
-          title="নতুন অর্ডারের সাউন্ড ও ৪৫ সেকেন্ড অ্যালার্ট টেস্ট করুন"
-        >
-          <span>🔔</span> সাউন্ড টেস্ট
-        </button>
       </div>
     </div>
   );

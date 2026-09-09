@@ -50,7 +50,7 @@ export function useVendorSessionGuard(vendorId: string, storeName?: string) {
   useEffect(() => {
     const unsubscribe = subscribeSyncEvent((payload) => {
       if (payload.type === "VENDOR_SUSPENDED") {
-        if (!payload.vendorId || payload.vendorId === vendorId || vendorId === "vnd-dhaka-089") {
+        if (!payload.vendorId || payload.vendorId === vendorId) {
           triggerSuspension(payload.suspendReason, payload.suspendedAt);
         }
       }

@@ -88,17 +88,17 @@ export async function POST(request: Request) {
 
       const newTask = {
         id: taskData.id,
-        orderNumber: taskData.orderNumber || taskData.displayId || `TB-${taskData.id.replace(/\D/g, "") || "9000"}`,
+        orderNumber: taskData.orderNumber || taskData.displayId || `TB-${taskData.id.replace(/\D/g, "") || "1001"}`,
         customerName: taskData.customerName || "সম্মানিত গ্রাহক",
-        customerPhone: taskData.customerPhone || "01729-458921",
-        deliveryAddress: taskData.deliveryAddress || `${taskData.deliveryZone || "ঢাকা জোন"}, ঢাকা`,
-        vendorName: taskData.vendorName || "Green Farm Groceries & Organics",
-        vendorPhone: taskData.vendorPhone || "01711-223344",
-        itemCount: taskData.itemCount || (Array.isArray(taskData.items) ? taskData.items.length : 2),
-        subtotal: Number(taskData.subtotal) || Number(taskData.grossTotal) || 1200,
-        deliveryFee: Number(taskData.deliveryFee) || 60,
-        total: Number(taskData.total) || Number(taskData.grossTotal) || 1260,
-        earnings: Number(taskData.earnings) || 50,
+        customerPhone: taskData.customerPhone || "",
+        deliveryAddress: taskData.deliveryAddress || (taskData.deliveryZone ? `${taskData.deliveryZone}, ঢাকা` : "ঢাকা"),
+        vendorName: taskData.vendorName || "তাতকা ভেন্ডর",
+        vendorPhone: taskData.vendorPhone || "",
+        itemCount: taskData.itemCount || (Array.isArray(taskData.items) ? taskData.items.length : 0),
+        subtotal: Number(taskData.subtotal) || Number(taskData.grossTotal) || 0,
+        deliveryFee: Number(taskData.deliveryFee) || 0,
+        total: Number(taskData.total) || Number(taskData.grossTotal) || 0,
+        earnings: Number(taskData.earnings) || 0,
         paymentStatus: taskData.paymentStatus || "COD",
         paymentMethod: taskData.paymentMethod || "CASH_ON_DELIVERY",
         items: Array.isArray(taskData.items) ? taskData.items : [],
@@ -129,11 +129,11 @@ export async function POST(request: Request) {
     // 2. Claim (Rider accepts order)
     if (action === "CLAIM") {
       const targetId = body.taskId || body.orderId;
-      const riderId = body.riderId || "rider-demo-01";
-      const riderName = body.riderName || "তামীম ইকবাল (রাইডার #১০১)";
-      const riderPhone = body.riderPhone || "01700000001";
-      const riderVehicle = body.riderVehicle || "মোটরসাইকেল (ঢাকা মেট্রো-হ-৪৫-১২৩৪)";
-      const riderTier = body.riderTier || "ব্রোঞ্জ রাইডার";
+      const riderId = body.riderId || "";
+      const riderName = body.riderName || "রাইডার";
+      const riderPhone = body.riderPhone || "";
+      const riderVehicle = body.riderVehicle || "";
+      const riderTier = body.riderTier || "";
 
       const idx = tasks.findIndex((t: any) => t.id === targetId || t.orderNumber === targetId);
       if (idx !== -1 && tasks[idx]) {
@@ -158,7 +158,7 @@ export async function POST(request: Request) {
         return NextResponse.json(
           {
             success: true,
-            message: "টাস্ক তামীম ইকবাল কর্তৃক সফলভাবে গ্রহণ করা হয়েছে!",
+            message: `টাস্ক ${riderName} কর্তৃক সফলভাবে গ্রহণ করা হয়েছে!`,
             task: tasks[idx],
           },
           { headers: CORS_HEADERS }
@@ -207,11 +207,11 @@ export async function POST(request: Request) {
 
     // 4. Send Chat Message between Vendor and Rider
     if (action === "SEND_CHAT") {
-      const orderId = body.orderId || "task-01";
+      const orderId = body.orderId || "";
       const message = {
         id: `msg-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
         sender: body.sender || "VENDOR",
-        senderName: body.senderName || (body.sender === "RIDER" ? "তামীম ইকবাল" : "সবুজ খামার গ্রোসারি"),
+        senderName: body.senderName || (body.sender === "RIDER" ? "রাইডার" : "ভেন্ডর"),
         text: body.text || "",
         timestamp: new Date().toISOString(),
       };

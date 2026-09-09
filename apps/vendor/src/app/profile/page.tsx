@@ -7,7 +7,7 @@ import { translations } from "@/utils/translations";
 const STEPS = ["দোকান ও ব্যক্তিগত তথ্য", "ঠিকানা ও ডেলিভারি হাব", "পরিচয়পত্র ও লাইসেন্স"];
 
 export default function VendorProfilePage() {
-  const { language, profile, updateProfile, fullResetVendorStore } = useVendorStore();
+  const { language, profile, orders, reviews, updateProfile, fullResetVendorStore } = useVendorStore();
   const t = translations[language];
 
   const [step, setStep] = useState(0);
@@ -19,24 +19,24 @@ export default function VendorProfilePage() {
     storeName: profile.storeName || "",
     storeNameBn: profile.storeNameBn || "",
     ownerName: profile.ownerName || "",
-    fatherName: profile.fatherName || "মোঃ রফিকুল হক",
-    motherName: profile.motherName || "বেগম রোকেয়া সুলতানা",
-    dateOfBirth: profile.dateOfBirth || "1988-06-15",
+    fatherName: profile.fatherName || "",
+    motherName: profile.motherName || "",
+    dateOfBirth: profile.dateOfBirth || "",
     phone: profile.phone || "",
     email: profile.email || "",
     address: profile.address || "",
-    permanentAddress: profile.permanentAddress || "গ্রাম: শান্তিনগর, ডাকঘর: ধানমন্ডি, ঢাকা ১২০৯",
-    nidNumber: profile.nidNumber || "1988269123849102",
-    tradeLicense: profile.tradeLicense || "TRAD/DSCC/019283/2024",
-    tinBin: profile.tinBin || "TIN-893019284102 / BIN-002910381",
+    permanentAddress: profile.permanentAddress || "",
+    nidNumber: profile.nidNumber || "",
+    tradeLicense: profile.tradeLicense || "",
+    tinBin: profile.tinBin || "",
     payoutMethod: profile.payoutMethod || "BKASH",
-    payoutAccount: profile.payoutAccount || "+8801711223344 (Merchant)",
-    openTime: profile.operatingHours?.open || "07:00",
+    payoutAccount: profile.payoutAccount || "",
+    openTime: profile.operatingHours?.open || "08:00",
     closeTime: profile.operatingHours?.close || "22:00",
     vacationMode: profile.vacationMode || false,
-    nidFrontUrl: profile.nidFrontUrl || "https://images.unsplash.com/photo-1544717305-2782549b5136?w=400",
-    nidBackUrl: profile.nidBackUrl || "https://images.unsplash.com/photo-1544717305-2782549b5136?w=400",
-    photoUrl: profile.logoUrl || "https://images.unsplash.com/photo-1542838132-92c53300491e?w=150",
+    nidFrontUrl: profile.nidFrontUrl || "",
+    nidBackUrl: profile.nidBackUrl || "",
+    photoUrl: profile.logoUrl || "",
   });
 
   const inp = (field: string) => (val: any) => {
@@ -68,7 +68,7 @@ export default function VendorProfilePage() {
         nidFrontUrl: form.nidFrontUrl,
         nidBackUrl: form.nidBackUrl,
         logoUrl: form.photoUrl,
-        kycStatus: "APPROVED",
+        kycStatus: profile.kycStatus || "PENDING",
       });
       setSaving(false);
       setSaved(true);
@@ -84,27 +84,45 @@ export default function VendorProfilePage() {
     .join("")
     .toUpperCase();
 
+  const totalDeliveries = orders.filter(
+    (o) => o.status === "COMPLETED"
+  ).length;
+  const rating = profile.rating || 5.0;
+  const totalRatings = reviews.length;
+  const onTimeRate = orders.length > 0 ? 100 : 0;
+  const acceptanceRate = orders.length > 0 ? 100 : 0;
+
+  const isGold = totalDeliveries >= 100;
+  const isSilver = totalDeliveries >= 20;
   const perf = {
-    tier: "GOLD",
-    tierTitleBn: "গোল্ড ভেন্ডর (Gold Merchant)",
-    tierBadgeEmoji: "🥇",
-    tierPerkBn: "টপ ক্যাটালগ প্রায়োরিটি + তাতকা এক্সপ্রেস ডিসপ্যাচ ও ১০% ফ্ল্যাট প্ল্যাটফর্ম কমিশন",
-    totalDeliveries: 1420,
-    rating: profile.rating || 4.9,
-    totalRatings: 128,
-    onTimeRate: 99.2,
-    acceptanceRate: 99.8,
+    tier: isGold ? "GOLD" : isSilver ? "SILVER" : "STANDARD",
+    tierTitleBn: isGold
+      ? "গোল্ড ভেন্ডর (Gold Merchant)"
+      : isSilver
+      ? "সিলভার ভেন্ডর (Silver Merchant)"
+      : "স্ট্যান্ডার্ড ভেন্ডর (Standard Merchant)",
+    tierBadgeEmoji: isGold ? "🥇" : isSilver ? "🥈" : "🏪",
+    tierPerkBn: isGold
+      ? "টপ ক্যাটালগ প্রায়োরিটি + তাতকা এক্সপ্রেস ডিসপ্যাচ ও ১০% ফ্ল্যাট প্ল্যাটফর্ম কমিশন"
+      : isSilver
+      ? "স্ট্যান্ডার্ড এক্সপ্রেস ডিসপ্যাচ ও ১২% প্ল্যাটফর্ম কমিশন"
+      : "নিয়মিত ডিসপ্যাচ ও প্ল্যাটফর্ম কমিশন",
+    totalDeliveries,
+    rating,
+    totalRatings,
+    onTimeRate,
+    acceptanceRate,
     starsBreakdown: {
-      star5: 92,
-      star4: 24,
-      star3: 8,
-      star2: 3,
-      star1: 1,
+      star5: reviews.filter((r) => r.rating === 5).length,
+      star4: reviews.filter((r) => r.rating === 4).length,
+      star3: reviews.filter((r) => r.rating === 3).length,
+      star2: reviews.filter((r) => r.rating === 2).length,
+      star1: reviews.filter((r) => r.rating === 1).length,
     },
   };
 
   const handleResetVendorPanel = () => {
-    if (confirm("আপনি কি নিশ্চিতভাবে ভেন্ডর প্যানেলের সকল ডেমো ডাটা ও সেটিংস রিসেট করতে চান?")) {
+    if (confirm("আপনি কি নিশ্চিতভাবে ভেন্ডর প্যানেলের সকল ডাটা ও ক্যাশ রিসেট করতে চান?")) {
       fullResetVendorStore();
       window.location.reload();
     }
@@ -117,11 +135,11 @@ export default function VendorProfilePage() {
         <div className="profile-avatar">{initials || "🏪"}</div>
         <div className="profile-name bn">{displayName}</div>
         <div className="profile-meta">
-          {profile.phone} • {profile.category || "তাজা শাকসবজি ও মুদি পণ্য"}
+          {profile.phone || "মোবাইল নম্বর যুক্ত নেই"} • {profile.category || "তাজা শাকসবজি ও মুদি পণ্য"}
         </div>
         <div style={{ display: "flex", gap: "8px", alignItems: "center", justifyContent: "center", marginTop: 10, flexWrap: "wrap" }}>
-          <div className="kyc-status-badge approved">
-            যাচাই সম্পন্ন ✓
+          <div className={`kyc-status-badge ${profile.kycStatus === "APPROVED" ? "approved" : "pending"}`}>
+            {profile.kycStatus === "APPROVED" ? "যাচাই সম্পন্ন ✓" : "যাচাই প্রক্রিয়াধীন (Pending)"}
           </div>
           <div className="tier-badge tier-gold">
             <span>{perf.tierBadgeEmoji}</span>
@@ -193,11 +211,11 @@ export default function VendorProfilePage() {
             ⭐ স্টার রেটিং অনুপাত
           </div>
           {[
-            { label: "৫ স্টার", count: perf.starsBreakdown.star5, pct: (perf.starsBreakdown.star5 / perf.totalRatings) * 100 },
-            { label: "৪ স্টার", count: perf.starsBreakdown.star4, pct: (perf.starsBreakdown.star4 / perf.totalRatings) * 100 },
-            { label: "৩ স্টার", count: perf.starsBreakdown.star3, pct: (perf.starsBreakdown.star3 / perf.totalRatings) * 100 },
-            { label: "২ স্টার", count: perf.starsBreakdown.star2, pct: (perf.starsBreakdown.star2 / perf.totalRatings) * 100 },
-            { label: "১ স্টার", count: perf.starsBreakdown.star1, pct: (perf.starsBreakdown.star1 / perf.totalRatings) * 100 },
+            { label: "৫ স্টার", count: perf.starsBreakdown.star5, pct: perf.totalRatings > 0 ? (perf.starsBreakdown.star5 / perf.totalRatings) * 100 : 0 },
+            { label: "৪ স্টার", count: perf.starsBreakdown.star4, pct: perf.totalRatings > 0 ? (perf.starsBreakdown.star4 / perf.totalRatings) * 100 : 0 },
+            { label: "৩ স্টার", count: perf.starsBreakdown.star3, pct: perf.totalRatings > 0 ? (perf.starsBreakdown.star3 / perf.totalRatings) * 100 : 0 },
+            { label: "২ স্টার", count: perf.starsBreakdown.star2, pct: perf.totalRatings > 0 ? (perf.starsBreakdown.star2 / perf.totalRatings) * 100 : 0 },
+            { label: "১ স্টার", count: perf.starsBreakdown.star1, pct: perf.totalRatings > 0 ? (perf.starsBreakdown.star1 / perf.totalRatings) * 100 : 0 },
           ].map((bar) => (
             <div key={bar.label} className="star-bar-row">
               <span style={{ width: 44, flexShrink: 0 }}>{bar.label}</span>

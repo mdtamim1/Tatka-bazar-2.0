@@ -76,16 +76,16 @@ export default function VendorOrderTrackModal({
   const riderName =
     liveTask?.riderName ||
     order.riderName ||
-    "তামীম ইকবাল (রাইডার #১০১)";
+    "রাইডার নির্ধারিত হয়নি";
   const riderPhone =
     liveTask?.riderPhone ||
     order.riderPhone ||
-    "01700000001";
+    "";
   const vehicle =
     liveTask?.riderVehicle ||
     order.riderVehicle ||
-    "মোটরসাইকেল (ঢাকা মেট্রো-হ-৪৫-১২৩৪)";
-  const zone = order.deliveryZone || "ধানমন্ডি জোন";
+    "";
+  const zone = order.deliveryZone || "";
 
   const steps = [
     {
@@ -275,25 +275,36 @@ export default function VendorOrderTrackModal({
                   </span>
                 </div>
                 <p className="text-[11px] text-slate-600 mt-0.5">
-                  যানবাহন: <span className="text-slate-900 font-semibold">{vehicle}</span>
+                  যানবাহন: <span className="text-slate-900 font-semibold">{vehicle || "প্রযোজ্য নয়"}</span>
                 </p>
                 <p className="text-[11px] text-slate-600">
-                  মোবাইল: <span className="font-mono text-slate-900 font-bold">{riderPhone}</span>
+                  মোবাইল: <span className="font-mono text-slate-900 font-bold">{riderPhone || "প্রযোজ্য নয়"}</span>
                 </p>
               </div>
             </div>
 
             {/* Action Buttons: Chat & Phone Call */}
             <div className="flex items-center gap-2 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-100">
-              {/* Direct Phone Call Button (Always Active) */}
-              <a
-                href={`tel:${riderPhone}`}
-                className="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold flex items-center gap-1.5 transition-all shadow-xs active:scale-95 text-xs"
-                title="রাইডারকে সরাসরি ফোন কল করুন"
-              >
-                <Phone size={14} />
-                <span>সরাসরি কল দিন</span>
-              </a>
+              {/* Direct Phone Call Button */}
+              {riderPhone ? (
+                <a
+                  href={`tel:${riderPhone}`}
+                  className="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold flex items-center gap-1.5 transition-all shadow-xs active:scale-95 text-xs"
+                  title="রাইডারকে সরাসরি ফোন কল করুন"
+                >
+                  <Phone size={14} />
+                  <span>সরাসরি কল দিন</span>
+                </a>
+              ) : (
+                <button
+                  type="button"
+                  disabled
+                  className="px-4 py-2.5 rounded-xl bg-slate-100 text-slate-400 font-bold flex items-center gap-1.5 text-xs cursor-not-allowed"
+                >
+                  <Phone size={14} />
+                  <span>কল নম্বর নেই</span>
+                </button>
+              )}
 
               {/* Chat Button: Active ONLY BEFORE parcel pickup from store */}
               {!isHandedOver && onOpenChat ? (

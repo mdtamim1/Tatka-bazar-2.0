@@ -12,6 +12,8 @@ import {
 } from "lucide-react";
 import { audioAlert } from "@/utils/audioAlert";
 
+import { useVendorStore } from "@/store/vendorStore";
+
 interface ChatMsg {
   id: string;
   sender: "VENDOR" | "RIDER" | "CUSTOMER" | "SUPPORT";
@@ -33,13 +35,15 @@ interface RiderChatModalProps {
 export default function RiderChatModal({
   isOpen,
   onClose,
-  orderNumber = "TB-9824",
-  riderName = "তামীম ইকবাল (রাইডার #১০১)",
-  riderPhone = "01700000001",
-  riderVehicle = "মোটরসাইকেল (ঢাকা মেট্রো-হ-৪৫-১২৩৪)",
-  riderRating = "4.95 ★",
+  orderNumber = "",
+  riderName = "রাইডার",
+  riderPhone = "",
+  riderVehicle = "",
+  riderRating = "5.0 ★",
 }: RiderChatModalProps) {
-  const channelId = "task-01"; // Unified with active demo channel
+  const { profile } = useVendorStore();
+  const storeName = profile?.storeName || "ভেন্ডর";
+  const channelId = orderNumber ? `order-${orderNumber}` : "general";
   const [messages, setMessages] = useState<ChatMsg[]>([]);
   const [inputText, setInputText] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -83,7 +87,7 @@ export default function RiderChatModal({
       window.removeEventListener("storage", handleStorage);
       clearInterval(pollInterval);
     };
-  }, [isOpen]);
+  }, [isOpen, channelId]);
 
   function loadMessages() {
     try {
@@ -91,19 +95,11 @@ export default function RiderChatModal({
       if (raw) {
         setMessages(JSON.parse(raw));
       } else {
-        const starter: ChatMsg[] = [
-          {
-            id: "m-1",
-            sender: "RIDER",
-            senderName: riderName,
-            text: "আসসালামু আলাইকুম ভেন্ডর ভাই, আমি পার্সেল সংগ্রহ করতে দোকানে আসছি। পার্সেল রেডি আছে কি? 🛵",
-            timestamp: new Date(Date.now() - 1000 * 60 * 8).toISOString(),
-          },
-        ];
-        setMessages(starter);
-        localStorage.setItem(`tatka_chat_${channelId}`, JSON.stringify(starter));
+        setMessages([]);
       }
-    } catch {}
+    } catch {
+      setMessages([]);
+    }
   }
 
   function handleSendMessage(customText?: string) {
@@ -113,7 +109,7 @@ export default function RiderChatModal({
     const newMsg: ChatMsg = {
       id: `msg-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
       sender: "VENDOR",
-      senderName: "সবুজ খামার গ্রোসারি (ভেন্ডর)",
+      senderName: `${storeName} (ভেন্ডর)`,
       text,
       timestamp: new Date().toISOString(),
     };
@@ -145,7 +141,7 @@ export default function RiderChatModal({
             action: "SEND_CHAT",
             orderId: channelId,
             sender: "VENDOR",
-            senderName: "সবুজ খামার গ্রোসারি (ভেন্ডর)",
+            senderName: `${storeName} (ভেন্ডর)`,
             text,
           }),
         }).catch(() => {});

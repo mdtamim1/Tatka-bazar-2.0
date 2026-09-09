@@ -65,7 +65,6 @@ export default function VendorDashboardPage() {
     products,
     commissionLedger,
     updateOrderStatus,
-    simulateIncomingOrder,
     setChatOrder,
     setTrackingOrder,
   } = useVendorStore();

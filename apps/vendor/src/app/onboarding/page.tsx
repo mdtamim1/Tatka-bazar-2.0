@@ -11,7 +11,6 @@ import {
   CheckCircle2,
   ArrowRight,
   ArrowLeft,
-  Sparkles,
   Clock,
   Store,
 } from "lucide-react";
@@ -29,7 +28,10 @@ export default function OnboardingPage() {
   const [nidNumber, setNidNumber] = useState(profile.nidNumber);
   const [payoutMethod, setPayoutMethod] = useState(profile.payoutMethod);
   const [payoutAccount, setPayoutAccount] = useState(profile.payoutAccount);
-  const [agreed, setAgreed] = useState(true);
+  const [deliveryZones, setDeliveryZones] = useState<string[]>(
+    profile.deliveryZones || []
+  );
+  const [agreed, setAgreed] = useState<boolean>(false);
 
   const handleNext = (e: React.FormEvent) => {
     e.preventDefault();
@@ -49,9 +51,6 @@ export default function OnboardingPage() {
     }
   };
 
-  const handleSimulateAdminApproval = () => {
-    updateProfile({ status: "APPROVED" });
-  };
 
   return (
     <div className="max-w-2xl mx-auto py-6 px-4 select-none space-y-6">
@@ -106,18 +105,10 @@ export default function OnboardingPage() {
             <div>Payout: {payoutMethod} ({payoutAccount})</div>
           </div>
 
-          <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-3">
-            <button
-              onClick={handleSimulateAdminApproval}
-              className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-lg shadow-emerald-950 flex items-center justify-center gap-2 transition-colors"
-            >
-              <Sparkles size={15} />
-              <span>{t.simulateApprovalBtn}</span>
-            </button>
-
+          <div className="pt-4 flex items-center justify-center">
             <Link
               href="/"
-              className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-[#152227] hover:bg-[#1c2c33] text-slate-300 text-xs font-semibold border border-[#20333B]"
+              className="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-[#152227] hover:bg-[#1c2c33] text-slate-300 text-xs font-semibold border border-[#20333B] text-center"
             >
               Back to Dashboard
             </Link>

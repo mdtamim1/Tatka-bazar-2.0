@@ -621,7 +621,7 @@ export default function OrderHistoryPage() {
                     {profile.storeNameBn || profile.storeName || "তাতকা ফ্রেশ ভেন্ডর"}
                   </div>
                   <div style={{ fontSize: ".70rem", color: "var(--text-3)", marginTop: 2 }}>
-                    ট্রেড লাইসেন্স: {profile.tradeLicense || "TRAD/DSCC/019283/2024"}
+                    ট্রেড লাইসেন্স: {profile.tradeLicense || "প্রযোজ্য নয়"}
                   </div>
                 </div>
                 <div style={{ textAlign: "right" }}>

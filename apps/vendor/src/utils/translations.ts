@@ -70,7 +70,6 @@ export const translations = {
     platformCommission: "Tatka Commission (10%)",
     nextPayoutCycle: "Next Settlement Cycle",
     requestPayoutBtn: "Request Payout",
-    simulateOrderBtn: "Simulate New Order (+Chime)",
     viewAllOrders: "View All Orders",
     viewInventory: "Manage Stock",
 
@@ -295,7 +294,6 @@ export const translations = {
     step5: "5. Terms Acceptance",
     kycPendingNotice: "KYC Under Verification by Tatka Bazar Compliance Team",
     kycPendingDesc: "Your trade documents and NID are being reviewed. Expected turnaround: 2-4 business hours.",
-    simulateApprovalBtn: "⚡ Simulate Admin Approval (Demo)",
   },
 
   bn: {
@@ -367,7 +365,6 @@ export const translations = {
     platformCommission: "টাটকা কমিশন (১০%)",
     nextPayoutCycle: "পরবর্তী সেটেলমেন্ট সাইকেল",
     requestPayoutBtn: "টাকা তোলার আবেদন",
-    simulateOrderBtn: "নতুন অর্ডার সিমুলেট (+সাউন্ড)",
     viewAllOrders: "সব অর্ডার দেখুন",
     viewInventory: "স্টক পরিচালনা করুন",
 
@@ -592,6 +589,5 @@ export const translations = {
     step5: "৫. শর্তাবলী সম্মতি",
     kycPendingNotice: "টাটকা বাজার ভেরিফিকেশন টিম কর্তৃক যাচাই প্রক্রিয়াধীন",
     kycPendingDesc: "আপনার ট্রেড লাইসেন্স ও এনআইডি যাচাই করা হচ্ছে। আনুমানিক সময়: ২-৪ কার্যঘণ্টা।",
-    simulateApprovalBtn: "⚡ অ্যাডমিন অনুমোদন সিমুলেট (ডেমো)",
   },
 };

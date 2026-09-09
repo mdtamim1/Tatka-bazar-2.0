@@ -114,15 +114,7 @@ export default function SignupPage() {
     }, 600);
   }
 
-  function handleQuickFill() {
-    setName("রফিকুল ইসলাম");
-    setPhone("01711223344");
-    setStoreName("সবুজ খামার অর্গানিক");
-    setCategory("কাঁচাবাজার");
-    setPassword("password123");
-    setAgreeTerms(true);
-    setError("");
-  }
+
 
   return (
     <>
@@ -531,26 +523,6 @@ export default function SignupPage() {
             </button>
           </form>
 
-          {/* 1-Click Fast Demo Fill Button */}
-          <div style={{ marginTop: 14, textAlign: "center" }}>
-            <button
-              type="button"
-              onClick={handleQuickFill}
-              style={{
-                background: "rgba(0,214,143,.08)",
-                border: "1px solid rgba(0,214,143,.2)",
-                color: "#00D68F",
-                fontSize: ".76rem",
-                fontWeight: 700,
-                cursor: "pointer",
-                padding: "6px 14px",
-                borderRadius: 999,
-                fontFamily: "var(--font-bn)",
-              }}
-            >
-              ⚡ ডেমো ডাটা অটো-ফিল
-            </button>
-          </div>
 
           {/* Footer */}
           <div style={{ marginTop: 24, textAlign: "center", fontSize: ".82rem", color: "rgba(168,192,216,.5)" }}>

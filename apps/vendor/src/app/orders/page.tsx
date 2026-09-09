@@ -41,8 +41,6 @@ export default function OrdersPage() {
     setTrackingOrder,
     resetShiftQueue,
     shiftStartedAt,
-    simulateAreaDispatchOrder,
-    simulateRemoteClaim,
     syncRiderDispatch,
   } = useVendorStore();
 
@@ -464,9 +462,9 @@ export default function OrdersPage() {
                 {/* Assigned Rider Bar & Status Action */}
                 {(order.status === "READY_FOR_PICKUP" || order.status === "HANDED_TO_RIDER" || order.status === "COMPLETED" || order.riderName) && (() => {
                   const isHandedOver = order.status === "HANDED_TO_RIDER" || order.status === "COMPLETED";
-                  const riderName = order.riderName || "তামীম ইকবাল (রাইডার #১০১)";
-                  const riderPhone = order.riderPhone || "01700000001";
-                  const riderVehicle = order.riderVehicle || "মোটরসাইকেল (ঢাকা মেট্রো-হ-৪৫-১২৩৪)";
+                  const riderName = order.riderName || "রাইডার";
+                  const riderPhone = order.riderPhone || "";
+                  const riderVehicle = order.riderVehicle || "";
 
                   return (
                     <div className="mt-3.5 p-3 rounded-xl bg-[rgba(0,214,143,0.08)] border border-[rgba(0,214,143,0.25)] text-xs flex flex-wrap items-center justify-between gap-2.5">
@@ -487,9 +485,11 @@ export default function OrdersPage() {
                                 : "পিকআপের জন্য দোকানে আসার পথে"}
                             </span>
                           </div>
-                          <p className="text-[11px] text-[#A8C0D8]">
-                            {riderVehicle} • {riderPhone}
-                          </p>
+                          {(riderVehicle || riderPhone) && (
+                            <p className="text-[11px] text-[#A8C0D8]">
+                              {[riderVehicle, riderPhone].filter(Boolean).join(" • ")}
+                            </p>
+                          )}
                         </div>
                       </div>
 
@@ -517,14 +517,16 @@ export default function OrdersPage() {
                         )}
 
                         {/* Direct Phone Call Button */}
-                        <a
-                          href={`tel:${riderPhone}`}
-                          className="px-2.5 py-1.5 text-white hover:text-white bg-[#122035] hover:bg-[#172540] rounded-lg border border-[rgba(255,255,255,0.12)] font-bold flex items-center gap-1 text-xs transition-colors shadow-2xs"
-                          title="রাইডারকে সরাসরি ফোন কল করুন"
-                        >
-                          <Phone size={13} className="text-[#00D68F]" />
-                          <span>কল দিন</span>
-                        </a>
+                        {riderPhone ? (
+                          <a
+                            href={`tel:${riderPhone}`}
+                            className="px-2.5 py-1.5 text-white hover:text-white bg-[#122035] hover:bg-[#172540] rounded-lg border border-[rgba(255,255,255,0.12)] font-bold flex items-center gap-1 text-xs transition-colors shadow-2xs"
+                            title="রাইডারকে সরাসরি ফোন কল করুন"
+                          >
+                            <Phone size={13} className="text-[#00D68F]" />
+                            <span>কল দিন</span>
+                          </a>
+                        ) : null}
                       </div>
                     </div>
                   );

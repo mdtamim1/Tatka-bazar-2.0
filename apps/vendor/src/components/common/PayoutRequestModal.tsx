@@ -20,9 +20,9 @@ export default function PayoutRequestModal({
   const { language, requestPayout, profile } = useVendorStore();
   const t = translations[language];
 
-  const [amount, setAmount] = useState<number>(availableBalance > 0 ? availableBalance : 5000);
+  const [amount, setAmount] = useState<number>(availableBalance > 0 ? availableBalance : 0);
   const [method, setMethod] = useState<PayoutMethod>(profile.payoutMethod || "BKASH");
-  const [account, setAccount] = useState<string>(profile.payoutAccount || "+8801711223344 (Merchant)");
+  const [account, setAccount] = useState<string>(profile.payoutAccount || "");
   const [error, setError] = useState<string | null>(null);
 
   if (!isOpen) return null;
@@ -90,9 +90,6 @@ export default function PayoutRequestModal({
               onChange={(e) => {
                 const m = e.target.value as PayoutMethod;
                 setMethod(m);
-                if (m === "BKASH") setAccount("+8801711223344 (Merchant bKash)");
-                else if (m === "NAGAD") setAccount("+8801819000111 (Merchant Nagad)");
-                else setAccount("BRAC Bank A/C #15012039120");
               }}
               className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-emerald-500 focus:bg-white transition-colors"
             >

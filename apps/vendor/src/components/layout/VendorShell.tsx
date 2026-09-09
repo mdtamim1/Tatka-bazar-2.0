@@ -40,13 +40,12 @@ export default function VendorShell({
     setChatOrder,
     trackingOrder,
     setTrackingOrder,
-    simulateIncomingOrder,
     updateOrderStatus,
   } = useVendorStore();
 
   // Real-time Session Guard (Auto-detects Hub suspension and triggers auto-logout)
   const { isSuspended, suspendReason, suspendedAt, handleLogout } = useVendorSessionGuard(
-    profile?.id || "vnd-dhaka-089",
+    profile?.id || "",
     profile?.storeName || profile?.storeNameBn
   );
 
@@ -75,7 +74,7 @@ export default function VendorShell({
   useEffect(() => {
     const unsubscribe = subscribeSyncEvent((payload) => {
       if (payload.type === "NEW_ORDER" || payload.type === "ADMIN_DISPATCH_TO_ZONE") {
-        simulateIncomingOrder();
+        audioAlert.playNewOrderChime();
       } else if (payload.type === "VENDOR_CLAIM_ORDER") {
         if (payload.claimedByVendorId && payload.claimedByVendorId !== profile.id) {
           setClaimLockAlert({
@@ -101,7 +100,7 @@ export default function VendorShell({
     });
 
     return () => unsubscribe();
-  }, [simulateIncomingOrder, profile.id, setClaimLockAlert, updateOrderStatus]);
+  }, [profile.id, setClaimLockAlert, updateOrderStatus]);
 
   const isAuthPage =
     pathname === "/login" ||
