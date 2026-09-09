@@ -132,7 +132,7 @@ export default function SettingsPage() {
             ⚠️ System Reset & Data Purge
           </div>
           <p style={{ fontSize: 13, color: "var(--text-secondary)", marginBottom: 16, lineHeight: 1.5 }}>
-            Reset Hub portal in-memory state, clear test activity logs, and restore clean default seed values.
+            Reset Hub portal in-memory state, clear test activity logs, and restore clean empty collections.
           </p>
 
           {resetMessage && (

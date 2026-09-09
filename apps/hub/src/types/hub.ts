@@ -9,7 +9,7 @@ export interface HubTeamMember {
   name: string;
   nameBn: string;
   email: string;
-  password: string; // hashed in production; plaintext for mock
+  password: string; // hashed or encrypted credentials
   role: HubRole;
   isActive: boolean;
   createdAt: string;

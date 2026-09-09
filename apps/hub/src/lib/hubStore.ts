@@ -73,238 +73,22 @@ const DEFAULT_TEAM: HubTeamMember[] = [
   },
 ];
 
-// ─── Seed Riders ──────────────────────────────────────────────
-const SEED_RIDERS: HubRider[] = [
-  {
-    id: "rider-demo-01",
-    name: "Tamim Iqbal",
-    nameBn: "Tamim Iqbal",
-    email: "singersujonkhan9@gmail.com",
-    phone: "01700000001",
-    vehicleType: "MOTORCYCLE",
-    vehicleNumber: "Dhaka Metro-H-45-1234",
-    zone: "Mirpur-10",
-    status: "ACTIVE",
-    tier: "BRONZE",
-    kycStatus: "SUBMITTED",
-    kycSubmittedAt: "2026-08-15T10:00:00Z",
-    balance: 0,
-    totalEarned: 4520,
-    totalDeliveries: 47,
-    dutyStatus: "ONLINE",
-    paymentMethod: "BKASH",
-    paymentAccount: "01700000001",
-    rating: 4.7,
-    totalRatings: 43,
-    joinedAt: "2026-07-01T00:00:00Z",
-  },
-  {
-    id: "rider-demo-02",
-    name: "Sakib Al Hasan",
-    nameBn: "Sakib Al Hasan",
-    email: "sakib.rider@gmail.com",
-    phone: "01711000002",
-    vehicleType: "MOTORCYCLE",
-    vehicleNumber: "Dhaka Metro-G-22-5678",
-    zone: "Dhanmondi",
-    status: "ACTIVE",
-    tier: "SILVER",
-    kycStatus: "APPROVED",
-    kycApprovedAt: "2026-07-20T00:00:00Z",
-    balance: 350,
-    totalEarned: 12400,
-    totalDeliveries: 134,
-    dutyStatus: "OFFLINE",
-    paymentMethod: "NAGAD",
-    paymentAccount: "01711000002",
-    rating: 4.9,
-    totalRatings: 128,
-    joinedAt: "2026-05-15T00:00:00Z",
-  },
-  {
-    id: "rider-demo-03",
-    name: "Mushfiqur Rahim",
-    nameBn: "Mushfiqur Rahim",
-    email: "mushfiq.rider@gmail.com",
-    phone: "01722000003",
-    vehicleType: "BICYCLE",
-    vehicleNumber: "N/A",
-    zone: "Uttara",
-    status: "PENDING_KYC",
-    tier: "BRONZE",
-    kycStatus: "NOT_SUBMITTED",
-    balance: 0,
-    totalEarned: 0,
-    totalDeliveries: 0,
-    dutyStatus: "OFFLINE",
-    joinedAt: "2026-09-01T00:00:00Z",
-  },
-  {
-    id: "rider-demo-04",
-    name: "Mahmudullah Riyad",
-    nameBn: "Mahmudullah Riyad",
-    email: "riyad.rider@gmail.com",
-    phone: "01733000004",
-    vehicleType: "MOTORCYCLE",
-    vehicleNumber: "Dhaka Metro-CH-33-9012",
-    zone: "Gulshan",
-    status: "SUSPENDED",
-    tier: "BRONZE",
-    kycStatus: "APPROVED",
-    balance: -200,
-    totalEarned: 1800,
-    totalDeliveries: 18,
-    dutyStatus: "OFFLINE",
-    joinedAt: "2026-06-01T00:00:00Z",
-    suspendedAt: "2026-09-05T00:00:00Z",
-    suspendReason: "Repeated delivery cancellation & abandonment",
-  },
-];
-
-// ─── Seed Vendors ─────────────────────────────────────────────
-const SEED_VENDORS: HubVendor[] = [
-  {
-    id: "vnd-dhaka-089",
-    storeName: "Green Farm Groceries & Organics",
-    storeNameBn: "Green Farm Groceries & Organics",
-    ownerName: "Rafiqul Islam",
-    email: "support@greenfarm.tatkabazar.com",
-    phone: "+8801711223344",
-    address: "House 42, Road 9/A, Dhanmondi, Dhaka",
-    deliveryZones: ["Dhanmondi", "Kalabagan", "Mohammadpur"],
-    category: "Fresh Produce, Dairy & Groceries",
-    commissionRate: 10,
-    status: "ACTIVE",
-    tier: "TRUSTED",
-    rating: 4.88,
-    totalOrders: 234,
-    totalRevenue: 287400,
-    settlementBalance: 12800,
-    vacationMode: false,
-    joinedAt: "2026-03-15T00:00:00Z",
-    approvedAt: "2026-03-18T00:00:00Z",
-    tradeLicense: "TRAD/DSCC/019283/2024",
-    payoutMethod: "BKASH",
-    payoutAccount: "+8801711223344",
-  },
-  {
-    id: "vnd-dhaka-090",
-    storeName: "Sadik Agro Fresh Foods",
-    storeNameBn: "Sadik Agro Fresh Foods",
-    ownerName: "Sadik Ahmed",
-    email: "sadik.agro@gmail.com",
-    phone: "01722334455",
-    address: "Shop 12, Karwan Bazar, Dhaka",
-    deliveryZones: ["Panthapath", "Farmgate", "Tejgaon"],
-    category: "Fish, Meat & Vegetables",
-    commissionRate: 12,
-    status: "ACTIVE",
-    tier: "STANDARD",
-    rating: 4.6,
-    totalOrders: 89,
-    totalRevenue: 98600,
-    settlementBalance: 5400,
-    vacationMode: false,
-    joinedAt: "2026-05-01T00:00:00Z",
-    approvedAt: "2026-05-04T00:00:00Z",
-    payoutMethod: "NAGAD",
-    payoutAccount: "01722334455",
-  },
-  {
-    id: "vnd-dhaka-091",
-    storeName: "Al-Madina Fresh Store",
-    storeNameBn: "Al-Madina Fresh Store",
-    ownerName: "Mohammad Abdullah",
-    email: "almadina.fresh@gmail.com",
-    phone: "01733445566",
-    address: "Shop 5, Mirpur-10, Dhaka",
-    deliveryZones: ["Mirpur", "Pallabi", "Kafrul"],
-    category: "Groceries & Daily Essentials",
-    commissionRate: 10,
-    status: "PENDING_APPROVAL",
-    tier: "STANDARD",
-    rating: 0,
-    totalOrders: 0,
-    totalRevenue: 0,
-    settlementBalance: 0,
-    vacationMode: false,
-    joinedAt: "2026-09-06T00:00:00Z",
-    tradeLicense: "TRAD/DSCC/029184/2026",
-    payoutMethod: "BKASH",
-    payoutAccount: "01733445566",
-  },
-];
-
-// ─── Seed Deposits ────────────────────────────────────────────
-const SEED_DEPOSITS: RiderDepositRequest[] = [
-  {
-    id: "dep-001",
-    riderId: "rider-demo-01",
-    riderName: "Tamim Iqbal",
-    riderPhone: "01700000001",
-    amount: 500,
-    paymentMethod: "bKash",
-    transactionId: "TXN8F2K9P",
-    lastFour: "0001",
-    status: "PENDING",
-    requestedAt: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
-  },
-  {
-    id: "dep-002",
-    riderId: "rider-demo-02",
-    riderName: "Sakib Al Hasan",
-    riderPhone: "01711000002",
-    amount: 1000,
-    paymentMethod: "Nagad",
-    transactionId: "TXN5L7M3Q",
-    lastFour: "0002",
-    status: "APPROVED",
-    requestedAt: new Date(Date.now() - 1000 * 60 * 60 * 4).toISOString(),
-    processedAt: new Date(Date.now() - 1000 * 60 * 60 * 3).toISOString(),
-    processedBy: "Super Admin",
-  },
-];
-
-// ─── Seed Settlements ─────────────────────────────────────────
-const SEED_SETTLEMENTS: VendorSettlementRequest[] = [
-  {
-    id: "stl-001",
-    vendorId: "vnd-dhaka-089",
-    vendorName: "Green Farm Groceries",
-    vendorPhone: "01711223344",
-    amount: 12800,
-    payoutMethod: "bKash Merchant",
-    payoutAccount: "+8801711223344",
-    ordersCount: 18,
-    status: "PENDING",
-    requestedAt: new Date(Date.now() - 1000 * 60 * 120).toISOString(),
-  },
-  {
-    id: "stl-002",
-    vendorId: "vnd-dhaka-090",
-    vendorName: "Sadik Agro Fresh Foods",
-    vendorPhone: "01722334455",
-    amount: 5400,
-    payoutMethod: "Nagad",
-    payoutAccount: "01722334455",
-    ordersCount: 7,
-    status: "APPROVED",
-    requestedAt: new Date(Date.now() - 1000 * 60 * 60 * 6).toISOString(),
-    processedAt: new Date(Date.now() - 1000 * 60 * 60 * 5).toISOString(),
-    processedBy: "Super Admin",
-  },
-];
+// ─── Clean Collections (No Demo Data) ─────────────────────────
+const SEED_RIDERS: HubRider[] = [];
+const SEED_VENDORS: HubVendor[] = [];
+const SEED_DEPOSITS: RiderDepositRequest[] = [];
+const SEED_SETTLEMENTS: VendorSettlementRequest[] = [];
 
 // ─── Init Store ────────────────────────────────────────────────
 export function initHubStore() {
   if (!g._hub_team) g._hub_team = [...DEFAULT_TEAM];
   if (!g._hub_sessions) g._hub_sessions = new Map();
   if (!g._hub_activity) g._hub_activity = [];
-  if (!g._hub_riders) g._hub_riders = [...SEED_RIDERS];
-  if (!g._hub_deposits) g._hub_deposits = [...SEED_DEPOSITS];
+  if (!g._hub_riders) g._hub_riders = [];
+  if (!g._hub_deposits) g._hub_deposits = [];
   if (!g._hub_withdrawals) g._hub_withdrawals = [];
-  if (!g._hub_vendors) g._hub_vendors = [...SEED_VENDORS];
-  if (!g._hub_settlements) g._hub_settlements = [...SEED_SETTLEMENTS];
+  if (!g._hub_vendors) g._hub_vendors = [];
+  if (!g._hub_settlements) g._hub_settlements = [];
   if (!g._hub_broadcasts) g._hub_broadcasts = [];
   if (!g._hub_config) g._hub_config = { ...DEFAULT_CONFIG };
 }
@@ -313,11 +97,11 @@ export function resetHubStore() {
   g._hub_team = [...DEFAULT_TEAM];
   g._hub_sessions = new Map();
   g._hub_activity = [];
-  g._hub_riders = [...SEED_RIDERS];
-  g._hub_deposits = [...SEED_DEPOSITS];
+  g._hub_riders = [];
+  g._hub_deposits = [];
   g._hub_withdrawals = [];
-  g._hub_vendors = [...SEED_VENDORS];
-  g._hub_settlements = [...SEED_SETTLEMENTS];
+  g._hub_vendors = [];
+  g._hub_settlements = [];
   g._hub_broadcasts = [];
   g._hub_config = { ...DEFAULT_CONFIG };
 }

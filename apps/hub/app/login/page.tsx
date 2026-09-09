@@ -107,30 +107,6 @@ export default function LoginPage() {
             )}
           </button>
         </form>
-
-        <div style={{ marginTop: 24, padding: "14px", background: "rgba(255,255,255,0.03)", borderRadius: "var(--radius-sm)", border: "1px solid var(--border)" }}>
-          <p style={{ fontSize: 11, color: "var(--text-muted)", marginBottom: 8, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em" }}>
-            Demo Credentials
-          </p>
-          {[
-            { role: "Super Admin", email: "admin@tatkabazar.com", pass: "tatka@2026", color: "var(--accent-green)" },
-            { role: "Ops Manager", email: "ops@tatkabazar.com", pass: "ops@2026", color: "var(--accent-blue)" },
-            { role: "Support Agent", email: "support@tatkabazar.com", pass: "support@2026", color: "var(--accent-orange)" },
-          ].map((c) => (
-            <button
-              key={c.email}
-              onClick={() => { setEmail(c.email); setPassword(c.pass); }}
-              style={{
-                display: "flex", alignItems: "center", justifyContent: "space-between",
-                width: "100%", background: "none", border: "none",
-                padding: "5px 0", cursor: "pointer",
-              }}
-            >
-              <span style={{ fontSize: 11, color: c.color, fontWeight: 600 }}>{c.role}</span>
-              <span style={{ fontSize: 11, color: "var(--text-muted)" }}>{c.email}</span>
-            </button>
-          ))}
-        </div>
       </div>
 
       <style>{`

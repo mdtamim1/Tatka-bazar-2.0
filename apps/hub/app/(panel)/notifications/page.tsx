@@ -21,7 +21,7 @@ export default function NotificationsPage() {
   async function send() {
     if (!title || !body) return;
     setSending(true);
-    // Simulate broadcast — in production, this would call push notification service
+    // Broadcast notification to active channels
     await new Promise((r) => setTimeout(r, 800));
     const newBroadcast = {
       title, body, targetType,

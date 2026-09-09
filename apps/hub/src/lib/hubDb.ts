@@ -65,7 +65,7 @@ export async function autoSeedDbIfEmpty(): Promise<void> {
     const available = await isDbAvailable();
     if (!available) return;
 
-    // 1. Seed AdminUser if none exists
+    // 1. Seed AdminUser if none exists (for platform operations)
     const adminCount = await prisma.adminUser.count();
     if (adminCount === 0) {
       const adminHash = await bcrypt.hash("tatka@2026", 10);
@@ -88,55 +88,8 @@ export async function autoSeedDbIfEmpty(): Promise<void> {
         ],
       });
     }
-
-    // 2. Seed DeliveryRiders if none exists
-    const riderCount = await prisma.deliveryRider.count();
-    if (riderCount === 0) {
-      const riderHash = await bcrypt.hash("Rider@2026!", 10);
-      const seedRiders = getRiders();
-      for (const r of seedRiders) {
-        await prisma.deliveryRider.create({
-          data: {
-            id: r.id,
-            name: r.name,
-            email: r.email,
-            phone: r.phone,
-            passwordHash: riderHash,
-            vehicleType: r.vehicleType === "BICYCLE" ? "BICYCLE" : "MOTORCYCLE",
-            vehicleNumber: r.vehicleNumber || null,
-            status: r.status === "ACTIVE" ? "AVAILABLE" : "OFFLINE",
-            isActive: r.status !== "SUSPENDED",
-            kycStatus: r.kycStatus === "APPROVED" ? "APPROVED" : r.kycStatus === "SUBMITTED" ? "PENDING" : "PENDING",
-            balance: r.balance,
-            totalEarned: r.totalEarned,
-          },
-        });
-      }
-    }
-
-    // 3. Seed Vendors if none exists
-    const vendorCount = await prisma.vendor.count();
-    if (vendorCount === 0) {
-      const vendorHash = await bcrypt.hash("Vendor@2026!", 10);
-      const seedVendors = getVendors();
-      for (const v of seedVendors) {
-        await prisma.vendor.create({
-          data: {
-            id: v.id,
-            businessName: v.storeName,
-            slug: v.id.toLowerCase(),
-            email: v.email,
-            phone: v.phone,
-            passwordHash: vendorHash,
-            status: v.status === "ACTIVE" ? "APPROVED" : v.status === "SUSPENDED" ? "SUSPENDED" : "PENDING",
-            commissionRate: v.commissionRate || 10,
-            isActive: v.status !== "SUSPENDED",
-          },
-        });
-      }
-    }
   } catch (err) {
-    console.warn("[Hub DB] Auto-seed skipped or failed:", (err as Error).message);
+    console.warn("[Hub DB] Admin auto-seed skipped or failed:", (err as Error).message);
   }
 }
 
