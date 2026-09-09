@@ -46,6 +46,7 @@ import { customerAuthRoutes } from "./routes/auth/customer.js";
 import { adminAuthRoutes } from "./routes/auth/admin.js";
 import { vendorAuthRoutes } from "./routes/auth/vendor.js";
 import { riderAuthRoutes } from "./routes/auth/rider.js";
+import { hubAuthRoutes } from "./routes/auth/hub.js";
 import { protectedRoutes } from "./routes/protected/index.js";
 import { productRoutes } from "./routes/api/products.js";
 import { categoryRoutes } from "./routes/api/categories.js";
@@ -56,6 +57,7 @@ import { paymentRoutes } from "./routes/api/payment.js";
 import { otpRoutes } from "./routes/api/otp.js";
 import { dispatchRoutes } from "./routes/api/dispatch.js";
 import { riderPortalRoutes } from "./routes/rider-portal/index.js";
+import { adminRoutes } from "./routes/api/admin.js";
 import { xssSanitizerHook } from "./middleware/xss-sanitizer.js";
 
 const PORT = Number(process.env["API_PORT"]) || 4000;
@@ -95,10 +97,21 @@ async function bootstrap() {
     requestTimeout: 15000, // 15s request timeout
   });
 
-  // Attach HTTP Keep-Alive & TCP Connection Reuse Headers
-  app.addHook("onSend", async (_req, reply) => {
+  // Precision Latency Tracker (Sub-millisecond Server Timing Header)
+  app.addHook("onRequest", async (req) => {
+    (req as any)._startTime = process.hrtime();
+  });
+
+  // Attach HTTP Keep-Alive & TCP Connection Reuse & Latency Headers
+  app.addHook("onSend", async (req, reply) => {
     reply.header("Connection", "keep-alive");
     reply.header("Keep-Alive", "timeout=60, max=1000");
+    if ((req as any)._startTime) {
+      const diff = process.hrtime((req as any)._startTime);
+      const timeMs = (diff[0] * 1e3 + diff[1] * 1e-6).toFixed(2);
+      reply.header("X-Response-Time", `${timeMs}ms`);
+      reply.header("Server-Timing", `total;dur=${timeMs}`);
+    }
   });
 
   await app.register(sensible);
@@ -154,9 +167,18 @@ async function bootstrap() {
     sign: { expiresIn: process.env["JWT_EXPIRY"] ?? "7d" },
   });
 
-  // Enterprise Rate Limiting Protection against DDoS & Spammers
+  // Enterprise Adaptive Multi-Tier Rate Limiting (High Throughput + Anti-Abuse)
   await app.register(rateLimit, {
-    max: 120, // 120 requests per minute per IP
+    max: (req) => {
+      // High-frequency telemetry: Rider live GPS ping every 5s
+      if (req.url.includes("/api/riders/live-location")) return 600;
+      // High-traffic public catalog browsing (e-commerce storefront)
+      if (req.url.startsWith("/api/products") || req.url.startsWith("/api/categories")) return 300;
+      // Strict brute-force protection on authentication endpoints
+      if (req.url.startsWith("/auth/")) return 25;
+      // Default standard API tier
+      return 180;
+    },
     timeWindow: "1 minute",
     allowList: ["127.0.0.1", "localhost"],
     errorResponseBuilder: (_request, context) => ({
@@ -179,6 +201,7 @@ async function bootstrap() {
   await app.register(adminAuthRoutes,    { prefix: "/auth/admin" });
   await app.register(vendorAuthRoutes,   { prefix: "/auth/vendor" });
   await app.register(riderAuthRoutes,    { prefix: "/auth/rider" });
+  await app.register(hubAuthRoutes,      { prefix: "/auth/hub" });
   await app.register(protectedRoutes,    { prefix: "/protected" });
 
   // Public & Operational REST API Endpoints
@@ -191,6 +214,7 @@ async function bootstrap() {
   await app.register(otpRoutes,          { prefix: "/api/otp" });
   await app.register(riderPortalRoutes,  { prefix: "/rider-portal" });
   await app.register(dispatchRoutes,     { prefix: "/api/dispatch" });
+  await app.register(adminRoutes,        { prefix: "/api/admin" });
 
   // ---------------------------------------------------------------------------
   // Global Unified Mobile & Web Error Handler
@@ -231,6 +255,32 @@ async function bootstrap() {
     app.log.error(err);
     process.exit(1);
   }
+
+  // ---------------------------------------------------------------------------
+  // Rock-Solid Process Crash Guard (Zero Unexpected Termination)
+  // ---------------------------------------------------------------------------
+  process.on("unhandledRejection", (reason) => {
+    app.log.error({ reason }, "Trapped Unhandled Promise Rejection (Anti-Crash)");
+  });
+
+  process.on("uncaughtException", (error) => {
+    app.log.error({ error }, "Trapped Uncaught Exception (Anti-Crash)");
+  });
+
+  const shutdown = async (signal: string) => {
+    console.log(`\n🛑 Received ${signal}, initiating graceful server shutdown...`);
+    try {
+      await app.close();
+      console.log("✅ Fastify closed all connections cleanly.");
+      process.exit(0);
+    } catch (err) {
+      console.error("Error during graceful shutdown:", err);
+      process.exit(1);
+    }
+  };
+
+  process.on("SIGINT", () => shutdown("SIGINT"));
+  process.on("SIGTERM", () => shutdown("SIGTERM"));
 }
 
 bootstrap();

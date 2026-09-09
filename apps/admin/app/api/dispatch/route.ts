@@ -110,6 +110,15 @@ export async function POST(request: Request) {
 
       globalScope._tatka_dispatch_tasks = tasks.slice(0, 100);
 
+      // Asynchronously sync to Fastify central backend
+      const centralApi = process.env["NEXT_PUBLIC_API_URL"] || "http://localhost:4000";
+      fetch(`${centralApi}/api/dispatch/ready-for-pickup`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ task: newTask }),
+        signal: AbortSignal.timeout(3000),
+      }).catch(() => {});
+
       return NextResponse.json(
         { success: true, task: newTask },
         { headers: CORS_HEADERS }

@@ -1,6 +1,11 @@
 import type { FastifyInstance } from "fastify";
 import bcrypt from "bcryptjs";
 import { prisma } from "@tatka-bazar/database";
+import {
+  updateRiderLocation,
+  getRiderLocation,
+  getAllActiveRiderLocations,
+} from "../../services/location/rider-tracking.js";
 
 export async function riderRoutes(fastify: FastifyInstance) {
   // GET /api/riders — list all delivery riders with counts
@@ -421,6 +426,84 @@ export async function riderRoutes(fastify: FastifyInstance) {
       return reply.status(201).send({ success: true, data: rate });
     } catch (err: any) {
       return reply.status(400).send({ success: false, error: err.message });
+    }
+  });
+
+  // ---------------------------------------------------------------------------
+  // LIVE GPS LOCATION TRACKING (Storefront, Rider, Hub & Admin)
+  // ---------------------------------------------------------------------------
+
+  // POST /api/riders/live-location — Rider sends live GPS position every 5-10s
+  fastify.post("/live-location", async (request, reply) => {
+    try {
+      const body = (request.body || {}) as {
+        riderId?: string;
+        riderName?: string;
+        phone?: string;
+        lat: number;
+        lng: number;
+        heading?: number;
+        speed?: number;
+        accuracy?: number;
+        dutyStatus?: "ONLINE" | "BUSY" | "OFFLINE";
+      };
+
+      // Extract riderId from JWT if available, else from body
+      let riderId = body.riderId;
+      try {
+        const payload = await request.jwtVerify() as any;
+        if (payload?.sub) riderId = payload.sub;
+      } catch {
+        // Fallback to body riderId
+      }
+
+      if (!riderId) {
+        riderId = "rider-live";
+      }
+
+      if (body.lat === undefined || body.lng === undefined) {
+        return reply.status(400).send({ success: false, error: "Latitude and Longitude are required" });
+      }
+
+      const updated = updateRiderLocation({
+        riderId,
+        riderName: body.riderName,
+        phone: body.phone,
+        lat: Number(body.lat),
+        lng: Number(body.lng),
+        heading: body.heading,
+        speed: body.speed,
+        accuracy: body.accuracy,
+        dutyStatus: body.dutyStatus || "ONLINE",
+      });
+
+      return reply.send({ success: true, data: updated });
+    } catch (err: any) {
+      return reply.status(500).send({ success: false, error: err.message });
+    }
+  });
+
+  // GET /api/riders/live-location — Hub & Admin map sees all active riders
+  fastify.get("/live-location", async (_request, reply) => {
+    try {
+      const active = getAllActiveRiderLocations();
+      return reply.send({ success: true, data: active, total: active.length });
+    } catch (err: any) {
+      return reply.status(500).send({ success: false, error: err.message });
+    }
+  });
+
+  // GET /api/riders/live-location/:id — Get single rider's live position
+  fastify.get("/live-location/:id", async (request, reply) => {
+    try {
+      const { id } = request.params as { id: string };
+      const coord = getRiderLocation(id);
+      if (!coord) {
+        return reply.status(404).send({ success: false, error: "No active location found for rider" });
+      }
+      return reply.send({ success: true, data: coord });
+    } catch (err: any) {
+      return reply.status(500).send({ success: false, error: err.message });
     }
   });
 }

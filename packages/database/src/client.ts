@@ -31,7 +31,10 @@ if (!process.env["DATABASE_URL"]) {
   }
 
   if (!process.env["DATABASE_URL"]) {
-    process.env["DATABASE_URL"] = "postgresql://postgres:password@localhost:5432/tatka_bazar?schema=public";
+    process.env["DATABASE_URL"] = "postgresql://postgres:password@localhost:5432/tatka_bazar?schema=public&connection_limit=25&pool_timeout=10";
+  } else if (!process.env["DATABASE_URL"].includes("connection_limit")) {
+    const separator = process.env["DATABASE_URL"].includes("?") ? "&" : "?";
+    process.env["DATABASE_URL"] = `${process.env["DATABASE_URL"]}${separator}connection_limit=25&pool_timeout=10`;
   }
 }
 

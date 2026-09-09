@@ -22,9 +22,65 @@ const ROLE_BADGE: Record<string, string> = {
 
 export default function TeamPage() {
   const { session } = useAuth();
-  const [team] = useState(DEFAULT_TEAM);
+  const [team, setTeam] = useState<any[]>(DEFAULT_TEAM);
+  const [loading, setLoading] = useState(false);
   const [addModal, setAddModal] = useState(false);
   const [newMember, setNewMember] = useState({ name: "", email: "", password: "", role: "SUPPORT_AGENT" });
+
+  const loadTeam = React.useCallback(async () => {
+    if (!session?.token) return;
+    try {
+      const res = await fetch("/api/hub", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.token}` },
+        body: JSON.stringify({ action: "GET_TEAM" }),
+      });
+      const json = await res.json();
+      if (json.success && Array.isArray(json.data) && json.data.length > 0) {
+        setTeam(json.data);
+      }
+    } catch {}
+  }, [session?.token]);
+
+  React.useEffect(() => {
+    loadTeam();
+  }, [loadTeam]);
+
+  async function handleAddMember() {
+    if (!newMember.name || !newMember.email || !newMember.password || !session?.token) return;
+    setLoading(true);
+    try {
+      const res = await fetch("/api/hub", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.token}` },
+        body: JSON.stringify({ action: "ADD_TEAM_MEMBER", member: newMember }),
+      });
+      const json = await res.json();
+      if (json.success) {
+        setAddModal(false);
+        setNewMember({ name: "", email: "", password: "", role: "SUPPORT_AGENT" });
+        loadTeam();
+      } else {
+        alert(json.error || "Failed to add member");
+      }
+    } catch (e: any) {
+      alert(e.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleToggleStatus(id: string, currentActive: boolean) {
+    if (!session?.token) return;
+    try {
+      await fetch("/api/hub", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.token}` },
+        body: JSON.stringify({ action: "UPDATE_TEAM_MEMBER", id, updates: { isActive: !currentActive } }),
+      });
+      loadTeam();
+    } catch {}
+  }
 
   if (!session || session.role !== "SUPER_ADMIN") {
     return (
@@ -120,9 +176,13 @@ export default function TeamPage() {
                 </td>
                 <td>
                   <div style={{ display: "flex", gap: 4 }}>
-                    <button className="btn-icon" title="Edit"><Edit2 size={12} /></button>
                     {m.id !== session.memberId && (
-                      <button className="btn-icon" title="Deactivate" style={{ color: "var(--danger)" }}>
+                      <button
+                        onClick={() => handleToggleStatus(m.id, m.isActive)}
+                        className="btn-icon"
+                        title={m.isActive ? "Deactivate" : "Activate"}
+                        style={{ color: m.isActive ? "var(--danger)" : "var(--success)" }}
+                      >
                         <Ban size={12} />
                       </button>
                     )}
@@ -161,9 +221,9 @@ export default function TeamPage() {
               </select>
             </div>
             <div className="modal-actions">
-              <button onClick={() => setAddModal(false)} className="btn btn-ghost">Cancel</button>
-              <button onClick={() => setAddModal(false)} className="btn btn-primary">
-                <Plus size={13} /><span>Add Member</span>
+              <button onClick={() => setAddModal(false)} className="btn btn-ghost" disabled={loading}>Cancel</button>
+              <button onClick={handleAddMember} className="btn btn-primary" disabled={loading}>
+                <Plus size={13} /><span>{loading ? "Adding..." : "Add Member"}</span>
               </button>
             </div>
           </div>

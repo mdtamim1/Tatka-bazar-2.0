@@ -84,24 +84,19 @@ export function broadcastSyncEvent(payload: SyncPayload) {
 export async function dispatchOrderToRiders(orderPayload: any) {
   if (typeof window === "undefined") return;
 
+  const apiBase = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
   const endpoints = [
-    // 1. Production Rider endpoint on Vercel
-    "https://tatka-bazar-2-0-rider-seven.vercel.app/api/dispatch",
-    // 2. Production Admin endpoint on Vercel
-    "https://tatka-bazar-2-0-admin.vercel.app/api/dispatch",
-    // 3. Production Hub endpoint on Vercel
-    "https://hub-gamma-umber.vercel.app/api/dispatch",
-    // 4. Current app dispatch route (Vercel serverless / local)
+    // 1. Central Fastify API (Primary Engine)
+    `${apiBase}/api/dispatch/ready-for-pickup`,
+    `${apiBase}/api/dispatch`,
+    // 2. Current Next.js app dispatch route
     "/api/dispatch",
-    // 5. Local Rider dev server
+    // 3. Cloud/Dev Fallbacks
+    "https://tatka-bazar-2-0-rider-seven.vercel.app/api/dispatch",
+    "https://tatka-bazar-2-0-admin.vercel.app/api/dispatch",
+    "https://hub-gamma-umber.vercel.app/api/dispatch",
     "http://localhost:3003/api/dispatch",
-    // 6. Local Fastify API dev server
-    "http://localhost:4000/api/dispatch/ready-for-pickup",
   ];
-
-  if (process.env.NEXT_PUBLIC_API_URL && !process.env.NEXT_PUBLIC_API_URL.includes("localhost")) {
-    endpoints.unshift(`${process.env.NEXT_PUBLIC_API_URL}/api/dispatch/ready-for-pickup`);
-  }
 
   const postPromises = endpoints.map(async (url) => {
     try {

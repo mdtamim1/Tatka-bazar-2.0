@@ -11,7 +11,10 @@ export async function GET(req: NextRequest) {
   const session = auth(req);
   if (!session) return NextResponse.json({ success: false, error: "Unauthorized access" }, { status: 401 });
   const config = getConfig();
+  const apiBase = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
   const endpoints = [
+    `${apiBase}/api/dispatch/tasks`,
+    `${apiBase}/api/dispatch`,
     `${config.riderLocalUrl}/api/dispatch`,
     `${config.riderVercelUrl}/api/dispatch`,
   ];
@@ -36,7 +39,9 @@ export async function POST(req: NextRequest) {
   if (!session) return NextResponse.json({ success: false, error: "Unauthorized access" }, { status: 401 });
   const body = await req.json();
   const config = getConfig();
+  const apiBase = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
   const endpoints = [
+    `${apiBase}/api/dispatch`,
     `${config.riderLocalUrl}/api/dispatch`,
     `${config.riderVercelUrl}/api/dispatch`,
   ];

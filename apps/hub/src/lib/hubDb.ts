@@ -88,6 +88,43 @@ export async function autoSeedDbIfEmpty(): Promise<void> {
         ],
       });
     }
+
+    // 2. Seed HubUser if none exists (for hub desktop operations)
+    const hubCount = await (prisma as any).hubUser.count();
+    if (hubCount === 0) {
+      const hubHash = await bcrypt.hash("tatka@2026", 10);
+      await (prisma as any).hubUser.createMany({
+        data: [
+          {
+            email: "admin@tatkabazar.com",
+            name: "Super Admin",
+            passwordHash: hubHash,
+            role: "SUPER_ADMIN",
+            hubZone: "Dhaka Central",
+            avatar: "🛡️",
+            isActive: true,
+          },
+          {
+            email: "ops@tatkabazar.com",
+            name: "Ops Manager",
+            passwordHash: hubHash,
+            role: "OPS_MANAGER",
+            hubZone: "Mirpur-10",
+            avatar: "⚙️",
+            isActive: true,
+          },
+          {
+            email: "dispatcher@tatkabazar.com",
+            name: "Live Dispatcher",
+            passwordHash: hubHash,
+            role: "DISPATCHER",
+            hubZone: "Dhanmondi",
+            avatar: "📡",
+            isActive: true,
+          },
+        ],
+      });
+    }
   } catch (err) {
     console.warn("[Hub DB] Admin auto-seed skipped or failed:", (err as Error).message);
   }
@@ -307,6 +344,31 @@ export async function authenticateDbAdmin(email: string, passwordPlain: string):
   try {
     if (await isDbAvailable()) {
       await autoSeedDbIfEmpty();
+
+      // 1. Check HubUser model in DB
+      const hubUser = await (prisma as any).hubUser.findUnique({
+        where: { email },
+      });
+
+      if (hubUser && hubUser.isActive) {
+        const valid = await bcrypt.compare(passwordPlain, hubUser.passwordHash);
+        if (valid) {
+          return {
+            id: hubUser.id,
+            name: hubUser.name,
+            nameBn: hubUser.nameBn || hubUser.name,
+            email: hubUser.email,
+            password: "●●●●●●●●",
+            role: hubUser.role as HubRole,
+            isActive: hubUser.isActive,
+            avatar: hubUser.avatar || "🛡️",
+            createdAt: hubUser.createdAt.toISOString(),
+            lastLoginAt: new Date().toISOString(),
+          };
+        }
+      }
+
+      // 2. Fallback check AdminUser
       const admin = await prisma.adminUser.findUnique({
         where: { email },
       });
@@ -360,6 +422,28 @@ export async function authenticateDbAdmin(email: string, passwordPlain: string):
 export async function getDbTeam(): Promise<HubTeamMember[]> {
   try {
     if (await isDbAvailable()) {
+      await autoSeedDbIfEmpty();
+
+      // 1. Query dedicated HubUser records
+      const hubUsers = await (prisma as any).hubUser.findMany({
+        orderBy: { createdAt: "asc" },
+      });
+
+      if (hubUsers && hubUsers.length > 0) {
+        return hubUsers.map((h: any) => ({
+          id: h.id,
+          name: h.name,
+          nameBn: h.nameBn || h.name,
+          email: h.email,
+          password: "●●●●●●●●",
+          role: h.role as HubRole,
+          isActive: h.isActive,
+          avatar: h.avatar || "🛡️",
+          createdAt: h.createdAt.toISOString(),
+        }));
+      }
+
+      // 2. Fallback to AdminUser records
       const records = await prisma.adminUser.findMany({
         orderBy: { createdAt: "asc" },
       });
@@ -389,6 +473,91 @@ export async function getDbTeam(): Promise<HubTeamMember[]> {
   }
 
   return getTeam();
+}
+
+export async function addDbTeamMember(member: {
+  name: string;
+  email: string;
+  password: string;
+  role: HubRole;
+  hubZone?: string;
+  avatar?: string;
+}): Promise<HubTeamMember> {
+  const passwordHash = await bcrypt.hash(member.password, 10);
+  try {
+    if (await isDbAvailable()) {
+      const created = await (prisma as any).hubUser.create({
+        data: {
+          name: member.name,
+          email: member.email,
+          passwordHash,
+          role: member.role,
+          hubZone: member.hubZone || "Dhaka Central",
+          avatar: member.avatar || "🛡️",
+          isActive: true,
+        },
+      });
+
+      return {
+        id: created.id,
+        name: created.name,
+        nameBn: created.nameBn || created.name,
+        email: created.email,
+        password: "●●●●●●●●",
+        role: created.role as HubRole,
+        isActive: created.isActive,
+        avatar: created.avatar || "🛡️",
+        createdAt: created.createdAt.toISOString(),
+      };
+    }
+  } catch (err) {
+    console.warn("[Hub DB] addDbTeamMember fallback to memory:", (err as Error).message);
+  }
+
+  // Memory fallback
+  const team = getTeam();
+  const mem: HubTeamMember = {
+    id: `hub-member-${Date.now()}`,
+    name: member.name,
+    nameBn: member.name,
+    email: member.email,
+    password: member.password,
+    role: member.role,
+    isActive: true,
+    avatar: member.avatar || "🛡️",
+    createdAt: new Date().toISOString(),
+  };
+  team.push(mem);
+  return mem;
+}
+
+export async function updateDbTeamMember(
+  id: string,
+  updates: Partial<HubTeamMember>
+): Promise<boolean> {
+  try {
+    if (await isDbAvailable()) {
+      await (prisma as any).hubUser.update({
+        where: { id },
+        data: {
+          ...(updates.name && { name: updates.name }),
+          ...(updates.role && { role: updates.role }),
+          ...(updates.isActive !== undefined && { isActive: updates.isActive }),
+        },
+      });
+      return true;
+    }
+  } catch (err) {
+    console.warn("[Hub DB] updateDbTeamMember fallback to memory:", (err as Error).message);
+  }
+
+  const team = getTeam();
+  const idx = team.findIndex((m) => m.id === id);
+  if (idx !== -1) {
+    Object.assign(team[idx], updates);
+    return true;
+  }
+  return false;
 }
 
 // ─── AUDIT & ACTIVITY LOGS ──────────────────────────────────

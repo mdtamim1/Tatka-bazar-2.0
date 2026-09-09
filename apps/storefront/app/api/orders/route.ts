@@ -19,24 +19,25 @@ export async function POST(request: Request) {
     const orderNumber = body.orderNumber || ("TB-" + Math.floor(100000 + Math.random() * 900000));
     const orderId = body.id || `ord-${Date.now()}`;
 
-    // Target sync endpoints across the Tatka Bazar ecosystem
+    // Target sync endpoints across the Tatka Bazar ecosystem (Fastify Central Engine First)
     const endpoints = [
-      "https://tatka-bazar-2-0-admin.vercel.app/api/orders",
+      process.env.API_URL ? `${process.env.API_URL}/api/orders` : null,
       process.env.NEXT_PUBLIC_API_URL ? `${process.env.NEXT_PUBLIC_API_URL}/api/orders` : null,
       "http://localhost:4000/api/orders",
+      "https://tatka-bazar-2-0-admin.vercel.app/api/orders",
       "http://localhost:3001/api/orders",
     ].filter(Boolean) as string[];
 
     let remoteOrderData: any = null;
 
-    // 1. Post to Admin API (server-side, avoiding browser CORS)
+    // 1. Post to Central API (server-side, avoiding browser CORS)
     for (const url of endpoints) {
       try {
         const res = await fetch(url, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ ...body, orderNumber, id: orderId }),
-          signal: AbortSignal.timeout(5000),
+          signal: AbortSignal.timeout(4000),
         });
         if (res.ok) {
           const json = await res.json();
@@ -50,7 +51,7 @@ export async function POST(request: Request) {
       }
     }
 
-    // 2. Also notify Vendor & Rider dispatch queues
+    // 2. Also notify Central Dispatch & Vendor queues
     const dispatchPayload = {
       action: "READY_FOR_PICKUP",
       task: {
@@ -72,10 +73,13 @@ export async function POST(request: Request) {
     };
 
     const dispatchUrls = [
+      process.env.API_URL ? `${process.env.API_URL}/api/dispatch/ready-for-pickup` : null,
+      process.env.NEXT_PUBLIC_API_URL ? `${process.env.NEXT_PUBLIC_API_URL}/api/dispatch/ready-for-pickup` : null,
+      "http://localhost:4000/api/dispatch/ready-for-pickup",
       "https://tatka-bazar-2-0-vendor.vercel.app/api/dispatch",
       "https://tatka-bazar-2-0-rider-seven.vercel.app/api/dispatch",
       "https://tatka-bazar-2-0-admin.vercel.app/api/dispatch",
-    ];
+    ].filter(Boolean) as string[];
 
     dispatchUrls.forEach((url) => {
       fetch(url, {

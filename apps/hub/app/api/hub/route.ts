@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getTeam, getConfig, getWithdrawals, validateSession, logActivity } from "@/lib/hubStore";
-import { getDbActivity, getDbTeam, logDbActivity, resetDbHubData } from "@/lib/hubDb";
+import { getDbActivity, getDbTeam, logDbActivity, resetDbHubData, addDbTeamMember, updateDbTeamMember } from "@/lib/hubDb";
 
 function auth(req: NextRequest) {
   const token = req.headers.get("authorization")?.replace("Bearer ", "");
@@ -48,16 +48,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(result);
   }
   if (body.action === "ADD_TEAM_MEMBER") {
-    const team = getTeam();
-    const exists = team.find((m) => m.email === body.member.email);
-    if (exists) return NextResponse.json({ success: false, error: "Email already in use" }, { status: 400 });
-    const newMember = {
-      id: `hub-member-${Date.now()}`,
-      ...body.member,
-      isActive: true,
-      createdAt: new Date().toISOString(),
-    };
-    team.push(newMember);
+    const newMember = await addDbTeamMember(body.member);
     await logDbActivity({
       actorId: session.memberId,
       actorName: session.name,
@@ -69,19 +60,17 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true, data: newMember });
   }
   if (body.action === "UPDATE_TEAM_MEMBER") {
-    const team = getTeam();
-    const idx = team.findIndex((m) => m.id === body.id);
-    if (idx === -1) return NextResponse.json({ success: false, error: "Member not found" }, { status: 404 });
-    Object.assign(team[idx], body.updates);
+    const ok = await updateDbTeamMember(body.id, body.updates);
+    if (!ok) return NextResponse.json({ success: false, error: "Member not found" }, { status: 404 });
     await logDbActivity({
       actorId: session.memberId,
       actorName: session.name,
       action: "TEAM_MEMBER_UPDATED",
       targetType: "TEAM",
       targetId: body.id,
-      targetName: team[idx].name,
+      details: `Updated fields: ${Object.keys(body.updates || {}).join(", ")}`,
     });
-    return NextResponse.json({ success: true, data: team[idx] });
+    return NextResponse.json({ success: true });
   }
   return NextResponse.json({ success: false, error: "Unknown action" }, { status: 400 });
 }

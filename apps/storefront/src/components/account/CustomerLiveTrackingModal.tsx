@@ -50,7 +50,8 @@ export function CustomerLiveTrackingModal({
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Customer Delivery OTP Code (Proof of Delivery)
-  const deliveryOtp = "4826";
+  const initialOtp = (orderNumber || orderId || "TB-4826").replace(/\D/g, "").slice(-4) || "4826";
+  const [deliveryOtp, setDeliveryOtp] = useState<string>(initialOtp);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -98,9 +99,33 @@ export function CustomerLiveTrackingModal({
     };
   }, [isOpen]);
 
-  function loadRiderGps() {
+  async function loadRiderGps() {
     try {
-      const raw = localStorage.getItem("rider_gps_rider-demo-01");
+      // 1. Fetch live tracking from Central Fastify API
+      const targetId = orderId || orderNumber || "TB-8942";
+      const apiBase = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+      const res = await fetch(`${apiBase}/api/dispatch/orders/${targetId}/live-tracking`, {
+        signal: AbortSignal.timeout(3000),
+      }).catch(() => null);
+
+      if (res && res.ok) {
+        const json = await res.json();
+        if (json.success && json.data) {
+          if (json.data.riderCoords?.lat && json.data.riderCoords?.lng) {
+            setRiderCoords({ lat: json.data.riderCoords.lat, lng: json.data.riderCoords.lng });
+            if (riderMarkerRef.current) {
+              riderMarkerRef.current.setLatLng([json.data.riderCoords.lat, json.data.riderCoords.lng]);
+            }
+          }
+          if (json.data.deliveryOtp) {
+            setDeliveryOtp(json.data.deliveryOtp);
+          }
+          return;
+        }
+      }
+
+      // 2. Fallback to localStorage for single-browser testing
+      const raw = localStorage.getItem("rider_gps_rider-demo-01") || localStorage.getItem("rider_gps_rider-live");
       if (raw) {
         const parsed = JSON.parse(raw);
         if (parsed.lat && parsed.lng) {

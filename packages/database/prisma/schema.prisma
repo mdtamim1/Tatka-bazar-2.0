@@ -59,6 +59,25 @@ model AdminUser {
   @@map("admin_users")
 }
 
+model HubUser {
+  id           String    @id @default(uuid())
+  email        String    @unique
+  name         String
+  nameBn       String?
+  passwordHash String
+  role         HubRole   @default(DISPATCHER)
+  hubZone      String    @default("Dhaka")
+  phone        String?
+  avatar       String?   @default("🛡️")
+  isActive     Boolean   @default(true)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@index([email])
+  @@index([role])
+  @@map("hub_users")
+}
+
 model Vendor {
   id             String       @id @default(uuid())
   email          String       @unique
@@ -666,6 +685,15 @@ enum AdminRole {
   STAFF
   FINANCE
   SUPPORT
+}
+
+enum HubRole {
+  SUPER_ADMIN
+  OPS_MANAGER
+  DISPATCHER
+  CASH_COLLECTOR
+  SUPPORT_AGENT
+  VIEWER
 }
 
 enum VendorStatus {

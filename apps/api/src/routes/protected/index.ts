@@ -62,6 +62,21 @@ async function riderProtected(fastify: FastifyInstance) {
 }
 
 // ---------------------------------------------------------------------------
+// Hub-only protected zone
+// ---------------------------------------------------------------------------
+async function hubProtected(fastify: FastifyInstance) {
+  addRoleGuard(fastify, ["hub", "admin"]);
+
+  fastify.get("/dashboard", async (request) => {
+    const user = request.user as { sub: string; email: string; role: string };
+    return {
+      success: true,
+      data: { message: "Hub operations panel — staff access", user },
+    };
+  });
+}
+
+// ---------------------------------------------------------------------------
 // Register all protected sub-routes
 // ---------------------------------------------------------------------------
 export async function protectedRoutes(fastify: FastifyInstance) {
@@ -69,4 +84,5 @@ export async function protectedRoutes(fastify: FastifyInstance) {
   await fastify.register(adminProtected,    { prefix: "/admin" });
   await fastify.register(vendorProtected,   { prefix: "/vendor" });
   await fastify.register(riderProtected,    { prefix: "/rider" });
+  await fastify.register(hubProtected,      { prefix: "/hub" });
 }

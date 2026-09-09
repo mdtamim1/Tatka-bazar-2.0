@@ -61,6 +61,24 @@ export function startGPSBroadcast(riderId: string, riderName: string) {
       localStorage.setItem(`rider_gps_${riderId}`, JSON.stringify(payload));
       // Notify same-tab listeners
       window.dispatchEvent(new CustomEvent("rider_gps_update", { detail: payload }));
+
+      // Broadcast to Central Fastify API Engine
+      const token = getToken();
+      fetch(`${API_BASE}/api/riders/live-location`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          riderId,
+          riderName,
+          lat: payload.lat,
+          lng: payload.lng,
+          accuracy: payload.accuracy,
+          dutyStatus: "ONLINE",
+        }),
+      }).catch(() => {});
     },
     (err) => {
       // GPS denied - write a Dhaka fallback so admin map still shows rider
@@ -1128,6 +1146,8 @@ export async function apiFetch<T = unknown>(
   // Tries own /api/dispatch first, then falls back to vendor's Vercel endpoint
   if (path === "/rider-portal/tasks" && method === "GET") {
     const dispatchEndpoints = [
+      `${API_BASE}/api/dispatch/tasks`,
+      `${API_BASE}/api/dispatch`,
       "/api/dispatch",
       "https://tatka-bazar-2-0-rider-seven.vercel.app/api/dispatch",
     ];
@@ -1170,6 +1190,8 @@ export async function apiFetch<T = unknown>(
         riderTier: "রাইডার",
       };
       const targets = [
+        `${API_BASE}/api/dispatch/tasks/${taskId}/claim`,
+        `${API_BASE}/api/dispatch`,
         "/api/dispatch",
         "https://tatka-bazar-2-0-vendor.vercel.app/api/dispatch",
         "https://tatka-bazar-2-0-admin.vercel.app/api/dispatch",
@@ -1232,6 +1254,8 @@ export async function apiFetch<T = unknown>(
     if (taskId) {
       const payload = { action: "STATUS_UPDATE", taskId, status: "DELIVERED" };
       const targets = [
+        `${API_BASE}/api/dispatch/tasks/${taskId}/deliver`,
+        `${API_BASE}/api/dispatch`,
         "/api/dispatch",
         "https://tatka-bazar-2-0-vendor.vercel.app/api/dispatch",
         "https://tatka-bazar-2-0-admin.vercel.app/api/dispatch",

@@ -2,10 +2,7 @@
 // Tatka Bazar — Shared TypeScript Types
 // =============================================================================
 
-// ---------------------------------------------------------------------------
-// User Roles
-// ---------------------------------------------------------------------------
-export type UserRole = "customer" | "admin" | "vendor" | "rider";
+export type UserRole = "customer" | "admin" | "vendor" | "rider" | "hub";
 
 // ---------------------------------------------------------------------------
 // JWT Payload — shape of the decoded token in all 4 apps

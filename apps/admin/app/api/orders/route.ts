@@ -374,7 +374,9 @@ export async function POST(request: Request) {
       },
     };
 
+    const centralApi = process.env["NEXT_PUBLIC_API_URL"] || "http://localhost:4000";
     const syncEndpoints = [
+      `${centralApi}/api/dispatch/ready-for-pickup`,
       "https://tatka-bazar-2-0-vendor.vercel.app/api/dispatch",
       "https://tatka-bazar-2-0-rider-seven.vercel.app/api/dispatch",
     ];

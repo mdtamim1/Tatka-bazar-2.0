@@ -7,7 +7,7 @@ import {
   LayoutDashboard, Users, Store, Radio, Settings,
   Bell, ChevronLeft, ChevronRight, LogOut, Shield,
   Bike, CreditCard, ArrowDownToLine, FileCheck, Banknote,
-  MapPin, UserCog, AlertTriangle,
+  MapPin, UserCog, AlertTriangle, Monitor,
 } from "lucide-react";
 
 interface NavItem {
@@ -48,6 +48,17 @@ function PanelShell({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const { session, isLoading, logout } = useAuth();
   const [collapsed, setCollapsed] = useState(false);
+  const [isMobileScreen, setIsMobileScreen] = useState(false);
+  const [dismissMobileWarning, setDismissMobileWarning] = useState(false);
+
+  useEffect(() => {
+    const checkScreen = () => {
+      setIsMobileScreen(window.innerWidth < 1024);
+    };
+    checkScreen();
+    window.addEventListener("resize", checkScreen);
+    return () => window.removeEventListener("resize", checkScreen);
+  }, []);
 
   useEffect(() => {
     if (!isLoading && !session) {
@@ -62,6 +73,56 @@ function PanelShell({ children }: { children: React.ReactNode }) {
           <div style={{ fontSize: 32, marginBottom: 12 }}>🛡️</div>
           <p style={{ fontSize: 14 }}>Loading...</p>
         </div>
+      </div>
+    );
+  }
+
+  if (isMobileScreen && !dismissMobileWarning) {
+    return (
+      <div style={{
+        minHeight: "100vh",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: "24px",
+        background: "#0f172a",
+        color: "#ffffff",
+        textAlign: "center",
+      }}>
+        <div style={{
+          width: "72px",
+          height: "72px",
+          borderRadius: "50%",
+          background: "rgba(0, 214, 143, 0.15)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          marginBottom: "20px",
+          border: "2px solid #00d68f",
+        }}>
+          <Monitor size={36} color="#00d68f" />
+        </div>
+        <h1 style={{ fontSize: "20px", fontWeight: 800, marginBottom: "8px" }}>
+          ডেস্কটপ ভিউ প্রয়োজন (Desktop Only)
+        </h1>
+        <p style={{ fontSize: "14px", color: "#94a3b8", maxWidth: "380px", lineHeight: "1.6", marginBottom: "24px" }}>
+          টাটকা বাজার হাব কন্ট্রোল পোর্টালটি ডিসপ্যাচ ও অপারেশনাল টিমদের বড় স্ক্রিনে (কম্পিউটার বা ল্যাপটপ) ব্যবহারের জন্য তৈরি করা হয়েছে।
+        </p>
+        <button
+          onClick={() => setDismissMobileWarning(true)}
+          style={{
+            background: "rgba(255, 255, 255, 0.1)",
+            border: "1px solid rgba(255, 255, 255, 0.2)",
+            color: "#e2e8f0",
+            padding: "8px 16px",
+            borderRadius: "8px",
+            fontSize: "12px",
+            cursor: "pointer",
+          }}
+        >
+          তবুও দেখতে চাই (Proceed anyway)
+        </button>
       </div>
     );
   }

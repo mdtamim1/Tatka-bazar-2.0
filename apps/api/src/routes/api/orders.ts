@@ -1,6 +1,7 @@
 import type { FastifyInstance } from "fastify";
 import { prisma } from "@tatka-bazar/database";
 import { catalogCache } from "../../services/cache/memory-cache.js";
+import { liveBus } from "../../services/events/live-bus.js";
 
 export async function orderRoutes(fastify: FastifyInstance) {
   // GET /api/orders — list orders with status, rider, search filters
@@ -225,7 +226,33 @@ export async function orderRoutes(fastify: FastifyInstance) {
       const orderNumber = `TB-${Math.floor(100000 + Math.random() * 900000)}`;
 
       // 3.5 Resolve real product IDs for foreign key integrity
-      const defaultProd = await prisma.product.findFirst();
+      let defaultProd = await prisma.product.findFirst();
+      if (!defaultProd) {
+        try {
+          const defaultVendor = await prisma.vendor.findFirst() || await (prisma.vendor.create as any)({
+            data: {
+              email: "vendor.central@tatkabazar.com",
+              phone: "01700000099",
+              businessName: "Tatka Bazar Central",
+              slug: "tatka-bazar-central",
+              passwordHash: "DEFAULT_HASH",
+            }
+          });
+          const defaultCategory = await prisma.category.findFirst() || await prisma.category.create({
+            data: { name: "Grocery", slug: "grocery" }
+          });
+          defaultProd = await (prisma.product.create as any)({
+            data: {
+              name: "General Grocery Product",
+              slug: `product-${Date.now()}`,
+              price: 100,
+              vendorId: defaultVendor.id,
+              categoryId: defaultCategory.id,
+            }
+          });
+        } catch {}
+      }
+
       const resolvedItems = items && items.length > 0
         ? await Promise.all(items.map(async (it) => {
             let pId = it.productId;
@@ -305,6 +332,17 @@ export async function orderRoutes(fastify: FastifyInstance) {
 
       // Invalidate catalog cache so updated stocks reflect immediately
       catalogCache.invalidate("products");
+
+      // Broadcast real-time order creation event to all connected portals (Hub, Vendor, Admin)
+      liveBus.broadcast("ORDER_CREATED", {
+        id: order.id,
+        orderNumber: order.orderNumber,
+        customerName: (order as any).user?.name || user.name,
+        customerPhone: (order as any).user?.phone || user.phone,
+        total: Number(order.total),
+        status: order.status,
+        createdAt: order.createdAt,
+      });
 
       return reply.status(201).send({
         success: true,
