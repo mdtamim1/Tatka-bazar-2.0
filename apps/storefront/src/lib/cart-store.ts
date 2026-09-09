@@ -393,11 +393,11 @@ export const useCartStore = create<CartState>()(
         };
 
         const targetEndpoints = [
+          "/api/orders",
+          "https://tatka-bazar-2-0-admin.vercel.app/api/orders",
           process.env.NEXT_PUBLIC_API_URL ? `${process.env.NEXT_PUBLIC_API_URL}/api/orders` : null,
           "http://localhost:4000/api/orders",
-          "https://tatka-bazar-2-0-admin.vercel.app/api/orders",
           "http://localhost:3001/api/orders",
-          "/api/orders",
         ].filter(Boolean) as string[];
 
         for (const url of targetEndpoints) {

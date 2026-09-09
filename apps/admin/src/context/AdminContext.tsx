@@ -124,7 +124,7 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
     orderNumber: string; customerName: string; totalAmount: number; area: string;
   } | null>(null);
 
-  // ── Live API polling ─────────────────────────────────────────────────────
+  // ── Live API polling & cross-app real-time synchronization ───────────────
   useEffect(() => {
     let isMounted = true;
 
@@ -138,18 +138,57 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
           fetch(`${API_BASE}/api/vendors`).then((r) => r.json()),
         ]);
 
-        if (ordRes.status === "fulfilled" && ordRes.value?.success && Array.isArray(ordRes.value.data) && isMounted) {
-          const freshOrders: AdminOrder[] = ordRes.value.data;
-          if (freshOrders.length > 0) {
-            setKnownOrderIds((prevKnown) => new Set([...prevKnown, ...freshOrders.map((o) => o.id)]));
-            setOrders((prev) => {
-              const dbIds = new Set(freshOrders.map(f => f.id));
-              const dbNumbers = new Set(freshOrders.map(f => f.orderNumber));
-              const remaining = prev.filter(p => !dbIds.has(p.id) && !dbNumbers.has(p.orderNumber));
-              return [...freshOrders, ...remaining];
-            });
-          }
+        let freshOrders: AdminOrder[] = [];
+
+        if (ordRes.status === "fulfilled" && ordRes.value?.success && Array.isArray(ordRes.value.data)) {
+          freshOrders = ordRes.value.data;
         }
+
+        // Secondary fallback to /api/dispatch?all=true if /api/orders is empty
+        if (freshOrders.length === 0) {
+          try {
+            const dispRes = await fetch("/api/dispatch?all=true");
+            if (dispRes.ok) {
+              const dispJson = await dispRes.json();
+              if (dispJson.success && Array.isArray(dispJson.data) && dispJson.data.length > 0) {
+                freshOrders = dispJson.data.map((t: any) => ({
+                  id: t.id,
+                  orderNumber: t.orderNumber || `TB-${t.id.replace(/\D/g, "") || "1000"}`,
+                  storeName: "Tatka Bazar",
+                  customerName: t.customerName || "সম্মানিত গ্রাহক",
+                  customerPhone: t.customerPhone || "01700000000",
+                  customerAddress: t.deliveryAddress || "Dhaka",
+                  deliveryArea: t.deliveryZone || "Dhaka",
+                  deliverySlot: "Standard Delivery",
+                  totalAmount: Number(t.total || 0),
+                  subtotalAmount: Number(t.subtotal || t.total || 0),
+                  deliveryCharge: Number(t.deliveryFee || 60),
+                  paymentMethod: "COD",
+                  paymentStatus: "PENDING",
+                  status: t.status === "READY_FOR_PICKUP" ? "SHIPPED" : t.status === "OUT_FOR_DELIVERY" ? "OUT_FOR_DELIVERY" : "PENDING",
+                  createdAt: t.createdAt ? new Date(t.createdAt).toLocaleDateString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) : "Today",
+                  assignedModerator: "Super Admin (Default)",
+                  assignedVendorName: t.vendorName,
+                  source: "STOREFRONT",
+                  items: Array.isArray(t.items) ? t.items : [],
+                  subOrders: [],
+                  orderHistory: [],
+                }));
+              }
+            }
+          } catch {}
+        }
+
+        if (freshOrders.length > 0 && isMounted) {
+          setKnownOrderIds((prevKnown) => new Set([...prevKnown, ...freshOrders.map((o) => o.id)]));
+          setOrders((prev) => {
+            const dbIds = new Set(freshOrders.map(f => f.id));
+            const dbNumbers = new Set(freshOrders.map(f => f.orderNumber));
+            const remaining = prev.filter(p => !dbIds.has(p.id) && !dbNumbers.has(p.orderNumber));
+            return [...freshOrders, ...remaining];
+          });
+        }
+
         if (riderRes.status === "fulfilled" && riderRes.value?.success && riderRes.value.data?.length > 0 && isMounted) {
           setRiders(riderRes.value.data);
         }
@@ -162,8 +201,34 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
     }
 
     loadLiveData();
-    const interval = setInterval(loadLiveData, 8000);
-    return () => { isMounted = false; clearInterval(interval); };
+    const interval = setInterval(loadLiveData, 6000);
+
+    // Cross-tab real-time listener (immediate sync when customer orders in another tab)
+    let bc: BroadcastChannel | null = null;
+    try {
+      if (typeof window !== "undefined" && typeof window.BroadcastChannel !== "undefined") {
+        bc = new BroadcastChannel("tatka_vendor_realtime_sync_channel");
+        bc.onmessage = () => { loadLiveData(); };
+      }
+    } catch {}
+
+    const handleStorage = (e: StorageEvent) => {
+      if (e.key === "tatka_sync_broadcast" || e.key === "tatka_customer_orders") {
+        loadLiveData();
+      }
+    };
+    if (typeof window !== "undefined") {
+      window.addEventListener("storage", handleStorage);
+    }
+
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+      if (bc) bc.close();
+      if (typeof window !== "undefined") {
+        window.removeEventListener("storage", handleStorage);
+      }
+    };
   }, []);
 
   const dismissAlert = () => setNewOrderAlert(null);

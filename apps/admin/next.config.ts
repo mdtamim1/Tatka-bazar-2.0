@@ -5,6 +5,8 @@ const nextConfig: NextConfig = {
   env: {
     NEXT_PUBLIC_API_URL: process.env["API_URL"] ?? "http://localhost:4000",
   },
+  transpilePackages: ["@tatka-bazar/database", "@tatka-bazar/shared", "@tatka-bazar/design-tokens"],
+  serverExternalPackages: ["@prisma/client", "prisma"],
   images: {
     formats: ["image/avif", "image/webp"],
     minimumCacheTTL: 86400,
@@ -17,6 +19,14 @@ const nextConfig: NextConfig = {
   },
   async headers() {
     return [
+      {
+        source: "/api/:path*",
+        headers: [
+          { key: "Access-Control-Allow-Origin", value: "*" },
+          { key: "Access-Control-Allow-Methods", value: "GET,POST,PUT,PATCH,DELETE,OPTIONS" },
+          { key: "Access-Control-Allow-Headers", value: "Content-Type,Authorization,X-Requested-With" },
+        ],
+      },
       {
         source: "/:path*",
         headers: [

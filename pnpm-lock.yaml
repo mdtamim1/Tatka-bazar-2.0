@@ -17,6 +17,9 @@ importers:
 
   apps/admin:
     dependencies:
+      '@prisma/client':
+        specifier: ^6.12.0
+        version: 6.19.3(prisma@6.19.3(typescript@5.9.3))(typescript@5.9.3)
       '@tatka-bazar/database':
         specifier: workspace:*
         version: link:../../packages/database
@@ -57,6 +60,9 @@ importers:
       '@types/react-dom':
         specifier: ^19.1.5
         version: 19.2.4(@types/react@19.2.18)
+      prisma:
+        specifier: ^6.12.0
+        version: 6.19.3(typescript@5.9.3)
       typescript:
         specifier: ^5.8.3
         version: 5.9.3

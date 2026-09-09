@@ -1463,6 +1463,18 @@ export default function OrdersPage() {
 
       if (dbOrders.length === 0) {
         try {
+          const res = await fetch("/api/dispatch?all=true");
+          if (res.ok) {
+            const json = await res.json();
+            if (json.success && Array.isArray(json.data)) {
+              dbOrders = json.data;
+            }
+          }
+        } catch {}
+      }
+
+      if (dbOrders.length === 0) {
+        try {
           const apiBase = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
           const res = await fetch(`${apiBase}/api/orders`);
           if (res.ok) {

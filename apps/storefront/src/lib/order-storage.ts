@@ -258,6 +258,29 @@ export function saveCustomerOrder(newOrder: Partial<CustomerOrder>): CustomerOrd
   if (typeof window !== "undefined") {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
     window.dispatchEvent(new CustomEvent("tatka_orders_updated", { detail: created }));
+
+    try {
+      localStorage.setItem("tatka_sync_broadcast", JSON.stringify({
+        type: "NEW_ORDER",
+        orderId: created.id,
+        amount: created.total,
+        deliveryZone: created.deliveryArea,
+        timestamp: new Date().toISOString(),
+      }));
+      window.dispatchEvent(new CustomEvent("tatka_sync_event", { detail: created }));
+
+      if (typeof window.BroadcastChannel !== "undefined") {
+        const bc = new BroadcastChannel("tatka_vendor_realtime_sync_channel");
+        bc.postMessage({
+          type: "NEW_ORDER",
+          orderId: created.id,
+          amount: created.total,
+          deliveryZone: created.deliveryArea,
+          timestamp: new Date().toISOString(),
+        });
+        setTimeout(() => bc.close(), 1000);
+      }
+    } catch {}
   }
   return created;
 }
