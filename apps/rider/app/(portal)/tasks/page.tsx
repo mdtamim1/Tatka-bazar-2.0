@@ -652,29 +652,6 @@ export default function TasksPage() {
                 ⏳ পেন্ডিং নতুন অর্ডার ({tasks.length}টি)
                 {duty === "ONLINE" && <span className="live-badge"><span className="live-dot" />LIVE</span>}
               </div>
-              {duty === "ONLINE" && tasks.length > 0 && (
-                <button
-                  id="trigger-sound-alert-btn"
-                  onClick={() => {
-                    if (tasks[0]) {
-                      window.dispatchEvent(new CustomEvent("trigger_rider_order_alert", { detail: { task: tasks[0] } }));
-                    }
-                  }}
-                  style={{
-                    background: "rgba(255, 122, 0, 0.12)",
-                    border: "1px solid rgba(255, 122, 0, 0.35)",
-                    color: "#ff7a00",
-                    borderRadius: 6,
-                    padding: "3px 8px",
-                    fontSize: ".70rem",
-                    fontWeight: 700,
-                    fontFamily: "var(--font-bn)",
-                    cursor: "pointer",
-                  }}
-                >
-                  🔔 অ্যালার্ট টেস্ট
-                </button>
-              )}
             </div>
 
             {duty === "OFFLINE" ? (
@@ -697,29 +674,7 @@ export default function TasksPage() {
               <div className="empty-state">
                 <div className="empty-state-icon">🛵</div>
                 <div className="empty-state-title">এখন কোন পেন্ডিং টাস্ক নেই</div>
-                <div className="empty-state-text">সব পেন্ডিং অর্ডার গ্রহণ করা হয়েছে অথবা নতুন অর্ডারের অপেক্ষা চলছে।</div>
-                <div style={{ marginTop: 12 }}>
-                  <button
-                    type="button"
-                    onClick={async () => {
-                      await apiFetch("/rider-portal/tasks/reset-sample", { method: "POST" });
-                      await fetchData();
-                    }}
-                    style={{
-                      background: "rgba(255, 122, 0, 0.12)",
-                      border: "1px solid rgba(255, 122, 0, 0.35)",
-                      color: "var(--orange)",
-                      padding: "7px 16px",
-                      borderRadius: 999,
-                      fontSize: ".78rem",
-                      fontWeight: 700,
-                      cursor: "pointer",
-                      fontFamily: "var(--font-bn)",
-                    }}
-                  >
-                    🔄 টেস্টের জন্য নতুন পেন্ডিং অর্ডার আনুন
-                  </button>
-                </div>
+                <div className="empty-state-text">নতুন কোনো ডেলিভারি অ্যাসাইন করা হলে তা সরাসরি এখানে প্রদর্শিত হবে।</div>
                 <div className="connecting-dots"><span /><span /><span /></div>
               </div>
             ) : (

@@ -24,7 +24,7 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
   const pathname = usePathname();
   const router = useRouter();
   const [riderName, setRiderName] = useState("");
-  const [riderId, setRiderId] = useState("rider-demo-01");
+  const [riderId, setRiderId] = useState("");
   const [taskCount, setTaskCount] = useState(0);
   const [unreadCount, setUnreadCount] = useState(0);
   const [duty, setDuty] = useState<"ONLINE" | "OFFLINE">("ONLINE");
@@ -50,12 +50,12 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
     const token = localStorage.getItem("rider_token");
     if (!token) { router.replace("/login"); return; }
     const user = localStorage.getItem("rider_user");
-    let rId = "rider-demo-01", rName = "রাইডার";
+    let rId = "", rName = "রাইডার";
     if (user) {
       try {
         const parsed = JSON.parse(user);
         rName = parsed.name?.split(" ")[0] || "";
-        rId = parsed.id || "rider-demo-01";
+        rId = parsed.id || "";
       } catch {}
     }
     setRiderName(rName);
@@ -219,27 +219,6 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
     router.push(`/tasks/${targetId}`);
   }
 
-  function triggerDemoAlert() {
-    if (duty === "OFFLINE") {
-      setDuty("ONLINE");
-      setDutyStatus("ONLINE");
-    }
-    const demoTask: Task = {
-      id: "task-01",
-      orderNumber: "TB-8942",
-      customerName: "তানভীর আহমেদ",
-      customerPhone: "01812345678",
-      deliveryAddress: "বাড়ি #১২, রোড #৫, ধানমন্ডি, ঢাকা",
-      vendorName: "সাদিক এগ্রো ফ্রেশ ফুডস",
-      itemCount: 4,
-      deliveryFee: 80,
-      total: 1530,
-      earnings: 40,
-      paymentStatus: "COD",
-      createdAt: new Date().toISOString(),
-    };
-    showIncomingOrder(demoTask);
-  }
 
   function handleResolveSos() {
     resolveSosAlert(riderId);
@@ -398,28 +377,6 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
             </span>
           </div>
         </div>
-
-        <button
-          id="sound-test-btn"
-          onClick={triggerDemoAlert}
-          style={{
-            background: "rgba(255, 122, 0, 0.12)",
-            border: "1px solid rgba(255, 122, 0, 0.35)",
-            color: "#ff7a00",
-            borderRadius: "999px",
-            padding: "4px 12px",
-            fontSize: ".72rem",
-            fontWeight: 700,
-            fontFamily: "var(--font-bn)",
-            display: "inline-flex",
-            alignItems: "center",
-            gap: 5,
-            cursor: "pointer",
-          }}
-          title="নতুন অর্ডারের সাউন্ড ও অ্যালার্ট টেস্ট করুন"
-        >
-          <span>🔔</span> সাউন্ড টেস্ট
-        </button>
       </div>
 
       <main style={{ flex: 1 }}>{children}</main>

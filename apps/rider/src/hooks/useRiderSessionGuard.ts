@@ -56,7 +56,7 @@ export function useRiderSessionGuard(riderId: string, riderName?: string) {
   useEffect(() => {
     const unsubscribe = subscribeSyncEvent((payload) => {
       if (payload.type === "RIDER_SUSPENDED") {
-        if (!payload.riderId || payload.riderId === riderId || riderId === "rider-demo-01") {
+        if (!payload.riderId || payload.riderId === riderId) {
           triggerSuspension(payload.suspendReason, payload.suspendedAt);
         }
       }

@@ -81,7 +81,6 @@ export default function TaskDetailPage() {
   const [inputReturnCode, setInputReturnCode] = useState("");
   const [codeError, setCodeError] = useState("");
   const [verifyingCode, setVerifyingCode] = useState(false);
-  const [approvingDemo, setApprovingDemo] = useState(false);
   const [returnSuccess, setReturnSuccess] = useState(false);
 
   useEffect(() => {
@@ -151,25 +150,7 @@ export default function TaskDetailPage() {
     setCancelling(false);
   }
 
-  // 3. Demo Simulator: Admin Approves Cancellation Request
-  async function handleAdminApproveDemo() {
-    if (!task) return;
-    setApprovingDemo(true);
-    const res = await apiFetch<ActiveTask>(`/rider-portal/tasks/${id}/approve-cancel`, {
-      method: "POST",
-    });
-    if (res.success && res.data) {
-      setTask(res.data);
-      emitSyncEvent({
-        type: "CANCELLATION_APPROVED",
-        taskId: id,
-        message: "অ্যাডমিন ক্যানসেল রিকোয়েস্ট অনুমোদন করেছে।",
-      });
-    } else {
-      alert("অ্যাপ্রুভাল প্রসেস করা যায়নি");
-    }
-    setApprovingDemo(false);
-  }
+
 
   // 4. Rider Verifies 4-digit Return Code provided by Store Owner
   async function handleVerifyReturnCode() {
@@ -567,20 +548,7 @@ export default function TaskDetailPage() {
                     className="delivery-otp-input"
                   />
 
-                  {/* Test Demo OTP Pill */}
-                  {task.customerDeliveryOtp && (
-                    <div
-                      className="return-hint-pill"
-                      onClick={() => setInputDeliveryOtp(task.customerDeliveryOtp || "4826")}
-                      style={{ borderColor: "rgba(0,214,143,.4)", background: "rgba(0,214,143,.1)", cursor: "pointer", display: "inline-flex", marginTop: 4 }}
-                      title="ক্লিক করে কোড বসিয়ে দিন"
-                    >
-                      💡 [টেস্ট ডেমো ওটিপি]:{" "}
-                      <strong style={{ color: "#00d68f", fontSize: "1rem", letterSpacing: 2, marginLeft: 4 }}>
-                        {task.customerDeliveryOtp}
-                      </strong>
-                    </div>
-                  )}
+
 
                   <div style={{ marginTop: 10 }}>
                     <button
@@ -1040,27 +1008,7 @@ export default function TaskDetailPage() {
               💡 হাবে কথা বলুন যাতে তারা কাস্টমারকে চেক করে অর্ডারটি বাতিল অনুমোদন করে। অনুমোদন পেলে আপনি পণ্যটি দোকানে ফেরত দেওয়ার অপশন পাবেন।
             </div>
 
-            {/* Demo Simulation Action for Testing */}
-            <div style={{ borderTop: "1px dashed var(--border-2)", paddingTop: 12 }}>
-              <div style={{ fontSize: ".68rem", color: "var(--text-3)", marginBottom: 6 }}>
-                ⚡ টেস্টের জন্য অ্যাডমিন অনুমোদন বাটন:
-              </div>
-              <button
-                id="demo-admin-approve-btn"
-                type="button"
-                className="btn-secondary"
-                disabled={approvingDemo}
-                onClick={handleAdminApproveDemo}
-                style={{
-                  fontSize: ".82rem",
-                  padding: "10px",
-                  borderColor: "var(--amber)",
-                  color: "var(--amber)",
-                }}
-              >
-                {approvingDemo ? "প্রসেসিং..." : "⚡ [অ্যাডমিন অনুমোদন সম্পন্ন করুন — স্ট্যাটাস ওপেন]"}
-              </button>
-            </div>
+
           </div>
         )}
 
@@ -1077,13 +1025,9 @@ export default function TaskDetailPage() {
               দোকানদার পণ্য অক্ষত বুঝে নিয়ে আপনাকে <strong>৪-সংখ্যার রিটার্ন কোড</strong> দেবেন।
             </div>
 
-            {/* Test Helper Pill */}
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 6 }}>
+            <div>
               <span style={{ fontSize: ".72rem", color: "var(--text-3)" }}>
-                দোকানদার থেকে প্রাপ্ত কোডটি লিখুন:
-              </span>
-              <span className="return-hint-pill">
-                🔑 দোকানদারের রিটার্ন কোড: <strong>{task.returnCode || "5842"}</strong>
+                দোকানদার থেকে প্রাপ্ত ৪-ডিজিট কোডটি লিখুন:
               </span>
             </div>
 

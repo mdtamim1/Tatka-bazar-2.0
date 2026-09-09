@@ -32,19 +32,7 @@ const SUPPORT_QUICK_CHIPS = [
   "বাইকে যান্ত্রিক সমস্যা হয়েছে, ব্যাকআপ প্রয়োজন 🏍️",
 ];
 
-const DEMO_AUTO_REPLIES: Record<string, string[]> = {
-  CUSTOMER: [
-    "ঠিক আছে ভাইয়া, আমি নিচে দারোয়ানকে বলে রাখছি।",
-    "ধন্যবাদ ভাইয়া, ৫ তলায় পাঠিয়ে দিন প্লিজ।",
-    "আচ্ছা ভাইয়া, আমি একটু পরেই নিচে আসছি। সাবধানে আসবেন।",
-    "হ্যাঁ ভাইয়া, আমার ফোনে একটু নেটওয়ার্ক সমস্যা ছিল, এখন ঠিক আছে।",
-  ],
-  SUPPORT: [
-    "ধন্যবাদ আপনার আপডেটের জন্য। আমরা কাস্টমারকে সেন্ট্রাল থেকে কল দিচ্ছি। আপনি অপেক্ষা করুন।",
-    "নোট নেওয়া হয়েছে। ভেন্ডরের সাথে সরাসরি কথা বলে দ্রুত পার্সেল হ্যান্ডওভার নিশ্চিত করা হচ্ছে।",
-    "আপনার লোকেশন ও ডিউটি কন্ট্রোল রুম থেকে ট্র্যাক করা হচ্ছে। কোনো বিপদ হলে SOS বাটন ব্যবহার করবেন।",
-  ],
-};
+
 
 export function ChatModal({
   isOpen,
@@ -98,19 +86,7 @@ export function ChatModal({
     setMessages((prev) => [...prev, sent]);
     setInputText("");
 
-    // Simulate auto-reply from Customer or Support after 2.5s for demo realism
-    setIsTyping(true);
-    setTimeout(() => {
-      setIsTyping(false);
-      const pool = DEMO_AUTO_REPLIES[activeChannel] || ["ঠিক আছে ভাইয়া, ধন্যবাদ।"];
-      const replyText = pool[Math.floor(Math.random() * pool.length)] || "ঠিক আছে ভাইয়া, ধন্যবাদ।";
-      const replySender = activeChannel === "CUSTOMER" ? "CUSTOMER" : "SUPPORT";
-      const replySenderName = activeChannel === "CUSTOMER" ? customerName : "তাতকা হেল্পডেস্ক (সাপোর্ট)";
 
-      const received = sendChatMessage(channelId, replySender, replySenderName, replyText);
-      setMessages((prev) => [...prev, received]);
-      sound.playMessagePop();
-    }, 2400);
   }
 
   if (!isOpen) return null;

@@ -129,11 +129,11 @@ export async function POST(request: Request) {
     // 2. Claim (Rider accepts order)
     if (action === "CLAIM") {
       const targetId = body.taskId || body.orderId;
-      const riderId = body.riderId || "rider-demo-01";
-      const riderName = body.riderName || "তামীম ইকবাল (রাইডার #১০১)";
-      const riderPhone = body.riderPhone || "01700000001";
-      const riderVehicle = body.riderVehicle || "মোটরসাইকেল (ঢাকা মেট্রো-হ-৪৫-১২৩৪)";
-      const riderTier = body.riderTier || "ব্রোঞ্জ রাইডার";
+      const riderId = body.riderId || "";
+      const riderName = body.riderName || "রাইডার";
+      const riderPhone = body.riderPhone || "";
+      const riderVehicle = body.riderVehicle || "বাইক";
+      const riderTier = body.riderTier || "রাইডার";
 
       const idx = tasks.findIndex((t: any) => t.id === targetId || t.orderNumber === targetId);
       if (idx !== -1 && tasks[idx]) {
@@ -158,7 +158,7 @@ export async function POST(request: Request) {
         return NextResponse.json(
           {
             success: true,
-            message: "টাস্ক তামীম ইকবাল কর্তৃক সফলভাবে গ্রহণ করা হয়েছে!",
+            message: `টাস্ক ${riderName} কর্তৃক সফলভাবে গ্রহণ করা হয়েছে!`,
             task: tasks[idx],
           },
           { headers: CORS_HEADERS }
@@ -211,7 +211,7 @@ export async function POST(request: Request) {
       const message = {
         id: `msg-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
         sender: body.sender || "RIDER",
-        senderName: body.senderName || (body.sender === "RIDER" ? "তামীম ইকবাল" : "সবুজ খামার গ্রোসারি"),
+        senderName: body.senderName || (body.sender === "RIDER" ? "রাইডার" : "ভেন্ডর"),
         text: body.text || "",
         timestamp: new Date().toISOString(),
       };
