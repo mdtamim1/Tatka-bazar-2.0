@@ -64,9 +64,9 @@ const nextConfig: NextConfig = {
     ];
   },
   async rewrites() {
-    const adminUrl = process.env["ADMIN_URL"] ?? "http://localhost:3001";
-    const vendorUrl = process.env["VENDOR_URL"] ?? "http://localhost:3002";
-    const riderUrl = process.env["RIDER_URL"] ?? "http://localhost:3003";
+    const adminUrl = process.env["ADMIN_URL"] ?? "https://tatka-bazar-2-0-admin.vercel.app";
+    const vendorUrl = process.env["VENDOR_URL"] ?? "https://tatka-bazar-2-0-vendor.vercel.app";
+    const riderUrl = process.env["RIDER_URL"] ?? "https://tatka-bazar-2-0-rider-seven.vercel.app";
 
     return [
       // Admin Portal Multi-Zone Proxying

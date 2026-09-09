@@ -30,6 +30,10 @@ const VENDOR_ENDPOINTS = [
   "https://tatka-bazar-2-0-vendor.vercel.app/api/sync/events",
 ];
 
+const ADMIN_ENDPOINTS = [
+  "https://tatka-bazar-2-0-admin.vercel.app/api/dispatch",
+];
+
 export async function broadcastToPortals(event: PortalSyncEvent): Promise<void> {
   // 1. Redis Pub/Sub Realtime Broadcast (Non-blocking)
   publishEvent(REDIS_CHANNELS.PORTAL_EVENTS, event.type, event).catch(() => {});
@@ -38,7 +42,8 @@ export async function broadcastToPortals(event: PortalSyncEvent): Promise<void> 
   enqueueJob(QUEUES.SYNC, event, { maxRetries: 3 }).catch(() => {});
 
   // 3. Direct HTTP Webhooks (Fire and forget)
-  const targets = event.targetType === "RIDER" ? RIDER_ENDPOINTS : VENDOR_ENDPOINTS;
+  const baseTargets = event.targetType === "RIDER" ? RIDER_ENDPOINTS : VENDOR_ENDPOINTS;
+  const targets = [...baseTargets, ...ADMIN_ENDPOINTS];
 
   targets.forEach(async (url) => {
     try {

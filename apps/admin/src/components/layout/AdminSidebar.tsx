@@ -6,17 +6,31 @@ import { usePathname } from "next/navigation";
 import {
   LayoutDashboard, ShoppingBag, Package, FolderTree, Warehouse,
   Store, Bike, Users, MapPin, Tag, Star, BarChart3,
-  Settings, History, Zap, Radio, UserCog, LogOut, ChevronRight,
-  ShoppingCart,
+  Settings, History, Zap, UserCog, LogOut, ChevronRight,
+  ShoppingCart, ExternalLink,
 } from "lucide-react";
 import { useAdmin } from "@/context/AdminContext";
 
-const NAV = [
+interface NavItem {
+  label: string;
+  href: string;
+  icon: any;
+  badgeKey?: string;
+  badge?: string;
+  badgeColor?: string;
+  isExternal?: boolean;
+}
+
+interface NavSection {
+  title: string;
+  items: NavItem[];
+}
+
+const NAV: NavSection[] = [
   {
     title: "CORE",
     items: [
       { label: "Dashboard",        href: "/dashboard",  icon: LayoutDashboard },
-      { label: "Live Dispatch",    href: "/dispatch",   icon: Radio,       badge: "live", badgeColor: "green" },
       { label: "Orders",           href: "/orders",     icon: ShoppingBag, badgeKey: "pendingOrders" },
     ],
   },
@@ -51,6 +65,15 @@ const NAV = [
       { label: "Staff",            href: "/staff",      icon: UserCog,     badgeKey: "pendingStaff" },
       { label: "Settings",         href: "/settings",   icon: Settings },
       { label: "Audit Log",        href: "/audit",      icon: History },
+    ],
+  },
+  {
+    title: "ECOSYSTEM PORTALS",
+    items: [
+      { label: "Storefront",       href: "https://tatka-bazar-2-0-storefront.vercel.app",  icon: ShoppingCart, badge: "LIVE", badgeColor: "green", isExternal: true },
+      { label: "Vendor Portal",    href: "https://tatka-bazar-2-0-vendor.vercel.app",      icon: Store,        badge: "LIVE", badgeColor: "green", isExternal: true },
+      { label: "Rider Portal",     href: "https://tatka-bazar-2-0-rider-seven.vercel.app", icon: Bike,         badge: "LIVE", badgeColor: "green", isExternal: true },
+      { label: "Operations Hub",   href: "https://hub-gamma-umber.vercel.app",             icon: Zap,          badge: "LIVE", badgeColor: "green", isExternal: true },
     ],
   },
 ];
@@ -117,6 +140,28 @@ export function AdminSidebar() {
               const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
               const badgeVal = item.badgeKey ? badges[item.badgeKey] : item.badge;
               const showBadge = badgeVal !== undefined && badgeVal !== 0 && badgeVal !== "";
+
+              if (item.isExternal) {
+                return (
+                  <a
+                    key={item.href}
+                    href={item.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="sidebar-link"
+                    style={{ textDecoration: "none" }}
+                  >
+                    <span className="sidebar-link-icon">
+                      <Icon size={15} />
+                    </span>
+                    <span style={{ flex: 1 }}>{item.label}</span>
+                    <span className="sidebar-badge green" style={{ fontSize: "0.58rem" }}>
+                      LIVE
+                    </span>
+                    <ExternalLink size={11} style={{ opacity: 0.5, marginLeft: 4 }} />
+                  </a>
+                );
+              }
 
               return (
                 <Link

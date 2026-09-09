@@ -66,7 +66,7 @@ export default function VendorHeader({
             <Menu size={20} />
           </button>
 
-          <div className="header-logo-mark" title="Tatka Bazar Vendor">
+          <div className="header-logo-mark" title="Tatka Bazar Vendor" style={{ background: "linear-gradient(135deg, #22C55E, #16A34A)", boxShadow: "0 4px 12px rgba(34,197,94,.3)" }}>
             🏪
           </div>
           <div>
@@ -86,9 +86,9 @@ export default function VendorHeader({
             onClick={() => alert("তাতকা সেন্ট্রাল সাপোর্ট: 01700-000000")}
             className="support-btn"
             style={{
-              background: "rgba(0, 214, 143, 0.12)",
-              border: "1px solid rgba(0, 214, 143, 0.35)",
-              color: "#00d68f",
+              background: "rgba(34, 197, 94, 0.12)",
+              border: "1px solid rgba(34, 197, 94, 0.35)",
+              color: "#22c55e",
             }}
             title="তাতকা সেন্ট্রাল সাপোর্ট চ্যাট"
           >
@@ -178,11 +178,11 @@ export default function VendorHeader({
                 gap: 5,
                 padding: "4px 10px",
                 borderRadius: 999,
-                background: "rgba(0, 214, 143, 0.1)",
-                border: "1px solid rgba(0, 214, 143, 0.35)",
+                background: "rgba(34, 197, 94, 0.1)",
+                border: "1px solid rgba(34, 197, 94, 0.35)",
                 fontSize: ".68rem",
                 fontWeight: 700,
-                color: "#00d68f",
+                color: "#22c55e",
                 animation: "gps-blink 2s ease-in-out infinite",
               }}
             >
@@ -197,9 +197,9 @@ export default function VendorHeader({
           id="sound-test-btn"
           onClick={simulateIncomingOrder}
           style={{
-            background: "rgba(0, 214, 143, 0.12)",
-            border: "1px solid rgba(0, 214, 143, 0.35)",
-            color: "#00D68F",
+            background: "rgba(34, 197, 94, 0.12)",
+            border: "1px solid rgba(34, 197, 94, 0.35)",
+            color: "#22C55E",
             borderRadius: "999px",
             padding: "5px 14px",
             fontSize: ".72rem",

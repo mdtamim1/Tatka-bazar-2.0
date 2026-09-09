@@ -36,7 +36,34 @@ function normalizeSection(s: OrderStatus): DisplaySection {
   return "ALL";
 }
 
-// ── Vendor Shift Modal (with Customer Area Match & Skip Option) ───────────────
+// ── Vendor Shift Modal (with Customer Area Match, Location Filter & Skip Option) ───────────────
+
+// BD Location data for manual filter
+const ADMIN_BD_DISTRICTS = ["Dhaka", "Chattogram", "Sylhet", "Rajshahi", "Khulna", "Barishal", "Rangpur", "Mymensingh"];
+const ADMIN_BD_THANAS: Record<string, string[]> = {
+  "Dhaka": ["Mirpur", "Mohammadpur", "Dhanmondi", "Gulshan", "Uttara", "Motijheel", "Demra", "Badda", "Khilgaon", "Lalbagh"],
+  "Chattogram": ["Kotwali", "Pahartali", "Hathazari", "Chandgaon"],
+  "Sylhet": ["Kotwali", "Shah Poran"],
+  "Rajshahi": ["Boalia", "Rajpara"],
+  "Khulna": ["Sonadanga", "Khalishpur"],
+  "Barishal": ["Kotwali", "Bandar"],
+  "Rangpur": ["Kotwali", "Mithapukur"],
+  "Mymensingh": ["Kotwali", "Trishal"],
+};
+const ADMIN_BD_BAZARS: Record<string, Record<string, string[]>> = {
+  "Dhaka": {
+    "Mirpur": ["Mirpur-1 Bazar", "Mirpur-10 Bazar", "Mirpur-11 Bazar", "Mirpur-12 Bazar", "Pallabi Bazar", "Kazipara Bazar"],
+    "Mohammadpur": ["Mohammadpur Krishi Market", "Mohammadpur Town Hall Bazar", "Shyamoli Bazar", "Adabor Bazar"],
+    "Dhanmondi": ["Dhanmondi Road 27 Bazar", "Jigatola Bazar", "Hazaribagh Bazar"],
+    "Gulshan": ["Gulshan-1 Bazar", "Gulshan-2 Bazar", "Banani Bazar", "DOHS Bazar"],
+    "Uttara": ["Uttara Sector-3 Bazar", "Uttara Sector-7 Bazar", "Uttara Sector-10 Bazar", "Abdullahpur Bazar"],
+    "Motijheel": ["Motijheel Bazar", "Arambagh Bazar", "Fakirapool Bazar"],
+    "Demra": ["Demra Bazar", "Jurain Bazar", "Shyampur Bazar"],
+    "Badda": ["Badda Bazar", "Boro Beraid Bazar", "Satarkul Bazar"],
+    "Khilgaon": ["Khilgaon Bazar", "Taltola Bazar", "Chowdhury Para Bazar"],
+    "Lalbagh": ["Lalbagh Bazar", "Azimpur Bazar", "Newmarket Bazar"],
+  },
+};
 
 function VendorShiftModal({
   order,
@@ -55,12 +82,20 @@ function VendorShiftModal({
     order.assignedVendorId ? [order.assignedVendorId] : []
   );
   const [filter, setFilter] = useState("");
+  // Manual location filter (overrides auto-detect)
+  const [filterDistrict, setFilterDistrict] = useState("");
+  const [filterThana, setFilterThana] = useState("");
+  const [filterBazar, setFilterBazar] = useState("");
+  const [showManualFilter, setShowManualFilter] = useState(false);
 
-  const targetDistrict = order.district || "Dhaka";
-  const targetThana = order.thana || "";
-  const targetArea = order.areaNeighborhood || order.deliveryArea || "";
+  const targetDistrict = filterDistrict || order.district || "Dhaka";
+  const targetThana = filterThana || order.thana || "";
+  const targetArea = filterBazar || order.areaNeighborhood || order.deliveryArea || "";
 
-  // Filter vendors matching customer district, thana or area
+  const filterThanas = useMemo(() => ADMIN_BD_THANAS[filterDistrict] || [], [filterDistrict]);
+  const filterBazars = useMemo(() => ADMIN_BD_BAZARS[filterDistrict]?.[filterThana] || [], [filterDistrict, filterThana]);
+
+  // Filter vendors matching customer district, thana or area (or manual filter)
   const areaMatchedVendors = useMemo(() => {
     return vendors.filter(v => {
       if (v.status !== "APPROVED") return false;
@@ -69,16 +104,26 @@ function VendorShiftModal({
         return (
           v.nameEn.toLowerCase().includes(q) ||
           (v.ownerName && v.ownerName.toLowerCase().includes(q)) ||
-          v.area.toLowerCase().includes(q)
+          v.area.toLowerCase().includes(q) ||
+          (v.district && v.district.toLowerCase().includes(q)) ||
+          (v.thana && v.thana.toLowerCase().includes(q))
         );
       }
-      // Match with customer's location
+      // Manual location filter takes precedence
+      if (filterDistrict) {
+        const matchDist = v.district && v.district.toLowerCase() === filterDistrict.toLowerCase();
+        if (!matchDist) return false;
+        if (filterThana && v.thana && v.thana.toLowerCase() !== filterThana.toLowerCase()) return false;
+        if (filterBazar && v.area && !v.area.toLowerCase().includes(filterBazar.toLowerCase())) return false;
+        return true;
+      }
+      // Auto-match with customer's address
       const matchDist = v.district && v.district.toLowerCase() === targetDistrict.toLowerCase();
       const matchThana = targetThana && v.thana && v.thana.toLowerCase() === targetThana.toLowerCase();
       const matchArea = targetArea && v.area && v.area.toLowerCase().includes(targetArea.toLowerCase());
       return matchDist || matchThana || matchArea || v.city.toLowerCase() === targetDistrict.toLowerCase();
     });
-  }, [vendors, targetDistrict, targetThana, targetArea, filter]);
+  }, [vendors, targetDistrict, targetThana, targetArea, filter, filterDistrict, filterThana, filterBazar]);
 
   // Other available vendors
   const otherVendors = useMemo(() => {
@@ -90,6 +135,8 @@ function VendorShiftModal({
       prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
     );
   };
+
+  const isManualFiltering = !!(filterDistrict || filterThana || filterBazar);
 
   return (
     <div className="modal-overlay" onClick={onClose} style={{ zIndex: 1200 }}>
@@ -119,7 +166,7 @@ function VendorShiftModal({
 
         <div style={{ padding: "18px 22px" }}>
           {/* Search */}
-          <div style={{ marginBottom: "14px" }}>
+          <div style={{ marginBottom: "10px" }}>
             <div className="search-wrap" style={{ width: "100%" }}>
               <Search size={14} className="search-icon" />
               <input
@@ -131,11 +178,67 @@ function VendorShiftModal({
             </div>
           </div>
 
-          <div style={{ fontSize: "0.72rem", color: "var(--text-3)", marginBottom: "8px", fontWeight: 700, textTransform: "uppercase" }}>
-            📍 Vendors in Customer&apos;s Zone ({areaMatchedVendors.length} Found)
+          {/* Manual Location Filter Toggle */}
+          <div style={{ marginBottom: 12 }}>
+            <button
+              type="button"
+              onClick={() => { setShowManualFilter(v => !v); if (showManualFilter) { setFilterDistrict(""); setFilterThana(""); setFilterBazar(""); } }}
+              style={{
+                fontSize: "0.74rem", fontWeight: 700, cursor: "pointer", background: "none",
+                border: "1px solid #2d2d35", borderRadius: 6, padding: "5px 10px",
+                color: isManualFiltering ? "#10b981" : "var(--text-3)",
+                display: "flex", alignItems: "center", gap: 5,
+              }}
+            >
+              <MapPin size={11} />
+              {isManualFiltering ? `📍 Filtered: ${[filterBazar, filterThana, filterDistrict].filter(Boolean).join(", ")}` : "Manual Location Filter"}
+              {isManualFiltering && <span style={{ marginLeft: 4, opacity: 0.7 }}>✕ Clear</span>}
+            </button>
+
+            {showManualFilter && !isManualFiltering && (
+              <div style={{ display: "flex", gap: 8, marginTop: 8, flexWrap: "wrap" }}>
+                {/* District */}
+                <select
+                  style={{ flex: 1, minWidth: 140, padding: "6px 10px", borderRadius: 6, background: "#1a1a1f", border: "1px solid #2d2d35", color: "#fff", fontSize: "0.78rem" }}
+                  value={filterDistrict}
+                  onChange={e => { setFilterDistrict(e.target.value); setFilterThana(""); setFilterBazar(""); }}
+                >
+                  <option value="">All Districts</option>
+                  {ADMIN_BD_DISTRICTS.map(d => <option key={d} value={d}>{d}</option>)}
+                </select>
+
+                {/* Thana */}
+                {filterDistrict && (
+                  <select
+                    style={{ flex: 1, minWidth: 130, padding: "6px 10px", borderRadius: 6, background: "#1a1a1f", border: "1px solid #2d2d35", color: "#fff", fontSize: "0.78rem" }}
+                    value={filterThana}
+                    onChange={e => { setFilterThana(e.target.value); setFilterBazar(""); }}
+                  >
+                    <option value="">All Thanas</option>
+                    {filterThanas.map(t => <option key={t} value={t}>{t}</option>)}
+                  </select>
+                )}
+
+                {/* Bazar */}
+                {filterThana && filterBazars.length > 0 && (
+                  <select
+                    style={{ flex: 1, minWidth: 160, padding: "6px 10px", borderRadius: 6, background: "#1a1a1f", border: "1px solid #2d2d35", color: "#fff", fontSize: "0.78rem" }}
+                    value={filterBazar}
+                    onChange={e => setFilterBazar(e.target.value)}
+                  >
+                    <option value="">All Bazars</option>
+                    {filterBazars.map(b => <option key={b} value={b}>{b}</option>)}
+                  </select>
+                )}
+              </div>
+            )}
           </div>
 
-          <div style={{ maxHeight: "330px", overflowY: "auto", display: "flex", flexDirection: "column", gap: "10px" }}>
+          <div style={{ fontSize: "0.72rem", color: "var(--text-3)", marginBottom: "8px", fontWeight: 700, textTransform: "uppercase" }}>
+            📍 {isManualFiltering ? `Vendors in ${[filterBazar, filterThana, filterDistrict].filter(Boolean).join(", ")}` : `Vendors in Customer's Zone`} ({areaMatchedVendors.length} Found)
+          </div>
+
+          <div style={{ maxHeight: "310px", overflowY: "auto", display: "flex", flexDirection: "column", gap: "10px" }}>
             {areaMatchedVendors.map(v => {
               const isSelected = selectedIds.includes(v.id);
               const parcelsToday = v.parcelsToday ?? 14;
@@ -169,7 +272,7 @@ function VendorShiftModal({
                         <span>📞 {v.phone}</span>
                       </div>
                       <div style={{ fontSize: "0.70rem", color: "var(--text-4)", marginTop: "2px" }}>
-                        📍 {v.area}, {v.district || v.city} · Rating: ⭐ {v.rating > 0 ? v.rating.toFixed(1) : "New"}
+                        📍 {v.area}{v.thana ? `, ${v.thana}` : ""}{v.district ? `, ${v.district}` : ""} · Rating: ⭐ {v.rating > 0 ? v.rating.toFixed(1) : "New"}
                       </div>
                     </div>
                   </div>
@@ -190,11 +293,13 @@ function VendorShiftModal({
             {/* Other Vendors fallback */}
             {areaMatchedVendors.length === 0 && (
               <div style={{ padding: "16px", textAlign: "center", color: "var(--text-3)", fontSize: "0.80rem" }}>
-                No direct vendor matched in {targetDistrict}. You can select from other city hubs below:
+                {isManualFiltering
+                  ? `No vendor found for selected location. Try a broader filter.`
+                  : `No direct vendor matched in ${targetDistrict}. You can select from other city hubs below:`}
               </div>
             )}
 
-            {otherVendors.slice(0, 3).map(v => {
+            {!isManualFiltering && otherVendors.slice(0, 3).map(v => {
               const isSelected = selectedIds.includes(v.id);
               return (
                 <div
@@ -1340,60 +1445,52 @@ export default function OrdersPage() {
     );
   };
 
-  // Sync storefront orders with Round-Robin distribution to active online KYC-verified staff
-  const handleSync = () => {
+  // Sync real storefront orders from PostgreSQL database with Round-Robin distribution to active online KYC-verified staff
+  const handleSync = async () => {
     setSyncing(true);
-    setTimeout(() => {
-      // 1. Filter online KYC-verified staff
+    try {
+      // 1. Fetch latest real orders from database API (try local Next.js route first, then Fastify API)
+      let dbOrders: any[] = [];
+      try {
+        const res = await fetch("/api/orders");
+        if (res.ok) {
+          const json = await res.json();
+          if (json.success && Array.isArray(json.data)) {
+            dbOrders = json.data;
+          }
+        }
+      } catch {}
+
+      if (dbOrders.length === 0) {
+        try {
+          const apiBase = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+          const res = await fetch(`${apiBase}/api/orders`);
+          if (res.ok) {
+            const json = await res.json();
+            if (json.success && Array.isArray(json.data)) {
+              dbOrders = json.data;
+            }
+          }
+        } catch {}
+      }
+
+      // 2. Filter online KYC-verified staff for round-robin assignment
       const onlineVerifiedStaff = staff.filter(
         s => s.status === "ACTIVE" && s.kycStatus === "VERIFIED" && s.dailySession.isCurrentlyOnline
       );
 
-      // 2. Identify storefront queue orders that haven't been synced yet
+      // 3. Identify real database orders that have not yet been imported into admin
       const existingIds = new Set(orders.map(o => o.id));
-      let pendingToSync = STOREFRONT_SYNC_QUEUE.filter(q => !existingIds.has(q.id));
+      const existingNumbers = new Set(orders.map(o => o.orderNumber));
+      const pendingToSync = dbOrders.filter(
+        (q: any) => !existingIds.has(q.id) && !existingNumbers.has(q.orderNumber)
+      );
 
-      // If all preset queue items are already synced, generate a new realistic customer order so admin can test sync anytime
+      // If no new orders exist in PostgreSQL database:
       if (pendingToSync.length === 0) {
-        const randId = Math.floor(1000 + Math.random() * 9000);
-        const nowStr = new Date().toLocaleString("en-GB", {
-          year: "numeric",
-          month: "2-digit",
-          day: "2-digit",
-          hour: "2-digit",
-          minute: "2-digit",
-        });
-        pendingToSync = [
-          {
-            id: `ord-sync-${Date.now()}`,
-            orderNumber: `BG-${randId}`,
-            storeName: "Tatka Bazar",
-            customerName: "Fahim Ahmed",
-            customerPhone: "01755-432190",
-            customerAddress: "Flat 4B, Road 12, Banani",
-            deliveryArea: "Banani, Dhaka",
-            district: "Dhaka",
-            thana: "Banani",
-            areaNeighborhood: "Block C",
-            deliverySlot: "Evening (06:00 PM - 09:00 PM)",
-            courier: "Steadfast",
-            assignedModerator: "Super Admin (Default)",
-            totalAmount: 1850,
-            subtotalAmount: 1730,
-            deliveryCharge: 120,
-            paymentMethod: "bKash",
-            paymentStatus: "PAID",
-            status: "PROCESSING",
-            createdAt: nowStr,
-            source: "STOREFRONT",
-            subOrders: [],
-            items: [
-              { id: `sync-it-${Date.now()}-1`, name: "Premium Beef Sirloin (Boneless)", quantity: 1, price: 950, sku: "TB-BF-101", size: "1 kg" },
-              { id: `sync-it-${Date.now()}-2`, name: "Fresh Hilsha Fish (Padma)", quantity: 1, price: 780, sku: "TB-FS-202", size: "800g" },
-            ],
-            orderHistory: [],
-          },
-        ];
+        alert("ℹ️ ডাটাবেস সম্পূর্ণ আপ-টু-ডেট! সিঙ্ক করার মতো কোনো নতুন ফ্রন্টএন্ড অর্ডার নেই।\n(No new orders to sync from database)");
+        setSyncing(false);
+        return;
       }
 
       const nowTime = new Date().toLocaleString("en-GB", {
@@ -1405,7 +1502,7 @@ export default function OrdersPage() {
 
       const summaryList: string[] = [];
 
-      pendingToSync.forEach((rawOrder, idx) => {
+      pendingToSync.forEach((rawOrder: any, idx: number) => {
         let assignedId: string;
         let assignedName: string;
         let assignedAvatar: string;
@@ -1448,8 +1545,11 @@ export default function OrdersPage() {
       });
 
       setSyncing(false);
-      alert(`✅ Synced ${pendingToSync.length} storefront order(s) successfully!\n\nRound-Robin Staff Distribution:\n${summaryList.join("\n")}`);
-    }, 800);
+      alert(`✅ Synced ${pendingToSync.length} storefront order(s) from database!\n\nRound-Robin Staff Distribution:\n${summaryList.join("\n")}`);
+    } catch (err: any) {
+      alert("⚠️ ডাটাবেস এর সাথে যোগাযোগ করা যায়নি। সার্ভার ও ডাটাবেস চেক করুন।");
+      setSyncing(false);
+    }
   };
 
   // Status Change Logic with business rules:

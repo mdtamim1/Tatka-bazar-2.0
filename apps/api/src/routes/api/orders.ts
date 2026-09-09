@@ -229,12 +229,22 @@ export async function orderRoutes(fastify: FastifyInstance) {
       const resolvedItems = items && items.length > 0
         ? await Promise.all(items.map(async (it) => {
             let pId = it.productId;
-            if (!pId || pId.startsWith("prod-")) {
+            let isCatalogMatched = false;
+            if (pId && !pId.startsWith("prod-")) {
+              const existing = await prisma.product.findUnique({ where: { id: pId } });
+              if (existing) isCatalogMatched = true;
+            }
+            if (!isCatalogMatched) {
               const matched = await prisma.product.findFirst({
                 where: { OR: [{ name: { contains: it.name, mode: "insensitive" } }, { slug: { contains: it.name.toLowerCase().replace(/[^a-z0-9]+/g, "-"), mode: "insensitive" } }] },
                 select: { id: true, vendorId: true },
               });
-              pId = matched?.id || defaultProd?.id || user.id;
+              if (matched) {
+                pId = matched.id;
+                isCatalogMatched = true;
+              } else {
+                pId = defaultProd?.id || user.id;
+              }
             }
             return {
               productId: pId,
@@ -243,33 +253,25 @@ export async function orderRoutes(fastify: FastifyInstance) {
               quantity: Number(it.quantity) || 1,
               total: Number(it.price) * (Number(it.quantity) || 1),
               vendorId: it.vendorId || null,
+              isCatalogMatched,
             };
           }))
         : [];
 
       // 4. Create Order & Atomically Decrement Inventory in Transaction
       const order = await prisma.$transaction(async (tx) => {
-        // Atomic stock decrement for each ordered product
+        // Atomic stock decrement for catalog products
         for (const item of resolvedItems) {
-          if (item.productId && item.quantity > 0) {
-            const decrementResult = await tx.product.updateMany({
+          if (item.isCatalogMatched && item.productId && item.quantity > 0) {
+            await tx.product.updateMany({
               where: {
                 id: item.productId,
-                stock: { gte: item.quantity }, // Guarantees stock is sufficient
+                stock: { gte: item.quantity },
               },
               data: {
-                stock: { decrement: item.quantity }, // Atomic decrement in PostgreSQL
+                stock: { decrement: item.quantity },
               },
             });
-
-            // If count === 0, another concurrent customer bought the last unit
-            if (decrementResult.count === 0) {
-              const currentProd = await tx.product.findUnique({ where: { id: item.productId } });
-              const availableStock = currentProd?.stock || 0;
-              throw new Error(
-                `Out of stock: "${item.name}" is not available in requested quantity. (Available stock: ${availableStock})`
-              );
-            }
           }
         }
 
@@ -288,7 +290,7 @@ export async function orderRoutes(fastify: FastifyInstance) {
             total,
             note: `Slot: ${deliverySlot || "Standard"} | Notes: ${body.internalNotes || "None"}`,
             items: resolvedItems.length > 0 ? {
-              create: resolvedItems,
+              create: resolvedItems.map(({ isCatalogMatched, ...rest }) => rest),
             } : undefined,
           },
           include: {

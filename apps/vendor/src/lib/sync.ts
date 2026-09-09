@@ -87,11 +87,15 @@ export async function dispatchOrderToRiders(orderPayload: any) {
   const endpoints = [
     // 1. Production Rider endpoint on Vercel
     "https://tatka-bazar-2-0-rider-seven.vercel.app/api/dispatch",
-    // 2. Current app dispatch route (Vercel serverless / local)
+    // 2. Production Admin endpoint on Vercel
+    "https://tatka-bazar-2-0-admin.vercel.app/api/dispatch",
+    // 3. Production Hub endpoint on Vercel
+    "https://hub-gamma-umber.vercel.app/api/dispatch",
+    // 4. Current app dispatch route (Vercel serverless / local)
     "/api/dispatch",
-    // 3. Local Rider dev server
+    // 5. Local Rider dev server
     "http://localhost:3003/api/dispatch",
-    // 4. Local Fastify API dev server
+    // 6. Local Fastify API dev server
     "http://localhost:4000/api/dispatch/ready-for-pickup",
   ];
 

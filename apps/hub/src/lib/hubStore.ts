@@ -29,6 +29,8 @@ const DEFAULT_CONFIG: HubConfig = {
   defaultCommissionRate: 10,
   riderVercelUrl: "https://tatka-bazar-2-0-rider-seven.vercel.app",
   vendorVercelUrl: "https://tatka-bazar-2-0-vendor.vercel.app",
+  adminVercelUrl: "https://tatka-bazar-2-0-admin.vercel.app",
+  storefrontVercelUrl: "https://tatka-bazar-2-0-storefront.vercel.app",
   riderLocalUrl: "http://localhost:3003",
   vendorLocalUrl: "http://localhost:3006",
   maintenanceMode: false,

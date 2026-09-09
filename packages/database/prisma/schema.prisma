@@ -76,6 +76,12 @@ model Vendor {
   createdAt      DateTime     @default(now())
   updatedAt      DateTime     @updatedAt
 
+  // Location fields — set by Hub during approval
+  district       String?      // e.g., "Dhaka"
+  thana          String?      // e.g., "Mirpur"
+  bazar          String?      // e.g., "Mirpur-10 Bazar"
+  locationSetAt  DateTime?
+
   approvedBy     AdminUser?   @relation("ApprovedBy", fields: [approvedById], references: [id])
   products       Product[]
   branches       Branch[]
@@ -84,10 +90,12 @@ model Vendor {
   orderItems     OrderItem[]
   quoteRequests  QuoteRequest[]
   invoices       Invoice[]
+  riderAssignments VendorRiderAssignment[]
 
   @@index([email])
   @@index([slug])
   @@index([status])
+  @@index([district, thana, bazar])
   @@map("vendors")
 }
 
@@ -130,15 +138,23 @@ model DeliveryRider {
   paymentAccount   String?
   paymentAccountLocked Boolean         @default(false)
 
+  // Location fields — set by Hub during KYC approval
+  district         String?             // e.g., "Dhaka"
+  thana            String?             // e.g., "Mirpur"
+  bazar            String?             // e.g., "Mirpur-10 Bazar"
+  locationSetAt    DateTime?
+
   approvedBy       AdminUser?          @relation("ApprovedBy", fields: [approvedById], references: [id])
   kycApprovedBy    AdminUser?          @relation("RiderKycApproval", fields: [kycApprovedById], references: [id])
   assignments      DeliveryAssignment[]
   earningHistory   RiderEarning[]
   withdrawRequests RiderWithdrawal[]
+  vendorAssignments VendorRiderAssignment[]
 
   @@index([email])
   @@index([status])
   @@index([kycStatus])
+  @@index([district, thana, bazar])
   @@map("delivery_riders")
 }
 
@@ -508,6 +524,22 @@ model DeliveryAssignment {
 }
 
 
+model VendorRiderAssignment {
+  id         String        @id @default(uuid())
+  vendorId   String
+  riderId    String
+  assignedAt DateTime      @default(now())
+  assignedBy String?       // Hub member ID who made the assignment
+
+  vendor     Vendor        @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  rider      DeliveryRider @relation(fields: [riderId], references: [id], onDelete: Cascade)
+
+  @@unique([vendorId, riderId])
+  @@index([vendorId])
+  @@index([riderId])
+  @@map("vendor_rider_assignments")
+}
+
 // =============================================================================
 // B2B & ENTERPRISE
 // =============================================================================
@@ -636,8 +668,9 @@ enum AdminRole {
 }
 
 enum VendorStatus {
-  PENDING
-  APPROVED
+  PENDING           // Just registered, KYC not complete
+  PENDING_APPROVAL  // KYC complete from vendor panel, waiting Hub approval
+  APPROVED          // Hub approved with location set
   SUSPENDED
   REJECTED
 }

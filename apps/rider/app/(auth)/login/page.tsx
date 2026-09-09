@@ -81,12 +81,20 @@ export default function LoginPage() {
           return localJson.data?.suspendReason || "অ্যাকাউন্ট স্থগিত করা হয়েছে";
         }
       }
-      const hubRes = await fetch(`http://localhost:3004/api/public/status?type=rider&id=${encodeURIComponent(riderIdOrPhone)}`);
-      if (hubRes.ok) {
-        const hubJson = await hubRes.json();
-        if (hubJson.success && hubJson.data?.isSuspended) {
-          return hubJson.data.suspendReason || "Hub অ্যাডমিন কর্তৃক সাময়িক স্থগিত করা হয়েছে";
-        }
+      const hubUrls = [
+        `https://hub-gamma-umber.vercel.app/api/public/status?type=rider&id=${encodeURIComponent(riderIdOrPhone)}`,
+        `http://localhost:3004/api/public/status?type=rider&id=${encodeURIComponent(riderIdOrPhone)}`,
+      ];
+      for (const hUrl of hubUrls) {
+        try {
+          const hubRes = await fetch(hUrl);
+          if (hubRes.ok) {
+            const hubJson = await hubRes.json();
+            if (hubJson.success && hubJson.data?.isSuspended) {
+              return hubJson.data.suspendReason || "Hub অ্যাডমিন কর্তৃক সাময়িক স্থগিত করা হয়েছে";
+            }
+          }
+        } catch {}
       }
     } catch {}
     return null;

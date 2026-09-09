@@ -103,12 +103,20 @@ export default function LoginPage() {
           return localJson.data?.suspendReason || "ভেন্ডর শপ স্থগিত করা হয়েছে";
         }
       }
-      const hubRes = await fetch(`http://localhost:3004/api/public/status?type=vendor&id=${encodeURIComponent(vendorIdOrPhone)}`);
-      if (hubRes.ok) {
-        const hubJson = await hubRes.json();
-        if (hubJson.success && hubJson.data?.isSuspended) {
-          return hubJson.data.suspendReason || "Hub অ্যাডমিন কর্তৃক সাময়িক স্থগিত করা হয়েছে";
-        }
+      const hubUrls = [
+        `https://hub-gamma-umber.vercel.app/api/public/status?type=vendor&id=${encodeURIComponent(vendorIdOrPhone)}`,
+        `http://localhost:3004/api/public/status?type=vendor&id=${encodeURIComponent(vendorIdOrPhone)}`,
+      ];
+      for (const hUrl of hubUrls) {
+        try {
+          const hubRes = await fetch(hUrl);
+          if (hubRes.ok) {
+            const hubJson = await hubRes.json();
+            if (hubJson.success && hubJson.data?.isSuspended) {
+              return hubJson.data.suspendReason || "Hub অ্যাডমিন কর্তৃক সাময়িক স্থগিত করা হয়েছে";
+            }
+          }
+        } catch {}
       }
     } catch {}
     return null;

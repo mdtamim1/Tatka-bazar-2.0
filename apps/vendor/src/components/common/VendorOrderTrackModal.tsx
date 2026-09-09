@@ -34,6 +34,8 @@ export default function VendorOrderTrackModal({
       const endpoints = [
         `/api/dispatch?orderId=${order?.id || ""}`,
         `https://tatka-bazar-2-0-rider-seven.vercel.app/api/dispatch?orderId=${order?.id || ""}`,
+        `https://tatka-bazar-2-0-admin.vercel.app/api/dispatch?orderId=${order?.id || ""}`,
+        `https://hub-gamma-umber.vercel.app/api/dispatch?orderId=${order?.id || ""}`,
       ];
 
       for (const url of endpoints) {

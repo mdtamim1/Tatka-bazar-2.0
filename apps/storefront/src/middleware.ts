@@ -7,17 +7,17 @@ export function middleware(request: NextRequest) {
 
   // 1. Subdomain routing support
   if (hostname.startsWith("admin.") || hostname.startsWith("admin-")) {
-    const adminUrl = process.env["ADMIN_URL"] ?? "http://localhost:3001";
+    const adminUrl = process.env["ADMIN_URL"] ?? "https://tatka-bazar-2-0-admin.vercel.app";
     return NextResponse.rewrite(new URL(`${url.pathname}${url.search}`, adminUrl));
   }
 
   if (hostname.startsWith("vendor.") || hostname.startsWith("vendor-")) {
-    const vendorUrl = process.env["VENDOR_URL"] ?? "http://localhost:3002";
+    const vendorUrl = process.env["VENDOR_URL"] ?? "https://tatka-bazar-2-0-vendor.vercel.app";
     return NextResponse.rewrite(new URL(`${url.pathname}${url.search}`, vendorUrl));
   }
 
   if (hostname.startsWith("rider.") || hostname.startsWith("rider-")) {
-    const riderUrl = process.env["RIDER_URL"] ?? "http://localhost:3003";
+    const riderUrl = process.env["RIDER_URL"] ?? "https://tatka-bazar-2-0-rider-seven.vercel.app";
     return NextResponse.rewrite(new URL(`${url.pathname}${url.search}`, riderUrl));
   }
 

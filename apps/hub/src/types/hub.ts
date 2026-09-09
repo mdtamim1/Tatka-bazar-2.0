@@ -80,6 +80,11 @@ export interface HubRider {
   suspendReason?: string;
   rating?: number;
   totalRatings?: number;
+  // Location — set by Hub during KYC approval
+  district?: string;
+  thana?: string;
+  bazar?: string;
+  locationSetAt?: string;
 }
 
 export interface RiderDepositRequest {
@@ -125,7 +130,8 @@ export interface BalanceAdjustment {
 
 // ─── Vendor Types ────────────────────────────────────────────
 
-export type VendorStatus = "ACTIVE" | "SUSPENDED" | "PENDING_APPROVAL" | "REJECTED";
+export type VendorStatus = "ACTIVE" | "SUSPENDED" | "PENDING" | "PENDING_APPROVAL" | "REJECTED";
+
 export type VendorTier = "STANDARD" | "TRUSTED" | "PREMIUM";
 
 export interface HubVendor {
@@ -156,6 +162,11 @@ export interface HubVendor {
   tinBin?: string;
   payoutMethod?: "BKASH" | "NAGAD" | "BANK";
   payoutAccount?: string;
+  // Location — set by Hub during approval
+  district?: string;
+  thana?: string;
+  bazar?: string;
+  locationSetAt?: string;
 }
 
 export interface VendorSettlementRequest {
@@ -228,6 +239,8 @@ export interface HubConfig {
   defaultCommissionRate: number;
   riderVercelUrl: string;
   vendorVercelUrl: string;
+  adminVercelUrl?: string;
+  storefrontVercelUrl?: string;
   riderLocalUrl: string;
   vendorLocalUrl: string;
   maintenanceMode: boolean;

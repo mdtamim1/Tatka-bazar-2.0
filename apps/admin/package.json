@@ -10,6 +10,7 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
+    "@tatka-bazar/database": "workspace:*",
     "@tatka-bazar/design-tokens": "workspace:*",
     "@tatka-bazar/shared": "workspace:*",
     "@types/leaflet": "^1.9.22",

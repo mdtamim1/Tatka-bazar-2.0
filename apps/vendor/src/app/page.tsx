@@ -254,15 +254,6 @@ export default function VendorDashboardPage() {
         >
           📋 সেটেলমেন্ট ও ইনকাম হিস্ট্রি
         </button>
-
-        <button
-          id="test-order-alert-btn"
-          className="btn-secondary"
-          style={{ borderColor: "rgba(0,214,143,0.35)", color: "#00D68F" }}
-          onClick={simulateIncomingOrder}
-        >
-          ⚡ নতুন অর্ডার সাউন্ড টেস্ট (৪৫ সে.)
-        </button>
       </div>
 
       {/* 4. Live Order Preparation & Dispatch Queue (Rider Task Card Style) */}
@@ -322,25 +313,9 @@ export default function VendorDashboardPage() {
           <div style={{ fontSize: "1rem", fontWeight: 700, color: "var(--text-1)", marginBottom: 4 }}>
             বর্তমানে কোনো অপেক্ষমাণ অর্ডার নেই
           </div>
-          <div style={{ fontSize: ".8rem", color: "var(--text-3)", maxWidth: 360, margin: "0 auto 18px" }}>
+          <div style={{ fontSize: ".8rem", color: "var(--text-3)", maxWidth: 360, margin: "0 auto" }}>
             নতুন কোনো কাস্টমার অর্ডার করলে অবিলম্বে সাউন্ড রিংটোন ও ৪৫ সেকেন্ডের লাইভ কাউন্টডাউন পপ-আপ প্রদর্শিত হবে।
           </div>
-          <button
-            onClick={simulateIncomingOrder}
-            style={{
-              padding: "10px 20px",
-              background: "linear-gradient(135deg, var(--emerald), var(--emerald-dim))",
-              borderRadius: "var(--r-full)",
-              color: "#fff",
-              fontSize: ".82rem",
-              fontWeight: 700,
-              cursor: "pointer",
-              boxShadow: "0 4px 16px var(--emerald-glow)",
-              fontFamily: "var(--font-bn)",
-            }}
-          >
-            ⚡ টেস্ট অর্ডার ট্রাই করুন
-          </button>
         </div>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
@@ -671,19 +646,23 @@ export default function VendorDashboardPage() {
                     )}
 
                     {order.status === "READY_FOR_PICKUP" && (
-                      <button
-                        onClick={() => updateOrderStatus(order.id, "HANDED_TO_RIDER")}
-                        className="btn-primary"
+                      <div
                         style={{
-                          padding: "8px 18px",
-                          fontSize: ".82rem",
-                          width: "auto",
-                          background: "linear-gradient(135deg, #8B5CF6, #6D28D9)",
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: "8px",
+                          padding: "8px 14px",
+                          borderRadius: "10px",
+                          background: "rgba(34, 197, 94, 0.12)",
+                          border: "1px solid rgba(34, 197, 94, 0.25)",
+                          color: "#22C55E",
+                          fontSize: "0.80rem",
+                          fontWeight: 700,
                         }}
                       >
                         <Bike size={14} />
-                        <span>রাইডারকে হ্যান্ডওভার</span>
-                      </button>
+                        <span>রাইডার পার্সেল সংগ্রহ করলেই স্বয়ংক্রিয়ভাবে সম্পন্ন হবে</span>
+                      </div>
                     )}
                   </div>
                 </div>

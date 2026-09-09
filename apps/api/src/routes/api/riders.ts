@@ -80,25 +80,54 @@ export async function riderRoutes(fastify: FastifyInstance) {
     }
   });
 
-  // PATCH /api/riders/:id — update rider status/vehicle
+  // PATCH /api/riders/:id — update rider status/vehicle/location
   fastify.patch("/:id", async (request, reply) => {
     const { id } = request.params as { id: string };
-    const body = request.body as { status?: any; vehicleType?: any };
+    const body = request.body as {
+      status?: any;
+      vehicleType?: any;
+      kycStatus?: any;
+      kycRejectionReason?: string;
+      kycApprovedAt?: string;
+      district?: string;
+      thana?: string;
+      bazar?: string;
+      // For Hub rider approval with vendor assignment
+      vendorIds?: string[];
+    };
     try {
-      const rider = await prisma.deliveryRider.update({
-        where: { id },
-        data: {
-          ...(body.status && { status: body.status }),
-          ...(body.vehicleType && { vehicleType: body.vehicleType }),
-        },
-      });
+      const updateData: any = {};
+      if (body.status) updateData.status = body.status;
+      if (body.vehicleType) updateData.vehicleType = body.vehicleType;
+      if (body.kycStatus) updateData.kycStatus = body.kycStatus;
+      if (body.kycApprovedAt) updateData.kycApprovedAt = new Date(body.kycApprovedAt);
+      if (body.district) updateData.district = body.district;
+      if (body.thana) updateData.thana = body.thana;
+      if (body.bazar) updateData.bazar = body.bazar;
+      if (body.district || body.thana || body.bazar) updateData.locationSetAt = new Date();
+
+      const rider = await prisma.deliveryRider.update({ where: { id }, data: updateData });
+
+      // If vendorIds provided, create vendor-rider assignments
+      if (body.vendorIds && body.vendorIds.length > 0) {
+        await Promise.all(
+          body.vendorIds.map(vendorId =>
+            (prisma.vendorRiderAssignment.upsert as any)({
+              where: { vendorId_riderId: { vendorId, riderId: id } },
+              update: {},
+              create: { vendorId, riderId: id },
+            })
+          )
+        );
+      }
+
       return reply.send({ success: true, data: rider });
     } catch (err: any) {
       return reply.status(400).send({ success: false, error: err.message });
     }
   });
 
-  // PATCH /api/riders/:id/kyc — approve or reject KYC
+  // PATCH /api/riders/:id/kyc — approve or reject KYC (legacy, kept for compatibility)
   fastify.patch("/:id/kyc", async (request, reply) => {
     const { id } = request.params as { id: string };
     const body = request.body as { kycAction: "APPROVE" | "REJECT"; note?: string };
@@ -113,6 +142,155 @@ export async function riderRoutes(fastify: FastifyInstance) {
       return reply.send({ success: true, data: rider });
     } catch (err: any) {
       return reply.status(400).send({ success: false, error: err.message });
+    }
+  });
+
+  // GET /api/riders/by-vendor/:vendorId — riders assigned to a specific vendor
+  fastify.get("/by-vendor/:vendorId", async (request, reply) => {
+    const { vendorId } = request.params as { vendorId: string };
+    try {
+      const assignments = await prisma.vendorRiderAssignment.findMany({
+        where: { vendorId },
+        include: {
+          rider: {
+            include: {
+              assignments: {
+                where: { status: { in: ["ASSIGNED", "PICKED_UP"] } },
+                select: { id: true },
+              },
+            },
+          },
+        },
+      });
+      return reply.send({
+        success: true,
+        data: assignments.map(a => ({
+          id: a.rider.id,
+          name: a.rider.name,
+          phone: a.rider.phone,
+          vehicleType: a.rider.vehicleType,
+          status: a.rider.status,
+          kycStatus: a.rider.kycStatus,
+          district: a.rider.district,
+          thana: a.rider.thana,
+          bazar: a.rider.bazar,
+          activeDeliveries: a.rider.assignments.length,
+          assignedAt: a.assignedAt,
+        })),
+      });
+    } catch (err: any) {
+      return reply.status(500).send({ success: false, error: err.message });
+    }
+  });
+
+  // GET /api/riders/available-for-order/:orderId
+  // Returns riders assigned to vendors serving this order's location,
+  // sorted by priority: least busy (fewest active deliveries) first
+  fastify.get("/available-for-order/:orderId", async (request, reply) => {
+    const { orderId } = request.params as { orderId: string };
+    try {
+      const order = await prisma.order.findUnique({
+        where: { id: orderId },
+        include: {
+          address: true,
+          items: { select: { vendorId: true } },
+        },
+      });
+      if (!order) return reply.status(404).send({ success: false, error: "Order not found" });
+
+      // Get vendor IDs involved in this order
+      const vendorIds = [...new Set(order.items.map(i => i.vendorId).filter(Boolean))] as string[];
+
+      // Get all riders assigned to these vendors
+      const assignments = await prisma.vendorRiderAssignment.findMany({
+        where: { vendorId: { in: vendorIds } },
+        include: {
+          rider: {
+            include: {
+              assignments: {
+                where: { status: { in: ["ASSIGNED", "PICKED_UP"] } },
+                select: { id: true, assignedAt: true },
+              },
+            },
+          },
+        },
+      });
+
+      // De-duplicate riders (a rider could be assigned to multiple vendors)
+      const riderMap = new Map<string, any>();
+      for (const a of assignments) {
+        if (!riderMap.has(a.rider.id)) {
+          riderMap.set(a.rider.id, a.rider);
+        }
+      }
+
+      // Sort by priority: fewer active deliveries = higher priority
+      const riders = [...riderMap.values()]
+        .filter(r => r.kycStatus === "APPROVED" && r.isActive)
+        .map(r => ({
+          id: r.id,
+          name: r.name,
+          phone: r.phone,
+          vehicleType: r.vehicleType,
+          status: r.status,
+          district: r.district,
+          thana: r.thana,
+          bazar: r.bazar,
+          activeDeliveries: r.assignments.length,
+          // Priority score: lower is better (fewer active deliveries = more free)
+          priorityScore: r.assignments.length * 10,
+        }))
+        .sort((a, b) => a.priorityScore - b.priorityScore);
+
+      return reply.send({ success: true, data: riders });
+    } catch (err: any) {
+      return reply.status(500).send({ success: false, error: err.message });
+    }
+  });
+
+  // GET /api/riders/by-location — get APPROVED riders filtered by location
+  fastify.get("/by-location", async (request, reply) => {
+    try {
+      const query = request.query as { district?: string; thana?: string; bazar?: string };
+      const where: any = { kycStatus: "APPROVED", isActive: true };
+      if (query.district) where.district = { contains: query.district, mode: "insensitive" };
+      if (query.thana) where.thana = { contains: query.thana, mode: "insensitive" };
+      if (query.bazar) where.bazar = { contains: query.bazar, mode: "insensitive" };
+
+      const riders = await prisma.deliveryRider.findMany({
+        where,
+        include: {
+          assignments: {
+            where: { status: { in: ["ASSIGNED", "PICKED_UP"] } },
+            select: { id: true },
+          },
+          vendorAssignments: {
+            include: { vendor: { select: { id: true, businessName: true } } },
+          },
+        },
+        orderBy: { createdAt: "desc" },
+      });
+
+      return reply.send({
+        success: true,
+        data: riders.map(r => ({
+          id: r.id,
+          name: r.name,
+          phone: r.phone,
+          vehicleType: r.vehicleType,
+          status: r.status,
+          district: r.district,
+          thana: r.thana,
+          bazar: r.bazar,
+          activeDeliveries: r.assignments.length,
+          assignedVendors: r.vendorAssignments.map(va => ({
+            id: va.vendor.id,
+            name: va.vendor.businessName,
+          })),
+        })),
+      });
+    } catch (err: any) {
+      return reply.status(500).send({ success: false, error: err.message });
     }
   });
 

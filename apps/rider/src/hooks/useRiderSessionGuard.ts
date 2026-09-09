@@ -84,20 +84,27 @@ export function useRiderSessionGuard(riderId: string, riderName?: string) {
         }
       } catch {}
 
-      // Fallback check Hub public status
-      try {
-        const hubUrl = `http://localhost:3004/api/public/status?type=rider&id=${encodeURIComponent(riderId)}`;
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 2000);
-        const hubRes = await fetch(hubUrl, { signal: controller.signal });
-        clearTimeout(timeoutId);
-        if (hubRes.ok) {
-          const hubJson = await hubRes.json();
-          if (hubJson.success && hubJson.data?.isSuspended && isMounted) {
-            triggerSuspension(hubJson.data.suspendReason, hubJson.data.suspendedAt);
+      // Fallback check Hub public status (cloud Hub first, then local)
+      const hubBases = [
+        process.env.NEXT_PUBLIC_HUB_URL || "https://hub-gamma-umber.vercel.app",
+        "http://localhost:3004",
+      ];
+      for (const base of hubBases) {
+        try {
+          const hubUrl = `${base}/api/public/status?type=rider&id=${encodeURIComponent(riderId)}`;
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 2000);
+          const hubRes = await fetch(hubUrl, { signal: controller.signal });
+          clearTimeout(timeoutId);
+          if (hubRes.ok) {
+            const hubJson = await hubRes.json();
+            if (hubJson.success && hubJson.data?.isSuspended && isMounted) {
+              triggerSuspension(hubJson.data.suspendReason, hubJson.data.suspendedAt);
+              break;
+            }
           }
-        }
-      } catch {}
+        } catch {}
+      }
     }
 
     // Run initial check after 2 seconds

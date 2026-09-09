@@ -17,8 +17,6 @@ import {
   INITIAL_CATEGORIES,
 } from "@/lib/admin-data";
 
-import { audioAlert } from "../utils/audioAlert";
-
 // ── Context Type ─────────────────────────────────────────────────────────────
 
 interface AdminContextType {
@@ -133,28 +131,24 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
     async function loadLiveData() {
       try {
         const [ordRes, riderRes, vendorRes] = await Promise.allSettled([
-          fetch(`${API_BASE}/api/orders`).then((r) => r.json()),
+          fetch("/api/orders")
+            .then((r) => (r.ok ? r.json() : Promise.reject()))
+            .catch(() => fetch(`${API_BASE}/api/orders`).then((r) => r.json())),
           fetch(`${API_BASE}/api/riders`).then((r) => r.json()),
           fetch(`${API_BASE}/api/vendors`).then((r) => r.json()),
         ]);
 
         if (ordRes.status === "fulfilled" && ordRes.value?.success && Array.isArray(ordRes.value.data) && isMounted) {
           const freshOrders: AdminOrder[] = ordRes.value.data;
-          setKnownOrderIds((prevKnown) => {
-            const newlyArrived = freshOrders.filter((o) => !prevKnown.has(o.id));
-            if (newlyArrived.length > 0 && newlyArrived[0]) {
-              const latest = newlyArrived[0];
-              audioAlert.playOrderAssignedSound?.();
-              setNewOrderAlert({
-                orderNumber: latest.orderNumber,
-                customerName: latest.customerName,
-                totalAmount: latest.totalAmount,
-                area: latest.deliveryArea,
-              });
-            }
-            return new Set([...prevKnown, ...freshOrders.map((o) => o.id)]);
-          });
-          setOrders(freshOrders);
+          if (freshOrders.length > 0) {
+            setKnownOrderIds((prevKnown) => new Set([...prevKnown, ...freshOrders.map((o) => o.id)]));
+            setOrders((prev) => {
+              const dbIds = new Set(freshOrders.map(f => f.id));
+              const dbNumbers = new Set(freshOrders.map(f => f.orderNumber));
+              const remaining = prev.filter(p => !dbIds.has(p.id) && !dbNumbers.has(p.orderNumber));
+              return [...freshOrders, ...remaining];
+            });
+          }
         }
         if (riderRes.status === "fulfilled" && riderRes.value?.success && riderRes.value.data?.length > 0 && isMounted) {
           setRiders(riderRes.value.data);
@@ -173,7 +167,7 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const dismissAlert = () => setNewOrderAlert(null);
-  const playTestSound = () => audioAlert.playOrderAssignedSound?.();
+  const playTestSound = () => {};
 
   // ── Audit Log ────────────────────────────────────────────────────────────
   const addAuditLog = useCallback((action: string, module: string, targetId: string, details: string) => {
@@ -274,13 +268,6 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
       subOrders: [],
     };
     setOrders((prev) => [newOrder, ...prev]);
-    audioAlert.playOrderAssignedSound?.();
-    setNewOrderAlert({
-      orderNumber: newOrder.orderNumber,
-      customerName: newOrder.customerName,
-      totalAmount: newOrder.totalAmount,
-      area: newOrder.deliveryArea,
-    });
     addAuditLog("ORDER_CREATE", "Orders", newOrder.id, `New order created: ${newOrder.orderNumber}`);
     fetch(`${API_BASE}/api/orders`, {
       method: "POST",

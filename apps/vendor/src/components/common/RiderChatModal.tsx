@@ -135,6 +135,7 @@ export default function RiderChatModal({
       const endpoints = [
         "/api/dispatch",
         "https://tatka-bazar-2-0-rider-seven.vercel.app/api/dispatch",
+        "https://tatka-bazar-2-0-admin.vercel.app/api/dispatch",
       ];
       endpoints.forEach((url) => {
         fetch(url, {

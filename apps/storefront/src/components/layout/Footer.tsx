@@ -230,6 +230,18 @@ export const Footer = () => {
             <Link href="/about" className="hover:text-background transition-colors">
               Delivery Information
             </Link>
+            <a href="https://tatka-bazar-2-0-vendor.vercel.app" target="_blank" rel="noopener noreferrer" className="hover:text-background transition-colors text-emerald-400">
+              Vendor
+            </a>
+            <a href="https://tatka-bazar-2-0-rider-seven.vercel.app" target="_blank" rel="noopener noreferrer" className="hover:text-background transition-colors text-orange-400">
+              Rider
+            </a>
+            <a href="https://tatka-bazar-2-0-admin.vercel.app" target="_blank" rel="noopener noreferrer" className="hover:text-background transition-colors text-indigo-400">
+              Admin
+            </a>
+            <a href="https://hub-gamma-umber.vercel.app" target="_blank" rel="noopener noreferrer" className="hover:text-background transition-colors text-cyan-400">
+              Hub
+            </a>
           </div>
         </div>
       </div>

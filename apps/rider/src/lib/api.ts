@@ -1232,6 +1232,8 @@ export async function apiFetch<T = unknown>(
       const targets = [
         "/api/dispatch",
         "https://tatka-bazar-2-0-vendor.vercel.app/api/dispatch",
+        "https://tatka-bazar-2-0-admin.vercel.app/api/dispatch",
+        "https://hub-gamma-umber.vercel.app/api/dispatch",
         "http://localhost:3006/api/dispatch",
       ];
       targets.forEach((url) => {
@@ -1252,6 +1254,8 @@ export async function apiFetch<T = unknown>(
       const targets = [
         "/api/dispatch",
         "https://tatka-bazar-2-0-vendor.vercel.app/api/dispatch",
+        "https://tatka-bazar-2-0-admin.vercel.app/api/dispatch",
+        "https://hub-gamma-umber.vercel.app/api/dispatch",
         "http://localhost:3006/api/dispatch",
       ];
       targets.forEach((url) => {
@@ -1261,6 +1265,24 @@ export async function apiFetch<T = unknown>(
           body: JSON.stringify(payload),
         }).catch(() => {});
       });
+
+      // Cross-tab direct broadcast to vendor portal
+      try {
+        if (typeof window !== "undefined") {
+          const syncEvt = {
+            type: "RIDER_PICKED_UP",
+            orderId: taskId,
+            timestamp: new Date().toISOString(),
+          };
+          localStorage.setItem("tatka_sync_broadcast", JSON.stringify(syncEvt));
+          window.dispatchEvent(new CustomEvent("tatka_sync_event", { detail: syncEvt }));
+          try {
+            const ch = new BroadcastChannel("tatka_vendor_realtime_sync_channel");
+            ch.postMessage(syncEvt);
+            ch.close();
+          } catch {}
+        }
+      } catch {}
     }
   }
 
@@ -1272,6 +1294,8 @@ export async function apiFetch<T = unknown>(
       const targets = [
         "/api/dispatch",
         "https://tatka-bazar-2-0-vendor.vercel.app/api/dispatch",
+        "https://tatka-bazar-2-0-admin.vercel.app/api/dispatch",
+        "https://hub-gamma-umber.vercel.app/api/dispatch",
         "http://localhost:3006/api/dispatch",
       ];
       targets.forEach((url) => {
@@ -1292,6 +1316,8 @@ export async function apiFetch<T = unknown>(
       const targets = [
         "/api/dispatch",
         "https://tatka-bazar-2-0-vendor.vercel.app/api/dispatch",
+        "https://tatka-bazar-2-0-admin.vercel.app/api/dispatch",
+        "https://hub-gamma-umber.vercel.app/api/dispatch",
         "http://localhost:3006/api/dispatch",
       ];
       targets.forEach((url) => {

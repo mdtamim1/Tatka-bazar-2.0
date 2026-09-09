@@ -55,6 +55,8 @@ export default function OrdersPage() {
       const endpoints = [
         "/api/dispatch?all=true",
         "https://tatka-bazar-2-0-rider-seven.vercel.app/api/dispatch?all=true",
+        "https://tatka-bazar-2-0-admin.vercel.app/api/dispatch?all=true",
+        "https://hub-gamma-umber.vercel.app/api/dispatch?all=true",
       ];
       for (const url of endpoints) {
         try {
@@ -218,15 +220,6 @@ export default function OrdersPage() {
           >
             <RotateCcw size={13} />
             <span>শিফট রিসেট</span>
-          </button>
-
-          <button
-            onClick={simulateAreaDispatchOrder}
-            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-gradient-to-r from-[#00D68F] to-[#00B87A] hover:opacity-90 text-white text-xs font-bold shadow-md shadow-[#00D68F]/20 transition-all active:scale-95"
-            title="অ্যাডমিন থেকে ৫টি ভেন্ডরের কাছে এলাকাভিত্তিক অর্ডার পাঠানো টেস্ট করুন"
-          >
-            <Zap size={14} className="text-white" />
-            <span>+ এলাকাভিত্তিক টেস্ট অর্ডার</span>
           </button>
         </div>
       </div>
@@ -401,12 +394,9 @@ export default function OrdersPage() {
           <p className="font-semibold text-[#F0F6FF]">
             এই সেকশনে বর্তমানে কোনো অর্ডার নেই।
           </p>
-          <button
-            onClick={simulateAreaDispatchOrder}
-            className="px-4 py-2 bg-gradient-to-r from-[#00D68F] to-[#00B87A] hover:opacity-90 text-white rounded-xl font-bold shadow-md transition-all"
-          >
-            টেস্ট অর্ডার পাঠান (অ্যাডমিন ডিসপ্যাচ)
-          </button>
+          <p className="text-[#64748b] text-[11px] max-w-sm mx-auto">
+            গ্রাহক ফ্রন্টএন্ড বা অ্যাডমিন থেকে নতুন অর্ডার আসলে তা স্বয়ংক্রিয়ভাবে এখানে প্রদর্শিত হবে।
+          </p>
         </div>
       ) : (
         <div className="space-y-4">
@@ -681,19 +671,16 @@ export default function OrdersPage() {
                       </button>
                     )}
 
-                    {/* If READY_FOR_PICKUP: Notice that vendor's job is complete & rider is assigned */}
+                    {/* If READY_FOR_PICKUP: Notice that vendor's job is complete - auto changes when rider collects parcel */}
                     {order.status === "READY_FOR_PICKUP" && (
                       <div className="flex items-center gap-2">
-                        <span className="text-[#00D68F] font-semibold text-[11px] bg-[rgba(0,214,143,0.12)] px-2.5 py-1.5 rounded-lg border border-[rgba(0,214,143,0.3)]">
-                          ✓ ভেন্ডরের কাজ শেষ, রাইডার পার্সেল নিতে আসছেন
+                        <span className="text-[#22C55E] font-semibold text-[11px] bg-[rgba(34,197,94,0.12)] px-3 py-1.5 rounded-lg border border-[rgba(34,197,94,0.3)] flex items-center gap-2">
+                          <span className="relative flex h-2 w-2">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#22C55E] opacity-75"></span>
+                            <span className="relative inline-flex rounded-full h-2 w-2 bg-[#22C55E]"></span>
+                          </span>
+                          <span>✓ ভেন্ডরের কাজ শেষ · রাইডার পার্সেল সংগ্রহ করলেই স্বয়ংক্রিয়ভাবে সম্পন্ন হবে</span>
                         </span>
-                        <button
-                          onClick={() => updateOrderStatus(order.id, "COMPLETED")}
-                          className="px-3.5 py-1.5 bg-[#8B5CF6] hover:bg-[#7C3AED] text-white rounded-xl font-bold text-xs shadow-md"
-                          title="রাইডার পার্সেল নিয়ে গেলে সম্পন্ন মার্ক করুন"
-                        >
-                          রাইডারকে পার্সেল বুঝিয়ে দিয়েছি
-                        </button>
                       </div>
                     )}
 

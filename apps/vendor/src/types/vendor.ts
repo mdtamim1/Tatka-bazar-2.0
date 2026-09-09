@@ -304,3 +304,46 @@ export interface NotificationItem {
   read: boolean;
   link?: string;
 }
+
+/* ─── Withdrawal System ────────────────────────────────────────── */
+
+export type WithdrawStatus =
+  | "PENDING"       // vendor submitted request
+  | "APPROVED"      // admin approved, OTP not yet sent
+  | "OTP_SENT"      // OTP generated, rider dispatched
+  | "COMPLETED"     // OTP verified, cash delivered
+  | "REJECTED";     // admin rejected
+
+export interface WithdrawRequest {
+  id: string;
+  amount: number;
+  method: PayoutMethod;
+  accountDetails: string;
+  status: WithdrawStatus;
+  requestedAt: string;
+  otp?: string;            // 6-digit OTP (generated on approval)
+  riderId?: string;
+  riderName?: string;
+  completedAt?: string;
+  rejectionNote?: string;
+}
+
+export type SettlementStatus =
+  | "PENDING"          // vendor submitted with selected orders
+  | "RIDER_DISPATCHED" // admin sent rider to collect
+  | "OTP_SENT"         // rider has OTP, about to verify
+  | "COMPLETED"        // cash received & confirmed
+  | "REJECTED";
+
+export interface SettlementRequest {
+  id: string;
+  orderIds: string[];
+  orderDisplayIds: string[];
+  totalAmount: number;
+  status: SettlementStatus;
+  requestedAt: string;
+  otp?: string;
+  riderId?: string;
+  riderName?: string;
+  completedAt?: string;
+}

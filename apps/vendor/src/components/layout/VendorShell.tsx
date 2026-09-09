@@ -41,6 +41,7 @@ export default function VendorShell({
     trackingOrder,
     setTrackingOrder,
     simulateIncomingOrder,
+    updateOrderStatus,
   } = useVendorStore();
 
   // Real-time Session Guard (Auto-detects Hub suspension and triggers auto-logout)
@@ -91,11 +92,16 @@ export default function VendorShell({
         });
       } else if (payload.type === "PAYOUT_APPROVED") {
         audioAlert.playSuccessSound();
+      } else if (payload.type === "RIDER_PICKED_UP" || payload.type === "RIDER_DELIVERED") {
+        if (payload.orderId) {
+          updateOrderStatus(payload.orderId, "COMPLETED");
+          audioAlert.playSuccessSound();
+        }
       }
     });
 
     return () => unsubscribe();
-  }, [simulateIncomingOrder, profile.id, setClaimLockAlert]);
+  }, [simulateIncomingOrder, profile.id, setClaimLockAlert, updateOrderStatus]);
 
   const isAuthPage =
     pathname === "/login" ||

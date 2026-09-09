@@ -103,33 +103,56 @@ export async function riderPortalRoutes(fastify: FastifyInstance) {
       return reply.status(500).send({ success: false, error: err.message });
     }
   });
-
-  // GET /rider-portal/tasks  available orders
-  fastify.get("/tasks", async (_request, reply) => {
+  // GET /rider-portal/tasks  — available orders FOR THIS RIDER ONLY
+  // Only shows orders belonging to vendors that this rider is assigned to.
+  // If no vendor assignments, falls back to showing all READY_FOR_PICKUP orders.
+  fastify.get("/tasks", async (request, reply) => {
+    const { sub: riderId } = request.user as { sub: string };
     try {
+      const rate = await prisma.deliveryRate.findFirst({ where: { isActive: true }, orderBy: { createdAt: "desc" } });
+
+      // Get vendor IDs this rider is assigned to
+      const riderVendorAssignments = await prisma.vendorRiderAssignment.findMany({
+        where: { riderId },
+        select: { vendorId: true },
+      });
+      const assignedVendorIds = riderVendorAssignments.map(a => a.vendorId);
+
+      // Build order filter: if assigned to vendors, only show those vendor orders
+      // If no vendor assignments yet, show all (backward compat for newly approved riders)
+      const itemsFilter = assignedVendorIds.length > 0
+        ? { some: { vendorId: { in: assignedVendorIds } } }
+        : undefined;
+
       const orders = await prisma.order.findMany({
-        where: { status: "READY_FOR_PICKUP", deliveryAssignment: null },
+        where: {
+          status: "READY_FOR_PICKUP",
+          deliveryAssignment: null,
+          ...(itemsFilter ? { items: itemsFilter } : {}),
+        },
         include: {
           user: { select: { name: true, phone: true } },
           address: { select: { line1: true, area: true, city: true } },
           items: {
             include: {
               product: { select: { name: true } },
-              vendor: { select: { businessName: true } },
+              vendor: { select: { id: true, businessName: true } },
             },
           },
         },
         orderBy: { createdAt: "asc" },
-        take: 20,
-      });      const rate = await prisma.deliveryRate.findFirst({ where: { isActive: true }, orderBy: { createdAt: "desc" } });
+        take: 30,
+      });
+
       const formatted = orders.map(o => {
         const deliveryFee = Number(o.deliveryFee);
-        const earnings = deliveryFee > 0 ? Math.round(deliveryFee * 0.5) : (rate?.amount ?? 50);
+        const earnings = deliveryFee > 0 ? Math.round(deliveryFee * 0.5) : Number(rate?.amount ?? 50);
         return {
           id: o.id, orderNumber: o.orderNumber,
           customerName: o.user.name, customerPhone: o.user.phone,
           deliveryAddress: `${o.address.line1}, ${o.address.area}, ${o.address.city}`,
           vendorName: o.items[0]?.vendor?.businessName ?? "Tatka Bazar",
+          vendorId: o.items[0]?.vendor?.id,
           itemCount: o.items.reduce((sum, i) => sum + i.quantity, 0),
           subtotal: Number(o.subtotal),
           deliveryFee,
@@ -141,7 +164,7 @@ export async function riderPortalRoutes(fastify: FastifyInstance) {
           createdAt: o.createdAt,
         };
       });
-      return reply.send({ success: true, data: formatted });
+      return reply.send({ success: true, data: formatted, assignedVendors: assignedVendorIds.length });
     } catch (err: any) {
       return reply.status(500).send({ success: false, error: err.message });
     }
@@ -189,23 +212,39 @@ export async function riderPortalRoutes(fastify: FastifyInstance) {
     }
   });
 
-  // POST /rider-portal/tasks/:orderId/accept
+  // POST /rider-portal/tasks/:orderId/accept — Atomic order acceptance with conflict detection
   fastify.post("/tasks/:orderId/accept", async (request, reply) => {
     const { sub: riderId } = request.user as { sub: string };
     const { orderId } = request.params as { orderId: string };
     try {
       const order = await prisma.order.findUnique({ where: { id: orderId }, include: { deliveryAssignment: true } });
       if (!order) return reply.status(404).send({ success: false, error: "Order not found" });
-      if (order.status !== "READY_FOR_PICKUP") return reply.status(409).send({ success: false, error: "Order is no longer available" });
-      if (order.deliveryAssignment) return reply.status(409).send({ success: false, error: "Order already taken" });
+      if (order.status !== "READY_FOR_PICKUP") {
+        return reply.status(409).send({ success: false, error: "অর্ডারটি আর পাওয়া যাচ্ছে না।", alreadyAccepted: true });
+      }
+      if (order.deliveryAssignment) {
+        return reply.status(409).send({
+          success: false,
+          error: "অর্ডারটি ইতিমধ্যে অন্য রাইডার গ্রহণ করেছেন।",
+          alreadyAccepted: true,
+        });
+      }
 
       const [, assignment] = await prisma.$transaction([
         prisma.order.update({ where: { id: orderId }, data: { status: "OUT_FOR_DELIVERY" } }),
         prisma.deliveryAssignment.create({ data: { orderId, riderId, status: "ASSIGNED" } }),
         prisma.deliveryRider.update({ where: { id: riderId }, data: { status: "BUSY" } }),
       ]);
-      return reply.send({ success: true, data: assignment });
+      return reply.send({ success: true, data: assignment, alreadyAccepted: false });
     } catch (err: any) {
+      // Unique constraint violation = another rider claimed it simultaneously
+      if (err?.code === "P2002") {
+        return reply.status(409).send({
+          success: false,
+          error: "অর্ডারটি ইতিমধ্যে অন্য রাইডার গ্রহণ করেছেন।",
+          alreadyAccepted: true,
+        });
+      }
       return reply.status(400).send({ success: false, error: err.message });
     }
   });
@@ -320,7 +359,7 @@ export async function riderPortalRoutes(fastify: FastifyInstance) {
     }
   });
 
-  // GET /rider-portal/tasks/stream  SSE real-time
+  // GET /rider-portal/tasks/stream — SSE real-time
   fastify.get("/tasks/stream", async (request, reply) => {
     reply.raw.setHeader("Content-Type", "text/event-stream");
     reply.raw.setHeader("Cache-Control", "no-cache");
@@ -337,4 +376,86 @@ export async function riderPortalRoutes(fastify: FastifyInstance) {
     }, 10000);
     request.raw.on("close", () => { clearInterval(interval); reply.raw.end(); });
   });
-}
+
+  // POST /rider-portal/batch-collect — Rider picks up multiple orders in one trip
+  // Fair-load: max 5 orders per rider. System checks current active deliveries.
+  fastify.post("/batch-collect", async (request, reply) => {
+    const { sub: riderId } = request.user as { sub: string };
+    const body = (request.body || {}) as { orderIds: string[] };
+    const { orderIds } = body;
+
+    if (!orderIds || orderIds.length === 0) {
+      return reply.status(400).send({ success: false, error: "orderIds is required" });
+    }
+
+    const MAX_BATCH = 5;
+    if (orderIds.length > MAX_BATCH) {
+      return reply.status(400).send({
+        success: false,
+        error: `একসাথে সর্বোচ্চ ${MAX_BATCH}টি অর্ডার নেওয়া যাবে।`,
+      });
+    }
+
+    try {
+      // Check current active deliveries for this rider
+      const currentActive = await prisma.deliveryAssignment.count({
+        where: { riderId, status: { in: ["ASSIGNED", "PICKED_UP"] } },
+      });
+
+      const canTake = MAX_BATCH - currentActive;
+      if (canTake <= 0) {
+        return reply.status(400).send({
+          success: false,
+          error: `আপনার কাছে ইতিমধ্যে ${currentActive}টি সক্রিয় ডেলিভারি আছে। নতুন অর্ডার নেওয়ার আগে কিছু ডেলিভারি সম্পন্ন করুন।`,
+          currentActive,
+          canTakeMore: 0,
+        });
+      }
+
+      const toProcess = orderIds.slice(0, canTake);
+      const results: { orderId: string; success: boolean; error?: string }[] = [];
+
+      for (const orderId of toProcess) {
+        try {
+          const order = await prisma.order.findUnique({
+            where: { id: orderId },
+            include: { deliveryAssignment: true },
+          });
+
+          if (!order || order.status !== "READY_FOR_PICKUP" || order.deliveryAssignment) {
+            results.push({ orderId, success: false, error: "অর্ডারটি আর পাওয়া যাচ্ছে না অথবা অন্য রাইডার নিয়েছেন।" });
+            continue;
+          }
+
+          await prisma.$transaction([
+            prisma.order.update({ where: { id: orderId }, data: { status: "OUT_FOR_DELIVERY" } }),
+            prisma.deliveryAssignment.create({ data: { orderId, riderId, status: "ASSIGNED" } }),
+          ]);
+
+          results.push({ orderId, success: true });
+        } catch (itemErr: any) {
+          if (itemErr?.code === "P2002") {
+            results.push({ orderId, success: false, error: "অন্য রাইডার আগেই নিয়েছেন।" });
+          } else {
+            results.push({ orderId, success: false, error: itemErr.message });
+          }
+        }
+      }
+
+      const claimed = results.filter(r => r.success);
+      if (claimed.length > 0) {
+        await prisma.deliveryRider.update({ where: { id: riderId }, data: { status: "BUSY" } });
+      }
+
+      return reply.send({
+        success: true,
+        claimedCount: claimed.length,
+        results,
+        message: `${claimed.length}টি অর্ডার সফলভাবে গ্রহণ করা হয়েছে।`,
+        currentActive: currentActive + claimed.length,
+      });
+    } catch (err: any) {
+      return reply.status(500).send({ success: false, error: err.message });
+    }
+  });
+}

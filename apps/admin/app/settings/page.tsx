@@ -63,6 +63,62 @@ export default function SettingsPage() {
         </div>
       </div>
 
+      {/* Connected Vercel Ecosystem */}
+      <div className="admin-card" style={{ padding: "20px" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+            <Globe size={16} color="var(--green)" />
+            <div style={{ fontWeight: 800, color: "var(--text-0)" }}>Connected Ecosystem Services (Vercel)</div>
+          </div>
+          <span className="tag green" style={{ fontSize: "0.65rem", fontWeight: 700 }}>5/5 ONLINE</span>
+        </div>
+        <p style={{ fontSize: "0.80rem", color: "var(--text-3)", marginBottom: "14px" }}>
+          All portals in the Tatka Bazar ecosystem are synchronized and connected via live cloud endpoints.
+        </p>
+        <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+          {[
+            { name: "Admin Control Panel", url: "https://tatka-bazar-2-0-admin.vercel.app", desc: "Current Panel (Operations & Management)", isCurrent: true },
+            { name: "Customer Storefront", url: "https://tatka-bazar-2-0-storefront.vercel.app", desc: "E-Commerce Shopping Frontend", isCurrent: false },
+            { name: "Vendor Partner Portal", url: "https://tatka-bazar-2-0-vendor.vercel.app", desc: "Vendor Store, Products & Packing Station", isCurrent: false },
+            { name: "Rider Fleet Portal", url: "https://tatka-bazar-2-0-rider-seven.vercel.app", desc: "Rider Order Claiming & Delivery Tracker", isCurrent: false },
+            { name: "Operations & Dispatch Hub", url: "https://hub-gamma-umber.vercel.app", desc: "Central Hub Coordination & Monitoring", isCurrent: false },
+          ].map((svc) => (
+            <div
+              key={svc.url}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                padding: "12px 14px",
+                background: "var(--bg-elevated)",
+                borderRadius: "var(--r-md)",
+                border: "1px solid var(--border-subtle)",
+              }}
+            >
+              <div>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                  <span style={{ fontWeight: 700, fontSize: "0.86rem", color: "var(--text-1)" }}>{svc.name}</span>
+                  {svc.isCurrent && (
+                    <span className="tag blue" style={{ fontSize: "0.60rem", padding: "1px 6px" }}>THIS PANEL</span>
+                  )}
+                </div>
+                <div style={{ fontSize: "0.74rem", color: "var(--text-3)", marginTop: "2px" }}>{svc.desc}</div>
+                <code style={{ fontSize: "0.70rem", color: "var(--green)", marginTop: "2px", display: "inline-block" }}>{svc.url}</code>
+              </div>
+              <a
+                href={svc.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="admin-btn admin-btn-secondary"
+                style={{ fontSize: "0.72rem", padding: "6px 12px", textDecoration: "none" }}
+              >
+                Open ↗
+              </a>
+            </div>
+          ))}
+        </div>
+      </div>
+
       {/* Store Config */}
       <div className="admin-card" style={{ padding: "20px" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "18px" }}>

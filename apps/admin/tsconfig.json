@@ -19,6 +19,9 @@
     "paths": {
       "@/*": [
         "./src/*"
+      ],
+      "@tatka-bazar/database": [
+        "../../packages/database/src/client.ts"
       ]
     },
     "allowJs": true,

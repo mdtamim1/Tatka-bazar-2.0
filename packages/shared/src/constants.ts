@@ -6,10 +6,11 @@
 // App URLs — used for CORS, redirects, and JWT audience
 // ---------------------------------------------------------------------------
 export const APP_URLS = {
-  storefront: process.env["STOREFRONT_URL"] ?? "http://localhost:3000",
-  admin:      process.env["ADMIN_URL"]      ?? "http://localhost:3001",
-  vendor:     process.env["VENDOR_URL"]     ?? "http://localhost:3002",
-  rider:      process.env["RIDER_URL"]      ?? "http://localhost:3003",
+  storefront: process.env["STOREFRONT_URL"] ?? "https://tatka-bazar-2-0-storefront.vercel.app",
+  admin:      process.env["ADMIN_URL"]      ?? "https://tatka-bazar-2-0-admin.vercel.app",
+  vendor:     process.env["VENDOR_URL"]     ?? "https://tatka-bazar-2-0-vendor.vercel.app",
+  rider:      process.env["RIDER_URL"]      ?? "https://tatka-bazar-2-0-rider-seven.vercel.app",
+  hub:        process.env["HUB_URL"]        ?? "https://hub-gamma-umber.vercel.app",
   api:        process.env["API_URL"]        ?? "http://localhost:4000",
 } as const;
 
