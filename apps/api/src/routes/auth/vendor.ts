@@ -16,7 +16,10 @@ export async function vendorAuthRoutes(fastify: FastifyInstance) {
     }
 
     const { email, password } = result.data;
-    const vendor = await prisma.vendor.findUnique({ where: { email } });
+    if (!email) {
+      return reply.status(400).send({ success: false, error: "Email is required" });
+    }
+    const vendor = await prisma.vendor.findFirst({ where: { email } });
 
     if (!vendor || !vendor.isActive) {
       return reply.status(401).send({ success: false, error: "Invalid credentials" });

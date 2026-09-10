@@ -17,6 +17,9 @@ export async function adminAuthRoutes(fastify: FastifyInstance) {
     }
 
     const { email, password } = result.data;
+    if (!email) {
+      return reply.status(400).send({ success: false, error: "Email is required" });
+    }
 
     // Check account lockout status
     const lockStatus = bruteForceGuard.isLocked(`admin:${email}`);
@@ -29,7 +32,7 @@ export async function adminAuthRoutes(fastify: FastifyInstance) {
       });
     }
 
-    const admin = await prisma.adminUser.findUnique({ where: { email } });
+    const admin = await prisma.adminUser.findFirst({ where: { email } });
 
     if (!admin || !admin.isActive) {
       const attempt = bruteForceGuard.recordFailedAttempt(`admin:${email}`);

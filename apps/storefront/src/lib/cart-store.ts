@@ -378,7 +378,7 @@ export const useCartStore = create<CartState>()(
           deliveryArea: formattedArea,
           deliverySlot: cust.preferredTime || "Standard Delivery",
           paymentMethod: mappedPayment,
-          paymentStatus: mappedPayment === "COD" ? "PENDING" : "PAID",
+          paymentStatus: mappedPayment === "COD" || mappedPayment === "SSLCOMMERZ" ? "PENDING" : "PAID",
           totalAmount: Number(orderPayload.grandTotal || orderPayload.totalAmount || 0),
           deliveryFee: Number(orderPayload.deliveryFee || 60),
           discount: Number(orderPayload.discount || 0),

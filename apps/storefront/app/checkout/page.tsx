@@ -475,7 +475,7 @@ function CheckoutContent() {
   const todayStr = new Date().toISOString().split("T")[0];
 
   // Payment
-  const [paymentMethod, setPaymentMethod] = useState<"BKASH" | "NAGAD" | "COD">("BKASH");
+  const [paymentMethod, setPaymentMethod] = useState<"BKASH" | "NAGAD" | "COD" | "SSLCOMMERZ">("BKASH");
   const [placedOrder, setPlacedOrder] = useState<any | null>(null);
 
   // Cost calculation
@@ -625,6 +625,40 @@ function CheckoutContent() {
           });
         } catch (storageErr) {
           console.warn("Failed to persist order to localStorage:", storageErr);
+        }
+
+        // If SSLCommerz, initiate gateway session and redirect
+        if (paymentMethod === "SSLCOMMERZ") {
+          try {
+            const sslRes = await fetch("/api/payment/sslcommerz/init", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                amount: grandTotal,
+                orderNumber: res.orderNumber,
+                customerName: customerInfo.fullName,
+                customerPhone: customerInfo.phone,
+                customerEmail: customerInfo.email,
+                customerAddress: deliveryAddress.address,
+              }),
+            });
+
+            if (sslRes.ok) {
+              const sslData = await sslRes.json();
+              if (sslData.success && sslData.gatewayUrl) {
+                if (isDirectBuy) {
+                  clearBuyNowItem();
+                  mergedCartItemIds.forEach((id) => removeItem(id));
+                } else {
+                  clearCart();
+                }
+                window.location.href = sslData.gatewayUrl;
+                return;
+              }
+            }
+          } catch (sslErr) {
+            console.warn("[SSLCommerz Frontend Init Error]:", sslErr);
+          }
         }
 
         setCurrentStep("complete");
@@ -1467,6 +1501,14 @@ function CheckoutContent() {
                       </div>
 
                       {[
+                        {
+                          id: "SSLCOMMERZ",
+                          name: "Card / Mobile / Net Banking (SSLCommerz)",
+                          nameBn: "কার্ড / ইন্টারনেট ব্যাংকিং (SSLCommerz)",
+                          desc: "Visa, Mastercard, Amex, bKash, Nagad, Rocket",
+                          descBn: "ভিসা, মাস্টারকার্ড, বিকাশ, নগদ, রকেট সহ সকল গেটওয়ে",
+                          emoji: "💳",
+                        },
                         {
                           id: "BKASH",
                           name: "bKash Digital Payment",

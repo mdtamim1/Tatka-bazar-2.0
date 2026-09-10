@@ -131,7 +131,7 @@ Output ONLY a single valid JSON object with this exact structure, nothing else:
         continue; // Try next model
       }
 
-      const data = await res.json();
+      const data = (await res.json()) as any;
       const candidateText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
 
     if (candidateText) {

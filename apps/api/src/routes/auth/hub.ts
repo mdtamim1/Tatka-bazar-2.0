@@ -17,6 +17,9 @@ export async function hubAuthRoutes(fastify: FastifyInstance) {
     }
 
     const { email, password } = result.data;
+    if (!email) {
+      return reply.status(400).send({ success: false, error: "Email is required" });
+    }
 
     // Check account lockout status
     const lockStatus = bruteForceGuard.isLocked(`hub:${email}`);
@@ -30,12 +33,12 @@ export async function hubAuthRoutes(fastify: FastifyInstance) {
     }
 
     // 1. Check HubUser table
-    let user: any = await (prisma as any).hubUser.findUnique({ where: { email } });
+    let user: any = await (prisma as any).hubUser.findFirst({ where: { email } });
     let isFromAdminTable = false;
 
     // 2. Fallback check AdminUser table
     if (!user) {
-      user = await prisma.adminUser.findUnique({ where: { email } });
+      user = await prisma.adminUser.findFirst({ where: { email } });
       if (user) isFromAdminTable = true;
     }
 
