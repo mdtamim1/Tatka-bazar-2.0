@@ -34,7 +34,6 @@ export default function RegisterPage() {
   const router = useRouter();
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
-  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [vehicleType, setVehicleType] = useState<"BICYCLE" | "MOTORCYCLE" | "VAN">("MOTORCYCLE");
   const [showPassword, setShowPassword] = useState(false);
@@ -72,7 +71,6 @@ export default function RegisterPage() {
         name: string;
         phone: string;
         password: string;
-        email?: string;
         vehicleType?: "BICYCLE" | "MOTORCYCLE" | "VAN";
       } = {
         name: name.trim(),
@@ -80,9 +78,6 @@ export default function RegisterPage() {
         password,
         vehicleType,
       };
-      if (email.trim().length > 0) {
-        payload.email = email.trim();
-      }
       const res = await registerRider(payload);
 
       if (res.success) {
@@ -396,20 +391,6 @@ export default function RegisterPage() {
               />
             </div>
 
-            {/* Email (optional) */}
-            <div>
-              <label style={{ display: "block", fontSize: ".78rem", fontWeight: 600, color: "rgba(168,192,216,.65)", letterSpacing: ".06em", textTransform: "uppercase", marginBottom: 7 }}>
-                ইমেইল <span style={{ color: "rgba(168,192,216,.35)", fontWeight: 400, textTransform: "none", letterSpacing: 0 }}>(ঐচ্ছিক)</span>
-              </label>
-              <input
-                id="reg-email"
-                type="email"
-                className="reg-input"
-                placeholder="rider@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
-            </div>
 
             {/* Password */}
             <div>
