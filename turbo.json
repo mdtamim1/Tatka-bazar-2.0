@@ -1,6 +1,27 @@
 {
   "$schema": "https://turbo.build/schema.json",
   "ui": "tui",
+  "globalEnv": [
+    "DATABASE_URL",
+    "DIRECT_URL",
+    "JWT_SECRET",
+    "JWT_EXPIRY",
+    "GEMINI_API_KEY",
+    "GOOGLE_AI_API_KEY",
+    "NEXT_PUBLIC_GOOGLE_CLIENT_ID",
+    "GOOGLE_CLIENT_ID",
+    "GOOGLE_CLIENT_SECRET",
+    "SSLCOMMERZ_STORE_ID",
+    "SSLCOMMERZ_STORE_PASSWORD",
+    "SSLCOMMERZ_IS_SANDBOX",
+    "NEXT_PUBLIC_API_URL",
+    "API_URL",
+    "STOREFRONT_URL",
+    "ADMIN_URL",
+    "VENDOR_URL",
+    "RIDER_URL",
+    "NODE_ENV"
+  ],
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
