@@ -177,15 +177,24 @@ const DEFAULT_PROFILE: RiderProfile = {
 
 const DEFAULT_NOTIFICATIONS: RiderNotification[] = [];
 
-const RIDER_DATA_VERSION = "v4_full_portal_reset";
+const RIDER_DATA_VERSION = "v5_real_database_auth";
 
 export function checkAndPurgeDemoData() {
   if (typeof window === "undefined") return;
   try {
     const currentVersion = localStorage.getItem("tatka_rider_reset_ver");
+    // Purge fake demo tokens and demo user sessions
+    const existingToken = localStorage.getItem("rider_token");
+    if (existingToken && (existingToken.startsWith("rider-token-") || existingToken.startsWith("demo_"))) {
+      localStorage.removeItem("rider_token");
+      localStorage.removeItem("rider_user");
+    }
+
     if (currentVersion !== RIDER_DATA_VERSION) {
       // Purge all legacy storage items
       const keysToClear = [
+        "rider_token",
+        "rider_user",
         "tb_demo_profile",
         "tb_demo_available_tasks",
         "tb_demo_active_tasks",
@@ -322,39 +331,9 @@ function handleMockFallback<T>(path: string, options: RequestInit): { success: b
   const queryString = path.includes("?") ? (path.split("?")[1] || "") : "";
   const params = new URLSearchParams(queryString);
 
-  // 1. Login
-  if (cleanPath === "/auth/rider/login" && method === "POST") {
-    let body: any = {};
-    try { body = JSON.parse(options.body as string); } catch {}
-    const identifier = body.email || body.phone || "";
-    const riderId = `rider-${Date.now()}`;
-    const user: RiderUser = {
-      id: riderId,
-      name: body.name || "রাইডার",
-      email: identifier.includes("@") ? identifier : `${identifier}@tatkabazar.com`,
-      phone: identifier.replace(/[^0-9]/g, "") || identifier,
-      role: "rider",
-    };
-    setToken(`rider-token-${Date.now()}`);
-    localStorage.setItem("rider_user", JSON.stringify(user));
-    return { success: true, data: { accessToken: `rider-token-${Date.now()}`, user } as any };
-  }
-
-  // 2. Register
-  if (cleanPath === "/auth/rider/register" && method === "POST") {
-    let body: any = {};
-    try { body = JSON.parse(options.body as string); } catch {}
-    const riderId = `rider-${Date.now()}`;
-    const user: RiderUser = {
-      id: riderId,
-      name: body.name || "নতুন রাইডার",
-      email: body.email || `${body.phone}@tatkabazar.com`,
-      phone: body.phone || "",
-      role: "rider",
-    };
-    setToken(`rider-token-${Date.now()}`);
-    localStorage.setItem("rider_user", JSON.stringify(user));
-    return { success: true, data: { accessToken: `rider-token-${Date.now()}`, user } as any };
+  // 1. Auth routes should never use mock fallback
+  if (cleanPath === "/auth/rider/login" || cleanPath === "/auth/rider/register") {
+    return { success: false, error: "রিয়েল সার্ভার সংযোগ ব্যর্থ হয়েছে। সঠিক ডাটাবেজ ক্রেডেনশিয়াল দিয়ে লগইন করুন।" };
   }
 
   // 3. Balance
@@ -903,8 +882,17 @@ function handleMockFallback<T>(path: string, options: RequestInit): { success: b
 
   // 9. Profile / Me
   if (cleanPath === "/rider-portal/me" && method === "GET") {
-    const profile = getLocalStore("profile", DEFAULT_PROFILE);
+    const token = getToken();
+    if (!token || token.startsWith("rider-token-") || token.startsWith("demo_")) {
+      clearToken();
+      return { success: false, error: "লগইন প্রয়োজন।" };
+    }
     const user = getLocalStore<RiderUser>("user", DEFAULT_USER);
+    if (!user.id) {
+      clearToken();
+      return { success: false, error: "লগইন প্রয়োজন।" };
+    }
+    const profile = getLocalStore("profile", DEFAULT_PROFILE);
     profile.name = user.name || profile.name;
     profile.email = user.email || profile.email;
     profile.phone = user.phone || profile.phone;
@@ -1294,20 +1282,26 @@ export async function apiFetch<T = unknown>(
     }
   }
 
+  const isInternalRoute =
+    path.startsWith("/api/") ||
+    path.startsWith("/auth/rider/") ||
+    path.startsWith("/rider-portal/");
+
+  const targetUrl = isInternalRoute
+    ? (path.startsWith("/api/") ? path : `/api${path}`)
+    : `${API_BASE}${path}`;
+
   try {
-    // Only attempt real fetch if API_BASE is reachable and not localhost over https
-    const isHttps = typeof window !== "undefined" && window.location.protocol === "https:";
-    const isLocalhostApi = API_BASE.includes("localhost") || API_BASE.includes("127.0.0.1");
-
-    // Browsers block HTTPS -> HTTP localhost (Mixed Content)
-    if (isHttps && isLocalhostApi) {
-      return handleMockFallback<T>(path, options);
-    }
-
-    const res = await fetch(`${API_BASE}${path}`, { ...options, headers });
+    const res = await fetch(targetUrl, { ...options, headers });
     const json = await res.json();
+    if (res.status === 401) {
+      clearToken();
+    }
     return json;
   } catch {
+    if (isInternalRoute) {
+      return { success: false, error: "ডাটাবেজ সার্ভারে সংযোগ ব্যর্থ হয়েছে। দয়া করে পুনরায় চেষ্টা করুন।" };
+    }
     // Graceful fallback to offline local state on network failure or offline backend
     return handleMockFallback<T>(path, options);
   }

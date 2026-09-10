@@ -67,15 +67,41 @@ export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const riderId = searchParams.get("riderId");
 
-  if (riderId && globalThis.__tatka_rider_suspended_map__?.[riderId]) {
-    return NextResponse.json(
-      {
-        success: true,
-        isSuspended: true,
-        data: globalThis.__tatka_rider_suspended_map__[riderId],
-      },
-      { headers: corsHeaders }
-    );
+  if (riderId) {
+    if (globalThis.__tatka_rider_suspended_map__?.[riderId]) {
+      return NextResponse.json(
+        {
+          success: true,
+          isSuspended: true,
+          data: globalThis.__tatka_rider_suspended_map__[riderId],
+        },
+        { headers: corsHeaders }
+      );
+    }
+
+    try {
+      const { prisma } = await import("@tatka-bazar/database");
+      const rider = await prisma.deliveryRider.findFirst({
+        where: {
+          OR: [{ id: riderId }, { phone: riderId }],
+        },
+        select: { id: true, isActive: true, kycStatus: true, status: true },
+      });
+
+      if (rider && !rider.isActive) {
+        return NextResponse.json(
+          {
+            success: true,
+            isSuspended: true,
+            data: {
+              suspendReason: "অ্যাকাউন্টটি Hub/Admin কর্তৃক সাময়িকভাবে স্থগিত করা হয়েছে।",
+              suspendedAt: new Date().toISOString(),
+            },
+          },
+          { headers: corsHeaders }
+        );
+      }
+    } catch {}
   }
 
   return NextResponse.json(

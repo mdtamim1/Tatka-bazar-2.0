@@ -4,15 +4,25 @@ import { z } from "zod";
 // Auth schemas
 // ---------------------------------------------------------------------------
 export const customerRegisterSchema = z.object({
-  name:     z.string().min(2).max(100),
-  email:    z.string().email(),
-  phone:    z.string().regex(/^(\+88)?01[3-9]\d{8}$/, "Valid Bangladeshi phone required"),
-  password: z.string().min(8).max(72),
+  name:        z.string().min(2).max(100),
+  identifier:  z.string().min(3).max(100).optional(),
+  email:       z.string().email().optional(),
+  phone:       z.string().optional(),
+  password:    z.string().min(6).max(72),
 });
 
 export const loginSchema = z.object({
-  email:    z.string().email(),
-  password: z.string().min(1),
+  identifier: z.string().min(1).optional(),
+  email:      z.string().min(1).optional(),
+  password:   z.string().min(1),
+});
+
+export const googleAuthSchema = z.object({
+  credential: z.string().optional(),
+  email:      z.string().email().optional(),
+  name:       z.string().optional(),
+  avatarUrl:  z.string().optional(),
+  googleId:   z.string().optional(),
 });
 
 // ---------------------------------------------------------------------------

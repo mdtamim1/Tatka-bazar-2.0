@@ -2,6 +2,7 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
+  transpilePackages: ["@tatka-bazar/database", "@tatka-bazar/shared", "@tatka-bazar/design-tokens"],
   env: {
     NEXT_PUBLIC_API_URL: process.env["API_URL"] ?? "http://localhost:4000",
   },

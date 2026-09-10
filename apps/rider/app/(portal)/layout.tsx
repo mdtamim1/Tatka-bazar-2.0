@@ -48,9 +48,24 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
 
   useEffect(() => {
     const token = localStorage.getItem("rider_token");
-    if (!token) { router.replace("/login"); return; }
+    if (!token || token.startsWith("rider-token-") || token.startsWith("demo_")) {
+      localStorage.removeItem("rider_token");
+      localStorage.removeItem("rider_user");
+      router.replace("/login");
+      return;
+    }
+
+    // Verify session against real DB
+    apiFetch<{ id: string; name: string }>("/rider-portal/me").then((res) => {
+      if (!res.success || !res.data) {
+        localStorage.removeItem("rider_token");
+        localStorage.removeItem("rider_user");
+        router.replace("/login");
+      }
+    });
+
     const user = localStorage.getItem("rider_user");
-    let rId = "", rName = "রাইডার";
+    let rId = "", rName = "";
     if (user) {
       try {
         const parsed = JSON.parse(user);

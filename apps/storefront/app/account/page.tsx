@@ -46,10 +46,15 @@ import {
   getCustomerOrders,
 } from "@/lib/order-storage";
 import styles from "./page.module.css";
+import { GoogleSignInButton } from "@/components/auth/GoogleSignInButton";
 
 interface CustomerUser {
+  id?: string;
   name: string;
-  emailOrPhone: string;
+  email?: string;
+  phone?: string;
+  emailOrPhone?: string;
+  avatarUrl?: string | null;
   vipTier?: string;
 }
 
@@ -72,12 +77,9 @@ export default function CustomerAccountPage() {
     applyCoupon
   } = useCartStore();
 
-  // User profile state
-  const [user, setUser] = useState<CustomerUser>({
-    name: "Ahmed Hammad",
-    emailOrPhone: "ahmed.hammad@gmail.com",
-    vipTier: "VIP Member",
-  });
+  // User profile state — starts null to check real auth session
+  const [user, setUser] = useState<CustomerUser | null>(null);
+  const [authChecked, setAuthChecked] = useState(false);
 
   const [mounted, setMounted] = useState(false);
   const [showSettingsView, setShowSettingsView] = useState(false);
@@ -136,24 +138,25 @@ export default function CustomerAccountPage() {
   // Orders State with Live Tracking capability
   const [orders, setOrders] = useState<CustomerOrder[]>([]);
 
-  // Load persisted user & settings
+  // Load persisted user & settings and fetch live database data
   useEffect(() => {
     setMounted(true);
-    setOrders(getCustomerOrders());
 
-    const handleOrdersUpdate = () => {
-      setOrders(getCustomerOrders());
-    };
-    window.addEventListener("tatka_orders_updated", handleOrdersUpdate);
-    window.addEventListener("storage", handleOrdersUpdate);
-
+    const token = localStorage.getItem("tatka_token");
     const rawUser = localStorage.getItem("tatka_user");
+
+    let currentUser: CustomerUser | null = null;
     if (rawUser) {
       try {
         const parsed = JSON.parse(rawUser);
-        if (parsed.name) setUser(parsed);
+        if (parsed && parsed.name) {
+          currentUser = parsed;
+          setUser(parsed);
+        }
       } catch {}
     }
+
+    setAuthChecked(true);
 
     const savedAddrs = localStorage.getItem("tatka_saved_addresses");
     if (savedAddrs) {
@@ -167,6 +170,84 @@ export default function CustomerAccountPage() {
     if (savedPoints) {
       setPoints(Number(savedPoints) || 55);
     }
+
+    const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+
+    // If authenticated, sync live user profile from database
+    if (token) {
+      fetch("/api/auth/customer/me", {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+        .then((res) => res.json())
+        .then((resData) => {
+          if (resData.success && resData.data) {
+            setUser(resData.data);
+            localStorage.setItem("tatka_user", JSON.stringify(resData.data));
+            if (Array.isArray(resData.data.addresses) && resData.data.addresses.length > 0) {
+              setAddresses(
+                resData.data.addresses.map((a: any) => ({
+                  id: a.id,
+                  type: a.label || "Home",
+                  address: `${a.line1}, ${a.area}, ${a.city}`,
+                  phone: a.phone || resData.data.phone || "",
+                  isDefault: a.isDefault,
+                }))
+              );
+            }
+          }
+        })
+        .catch(() => {});
+
+      // Fetch customer orders from database
+      const searchTarget = currentUser?.phone || currentUser?.email || "";
+      if (searchTarget) {
+        fetch(`${API_URL}/api/orders?search=${encodeURIComponent(searchTarget)}`)
+          .then((res) => res.json())
+          .then((ordData) => {
+            if (ordData.success && Array.isArray(ordData.data) && ordData.data.length > 0) {
+              const formattedOrders: CustomerOrder[] = ordData.data.map((o: any) => ({
+                id: o.orderNumber || o.id,
+                orderNumber: o.orderNumber || o.id,
+                date: o.createdAt || "আজকে",
+                status: (o.status?.charAt(0).toUpperCase() + o.status?.slice(1).toLowerCase()) as any,
+                total: o.totalAmount || 0,
+                subtotal: o.subtotal || o.totalAmount || 0,
+                deliveryFee: o.deliveryFee || 0,
+                discount: o.discount || 0,
+                items: o.items?.map((it: any) => it.name).join(", ") || "পণ্যসমূহ",
+                rawItems: (o.items || []).map((it: any) => ({
+                  name: it.name,
+                  qty: `${it.quantity} টি`,
+                  price: it.price,
+                  productId: it.productId,
+                })),
+                deliveryAddress: o.customerAddress || "",
+                deliveryArea: o.deliveryArea || "ঢাকা",
+                deliverySlot: o.deliverySlot || "স্ট্যান্ডার্ড ডেলিভারি",
+                paymentMethod: o.paymentMethod,
+                paymentStatus: o.paymentStatus,
+                canTrack: ["PENDING", "PREPARING", "READY_FOR_PICKUP", "OUT_FOR_DELIVERY"].includes(o.status),
+              }));
+              setOrders(formattedOrders);
+            } else {
+              setOrders(getCustomerOrders());
+            }
+          })
+          .catch(() => {
+            setOrders(getCustomerOrders());
+          });
+      } else {
+        setOrders(getCustomerOrders());
+      }
+    } else {
+      setOrders(getCustomerOrders());
+    }
+
+    const handleOrdersUpdate = () => {
+      setOrders(getCustomerOrders());
+    };
+    window.addEventListener("tatka_orders_updated", handleOrdersUpdate);
+    window.addEventListener("storage", handleOrdersUpdate);
 
     return () => {
       window.removeEventListener("tatka_orders_updated", handleOrdersUpdate);
@@ -183,6 +264,7 @@ export default function CustomerAccountPage() {
     if (confirm(locale === "bn" ? "আপনি কি নিশ্চিত যে লগআউট করতে চান?" : "Are you sure you want to log out?")) {
       localStorage.removeItem("tatka_token");
       localStorage.removeItem("tatka_user");
+      setUser(null);
       triggerFeedback(locale === "bn" ? "সফলভাবে লগআউট হয়েছে" : "You have been logged out.");
       setTimeout(() => {
         router.push("/login");
@@ -337,7 +419,94 @@ export default function CustomerAccountPage() {
       )}
 
       <div className={styles.accountContainer}>
-        {!showSettingsView ? (
+        {mounted && authChecked && !user ? (
+          /* ===================================================================
+              GUEST / UNAUTHENTICATED SESSION: LOGIN / SIGNUP PROMPT
+              =================================================================== */
+          <div style={{ maxWidth: 440, margin: "40px auto", textAlign: "center" }}>
+            <div
+              style={{
+                background: "#ffffff",
+                border: "1px solid #e2e8f0",
+                borderRadius: 18,
+                padding: "36px 28px",
+                boxShadow: "0 10px 25px -5px rgba(0,0,0,0.05)",
+              }}
+            >
+              <div
+                style={{
+                  width: 58,
+                  height: 58,
+                  borderRadius: 16,
+                  background: "#0f172a",
+                  color: "#ffffff",
+                  fontSize: 28,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  margin: "0 auto 16px",
+                }}
+              >
+                🌿
+              </div>
+              <h2 style={{ fontSize: "1.45rem", fontWeight: 800, color: "#0f172a", margin: "0 0 8px 0" }}>
+                {locale === "bn" ? "টাটকা বাজারে স্বাগতম" : "Welcome to Tatka Bazar"}
+              </h2>
+              <p style={{ fontSize: ".85rem", color: "#64748b", margin: "0 0 24px 0", lineHeight: 1.55 }}>
+                {locale === "bn"
+                  ? "আপনার অ্যাকাউন্ট প্রোফাইল, অর্ডার হিস্ট্রি এবং সংরক্ষিত ঠিকানা পরিচালনা করতে লগইন করুন।"
+                  : "Sign in to access your orders, live tracking, addresses and loyalty points."}
+              </p>
+
+              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                <Link
+                  href="/login"
+                  style={{
+                    display: "block",
+                    padding: "12px 20px",
+                    background: "#0f172a",
+                    color: "#ffffff",
+                    borderRadius: 12,
+                    fontWeight: 700,
+                    fontSize: ".9rem",
+                    textDecoration: "none",
+                  }}
+                >
+                  {locale === "bn" ? "লগইন করুন (Login)" : "Login"}
+                </Link>
+
+                <Link
+                  href="/signup"
+                  style={{
+                    display: "block",
+                    padding: "12px 20px",
+                    background: "#f8fafc",
+                    color: "#0f172a",
+                    border: "1px solid #cbd5e1",
+                    borderRadius: 12,
+                    fontWeight: 700,
+                    fontSize: ".9rem",
+                    textDecoration: "none",
+                  }}
+                >
+                  {locale === "bn" ? "নতুন অ্যাকাউন্ট খুলুন (Sign Up)" : "Create Account"}
+                </Link>
+              </div>
+
+              <div className={styles.divider} style={{ margin: "20px 0" }}>
+                <span>{locale === "bn" ? "অথবা গুগল দিয়ে সরাসরি" : "Or continue with"}</span>
+              </div>
+
+              <GoogleSignInButton
+                mode="login"
+                onSuccess={(u) => {
+                  setUser(u);
+                  triggerFeedback(locale === "bn" ? "গুগল লগইন সফল হয়েছে!" : "Google login successful!");
+                }}
+              />
+            </div>
+          </div>
+        ) : !showSettingsView ? (
           /* ===================================================================
               SCREEN 1: MAIN ECOMMERCE PROFILE
               =================================================================== */
@@ -347,13 +516,21 @@ export default function CustomerAccountPage() {
             <div className={styles.headerTop}>
               <div className={styles.userInfo}>
                 <div className={styles.avatarCircle}>
-                  {user.name.charAt(0).toUpperCase()}
+                  {user?.avatarUrl ? (
+                    <img
+                      src={user.avatarUrl}
+                      alt={user.name || "User"}
+                      style={{ width: "100%", height: "100%", borderRadius: "50%", objectFit: "cover" }}
+                    />
+                  ) : (
+                    user?.name ? user.name.charAt(0).toUpperCase() : "U"
+                  )}
                 </div>
                 <div>
-                  <h1 className={styles.userName}>{user.name}</h1>
+                  <h1 className={styles.userName}>{user?.name || "Customer"}</h1>
                   <div className={styles.vipPill}>
                     <span>⭐</span>
-                    <span>{user.vipTier || "VIP Member"}</span>
+                    <span>{user?.vipTier || "VIP Member"}</span>
                   </div>
                 </div>
               </div>
@@ -1015,7 +1192,7 @@ export default function CustomerAccountPage() {
               </div>
               <div style={{ display: "flex", justifyContent: "space-between", fontSize: ".8rem", marginTop: 4 }}>
                 <span style={{ color: "#64748b" }}>গ্রাহকের নাম:</span>
-                <span style={{ fontWeight: 700 }}>{user.name}</span>
+                <span style={{ fontWeight: 700 }}>{user?.name || "Customer"}</span>
               </div>
               <div style={{ display: "flex", justifyContent: "space-between", fontSize: ".8rem", marginTop: 4 }}>
                 <span style={{ color: "#64748b" }}>ডেলিভারি ঠিকানা:</span>
@@ -1914,8 +2091,8 @@ export default function CustomerAccountPage() {
                 </label>
                 <input
                   type="text"
-                  value={user.name}
-                  onChange={(e) => setUser({ ...user, name: e.target.value })}
+                  value={user?.name || ""}
+                  onChange={(e) => user && setUser({ ...user, name: e.target.value })}
                   style={{
                     width: "100%",
                     padding: "10px 12px",
@@ -1933,8 +2110,8 @@ export default function CustomerAccountPage() {
                 </label>
                 <input
                   type="text"
-                  value={user.emailOrPhone}
-                  onChange={(e) => setUser({ ...user, emailOrPhone: e.target.value })}
+                  value={user?.emailOrPhone || user?.phone || user?.email || ""}
+                  onChange={(e) => user && setUser({ ...user, emailOrPhone: e.target.value })}
                   style={{
                     width: "100%",
                     padding: "10px 12px",
@@ -1951,7 +2128,7 @@ export default function CustomerAccountPage() {
                   {locale === "bn" ? "মেম্বারশিপ পদবী" : "Membership Tier"}
                 </label>
                 <div style={{ padding: "8px 12px", background: "#fef3c7", borderRadius: 10, color: "#78350f", fontWeight: 800, fontSize: ".82rem" }}>
-                  ⭐ {user.vipTier || "VIP Member"}
+                  ⭐ {user?.vipTier || "VIP Member"}
                 </div>
               </div>
 

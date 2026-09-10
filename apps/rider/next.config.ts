@@ -1,7 +1,7 @@
 import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
-  transpilePackages: ['@tatka-bazar/shared'],
+  transpilePackages: ['@tatka-bazar/shared', '@tatka-bazar/database'],
   async headers() {
     return [
       {

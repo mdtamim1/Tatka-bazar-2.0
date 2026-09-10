@@ -11,6 +11,8 @@ export async function orderRoutes(fastify: FastifyInstance) {
         status?: string;
         paymentStatus?: string;
         riderId?: string;
+        userId?: string;
+        phone?: string;
         search?: string;
         limit?: string;
         page?: string;
@@ -18,6 +20,12 @@ export async function orderRoutes(fastify: FastifyInstance) {
 
       const where: any = {};
 
+      if (query.userId) {
+        where.userId = query.userId;
+      }
+      if (query.phone) {
+        where.user = { phone: query.phone };
+      }
       if (query.status && query.status !== "all") {
         where.status = query.status;
       }
