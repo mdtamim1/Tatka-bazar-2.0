@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState } from "react";
-import { Menu } from "lucide-react";
 import { useVendorStore } from "@/store/vendorStore";
 import { translations } from "@/utils/translations";
 
@@ -22,7 +21,7 @@ function PhoneIcon() {
 }
 
 interface VendorHeaderProps {
-  onToggleMobileSidebar: () => void;
+  onToggleMobileSidebar?: () => void;
   onOpenNotifications: () => void;
   onOpenRoleModal?: () => void;
   onOpenShortcuts?: () => void;
@@ -57,14 +56,6 @@ export default function VendorHeader({
       {/* Top Header - Rider Portal Design */}
       <header className="top-header">
         <div className="header-logo">
-          <button
-            onClick={onToggleMobileSidebar}
-            className="lg:hidden p-1.5 -ml-2 text-slate-400 hover:text-white rounded-lg transition-colors"
-            aria-label="Open menu"
-          >
-            <Menu size={20} />
-          </button>
-
           <div className="header-logo-mark" title="Tatka Bazar Vendor" style={{ background: "linear-gradient(135deg, #22C55E, #16A34A)", boxShadow: "0 4px 12px rgba(34,197,94,.3)" }}>
             🏪
           </div>

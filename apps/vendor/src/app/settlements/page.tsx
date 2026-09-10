@@ -434,7 +434,7 @@ export default function SettlementsPage() {
     ...settlementRequests.filter((r) => r.status === "COMPLETED").map((r) => r.totalAmount)].reduce((a, b) => a + b, 0);
 
   return (
-    <div style={{ maxWidth: 680, margin: "0 auto", padding: "20px 16px calc(var(--nav-h) + 24px)", display: "flex", flexDirection: "column", gap: 20 }}>
+    <div className="page-content">
       <div>
         <h1 style={{ fontSize: "1.15rem", fontWeight: 800, color: "var(--text-1)", fontFamily: "var(--font-bn)" }}>
           💰 উইথড্র ও সেটেলমেন্ট

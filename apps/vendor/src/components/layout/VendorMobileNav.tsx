@@ -71,7 +71,7 @@ export default function VendorMobileNav({}: VendorMobileNavProps) {
   ];
 
   return (
-    <nav className="bottom-nav lg:hidden" role="navigation" aria-label="মূল নেভিগেশন">
+    <nav className="bottom-nav" role="navigation" aria-label="মূল নেভিগেশন">
       {nav.map((item) => {
         const isActive = pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href));
 

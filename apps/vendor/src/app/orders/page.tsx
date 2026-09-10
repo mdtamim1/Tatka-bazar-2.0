@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import {
   ShoppingBag,
@@ -16,12 +16,8 @@ import {
   MessageCircle,
   ShieldCheck,
   RotateCcw,
-  Zap,
-  Navigation,
-  History,
   AlertTriangle,
   Flame,
-  ArrowRight,
 } from "lucide-react";
 import { useVendorStore } from "@/store/vendorStore";
 import { Order, OrderStatus } from "@/types/vendor";
@@ -33,6 +29,8 @@ export default function OrdersPage() {
   const {
     language,
     orders,
+    dutyStatus,
+    setDutyStatus,
     updateOrderStatus,
     reconcileItemWeight,
     acceptOrder,
@@ -47,7 +45,7 @@ export default function OrdersPage() {
   const t = translations[language];
 
   // ─── Real-time dispatch sync with Rider Portal ───
-  React.useEffect(() => {
+  useEffect(() => {
     let isMounted = true;
     async function syncDispatch() {
       const endpoints = [
@@ -78,7 +76,7 @@ export default function OrdersPage() {
     };
   }, [syncRiderDispatch]);
 
-  // 6 Top Pipeline Status Tabs: ALL (Today), PENDING, PROCESSING, READY_FOR_PICKUP, COMPLETED, RETURNED
+  // Status Tabs: ALL (Today), PENDING, PROCESSING, READY_FOR_PICKUP, COMPLETED, RETURNED
   const [activeTab, setActiveTab] = useState<string>("ALL");
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -90,11 +88,6 @@ export default function OrdersPage() {
   const activeWeightOrder = orders.find((o) => o.id === activeWeightOrderId) || null;
   const activeWeightItem = activeWeightOrder?.items.find((i) => i.id === activeWeightItemId) || null;
   const activeChecklistOrder = orders.find((o) => o.id === activeChecklistOrderId) || null;
-
-  // Compute 12-Hour Shift Window
-  const shiftDate = new Date(shiftStartedAt || Date.now());
-  const elapsedHours = Math.floor((Date.now() - shiftDate.getTime()) / (1000 * 60 * 60));
-  const remainingHours = Math.max(0, 12 - elapsedHours);
 
   // Status mapping helper
   const matchesStatus = (order: Order, tab: string) => {
@@ -124,11 +117,11 @@ export default function OrdersPage() {
     return true;
   });
 
-  // Top 6 Module Counts
+  // Module Counts
   const countToday = orders.length;
   const countPending = orders.filter((o) => o.status === "PENDING" || o.status === "RECEIVED").length;
   const countProcessing = orders.filter((o) => o.status === "PROCESSING" || o.status === "PREPARING").length;
-  const countReady = orders.filter((o) => o.status === "READY_FOR_PICKUP").length;
+  const countReady = orders.filter((o) => o.status === "READY_FOR_PICKUP" || o.status === "HANDED_TO_RIDER").length;
   const countCompleted = orders.filter((o) => o.status === "COMPLETED").length;
   const countReturned = orders.filter((o) => o.status === "RETURNED").length;
 
@@ -136,529 +129,451 @@ export default function OrdersPage() {
     switch (status) {
       case "PENDING":
       case "RECEIVED":
-        return (
-          <span className="px-2.5 py-0.5 rounded-md text-[11px] font-bold bg-amber-50 text-amber-800 border border-amber-300">
-            অপেক্ষমাণ (পেন্ডিং)
-          </span>
-        );
+        return <span className="badge badge-amber">⏱️ অপেক্ষমাণ</span>;
       case "PROCESSING":
       case "PREPARING":
-        return (
-          <span className="px-2.5 py-0.5 rounded-md text-[11px] font-bold bg-sky-50 text-sky-800 border border-sky-300">
-            প্রস্তুতি চলছে (প্রসেসিং)
-          </span>
-        );
+        return <span className="badge badge-processing">⚡ প্রসেসিং</span>;
       case "READY_FOR_PICKUP":
-        return (
-          <span className="px-2.5 py-0.5 rounded-md text-[11px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-300">
-            রেডি ফর পিকআপ (রাইডার অ্যালার্ট)
-          </span>
-        );
+        return <span className="badge badge-emerald">📦 রেডি ফর পিকআপ</span>;
       case "HANDED_TO_RIDER":
-        return (
-          <span className="px-2.5 py-0.5 rounded-md text-[11px] font-bold bg-blue-50 text-blue-800 border border-blue-300">
-            🛵 রাইডারের সাথে (ডেলিভারিতে)
-          </span>
-        );
+        return <span className="badge badge-processing">🛵 রাইডারের সাথে</span>;
       case "COMPLETED":
-        return (
-          <span className="px-2.5 py-0.5 rounded-md text-[11px] font-bold bg-slate-100 text-slate-800 border border-slate-300">
-            সম্পন্ন (ডেলিভার্ড)
-          </span>
-        );
+        return <span className="badge badge-completed">✅ ডেলিভার্ড</span>;
       case "RETURNED":
-        return (
-          <span className="px-2.5 py-0.5 rounded-md text-[11px] font-bold bg-rose-50 text-rose-800 border border-rose-300">
-            রিটার্নড (ফেরত এসেছে)
-          </span>
-        );
+        return <span className="badge badge-rejected">↩️ ফেরত এসেছে</span>;
       default:
-        return (
-          <span className="px-2.5 py-0.5 rounded-md text-[11px] font-bold bg-slate-100 text-slate-700">
-            {status}
-          </span>
-        );
+        return <span className="badge badge-slate">{status}</span>;
     }
   };
 
   return (
-    <div className="space-y-6 select-none max-w-7xl mx-auto p-4 sm:p-6 text-[#F0F6FF]">
-      {/* Top Header & Operational Shift Controller */}
-      <div className="bg-[#0F1E32] p-5 rounded-2xl border border-[rgba(255,255,255,0.08)] shadow-lg flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2.5 flex-wrap">
-            <h1 className="text-xl font-bold text-[#F0F6FF] tracking-tight font-bn">
-              অর্ডার ব্যবস্থাপনা ও অপারেশন কিউ
-            </h1>
-            <span className="inline-flex items-center gap-1 text-[11px] font-bold text-[#00D68F] bg-[rgba(0,214,143,0.12)] px-2.5 py-0.5 rounded-full border border-[rgba(0,214,143,0.3)] font-bn">
-              <Clock size={12} className="text-[#00D68F]" />
-              <span>১২ ঘণ্টার শিফট: {remainingHours} ঘণ্টা বাকি</span>
-            </span>
+    <div className="page-content select-none">
+      {/* Offline Lock Warning (Rider Style) */}
+      {dutyStatus === "STORE_CLOSED" && (
+        <div className="offline-lock-card">
+          <div className="offline-lock-icon">⏸️</div>
+          <div style={{ fontSize: "1.1rem", fontWeight: 800, color: "#fff", fontFamily: "var(--font-bn)", marginBottom: 6 }}>
+            আপনার দোকান বর্তমানে বন্ধ (বিশ্রামে) আছে
           </div>
-          <p className="text-xs text-[#A8C0D8]/70 mt-1 font-bn">
-            গ্রাহকের গোপনীয়তা সুরক্ষিত • ডিজিটাল স্কেল ওজন সমন্বয় • পিকআপ সম্পন্ন হলে রিয়েল-টাইম রাইডার ট্র্যাকিং
-          </p>
-        </div>
-
-        {/* Action Controls */}
-        <div className="flex items-center gap-2.5 flex-wrap font-bn">
-          <Link
-            href="/orders/history"
-            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#122035] hover:bg-[#172540] text-[#A8C0D8] text-xs font-bold border border-[rgba(255,255,255,0.08)] transition-colors"
-            title="সকল বিগত অর্ডারের স্থায়ী ইতিহাস ও সার্চ"
-          >
-            <History size={14} className="text-[#00D68F]" />
-            <span>অর্ডার হিস্ট্রি (সকল ইতিহাস)</span>
-          </Link>
-
+          <div style={{ fontSize: ".82rem", color: "var(--text-3)", fontFamily: "var(--font-bn)", maxWidth: 360, margin: "0 auto 16px", lineHeight: 1.5 }}>
+            নতুন কোনো কাস্টমার অর্ডার গ্রহণ বা প্রসেস করতে অন-ডিউটি (দোকান খোলা) চালু করুন।
+          </div>
           <button
-            onClick={resetShiftQueue}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[#122035] hover:bg-[#172540] text-[#A8C0D8] text-xs font-semibold border border-[rgba(255,255,255,0.08)] transition-colors"
-            title="১২ ঘণ্টার শিফট কিউ ম্যানুয়ালি রিসেট করুন"
+            id="go-online-btn"
+            onClick={() => setDutyStatus("STORE_OPEN")}
+            style={{
+              background: "linear-gradient(135deg, #00d68f, #00b377)",
+              color: "#051322",
+              padding: "10px 22px",
+              borderRadius: "999px",
+              fontWeight: 900,
+              fontSize: ".9rem",
+              border: "none",
+              cursor: "pointer",
+              boxShadow: "0 4px 16px rgba(0,214,143,.35)",
+              fontFamily: "var(--font-bn)",
+            }}
           >
-            <RotateCcw size={13} />
-            <span>শিফট রিসেট</span>
+            🟢 দোকান খুলুন (Open Store)
           </button>
         </div>
+      )}
+
+      {/* Top Header Row with History Link */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div className="section-title">
+          <span>📦 অর্ডার কিউ ও ডিসপ্যাচ</span>
+          {countPending > 0 && (
+            <div className="live-badge">
+              <div className="live-dot" />
+              <span>{countPending} টি নতুন</span>
+            </div>
+          )}
+        </div>
+        <Link
+          href="/orders/history"
+          style={{
+            fontSize: ".75rem",
+            color: "var(--emerald)",
+            fontWeight: 700,
+            display: "flex",
+            alignItems: "center",
+            gap: 4,
+            fontFamily: "var(--font-bn)",
+          }}
+        >
+          <span>অর্ডার হিস্ট্রি →</span>
+        </Link>
       </div>
 
-      {/* Top 6 Pipeline Status Modules */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 font-bn">
-        {/* 1. Today Orders */}
+      {/* Horizontal Status Bar (Matching Rider Tasks Page) */}
+      <div className="status-column-bar">
         <button
+          type="button"
+          className={`status-tab-btn ${activeTab === "ALL" ? "active" : ""}`}
           onClick={() => setActiveTab("ALL")}
-          className={`p-3.5 rounded-2xl border text-left transition-all ${
-            activeTab === "ALL"
-              ? "bg-[#00D68F] text-[#051322] border-[#00D68F] shadow-lg shadow-[#00D68F]/20 font-bold"
-              : "bg-[#0F1E32] text-[#A8C0D8] border-[rgba(255,255,255,0.08)] hover:border-[rgba(0,214,143,0.3)] hover:bg-[#122035]"
-          }`}
         >
-          <div className="flex items-center justify-between">
-            <span className={`text-[11px] font-bold ${activeTab === "ALL" ? "text-[#051322]" : "text-[#A8C0D8]"}`}>
-              আজকের অর্ডার
-            </span>
-            <ShoppingBag size={15} className={activeTab === "ALL" ? "text-[#051322]" : "text-[#5E7A96]"} />
-          </div>
-          <div className="mt-2 flex items-baseline gap-1.5">
-            <span className="text-xl font-black font-mono">{countToday}</span>
-            <span className={`text-[10px] ${activeTab === "ALL" ? "text-[#051322]/80" : "text-[#5E7A96]"}`}>টি</span>
-          </div>
+          <span>📋 আজকের অর্ডার</span>
+          <span className="status-tab-badge">{countToday}</span>
         </button>
 
-        {/* 2. Pending */}
         <button
+          type="button"
+          className={`status-tab-btn ${activeTab === "PENDING" ? "active" : ""}`}
           onClick={() => setActiveTab("PENDING")}
-          className={`p-3.5 rounded-2xl border text-left transition-all ${
-            activeTab === "PENDING"
-              ? "bg-[#F59E0B] text-[#051322] border-[#F59E0B] shadow-lg shadow-[#F59E0B]/20 font-bold"
-              : "bg-[#0F1E32] text-[#A8C0D8] border-[rgba(255,255,255,0.08)] hover:border-[rgba(245,158,11,0.3)] hover:bg-[#122035]"
-          }`}
         >
-          <div className="flex items-center justify-between">
-            <span className={`text-[11px] font-bold ${activeTab === "PENDING" ? "text-[#051322]" : "text-[#A8C0D8]"}`}>
-              পেন্ডিং
-            </span>
-            <Clock size={15} className={activeTab === "PENDING" ? "text-[#051322]" : "text-[#F59E0B]"} />
-          </div>
-          <div className="mt-2 flex items-baseline gap-1.5">
-            <span className="text-xl font-black font-mono" style={{ color: activeTab === "PENDING" ? "#051322" : "#F59E0B" }}>
-              {countPending}
-            </span>
-            <span className={`text-[10px] ${activeTab === "PENDING" ? "text-[#051322]/80" : "text-[#5E7A96]"}`}>অপেক্ষমাণ</span>
-          </div>
+          <span>⏱️ পেন্ডিং</span>
+          <span className="status-tab-badge">{countPending}</span>
         </button>
 
-        {/* 3. Processing */}
         <button
+          type="button"
+          className={`status-tab-btn ${activeTab === "PROCESSING" ? "active" : ""}`}
           onClick={() => setActiveTab("PROCESSING")}
-          className={`p-3.5 rounded-2xl border text-left transition-all ${
-            activeTab === "PROCESSING"
-              ? "bg-[#3B82F6] text-white border-[#3B82F6] shadow-lg shadow-[#3B82F6]/20 font-bold"
-              : "bg-[#0F1E32] text-[#A8C0D8] border-[rgba(255,255,255,0.08)] hover:border-[rgba(59,130,246,0.3)] hover:bg-[#122035]"
-          }`}
         >
-          <div className="flex items-center justify-between">
-            <span className={`text-[11px] font-bold ${activeTab === "PROCESSING" ? "text-white" : "text-[#A8C0D8]"}`}>
-              প্রসেসিং
-            </span>
-            <Scale size={15} className={activeTab === "PROCESSING" ? "text-white" : "text-[#3B82F6]"} />
-          </div>
-          <div className="mt-2 flex items-baseline gap-1.5">
-            <span className="text-xl font-black font-mono" style={{ color: activeTab === "PROCESSING" ? "white" : "#60A5FA" }}>
-              {countProcessing}
-            </span>
-            <span className={`text-[10px] ${activeTab === "PROCESSING" ? "text-white/80" : "text-[#5E7A96]"}`}>প্যাকিং চলছে</span>
-          </div>
+          <span>⚡ প্রসেসিং</span>
+          <span className="status-tab-badge">{countProcessing}</span>
         </button>
 
-        {/* 4. Ready for Pickup */}
         <button
+          type="button"
+          className={`status-tab-btn ${activeTab === "READY_FOR_PICKUP" ? "active" : ""}`}
           onClick={() => setActiveTab("READY_FOR_PICKUP")}
-          className={`p-3.5 rounded-2xl border text-left transition-all ${
-            activeTab === "READY_FOR_PICKUP"
-              ? "bg-gradient-to-r from-[#00D68F] to-[#00B87A] text-white border-[#00D68F] shadow-lg shadow-[#00D68F]/25 font-bold"
-              : "bg-[#0F1E32] text-[#A8C0D8] border-[rgba(255,255,255,0.08)] hover:border-[rgba(0,214,143,0.3)] hover:bg-[#122035]"
-          }`}
         >
-          <div className="flex items-center justify-between">
-            <span className={`text-[11px] font-bold ${activeTab === "READY_FOR_PICKUP" ? "text-white" : "text-[#A8C0D8]"}`}>
-              রেডি ফর পিকআপ
-            </span>
-            <Bike size={15} className={activeTab === "READY_FOR_PICKUP" ? "text-white" : "text-[#00D68F]"} />
-          </div>
-          <div className="mt-2 flex items-baseline gap-1.5">
-            <span className="text-xl font-black font-mono" style={{ color: activeTab === "READY_FOR_PICKUP" ? "white" : "#00D68F" }}>
-              {countReady}
-            </span>
-            <span className={`text-[10px] ${activeTab === "READY_FOR_PICKUP" ? "text-white/80" : "text-[#5E7A96]"}`}>রাইডার অ্যালার্ট</span>
-          </div>
+          <span>📦 রেডি / পিকআপ</span>
+          <span className="status-tab-badge">{countReady}</span>
         </button>
 
-        {/* 5. Completed */}
         <button
+          type="button"
+          className={`status-tab-btn ${activeTab === "COMPLETED" ? "active" : ""}`}
           onClick={() => setActiveTab("COMPLETED")}
-          className={`p-3.5 rounded-2xl border text-left transition-all ${
-            activeTab === "COMPLETED"
-              ? "bg-[#172540] text-white border-[#334D65] shadow-sm font-bold"
-              : "bg-[#0F1E32] text-[#A8C0D8] border-[rgba(255,255,255,0.08)] hover:border-[rgba(255,255,255,0.15)] hover:bg-[#122035]"
-          }`}
         >
-          <div className="flex items-center justify-between">
-            <span className={`text-[11px] font-bold ${activeTab === "COMPLETED" ? "text-white" : "text-[#A8C0D8]"}`}>
-              সম্পন্ন
-            </span>
-            <CheckCircle size={15} className={activeTab === "COMPLETED" ? "text-emerald-400" : "text-[#5E7A96]"} />
-          </div>
-          <div className="mt-2 flex items-baseline gap-1.5">
-            <span className="text-xl font-black font-mono" style={{ color: activeTab === "COMPLETED" ? "white" : "#A8C0D8" }}>
-              {countCompleted}
-            </span>
-            <span className={`text-[10px] ${activeTab === "COMPLETED" ? "text-slate-300" : "text-[#5E7A96]"}`}>ডেলিভার্ড</span>
-          </div>
+          <span>✅ সম্পন্ন</span>
+          <span className="status-tab-badge">{countCompleted}</span>
         </button>
 
-        {/* 6. Returned */}
         <button
+          type="button"
+          className={`status-tab-btn ${activeTab === "RETURNED" ? "active" : ""}`}
           onClick={() => setActiveTab("RETURNED")}
-          className={`p-3.5 rounded-2xl border text-left transition-all ${
-            activeTab === "RETURNED"
-              ? "bg-[#EF4444] text-white border-[#EF4444] shadow-lg shadow-[#EF4444]/20 font-bold"
-              : "bg-[#0F1E32] text-[#A8C0D8] border-[rgba(255,255,255,0.08)] hover:border-[rgba(239,68,68,0.3)] hover:bg-[#122035]"
-          }`}
         >
-          <div className="flex items-center justify-between">
-            <span className={`text-[11px] font-bold ${activeTab === "RETURNED" ? "text-white" : "text-[#A8C0D8]"}`}>
-              রিটার্নড
-            </span>
-            <RotateCcw size={15} className={activeTab === "RETURNED" ? "text-white" : "text-[#EF4444]"} />
-          </div>
-          <div className="mt-2 flex items-baseline gap-1.5">
-            <span className="text-xl font-black font-mono" style={{ color: activeTab === "RETURNED" ? "white" : "#EF4444" }}>
-              {countReturned}
-            </span>
-            <span className={`text-[10px] ${activeTab === "RETURNED" ? "text-white/80" : "text-[#5E7A96]"}`}>ফেরত এসেছে</span>
-          </div>
+          <span>↩️ রিটার্নড</span>
+          <span className="status-tab-badge">{countReturned}</span>
         </button>
       </div>
 
-      {/* Search & Area Filter Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 font-bn">
-        <div className="relative w-full sm:w-80">
-          <Search
-            size={15}
-            className="absolute inset-y-0 left-0 pl-3.5 my-auto text-slate-400 pointer-events-none"
-          />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="অর্ডার আইডি (যেমন TB-8492), পণ্য বা জোন খুঁজুন..."
-            className="w-full bg-[#0F1E32] border border-[rgba(255,255,255,0.08)] rounded-xl pl-9 pr-3.5 py-2 text-xs text-[#F0F6FF] placeholder-slate-400 focus:outline-none focus:border-[#00D68F] shadow-2xs"
-          />
-        </div>
-
-        <div className="flex items-center gap-2 text-xs text-[#A8C0D8]/70 font-medium">
-          <ShieldCheck size={14} className="text-[#00D68F]" />
-          <span>গ্রাহকের ঠিকানা ও ফোন গোপনীয়তা প্রোটেকশন চালু রয়েছে</span>
-        </div>
+      {/* Search Bar */}
+      <div style={{ position: "relative", width: "100%" }}>
+        <Search
+          size={16}
+          style={{
+            position: "absolute",
+            left: 14,
+            top: "50%",
+            transform: "translateY(-50%)",
+            color: "var(--text-3)",
+            pointerEvents: "none",
+          }}
+        />
+        <input
+          type="text"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          placeholder="অর্ডার আইডি (যেমন TB-8492), পণ্য বা জোন খুঁজুন..."
+          className="form-input"
+          style={{ paddingLeft: 40, fontSize: ".84rem" }}
+        />
       </div>
 
-      {/* Orders List / Cards */}
+      {/* Order Cards List (Rider task-card Style) */}
       {filteredOrders.length === 0 ? (
-        <div className="p-12 text-center text-[#A8C0D8] text-xs bg-[#0F1E32] rounded-2xl border border-[rgba(255,255,255,0.08)] shadow-lg space-y-3 font-bn">
-          <div className="w-12 h-12 rounded-full bg-[rgba(255,255,255,0.05)] flex items-center justify-center mx-auto text-slate-400">
-            <ShoppingBag size={20} />
+        <div className="empty-state">
+          <div className="empty-state-icon">📦</div>
+          <div className="empty-state-title">বর্তমানে কোনো অর্ডার নেই</div>
+          <div className="empty-state-text">
+            নতুন কোনো গ্রাহক অর্ডার করলে লাইভ সাউন্ড এলার্ট ও এখানে তালিকা প্রদর্শিত হবে।
           </div>
-          <p className="font-semibold text-[#F0F6FF]">
-            এই সেকশনে বর্তমানে কোনো অর্ডার নেই।
-          </p>
-          <p className="text-[#64748b] text-[11px] max-w-sm mx-auto">
-            গ্রাহক ফ্রন্টএন্ড বা অ্যাডমিন থেকে নতুন অর্ডার আসলে তা স্বয়ংক্রিয়ভাবে এখানে প্রদর্শিত হবে।
-          </p>
         </div>
       ) : (
-        <div className="space-y-4">
+        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
           {filteredOrders.map((order) => {
             const unweighedItem = order.items.find(
               (i) => i.pricingType === "WEIGHT_BASED" && !i.weightActual
             );
+            const isHandedOver = order.status === "HANDED_TO_RIDER" || order.status === "COMPLETED";
 
             return (
-              <div
-                key={order.id}
-                className="bg-[#0F1E32] border border-[rgba(255,255,255,0.08)] rounded-2xl p-5 hover:border-[#00D68F]/40 transition-all shadow-md font-bn"
-              >
-                {/* Header Row */}
-                <div className="flex flex-wrap items-start justify-between gap-3 pb-4 border-b border-[rgba(255,255,255,0.06)]">
-                  <div className="space-y-1.5">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="font-mono text-base font-bold text-[#00D68F] bg-[rgba(0,214,143,0.12)] px-2.5 py-0.5 rounded-md border border-[rgba(0,214,143,0.3)]">
-                        #{order.displayId}
-                      </span>
-                      {getStatusBadge(order.status)}
-                      {order.urgent && (
-                        <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-rose-500/15 text-rose-400 border border-rose-500/30 flex items-center gap-1">
-                          <Flame size={12} />
-                          <span>জরুরি অর্ডার</span>
+              <div key={order.id} className="task-card">
+                {/* Header */}
+                <div className="task-card-header">
+                  <div className="task-vendor">
+                    <div className="task-vendor-icon">🥬</div>
+                    <div>
+                      <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+                        <span
+                          style={{
+                            fontSize: ".84rem",
+                            fontWeight: 800,
+                            color: "var(--emerald)",
+                            fontFamily: "var(--font-mono)",
+                          }}
+                        >
+                          #{order.displayId}
                         </span>
-                      )}
-                    </div>
-
-                    {/* Customer Info with Privacy Shield */}
-                    <div className="flex flex-wrap items-center gap-3 text-xs text-[#A8C0D8] mt-1">
-                      <span className="font-bold text-[#F0F6FF]">
-                        {order.customerName}
-                      </span>
-                      <span className="flex items-center gap-1 text-[#00D68F] bg-[rgba(0,214,143,0.12)] px-2 py-0.5 rounded border border-[rgba(0,214,143,0.3)] font-semibold">
-                        <MapPin size={12} className="text-[#00D68F]" />
-                        <span>{order.deliveryZone || "ঢাকা জোন"}</span>
-                      </span>
-                      <span className="flex items-center gap-1 text-slate-400 text-[11px]">
-                        <ShieldCheck size={13} className="text-[#00D68F]" />
-                        <span>🔒 ঠিকানা ও ফোন গোপনীয় (রাইডারের দায়িত্বে)</span>
-                      </span>
-                    </div>
-
-                    {order.notes && (
-                      <div className="text-[11px] text-amber-300 bg-amber-500/10 px-2.5 py-1 rounded-lg border border-amber-500/25 inline-block font-medium">
-                        গ্রাহকের প্যাকেজিং নোট: {order.notes}
+                        {getStatusBadge(order.status)}
+                        {order.urgent && (
+                          <span className="badge badge-red">
+                            <Flame size={11} />
+                            <span>জরুরি</span>
+                          </span>
+                        )}
                       </div>
-                    )}
+                      <div style={{ fontSize: ".76rem", color: "var(--text-2)", marginTop: 2, display: "flex", alignItems: "center", gap: 6 }}>
+                        <span style={{ fontWeight: 700 }}>{order.customerName}</span>
+                        <span>•</span>
+                        <span style={{ color: "var(--emerald)" }}>{order.deliveryZone || "ঢাকা জোন"}</span>
+                      </div>
+                    </div>
                   </div>
 
-                  <div className="text-right">
-                    <div className="text-lg font-bold font-mono text-[#F0F6FF]">
+                  <div style={{ textAlign: "right" }}>
+                    <div style={{ fontSize: "1.15rem", fontWeight: 900, color: "var(--text-1)", fontFamily: "var(--font-mono)" }}>
                       ৳{order.grossTotal.toLocaleString()}
                     </div>
-                    <div className="text-xs text-[#00D68F] font-semibold font-mono">
-                      নেট ভেন্ডর আয়: ৳{order.netTotal.toLocaleString()}
-                    </div>
-                    <div className="text-[11px] text-slate-400 mt-0.5">
-                      {order.paymentMethod === "CASH_ON_DELIVERY" ? "ক্যাশ অন ডেলিভারি" : "প্রিপেইড (" + order.paymentMethod + ")"}
+                    <div style={{ fontSize: ".70rem", color: "var(--emerald)", fontWeight: 700, fontFamily: "var(--font-mono)" }}>
+                      আয়: ৳{order.netTotal.toLocaleString()}
                     </div>
                   </div>
                 </div>
 
-                {/* Assigned Rider Bar & Status Action */}
-                {(order.status === "READY_FOR_PICKUP" || order.status === "HANDED_TO_RIDER" || order.status === "COMPLETED" || order.riderName) && (() => {
-                  const isHandedOver = order.status === "HANDED_TO_RIDER" || order.status === "COMPLETED";
-                  const riderName = order.riderName || "রাইডার";
-                  const riderPhone = order.riderPhone || "";
-                  const riderVehicle = order.riderVehicle || "";
+                {order.notes && (
+                  <div style={{
+                    padding: "8px 12px",
+                    borderRadius: "var(--r-sm)",
+                    background: "var(--amber-glass)",
+                    border: "1px solid var(--amber-glow)",
+                    fontSize: ".75rem",
+                    color: "var(--amber)",
+                    fontFamily: "var(--font-bn)",
+                  }}>
+                    💬 নোট: {order.notes}
+                  </div>
+                )}
 
-                  return (
-                    <div className="mt-3.5 p-3 rounded-xl bg-[rgba(0,214,143,0.08)] border border-[rgba(0,214,143,0.25)] text-xs flex flex-wrap items-center justify-between gap-2.5">
-                      <div className="flex items-center gap-2 text-[#F0F6FF]">
-                        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#00D68F] to-[#00B87A] text-[#051322] font-black flex items-center justify-center shrink-0 shadow-sm text-base">
-                          🛵
-                        </div>
+                {/* Items Box */}
+                <div style={{
+                  background: "var(--bg-raised)",
+                  borderRadius: "var(--r-md)",
+                  padding: "12px 14px",
+                  border: "1px solid var(--border-2)",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 8,
+                }}>
+                  <div style={{
+                    fontSize: ".68rem",
+                    color: "var(--text-3)",
+                    fontWeight: 700,
+                    textTransform: "uppercase",
+                    letterSpacing: ".06em",
+                    display: "flex",
+                    justifyContent: "space-between",
+                  }}>
+                    <span>পণ্য ({order.items.length}টি)</span>
+                    <span>পরিমাণ ও দাম</span>
+                  </div>
+
+                  {order.items.map((item) => {
+                    const isWeightBased = item.pricingType === "WEIGHT_BASED";
+                    return (
+                      <div
+                        key={item.id}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "space-between",
+                          gap: 8,
+                          fontSize: ".82rem",
+                          borderBottom: "1px solid var(--border-1)",
+                          paddingBottom: 6,
+                        }}
+                      >
                         <div>
-                          <div className="flex items-center gap-1.5">
-                            <strong className="text-[#F0F6FF]">
-                              {riderName}
-                            </strong>
-                            <span className="text-[10px] bg-[rgba(0,214,143,0.18)] text-[#00D68F] px-1.5 py-0.2 rounded font-bold border border-[rgba(0,214,143,0.3)]">
-                              {order.status === "COMPLETED"
-                                ? "ডেলিভার্ড ✓"
-                                : isHandedOver
-                                ? "পার্সেল পিকআপ সম্পন্ন (ডেলিভারির পথে)"
-                                : "পিকআপের জন্য দোকানে আসার পথে"}
-                            </span>
+                          <div style={{ fontWeight: 700, color: "var(--text-1)" }}>
+                            {language === "bn" ? item.productNameBn : item.productName}
                           </div>
-                          {(riderVehicle || riderPhone) && (
-                            <p className="text-[11px] text-[#A8C0D8]">
-                              {[riderVehicle, riderPhone].filter(Boolean).join(" • ")}
-                            </p>
+                          <div style={{ fontSize: ".70rem", color: "var(--text-3)" }}>
+                            {isWeightBased ? `${item.weightOrdered} ${item.unit}` : `${item.quantity} ${item.unit}`}
+                            {isWeightBased && item.weightActual && (
+                              <span style={{ color: "var(--emerald)", fontWeight: 700, marginLeft: 6 }}>
+                                ✓ প্রকৃত: {item.weightActual} {item.unit}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+
+                        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                          <span style={{ fontWeight: 800, color: "var(--text-1)", fontFamily: "var(--font-mono)" }}>
+                            ৳{item.finalPrice}
+                          </span>
+                          {isWeightBased && (order.status === "PROCESSING" || order.status === "PREPARING") && (
+                            <button
+                              onClick={() => {
+                                setActiveWeightOrderId(order.id);
+                                setActiveWeightItemId(item.id);
+                              }}
+                              style={{
+                                padding: "4px 8px",
+                                borderRadius: 6,
+                                background: "var(--amber-glass)",
+                                border: "1px solid var(--amber-glow)",
+                                color: "var(--amber)",
+                                fontSize: ".70rem",
+                                fontWeight: 700,
+                                cursor: "pointer",
+                              }}
+                            >
+                              ⚖️ {item.weightActual ? "ওজন ঠিক আছে" : "ওজন স্কেল"}
+                            </button>
                           )}
                         </div>
                       </div>
+                    );
+                  })}
+                </div>
 
-                      <div className="flex items-center gap-2">
-                        {/* Order Tracking Button */}
-                        <button
-                          onClick={() => setTrackingOrder(order)}
-                          className="px-3 py-1.5 bg-[#00D68F] hover:bg-[#00b87a] text-[#051322] rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all shadow-xs active:scale-95"
-                          title="অর্ডার ট্র্যাকিং ও স্ট্যাটাস দেখুন"
-                        >
-                          <Clock size={13} />
-                          <span>অর্ডার ট্র্যাকিং</span>
-                        </button>
-
-                        {/* Chat with Rider */}
-                        {!isHandedOver && (
-                          <button
-                            onClick={() => setChatOrder(order)}
-                            className="px-3 py-1.5 bg-[#122035] hover:bg-[#172540] text-[#00D68F] border border-[rgba(0,214,143,0.35)] rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all shadow-2xs"
-                            title="পার্সেল পিকআপের পূর্বে রাইডারের সাথে চ্যাট করুন"
-                          >
-                            <MessageCircle size={13} />
-                            <span>রাইডার চ্যাট</span>
-                          </button>
-                        )}
-
-                        {/* Direct Phone Call Button */}
-                        {riderPhone ? (
-                          <a
-                            href={`tel:${riderPhone}`}
-                            className="px-2.5 py-1.5 text-white hover:text-white bg-[#122035] hover:bg-[#172540] rounded-lg border border-[rgba(255,255,255,0.12)] font-bold flex items-center gap-1 text-xs transition-colors shadow-2xs"
-                            title="রাইডারকে সরাসরি ফোন কল করুন"
-                          >
-                            <Phone size={13} className="text-[#00D68F]" />
-                            <span>কল দিন</span>
-                          </a>
-                        ) : null}
+                {/* Assigned Rider Bar */}
+                {(order.status === "READY_FOR_PICKUP" || order.status === "HANDED_TO_RIDER" || order.status === "COMPLETED" || order.riderName) && (
+                  <div style={{
+                    padding: "10px 14px",
+                    borderRadius: "var(--r-md)",
+                    background: "rgba(0,214,143,0.06)",
+                    border: "1px solid rgba(0,214,143,0.2)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    gap: 8,
+                    flexWrap: "wrap",
+                  }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <span style={{ fontSize: "1.2rem" }}>🛵</span>
+                      <div>
+                        <div style={{ fontSize: ".78rem", fontWeight: 800, color: "var(--text-1)" }}>
+                          {order.riderName || "রাইডার নির্ধারিত"}
+                        </div>
+                        <div style={{ fontSize: ".68rem", color: "var(--text-3)" }}>
+                          {order.riderPhone ? `${order.riderPhone} • ` : ""}{isHandedOver ? "ডেলিভারির পথে" : "দোকানে আসার পথে"}
+                        </div>
                       </div>
                     </div>
-                  );
-                })()}
 
-                {/* Return Reason Banner */}
-                {order.status === "RETURNED" && (
-                  <div className="mt-3.5 p-3 rounded-xl bg-rose-500/10 border border-rose-500/25 text-xs text-rose-300 flex items-start gap-2">
-                    <AlertTriangle size={16} className="text-rose-400 shrink-0 mt-0.5" />
-                    <div>
-                      <strong className="font-bold text-rose-200">রিটার্ন কারণ:</strong>{" "}
-                      <span>{order.returnReason || "গ্রাহক দরজায় অনুপস্থিত ছিলেন এবং ফোনে যোগাযোগ করা যায়নি।"}</span>
-                      <p className="text-[11px] text-slate-400 mt-1">
-                        পার্সেল ফেরত এসেছে। পণ্যসমূহ আনপ্যাক করে পুনরায় ইনভেন্টরি স্টকে যুক্ত করতে পারেন।
-                      </p>
+                    <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                      <button
+                        onClick={() => setTrackingOrder(order)}
+                        style={{
+                          padding: "6px 10px",
+                          borderRadius: "var(--r-sm)",
+                          background: "var(--emerald)",
+                          color: "#051322",
+                          fontSize: ".72rem",
+                          fontWeight: 800,
+                          fontFamily: "var(--font-bn)",
+                          border: "none",
+                          cursor: "pointer",
+                        }}
+                      >
+                        🗺️ ট্র্যাকিং
+                      </button>
+
+                      {!isHandedOver && (
+                        <button
+                          onClick={() => setChatOrder(order)}
+                          style={{
+                            padding: "6px 10px",
+                            borderRadius: "var(--r-sm)",
+                            background: "var(--bg-raised)",
+                            color: "var(--emerald)",
+                            border: "1px solid rgba(0,214,143,0.3)",
+                            fontSize: ".72rem",
+                            fontWeight: 700,
+                            fontFamily: "var(--font-bn)",
+                            cursor: "pointer",
+                          }}
+                        >
+                          💬 চ্যাট
+                        </button>
+                      )}
+
+                      {order.riderPhone && (
+                        <a
+                          href={`tel:${order.riderPhone}`}
+                          style={{
+                            padding: "6px 10px",
+                            borderRadius: "var(--r-sm)",
+                            background: "var(--bg-raised)",
+                            color: "var(--text-2)",
+                            border: "1px solid var(--border-2)",
+                            fontSize: ".72rem",
+                            fontWeight: 700,
+                            fontFamily: "var(--font-bn)",
+                          }}
+                        >
+                          📞 কল
+                        </a>
+                      )}
                     </div>
                   </div>
                 )}
 
-                {/* Items Table */}
-                <div className="mt-4 overflow-x-auto">
-                  <table className="w-full text-left text-xs text-[#F0F6FF]">
-                    <thead>
-                      <tr className="text-[#A8C0D8] border-b border-[rgba(255,255,255,0.06)] pb-2">
-                        <th className="py-2.5 font-semibold">পণ্য ও জাত</th>
-                        <th className="py-2.5 font-semibold">ধরণ</th>
-                        <th className="py-2.5 font-semibold">অর্ডারকৃত পরিমাণ</th>
-                        <th className="py-2.5 font-semibold">প্রকৃত স্কেল ওজন</th>
-                        <th className="py-2.5 font-semibold">আইটেম মোট</th>
-                        <th className="py-2.5 text-right font-semibold">অ্যাকশন</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-[rgba(255,255,255,0.06)]">
-                      {order.items.map((item) => {
-                        const isWeightBased = item.pricingType === "WEIGHT_BASED";
-
-                        return (
-                          <tr key={item.id} className="hover:bg-[#172540]/40 transition-colors">
-                            <td className="py-3 font-semibold text-[#F0F6FF]">
-                              {language === "bn" ? item.productNameBn : item.productName}
-                            </td>
-                            <td className="py-3 text-[#A8C0D8]">
-                              {isWeightBased ? (
-                                <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] bg-sky-500/15 text-sky-400 border border-sky-500/30">ওজন ভিত্তিক</span>
-                              ) : (
-                                <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] bg-slate-700/40 text-slate-300 border border-slate-600/40">প্যাকেট</span>
-                              )}
-                            </td>
-                            <td className="py-3 text-[#A8C0D8] font-mono">
-                              {isWeightBased ? `${item.weightOrdered} ${item.unit}` : `${item.quantity} ${item.unit}`}
-                            </td>
-                            <td className="py-3 font-mono">
-                              {isWeightBased ? (
-                                item.weightActual ? (
-                                  <span className="text-[#00D68F] font-bold">
-                                    ✓ {item.weightActual} {item.unit}
-                                  </span>
-                                ) : (
-                                  <span className="text-[#F59E0B] font-semibold italic">
-                                    ওজন বাকি (স্কেল)
-                                  </span>
-                                )
-                              ) : (
-                                <span className="text-slate-500">—</span>
-                              )}
-                            </td>
-                            <td className="py-3 font-mono font-bold text-[#F0F6FF]">
-                              ৳{item.finalPrice}
-                            </td>
-                            <td className="py-3 text-right">
-                              {isWeightBased && (order.status === "PROCESSING" || order.status === "PREPARING") && (
-                                <button
-                                  onClick={() => {
-                                    setActiveWeightOrderId(order.id);
-                                    setActiveWeightItemId(item.id);
-                                  }}
-                                  className="px-3 py-1 bg-amber-500/15 hover:bg-amber-500/25 text-[#F59E0B] border border-amber-500/30 rounded-lg text-xs font-semibold inline-flex items-center gap-1 shadow-2xs transition-all"
-                                >
-                                  <Scale size={13} />
-                                  <span>{item.weightActual ? "পুনরায় ওজন" : "স্কেলে ওজন করুন"}</span>
-                                </button>
-                              )}
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-
-                {/* Footer Controls based on 6 Statuses */}
-                <div className="mt-4 pt-3.5 border-t border-[rgba(255,255,255,0.06)] flex flex-wrap items-center justify-between gap-3 text-xs">
-                  <div className="flex items-center gap-3 text-slate-500">
-                    <span className="flex items-center gap-1 font-mono text-[11px]">
-                      <Clock size={14} className="text-slate-400" />
-                      {new Date(order.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                    </span>
-                    {(order.status === "PROCESSING" || order.status === "PREPARING") && (
-                      <>
-                        <span>•</span>
-                        <button
-                          onClick={() => setActiveChecklistOrderId(order.id)}
-                          className="text-emerald-700 hover:text-emerald-800 hover:underline flex items-center gap-1 font-semibold"
-                        >
-                          <CheckSquare size={14} />
-                          <span>প্যাকিং চেকলিস্ট</span>
-                        </button>
-                      </>
-                    )}
+                {/* Return Banner */}
+                {order.status === "RETURNED" && (
+                  <div style={{
+                    padding: "10px 14px",
+                    borderRadius: "var(--r-md)",
+                    background: "var(--red-glass)",
+                    border: "1px solid var(--red-glow)",
+                    fontSize: ".76rem",
+                    color: "var(--red)",
+                    fontFamily: "var(--font-bn)",
+                  }}>
+                    ⚠️ <strong>রিটার্ন কারণ:</strong> {order.returnReason || "গ্রাহক অনুপস্থিত ছিলেন।"}
                   </div>
+                )}
 
-                  <div className="flex items-center gap-2">
-                    {/* If PENDING: Accept Order or Decline */}
-                    {(order.status === "PENDING" || order.status === "RECEIVED") && (
-                      <>
-                        <button
-                          onClick={() => declineOrder(order.id)}
-                          className="px-3.5 py-2 bg-[#122035] hover:bg-[#172540] text-[#A8C0D8] rounded-xl font-bold border border-[rgba(255,255,255,0.08)] transition-all"
-                        >
-                          বাতিল
-                        </button>
-                        <button
-                          onClick={() => acceptOrder(order.id)}
-                          className="px-4 py-2 bg-gradient-to-r from-[#00D68F] to-[#00B87A] hover:opacity-90 text-white rounded-xl font-bold transition-all shadow-md active:scale-95"
-                        >
-                          অর্ডার গ্রহণ করুন (প্রসেসিং শুরু)
-                        </button>
-                      </>
-                    )}
+                {/* Action Buttons */}
+                <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
+                  {/* PENDING: Accept / Decline */}
+                  {(order.status === "PENDING" || order.status === "RECEIVED") && (
+                    <>
+                      <button
+                        onClick={() => declineOrder(order.id)}
+                        className="btn-secondary"
+                        style={{ flex: 1, padding: "12px" }}
+                      >
+                        বাতিল
+                      </button>
+                      <button
+                        onClick={() => acceptOrder(order.id)}
+                        className="btn-primary"
+                        style={{ flex: 2, padding: "12px" }}
+                      >
+                        ⚡ অর্ডার গ্রহণ করুন
+                      </button>
+                    </>
+                  )}
 
-                    {/* If PROCESSING: Mark Ready for Pickup */}
-                    {(order.status === "PROCESSING" || order.status === "PREPARING") && (
+                  {/* PROCESSING: Mark Ready for Pickup & Checklist */}
+                  {(order.status === "PROCESSING" || order.status === "PREPARING") && (
+                    <div style={{ display: "flex", flexDirection: "column", gap: 8, width: "100%" }}>
+                      <button
+                        onClick={() => setActiveChecklistOrderId(order.id)}
+                        className="btn-secondary"
+                        style={{ padding: "10px", fontSize: ".80rem" }}
+                      >
+                        <CheckSquare size={14} />
+                        <span>প্যাকিং চেকলিস্ট যাচাই</span>
+                      </button>
                       <button
                         onClick={() => {
                           if (unweighedItem) {
@@ -666,43 +581,60 @@ export default function OrdersPage() {
                           }
                           updateOrderStatus(order.id, "READY_FOR_PICKUP");
                         }}
-                        className="px-4 py-2 bg-gradient-to-r from-[#00D68F] to-[#00B87A] text-[#051322] rounded-xl font-extrabold flex items-center gap-1.5 shadow-md transition-all active:scale-95"
+                        className="task-deliver-btn"
                       >
-                        <Sparkles size={14} />
-                        <span>প্যাকিং সম্পন্ন - রেডি ফর পিকআপ</span>
+                        <Sparkles size={16} />
+                        <span>প্যাকিং সম্পন্ন — রেডি ফর পিকআপ</span>
                       </button>
-                    )}
+                    </div>
+                  )}
 
-                    {/* If READY_FOR_PICKUP: Notice that vendor's job is complete - auto changes when rider collects parcel */}
-                    {order.status === "READY_FOR_PICKUP" && (
-                      <div className="flex items-center gap-2">
-                        <span className="text-[#22C55E] font-semibold text-[11px] bg-[rgba(34,197,94,0.12)] px-3 py-1.5 rounded-lg border border-[rgba(34,197,94,0.3)] flex items-center gap-2">
-                          <span className="relative flex h-2 w-2">
-                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#22C55E] opacity-75"></span>
-                            <span className="relative inline-flex rounded-full h-2 w-2 bg-[#22C55E]"></span>
-                          </span>
-                          <span>✓ ভেন্ডরের কাজ শেষ · রাইডার পার্সেল সংগ্রহ করলেই স্বয়ংক্রিয়ভাবে সম্পন্ন হবে</span>
-                        </span>
-                      </div>
-                    )}
+                  {/* READY FOR PICKUP */}
+                  {order.status === "READY_FOR_PICKUP" && (
+                    <div style={{
+                      padding: "12px 14px",
+                      borderRadius: "var(--r-md)",
+                      background: "rgba(0,214,143,0.1)",
+                      border: "1px solid rgba(0,214,143,0.3)",
+                      fontSize: ".78rem",
+                      color: "var(--emerald)",
+                      textAlign: "center",
+                      width: "100%",
+                      fontFamily: "var(--font-bn)",
+                      fontWeight: 700,
+                    }}>
+                      ✓ পার্সেল রেডি · রাইডার পার্সেল সংগ্রহ করলেই স্বয়ংক্রিয়ভাবে আপডেট হবে
+                    </div>
+                  )}
 
-                    {/* If COMPLETED: Link to view Receipt / Details */}
-                    {order.status === "COMPLETED" && (
-                      <span className="text-[#00D68F] text-xs font-semibold bg-[rgba(0,214,143,0.12)] px-3 py-1.5 rounded-lg border border-[rgba(0,214,143,0.3)]">
-                        ✓ রাইডার কর্তৃক সফলভাবে ডেলিভার্ড
-                      </span>
-                    )}
+                  {/* COMPLETED */}
+                  {order.status === "COMPLETED" && (
+                    <div style={{
+                      padding: "10px 14px",
+                      borderRadius: "var(--r-md)",
+                      background: "rgba(0,214,143,0.1)",
+                      border: "1px solid rgba(0,214,143,0.25)",
+                      fontSize: ".78rem",
+                      color: "var(--emerald)",
+                      textAlign: "center",
+                      width: "100%",
+                      fontFamily: "var(--font-bn)",
+                      fontWeight: 700,
+                    }}>
+                      ✓ সফলভাবে ডেলিভারি সম্পন্ন হয়েছে
+                    </div>
+                  )}
 
-                    {/* If RETURNED: Option to restock */}
-                    {order.status === "RETURNED" && (
-                      <Link
-                        href="/inventory"
-                        className="px-3.5 py-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl font-bold text-xs shadow-2xs"
-                      >
-                        ইনভেন্টরি রিস্টক করুন
-                      </Link>
-                    )}
-                  </div>
+                  {/* RETURNED */}
+                  {order.status === "RETURNED" && (
+                    <Link
+                      href="/inventory"
+                      className="btn-danger"
+                      style={{ width: "100%", textAlign: "center" }}
+                    >
+                      পুনরায় ইনভেন্টরিতে স্টক যুক্ত করুন
+                    </Link>
+                  )}
                 </div>
               </div>
             );
@@ -710,7 +642,7 @@ export default function OrdersPage() {
         </div>
       )}
 
-      {/* Global Modals */}
+      {/* Modals */}
       <WeightReconciliationModal
         isOpen={!!activeWeightOrder && !!activeWeightItem}
         order={activeWeightOrder}

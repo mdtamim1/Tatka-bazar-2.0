@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
-import VendorSidebar from "./VendorSidebar";
 import VendorHeader from "./VendorHeader";
 import VendorMobileNav from "./VendorMobileNav";
 import NotificationDrawer from "@/components/common/NotificationDrawer";
@@ -23,7 +22,6 @@ export default function VendorShell({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
-  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [isRoleModalOpen, setIsRoleModalOpen] = useState(false);
   const [isShortcutsOpen, setIsShortcutsOpen] = useState(false);
@@ -117,42 +115,20 @@ export default function VendorShell({
   }
 
   return (
-    <div className="flex h-screen overflow-hidden bg-[#050810] text-[#F0F6FF]">
-      {/* Desktop Persistent Sidebar */}
-      <div className="hidden lg:flex lg:flex-shrink-0">
-        <VendorSidebar />
-      </div>
-
-      {/* Mobile Drawer Sidebar */}
-      {isMobileSidebarOpen && (
-        <div className="fixed inset-0 z-50 lg:hidden flex">
-          <div
-            className="fixed inset-0 bg-black/70 backdrop-blur-sm transition-opacity"
-            onClick={() => setIsMobileSidebarOpen(false)}
-          />
-          <div className="relative flex-1 flex flex-col max-w-xs w-full bg-[#08111E] border-r border-[rgba(255,255,255,0.08)] shadow-2xl">
-            <VendorSidebar onClose={() => setIsMobileSidebarOpen(false)} />
-          </div>
-        </div>
-      )}
+    <div className="app-shell">
+      {/* Top Header Bar + Duty Switch Bar (Rider Portal Style) */}
+      <VendorHeader
+        onOpenNotifications={() => setIsNotificationOpen(true)}
+        onOpenRoleModal={() => setIsRoleModalOpen(true)}
+        onOpenShortcuts={() => setIsShortcutsOpen(true)}
+      />
 
       {/* Main Operational Surface */}
-      <div className="flex flex-col flex-1 min-w-0 overflow-hidden bg-[#050810]">
-        {/* Top Header Bar + Duty Switch Bar */}
-        <VendorHeader
-          onToggleMobileSidebar={() => setIsMobileSidebarOpen(true)}
-          onOpenNotifications={() => setIsNotificationOpen(true)}
-          onOpenRoleModal={() => setIsRoleModalOpen(true)}
-          onOpenShortcuts={() => setIsShortcutsOpen(true)}
-        />
+      <main style={{ flex: 1 }}>
+        {children}
+      </main>
 
-        {/* Scrollable Content Area */}
-        <main className="flex-1 relative overflow-y-auto pb-24 lg:pb-12 bg-[#050810]">
-          {children}
-        </main>
-      </div>
-
-      {/* Mobile Bottom Navigation (Rider Portal Style) */}
+      {/* Bottom Navigation (Fixed on all screens, Rider Portal Style) */}
       <VendorMobileNav
         onOpenNotifications={() => setIsNotificationOpen(true)}
         onOpenRoleModal={() => setIsRoleModalOpen(true)}
