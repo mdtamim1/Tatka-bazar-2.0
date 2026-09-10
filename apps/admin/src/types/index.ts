@@ -149,6 +149,8 @@ export interface AdminOrder {
   riderAvatar?: string;
   riderPhone?: string;
   riderTrackingStatus?: string;
+  riderNotes?: Array<{ id?: string; note: string; riderName?: string; createdAt?: string }>;
+  riderNote?: string;
   riderCustomerConversation?: Array<{ time: string; sender: "RIDER" | "CUSTOMER" | "SYSTEM"; message: string }>;
   assignedVendorId?: string;
   assignedVendorName?: string;

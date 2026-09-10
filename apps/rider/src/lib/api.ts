@@ -537,6 +537,59 @@ function handleMockFallback<T>(path: string, options: RequestInit): { success: b
   }
 
 
+  // 8a-0. Rider Adds Delivery Note / Status Update
+  if (cleanPath.includes("/note") && method === "POST") {
+    let body: any = {};
+    try { body = JSON.parse(options.body as string); } catch {}
+    const taskId = cleanPath.split("/")[3];
+    const noteText = (body.note || body.text || "").trim();
+    if (!noteText) {
+      return { success: false, error: "নোট খালি রাখা যাবে না" };
+    }
+    const active = getLocalStore<ActiveTask[]>("active_tasks", []);
+    const idx = active.findIndex((a) => a.assignmentId === taskId || a.order.id === taskId);
+    if (idx !== -1 && active[idx]) {
+      const user = typeof window !== "undefined" ? localStorage.getItem("rider_user") : null;
+      const riderName = body.riderName || (user ? (JSON.parse(user).name || "রাইডার") : "রাইডার");
+      if (!active[idx].riderNotes) {
+        active[idx].riderNotes = [];
+      }
+      const noteItem = {
+        id: "note-" + Date.now(),
+        note: noteText,
+        riderName,
+        createdAt: new Date().toISOString(),
+      };
+      active[idx].riderNotes!.push(noteItem);
+      active[idx].riderNote = noteText;
+      setLocalStore("active_tasks", active);
+
+      // Async sync to admin & dispatch API
+      const syncPayload = {
+        action: "ADD_NOTE",
+        taskId: active[idx].assignmentId,
+        orderId: active[idx].order.id,
+        orderNumber: active[idx].order.orderNumber,
+        note: noteText,
+        riderName,
+      };
+      const targets = [
+        "/api/dispatch",
+        "https://tatka-bazar-2-0-admin.vercel.app/api/dispatch",
+      ];
+      targets.forEach(url => {
+        fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(syncPayload),
+        }).catch(() => {});
+      });
+
+      return { success: true, data: { task: active[idx], note: noteItem } as any };
+    }
+    return { success: false, error: "টাস্ক পাওয়া যায়নি" };
+  }
+
   // 8a. Start Transit / On The Way (Stage 1 -> Stage 2)
   if (cleanPath.includes("/transit") && method === "POST") {
     const taskId = cleanPath.split("/")[3];
@@ -1388,6 +1441,13 @@ export type DeliveryStage =
   | "DELIVERED"
   | "CANCELLED_RETURNED";
 
+export interface RiderNoteItem {
+  id?: string;
+  note: string;
+  riderName?: string;
+  createdAt: string;
+}
+
 export interface ActiveTask {
   assignmentId: string;
   status: DeliveryStage | string;
@@ -1403,6 +1463,8 @@ export interface ActiveTask {
   returnTripFee?: number | undefined;
   customerDeliveryOtp?: string | undefined;
   deliveryProofNote?: string | undefined;
+  riderNotes?: RiderNoteItem[] | undefined;
+  riderNote?: string | undefined;
   /** Customer's pinned GPS delivery coordinates (from checkout map/GPS) */
   customerLat?: number | undefined;
   customerLng?: number | undefined;

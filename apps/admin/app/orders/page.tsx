@@ -1010,6 +1010,168 @@ function EditOrderModal({
               )}
             </div>
 
+            {/* ── SteadFast Courier-Style Tracking Timeline & Rider Notes ── */}
+            <div style={{ background: "#17171d", border: "1px solid #282832", borderRadius: "10px", padding: "14px", marginTop: "10px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px", fontWeight: 700, fontSize: "0.84rem", color: "#fff" }}>
+                  <Truck size={14} color="#00D68F" />
+                  <span>লাইভ অর্ডার ট্র্যাকিং ও ডেলিভারি টাইমলাইন (SteadFast Style)</span>
+                </div>
+                <span style={{ fontSize: "0.68rem", color: "#00D68F", background: "rgba(0,214,143,0.12)", border: "1px solid rgba(0,214,143,0.3)", padding: "2px 8px", borderRadius: "6px", fontWeight: 700 }}>
+                  কাস্টমার লাইভ ট্র্যাকিং
+                </span>
+              </div>
+
+              {/* 6-Stage Visual Stepper */}
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: "6px", marginBottom: "14px" }}>
+                {[
+                  {
+                    step: 1,
+                    title: "অর্ডার গ্রহণ",
+                    sub: "Placed",
+                    done: true,
+                    active: status === "PENDING",
+                  },
+                  {
+                    step: 2,
+                    title: "প্রসেসিং",
+                    sub: "Confirmed",
+                    done: ["CONFIRMED", "PROCESSING", "VENDOR_ASSIGNED", "PREPARING", "READY_FOR_PICKUP", "ASSIGNED", "OUT_FOR_DELIVERY", "ON_THE_WAY", "DELIVERED"].includes(String(status).toUpperCase()),
+                    active: status === "PROCESSING" || status === "CONFIRMED",
+                  },
+                  {
+                    step: 3,
+                    title: "ভেন্ডর",
+                    sub: "Sent to Vendor",
+                    done: ["VENDOR_ASSIGNED", "PREPARING", "READY_FOR_PICKUP", "ASSIGNED", "OUT_FOR_DELIVERY", "ON_THE_WAY", "DELIVERED"].includes(String(status).toUpperCase()) || !!order.assignedVendorName,
+                    active: (status as string) === "VENDOR_ASSIGNED" || (status as string) === "PREPARING" || (status as string) === "READY_FOR_PICKUP",
+                  },
+                  {
+                    step: 4,
+                    title: "রাইডার",
+                    sub: "Assigned",
+                    done: ["ASSIGNED", "OUT_FOR_DELIVERY", "ON_THE_WAY", "DELIVERED"].includes(String(status).toUpperCase()) || !!order.assignedRiderName,
+                    active: (status as string) === "ASSIGNED",
+                  },
+                  {
+                    step: 5,
+                    title: "ডেলিভারির পথে",
+                    sub: "On The Way",
+                    done: ["OUT_FOR_DELIVERY", "ON_THE_WAY", "DELIVERED"].includes(String(status).toUpperCase()),
+                    active: (status as string) === "OUT_FOR_DELIVERY" || (status as string) === "ON_THE_WAY",
+                  },
+                  {
+                    step: 6,
+                    title: "সম্পন্ন",
+                    sub: "Delivered",
+                    done: String(status).toUpperCase() === "DELIVERED",
+                    active: String(status).toUpperCase() === "DELIVERED",
+                  },
+                ].map((st) => (
+                  <div
+                    key={st.step}
+                    style={{
+                      background: st.active ? "rgba(0,214,143,0.15)" : st.done ? "rgba(255,255,255,0.04)" : "#131317",
+                      border: `1px solid ${st.active ? "#00D68F" : st.done ? "rgba(0,214,143,0.3)" : "#23232b"}`,
+                      borderRadius: "8px",
+                      padding: "8px 4px",
+                      textAlign: "center",
+                      transition: "all 0.2s ease",
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: "20px",
+                        height: "20px",
+                        borderRadius: "50%",
+                        margin: "0 auto 4px",
+                        background: st.active ? "#00D68F" : st.done ? "rgba(0,214,143,0.2)" : "#1c1c24",
+                        color: st.active ? "#04140e" : st.done ? "#00D68F" : "var(--text-4)",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        fontSize: "0.68rem",
+                        fontWeight: 800,
+                      }}
+                    >
+                      {st.done && !st.active ? "✓" : st.step}
+                    </div>
+                    <div style={{ fontSize: "0.68rem", fontWeight: 700, color: st.active ? "#00D68F" : st.done ? "#fff" : "var(--text-3)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                      {st.title}
+                    </div>
+                    <div style={{ fontSize: "0.58rem", color: "var(--text-4)", whiteSpace: "nowrap" }}>
+                      {st.sub}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Rider Delivery Notes Section */}
+              <div style={{ borderTop: "1px solid #23232b", paddingTop: "10px" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.78rem", fontWeight: 700, color: "#38bdf8" }}>
+                    <MessageSquare size={13} /> রাইডারের ডেলিভারি নোট ও কাস্টমার আপডেট
+                  </div>
+                  <span style={{ fontSize: "0.66rem", color: "var(--text-4)" }}>
+                    Rider Portal Note Sync
+                  </span>
+                </div>
+
+                {order.riderNotes && order.riderNotes.length > 0 ? (
+                  <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                    {order.riderNotes.map((rn: any, idx: number) => (
+                      <div
+                        key={rn.id || idx}
+                        style={{
+                          background: "#1c1c24",
+                          borderLeft: "3px solid #38bdf8",
+                          padding: "8px 12px",
+                          borderRadius: "6px",
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                        }}
+                      >
+                        <div>
+                          <div style={{ fontSize: "0.78rem", color: "#fff", fontWeight: 600 }}>
+                            💬 {rn.note}
+                          </div>
+                          <div style={{ fontSize: "0.68rem", color: "var(--text-4)", marginTop: "2px" }}>
+                            প্রেরক: {rn.riderName || order.assignedRiderName || "রাইডার"}
+                          </div>
+                        </div>
+                        <span style={{ fontSize: "0.68rem", color: "var(--text-3)", whiteSpace: "nowrap" }}>
+                          {rn.createdAt
+                            ? new Date(rn.createdAt).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })
+                            : "সাম্প্রতিক"}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                ) : order.riderNote ? (
+                  <div
+                    style={{
+                      background: "#1c1c24",
+                      borderLeft: "3px solid #38bdf8",
+                      padding: "8px 12px",
+                      borderRadius: "6px",
+                    }}
+                  >
+                    <div style={{ fontSize: "0.78rem", color: "#fff", fontWeight: 600 }}>
+                      💬 {order.riderNote}
+                    </div>
+                    <div style={{ fontSize: "0.68rem", color: "var(--text-4)", marginTop: "2px" }}>
+                      প্রেরক: {order.assignedRiderName || "রাইডার"}
+                    </div>
+                  </div>
+                ) : (
+                  <div style={{ fontSize: "0.72rem", color: "var(--text-4)", fontStyle: "italic", padding: "6px 0" }}>
+                    রাইডার এখনো কোনো ডেলিভারি নোট প্রদান করেননি। রাইডার অ্যাপ থেকে নোট দিলে এখানে সরাসরি আপডেট দেখা যাবে।
+                  </div>
+                )}
+              </div>
+            </div>
+
             {/* Order Activity & Assignment History */}
             <div className="order-history-box" style={{ marginTop: "14px" }}>
               <div className="order-history-title">

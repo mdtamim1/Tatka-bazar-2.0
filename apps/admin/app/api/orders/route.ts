@@ -410,3 +410,86 @@ export async function POST(request: Request) {
     );
   }
 }
+
+export async function PATCH(request: Request) {
+  try {
+    const body = await request.json();
+    const orderId = body.id || body.orderId || body.orderNumber;
+    if (!orderId) {
+      return NextResponse.json(
+        { success: false, error: "Order ID or orderNumber is required" },
+        { status: 400, headers: CORS_HEADERS }
+      );
+    }
+
+    const cleanId = String(orderId).trim();
+    const memoryOrders = globalScope._tatka_admin_orders || [];
+    const idx = memoryOrders.findIndex(
+      (o: any) =>
+        o.id === cleanId ||
+        o.orderNumber?.toLowerCase() === cleanId.toLowerCase()
+    );
+
+    let updatedOrder: any = null;
+
+    if (idx !== -1) {
+      const current = memoryOrders[idx];
+      const riderNotes = current.riderNotes || [];
+
+      if (body.note || body.riderNote) {
+        const noteText = body.note || body.riderNote;
+        riderNotes.push({
+          id: `note-${Date.now()}`,
+          note: noteText,
+          riderName: body.riderName || "রাইডার",
+          createdAt: new Date().toISOString(),
+        });
+      }
+
+      updatedOrder = {
+        ...current,
+        ...body,
+        status: body.status || current.status,
+        riderNotes,
+        riderNote: body.note || body.riderNote || current.riderNote,
+      };
+
+      memoryOrders[idx] = updatedOrder;
+      globalScope._tatka_admin_orders = memoryOrders;
+    }
+
+    // Try DB update
+    try {
+      const updateData: any = {};
+      if (body.status) updateData.status = body.status;
+      if (body.paymentStatus) updateData.paymentStatus = body.paymentStatus;
+      if (body.note) updateData.note = body.note;
+
+      await prisma.order.updateMany({
+        where: {
+          OR: [
+            { id: cleanId },
+            { orderNumber: { equals: cleanId, mode: "insensitive" } },
+          ],
+        },
+        data: updateData,
+      });
+    } catch (dbErr) {
+      console.warn("DB update failed in admin PATCH orders:", dbErr);
+    }
+
+    return NextResponse.json(
+      {
+        success: true,
+        message: "অর্ডার আপডেট হয়েছে",
+        order: updatedOrder || body,
+      },
+      { headers: CORS_HEADERS }
+    );
+  } catch (err: any) {
+    return NextResponse.json(
+      { success: false, error: err.message || "Failed to update order" },
+      { status: 500, headers: CORS_HEADERS }
+    );
+  }
+}

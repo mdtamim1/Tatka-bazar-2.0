@@ -83,6 +83,11 @@ export default function TaskDetailPage() {
   const [verifyingCode, setVerifyingCode] = useState(false);
   const [returnSuccess, setReturnSuccess] = useState(false);
 
+  // Delivery Note / Customer Tracking Update
+  const [inputNote, setInputNote] = useState("");
+  const [submittingNote, setSubmittingNote] = useState(false);
+  const [noteSuccessMsg, setNoteSuccessMsg] = useState("");
+
   useEffect(() => {
     function loadTask() {
       apiFetch<ActiveTask[]>("/rider-portal/tasks/active").then((r) => {
@@ -177,6 +182,46 @@ export default function TaskDetailPage() {
     } else {
       setCodeError(res.error || "ভুল রিটার্ন কোড! দোকানদারের কোড মিলিয়ে নিন।");
       setVerifyingCode(false);
+    }
+  }
+
+  // 4b. Rider Submits Delivery Note / Tracking Note
+  async function handleAddNote(customText?: string) {
+    const textToSend = (customText || inputNote).trim();
+    if (!textToSend || !task) return;
+    setSubmittingNote(true);
+    setNoteSuccessMsg("");
+    try {
+      const res = await apiFetch<{ task: ActiveTask; note: any }>(`/rider-portal/tasks/${id}/note`, {
+        method: "POST",
+        body: JSON.stringify({ note: textToSend }),
+      });
+      if (res.success) {
+        setInputNote("");
+        setNoteSuccessMsg("✅ নোট কাস্টমার ট্র্যাকিং ও অ্যাডমিন প্যানেলে পৌঁছেছে!");
+        const noteObj = {
+          id: `note-${Date.now()}`,
+          note: textToSend,
+          riderName: "রাইডার",
+          createdAt: new Date().toISOString(),
+        };
+        setTask((prev) => {
+          if (!prev) return prev;
+          const prevNotes = prev.riderNotes || [];
+          return {
+            ...prev,
+            riderNote: textToSend,
+            riderNotes: [...prevNotes, noteObj],
+          };
+        });
+        setTimeout(() => setNoteSuccessMsg(""), 4000);
+      } else {
+        alert(res.error || "নোট পাঠানো যায়নি");
+      }
+    } catch {
+      alert("নোট পাঠানো যায়নি");
+    } finally {
+      setSubmittingNote(false);
     }
   }
 
@@ -1070,6 +1115,184 @@ export default function TaskDetailPage() {
             >
               {verifyingCode ? "কোড যাচাই করা হচ্ছে..." : "✅ রিটার্ন কোড যাচাই ও সম্পন্ন করুন"}
             </button>
+          </div>
+        )}
+
+        {/* ─── Rider Delivery Note / Status Update to Customer & Admin ─── */}
+        {!isDelivered && (
+          <div
+            style={{
+              background: "var(--bg-card)",
+              border: "1px solid rgba(56, 189, 248, 0.3)",
+              borderRadius: "var(--r-lg)",
+              padding: "16px 18px",
+              display: "flex",
+              flexDirection: "column",
+              gap: "12px",
+              fontFamily: "var(--font-bn)",
+              boxShadow: "0 4px 20px rgba(0,0,0,0.2)",
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <span style={{ fontSize: "1.2rem" }}>📝</span>
+                <div>
+                  <div style={{ fontSize: ".92rem", fontWeight: 800, color: "var(--text-1)" }}>
+                    ডেলিভারি আপডেট ও কাস্টমার নোট
+                  </div>
+                  <div style={{ fontSize: ".70rem", color: "var(--text-3)" }}>
+                    এখানে নোট দিলে কাস্টমারের লাইভ ট্র্যাকিং ও অ্যাডমিন প্যানেলে সাথে সাথে দেখা যাবে
+                  </div>
+                </div>
+              </div>
+              <span
+                style={{
+                  fontSize: ".65rem",
+                  color: "#38BDF8",
+                  background: "rgba(56, 189, 248, 0.12)",
+                  padding: "3px 8px",
+                  borderRadius: "6px",
+                  fontWeight: 800,
+                  border: "1px solid rgba(56, 189, 248, 0.3)",
+                }}
+              >
+                📡 লাইভ সিঙ্ক
+              </span>
+            </div>
+
+            {/* Quick preset chips */}
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
+              {[
+                "📞 কাস্টমারের সাথে কথা হয়েছে",
+                "⏱️ ৫-১০ মিনিটে পৌঁছাচ্ছি",
+                "🌧️ বৃষ্টির কারণে কিছুটা দেরি হচ্ছে",
+                "🚪 গেটে / দরজায় দাঁড়িয়ে আছি",
+                "💵 খুচরা টাকার সমস্যা হচ্ছে",
+              ].map((chip) => (
+                <button
+                  key={chip}
+                  type="button"
+                  onClick={() => handleAddNote(chip)}
+                  disabled={submittingNote}
+                  style={{
+                    background: "var(--bg-base)",
+                    border: "1px solid var(--border-2)",
+                    color: "var(--text-2)",
+                    borderRadius: "20px",
+                    padding: "5px 11px",
+                    fontSize: ".75rem",
+                    cursor: "pointer",
+                    transition: "all 0.15s ease",
+                    fontFamily: "var(--font-bn)",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.borderColor = "#38BDF8";
+                    e.currentTarget.style.color = "#38BDF8";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.borderColor = "var(--border-2)";
+                    e.currentTarget.style.color = "var(--text-2)";
+                  }}
+                >
+                  + {chip}
+                </button>
+              ))}
+            </div>
+
+            {/* Textarea + Submit */}
+            <div style={{ display: "flex", gap: "8px", alignItems: "flex-end" }}>
+              <textarea
+                value={inputNote}
+                onChange={(e) => setInputNote(e.target.value)}
+                placeholder="কাস্টমার বা অ্যাডমিনের জন্য বিশেষ নোট লিখুন (যেমন: বাড়ি নম্বর খুঁজে পাচ্ছি না)..."
+                rows={2}
+                style={{
+                  flex: 1,
+                  background: "var(--bg-base)",
+                  border: "1px solid var(--border-2)",
+                  borderRadius: "10px",
+                  padding: "8px 12px",
+                  color: "var(--text-1)",
+                  fontSize: ".82rem",
+                  fontFamily: "var(--font-bn)",
+                  resize: "none",
+                  outline: "none",
+                }}
+              />
+              <button
+                type="button"
+                onClick={() => handleAddNote()}
+                disabled={submittingNote || !inputNote.trim()}
+                style={{
+                  background: inputNote.trim()
+                    ? "linear-gradient(135deg, #0284C7, #0369A1)"
+                    : "var(--bg-base)",
+                  border: inputNote.trim() ? "none" : "1px solid var(--border-2)",
+                  color: inputNote.trim() ? "#FFF" : "var(--text-3)",
+                  padding: "10px 16px",
+                  borderRadius: "10px",
+                  fontSize: ".82rem",
+                  fontWeight: 700,
+                  cursor: inputNote.trim() && !submittingNote ? "pointer" : "not-allowed",
+                  fontFamily: "var(--font-bn)",
+                  boxShadow: inputNote.trim() ? "0 4px 14px rgba(2,132,199,0.3)" : "none",
+                  whiteSpace: "nowrap",
+                  height: "54px",
+                }}
+              >
+                {submittingNote ? "পাঠাচ্ছে..." : "নোট পাঠান 🚀"}
+              </button>
+            </div>
+
+            {noteSuccessMsg && (
+              <div
+                style={{
+                  fontSize: ".75rem",
+                  color: "#10B981",
+                  background: "rgba(16, 185, 129, 0.1)",
+                  padding: "6px 10px",
+                  borderRadius: "6px",
+                  fontWeight: 700,
+                }}
+              >
+                {noteSuccessMsg}
+              </div>
+            )}
+
+            {/* List of Previous Notes */}
+            {task.riderNotes && task.riderNotes.length > 0 && (
+              <div style={{ marginTop: "4px", borderTop: "1px solid var(--border-1)", paddingTop: "8px" }}>
+                <div style={{ fontSize: ".72rem", color: "var(--text-3)", marginBottom: "6px" }}>
+                  ইতিপূর্বে পাঠানো নোটসমূহ:
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                  {task.riderNotes.map((rn, idx) => (
+                    <div
+                      key={rn.id || idx}
+                      style={{
+                        background: "var(--bg-base)",
+                        padding: "8px 10px",
+                        borderRadius: "8px",
+                        borderLeft: "3px solid #38BDF8",
+                        fontSize: ".78rem",
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                      }}
+                    >
+                      <div>
+                        <span style={{ color: "var(--text-1)", fontWeight: 600 }}>💬 {rn.note}</span>
+                      </div>
+                      <span style={{ fontSize: ".68rem", color: "var(--text-3)", whiteSpace: "nowrap" }}>
+                        {rn.createdAt
+                          ? new Date(rn.createdAt).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })
+                          : "এইমাত্র"}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         )}
 

@@ -158,6 +158,36 @@ export async function POST(request: Request) {
       );
     }
 
+    if (action === "ADD_NOTE") {
+      const targetId = body.taskId || body.orderId;
+      const noteText = (body.note || body.text || "").trim();
+      const riderName = body.riderName || "রাইডার";
+      const task = tasks.find((t: any) => t.id === targetId || t.orderNumber === targetId);
+
+      if (task) {
+        if (!task.notes) task.notes = [];
+        const newNoteObj = {
+          id: `note-${Date.now()}`,
+          note: noteText,
+          riderName,
+          createdAt: new Date().toISOString(),
+        };
+        task.notes.push(newNoteObj);
+        task.lastNote = noteText;
+        task.riderNote = noteText;
+
+        return NextResponse.json(
+          { success: true, message: "ডেলিভারি নোট সফলভাবে যুক্ত হয়েছে", note: newNoteObj, task },
+          { headers: CORS_HEADERS }
+        );
+      }
+
+      return NextResponse.json(
+        { success: false, error: "টাস্ক পাওয়া যায়নি" },
+        { status: 404, headers: CORS_HEADERS }
+      );
+    }
+
     return NextResponse.json(
       { success: false, error: `Unknown action ${action}` },
       { status: 400, headers: CORS_HEADERS }

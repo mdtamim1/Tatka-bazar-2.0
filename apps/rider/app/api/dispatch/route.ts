@@ -205,6 +205,43 @@ export async function POST(request: Request) {
       );
     }
 
+    // 3b. Add Delivery Note by Rider
+    if (action === "ADD_NOTE") {
+      const targetId = body.taskId || body.orderId;
+      const noteText = (body.note || body.text || "").trim();
+      const riderName = body.riderName || "রাইডার";
+      const idx = tasks.findIndex((t: any) => t.id === targetId || t.orderNumber === targetId);
+
+      if (idx !== -1 && tasks[idx]) {
+        if (!tasks[idx].notes) tasks[idx].notes = [];
+        const newNoteObj = {
+          id: `note-${Date.now()}`,
+          note: noteText,
+          riderName,
+          createdAt: new Date().toISOString(),
+        };
+        tasks[idx].notes.push(newNoteObj);
+        tasks[idx].lastNote = noteText;
+        tasks[idx].riderNote = noteText;
+        globalScope._tatka_dispatch_tasks = tasks;
+
+        return NextResponse.json(
+          {
+            success: true,
+            message: "ডেলিভারি নোট সফলভাবে যুক্ত হয়েছে।",
+            note: newNoteObj,
+            task: tasks[idx],
+          },
+          { headers: CORS_HEADERS }
+        );
+      }
+
+      return NextResponse.json(
+        { success: false, error: "টাস্ক পাওয়া যায়নি" },
+        { status: 404, headers: CORS_HEADERS }
+      );
+    }
+
     // 4. Send Chat Message between Vendor and Rider
     if (action === "SEND_CHAT") {
       const orderId = body.orderId || "task-01";

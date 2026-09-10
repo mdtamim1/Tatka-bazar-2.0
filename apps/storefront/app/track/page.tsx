@@ -124,7 +124,7 @@ export default function TrackSearchPage() {
         >
           <form onSubmit={handleSearch} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
             <label style={{ fontSize: "0.92rem", fontWeight: 700, color: "var(--text-main)" }}>
-              Enter Order Number (e.g. TB-194080)
+              অর্ডার নম্বর অথবা মোবাইল নম্বর দিন (Enter Order ID or Phone Number)
             </label>
 
             <div style={{ display: "flex", gap: "10px" }}>
@@ -143,7 +143,7 @@ export default function TrackSearchPage() {
                   type="text"
                   value={searchInput}
                   onChange={(e) => setSearchInput(e.target.value)}
-                  placeholder="TB-194080 or your phone number..."
+                  placeholder="যেমন: TB-194080 অথবা 017XXXXXXXX..."
                   style={{
                     width: "100%",
                     padding: "14px 14px 14px 42px",
