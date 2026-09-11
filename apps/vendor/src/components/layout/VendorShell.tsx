@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import VendorHeader from "./VendorHeader";
 import VendorMobileNav from "./VendorMobileNav";
 import NotificationDrawer from "@/components/common/NotificationDrawer";
@@ -15,6 +15,7 @@ import { subscribeSyncEvent } from "@/lib/sync";
 import { audioAlert } from "@/utils/audioAlert";
 import VendorSuspendedModal from "@/components/common/VendorSuspendedModal";
 import { useVendorSessionGuard } from "@/hooks/useVendorSessionGuard";
+import { getToken, clearToken, apiFetch } from "@/lib/api";
 
 export default function VendorShell({
   children,
@@ -22,6 +23,7 @@ export default function VendorShell({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const router = useRouter();
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [isRoleModalOpen, setIsRoleModalOpen] = useState(false);
   const [isShortcutsOpen, setIsShortcutsOpen] = useState(false);
@@ -29,6 +31,9 @@ export default function VendorShell({
   // Live store values
   const {
     profile,
+    updateProfile,
+    setOrders,
+    setProducts,
     incomingOrderAlert,
     claimLockAlert,
     setClaimLockAlert,
@@ -40,6 +45,55 @@ export default function VendorShell({
     setTrackingOrder,
     updateOrderStatus,
   } = useVendorStore();
+
+  const isAuthPage =
+    pathname === "/login" ||
+    pathname === "/signup" ||
+    pathname === "/register" ||
+    pathname === "/onboarding";
+
+  // Hydrate vendor state directly from PostgreSQL database on load
+  useEffect(() => {
+    if (isAuthPage) return;
+
+    const token = getToken();
+    if (!token) {
+      router.replace("/login");
+      return;
+    }
+
+    // Hydrate vendor profile from database
+    apiFetch<any>("/api/vendor-portal/me")
+      .then((res) => {
+        if (res.success && res.data) {
+          updateProfile(res.data);
+        }
+      })
+      .catch((err) => {
+        if (err?.message?.includes("401") || err?.message?.includes("Unauthorized")) {
+          clearToken();
+          router.replace("/login");
+        }
+      });
+
+    // Hydrate live orders from database
+    apiFetch<any[]>("/api/vendor-portal/orders")
+      .then((res) => {
+        if (res.success && Array.isArray(res.data)) {
+          setOrders(res.data);
+        }
+      })
+      .catch(() => {});
+
+    // Hydrate products from database
+    apiFetch<any[]>("/api/vendor-portal/products")
+      .then((res) => {
+        if (res.success && Array.isArray(res.data)) {
+          setProducts(res.data);
+        }
+      })
+      .catch(() => {});
+  }, [isAuthPage, router, updateProfile, setOrders, setProducts]);
 
   // Real-time Session Guard (Auto-detects Hub suspension and triggers auto-logout)
   const { isSuspended, suspendReason, suspendedAt, handleLogout } = useVendorSessionGuard(
@@ -99,12 +153,6 @@ export default function VendorShell({
 
     return () => unsubscribe();
   }, [profile.id, setClaimLockAlert, updateOrderStatus]);
-
-  const isAuthPage =
-    pathname === "/login" ||
-    pathname === "/signup" ||
-    pathname === "/register" ||
-    pathname === "/onboarding";
 
   if (isAuthPage) {
     return (

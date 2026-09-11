@@ -26,6 +26,7 @@ import {
 import { Language } from "@/utils/translations";
 import { audioAlert } from "@/utils/audioAlert";
 import { broadcastSyncEvent, dispatchOrderToRiders } from "@/lib/sync";
+import { apiFetch } from "@/lib/api";
 
 interface VendorState {
   // Localization & Role
@@ -79,6 +80,8 @@ interface VendorState {
   acceptOrder: (orderId: string) => void;
   declineOrder: (orderId: string) => void;
   updateProfile: (updates: Partial<VendorProfile>) => void;
+  setOrders: (orders: Order[]) => void;
+  setProducts: (products: Product[]) => void;
 
   // Order Operations
   updateOrderStatus: (orderId: string, status: OrderStatus) => void;
@@ -336,6 +339,14 @@ export const useVendorStore = create<VendorState>()(
         }));
       },
 
+      setOrders: (orders) => {
+        set({ orders });
+      },
+
+      setProducts: (products) => {
+        set({ products });
+      },
+
       updateOrderStatus: (orderId: string, newStatus: OrderStatus) => {
         set((state) => {
           const updatedOrders = state.orders.map((o) => {
@@ -437,6 +448,13 @@ export const useVendorStore = create<VendorState>()(
           return { orders: updatedOrders, commissionLedger: updatedLedger, orderHistory: updatedHistory };
         });
         audioAlert.playSuccessSound();
+
+        if (typeof window !== "undefined") {
+          apiFetch("/api/vendor-portal/orders", {
+            method: "PATCH",
+            body: JSON.stringify({ orderId, status: newStatus }),
+          }).catch(() => {});
+        }
       },
 
       reconcileItemWeight: (orderId: string, itemId: string, actualWeight: number) => {
@@ -473,6 +491,13 @@ export const useVendorStore = create<VendorState>()(
           return { orders: updatedOrders };
         });
         audioAlert.playSuccessSound();
+
+        if (typeof window !== "undefined") {
+          apiFetch("/api/vendor-portal/orders", {
+            method: "PATCH",
+            body: JSON.stringify({ orderId, itemId, actualWeight }),
+          }).catch(() => {});
+        }
       },
 
       toggleItemPacked: (orderId: string, itemId: string) => {
@@ -611,6 +636,33 @@ export const useVendorStore = create<VendorState>()(
           products: [newProduct, ...state.products],
         }));
         audioAlert.playSuccessSound();
+
+        if (typeof window !== "undefined") {
+          apiFetch<any>("/api/vendor-portal/products", {
+            method: "POST",
+            body: JSON.stringify({
+              name: productData.name,
+              nameBn: productData.nameBn,
+              price: productData.pricePerUnit,
+              stock: productData.stockQty,
+              category: productData.category,
+              image: productData.imageUrl,
+              unit: productData.unit,
+            }),
+          })
+            .then((res) => {
+              if (res.success && res.data && res.data.id) {
+                const newDbId = res.data.id;
+                // Update product id with db generated id
+                set((state) => ({
+                  products: state.products.map((p) =>
+                    p.id === id ? { ...p, id: newDbId } : p
+                  ),
+                }));
+              }
+            })
+            .catch(() => {});
+        }
       },
 
       updateProduct: (id: string, updates: Partial<Product>) => {
@@ -860,6 +912,13 @@ export const useVendorStore = create<VendorState>()(
         set((state) => ({
           withdrawRequests: [newReq, ...state.withdrawRequests],
         }));
+
+        if (typeof window !== "undefined") {
+          apiFetch("/api/vendor-portal/settlements", {
+            method: "POST",
+            body: JSON.stringify({ amount, method, account }),
+          }).catch(() => {});
+        }
       },
 
       requestSettlement: (orderIds, orderDisplayIds, totalAmount) => {

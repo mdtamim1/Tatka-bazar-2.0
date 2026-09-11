@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useVendorStore } from "@/store/vendorStore";
+import { apiFetch, setToken, setStoredUser } from "@/lib/api";
 
 // Animated floating orbs (Same as Rider Portal)
 function Orbs() {
@@ -75,7 +76,7 @@ export default function SignupPage() {
     { id: "গ্রোসারি", label: "ডেইরি ও গ্রোসারি", icon: "🥛" },
   ];
 
-  function handleRegister(e: React.FormEvent) {
+  async function handleRegister(e: React.FormEvent) {
     e.preventDefault();
     if (!name.trim()) {
       setError("আপনার পুরো নাম লিখুন");
@@ -101,17 +102,40 @@ export default function SignupPage() {
     setLoading(true);
     setError("");
 
-    setTimeout(() => {
+    try {
+      const res = await apiFetch<{ accessToken: string; user: any }>("/api/auth/vendor/register", {
+        method: "POST",
+        body: JSON.stringify({
+          name: name.trim(),
+          phone: phone.trim(),
+          storeName: storeName.trim(),
+          category,
+          password,
+        }),
+      });
+
+      if (!res.success || !res.data) {
+        setError(res.error || "রেজিস্ট্রেশন ব্যর্থ হয়েছে। সঠিক তথ্য দিন।");
+        setLoading(false);
+        return;
+      }
+
+      setToken(res.data.accessToken);
+      setStoredUser(res.data.user);
       updateProfile({
+        id: res.data.user.id,
         ownerName: name.trim(),
         phone: phone.trim(),
         storeName: storeName.trim(),
         storeNameBn: storeName.trim(),
-        category: category,
+        category,
       });
       setRole("OWNER");
       router.replace("/");
-    }, 600);
+    } catch (err: any) {
+      setError("সার্ভারের সাথে সংযোগ স্থাপন করা যায়নি।");
+      setLoading(false);
+    }
   }
 
 

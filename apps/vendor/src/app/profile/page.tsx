@@ -1,12 +1,15 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { useVendorStore } from "@/store/vendorStore";
 import { translations } from "@/utils/translations";
+import { apiFetch, clearToken } from "@/lib/api";
 
 const STEPS = ["দোকান ও ব্যক্তিগত তথ্য", "ঠিকানা ও ডেলিভারি হাব", "পরিচয়পত্র ও লাইসেন্স"];
 
 export default function VendorProfilePage() {
+  const router = useRouter();
   const { language, profile, orders, reviews, updateProfile, fullResetVendorStore } = useVendorStore();
   const t = translations[language];
 
@@ -39,41 +42,83 @@ export default function VendorProfilePage() {
     photoUrl: profile.logoUrl || "",
   });
 
+  useEffect(() => {
+    if (profile && profile.id) {
+      setForm((prev) => ({
+        ...prev,
+        storeName: profile.storeName || prev.storeName,
+        storeNameBn: profile.storeNameBn || prev.storeNameBn,
+        ownerName: profile.ownerName || prev.ownerName,
+        fatherName: profile.fatherName || prev.fatherName,
+        motherName: profile.motherName || prev.motherName,
+        dateOfBirth: profile.dateOfBirth || prev.dateOfBirth,
+        phone: profile.phone || prev.phone,
+        email: profile.email || prev.email,
+        address: profile.address || prev.address,
+        permanentAddress: profile.permanentAddress || prev.permanentAddress,
+        nidNumber: profile.nidNumber || prev.nidNumber,
+        tradeLicense: profile.tradeLicense || prev.tradeLicense,
+        tinBin: profile.tinBin || prev.tinBin,
+        payoutMethod: profile.payoutMethod || prev.payoutMethod,
+        payoutAccount: profile.payoutAccount || prev.payoutAccount,
+        openTime: profile.operatingHours?.open || prev.openTime,
+        closeTime: profile.operatingHours?.close || prev.closeTime,
+        vacationMode: profile.vacationMode ?? prev.vacationMode,
+        nidFrontUrl: profile.nidFrontUrl || prev.nidFrontUrl,
+        nidBackUrl: profile.nidBackUrl || prev.nidBackUrl,
+        photoUrl: profile.logoUrl || prev.photoUrl,
+      }));
+    }
+  }, [profile]);
+
   const inp = (field: string) => (val: any) => {
     setForm((f) => ({ ...f, [field]: val }));
   };
 
-  const submitProfile = (e?: React.FormEvent) => {
+  const submitProfile = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     setSaving(true);
-    setTimeout(() => {
-      updateProfile({
-        storeName: form.storeName,
-        storeNameBn: form.storeNameBn,
-        ownerName: form.ownerName,
-        fatherName: form.fatherName,
-        motherName: form.motherName,
-        dateOfBirth: form.dateOfBirth,
-        phone: form.phone,
-        email: form.email,
-        address: form.address,
-        permanentAddress: form.permanentAddress,
-        nidNumber: form.nidNumber,
-        tradeLicense: form.tradeLicense,
-        tinBin: form.tinBin,
-        payoutMethod: form.payoutMethod as any,
-        payoutAccount: form.payoutAccount,
-        operatingHours: { open: form.openTime, close: form.closeTime },
-        vacationMode: form.vacationMode,
-        nidFrontUrl: form.nidFrontUrl,
-        nidBackUrl: form.nidBackUrl,
-        logoUrl: form.photoUrl,
-        kycStatus: profile.kycStatus || "PENDING",
+    const updates = {
+      storeName: form.storeName,
+      storeNameBn: form.storeNameBn,
+      ownerName: form.ownerName,
+      fatherName: form.fatherName,
+      motherName: form.motherName,
+      dateOfBirth: form.dateOfBirth,
+      phone: form.phone,
+      email: form.email,
+      address: form.address,
+      permanentAddress: form.permanentAddress,
+      nidNumber: form.nidNumber,
+      tradeLicense: form.tradeLicense,
+      tinBin: form.tinBin,
+      payoutMethod: form.payoutMethod as any,
+      payoutAccount: form.payoutAccount,
+      operatingHours: { open: form.openTime, close: form.closeTime },
+      vacationMode: form.vacationMode,
+      nidFrontUrl: form.nidFrontUrl,
+      nidBackUrl: form.nidBackUrl,
+      logoUrl: form.photoUrl,
+      kycStatus: profile.kycStatus || "PENDING",
+    };
+
+    try {
+      const res = await apiFetch<any>("/api/vendor-portal/me", {
+        method: "PATCH",
+        body: JSON.stringify(updates),
       });
+      if (res.success && res.data) {
+        updateProfile(res.data);
+      } else {
+        updateProfile(updates);
+      }
+    } catch {
+      updateProfile(updates);
+    } finally {
       setSaving(false);
       setSaved(true);
       setTimeout(() => setSaved(false), 4000);
-    }, 400);
+    }
   };
 
   const displayName = profile.storeNameBn || profile.storeName || "তাতকা মার্চেন্ট";
@@ -119,6 +164,13 @@ export default function VendorProfilePage() {
       star2: reviews.filter((r) => r.rating === 2).length,
       star1: reviews.filter((r) => r.rating === 1).length,
     },
+  };
+
+  const handleLogout = () => {
+    if (confirm("আপনি কি নিশ্চিতভাবে ভেন্ডর অ্যাকাউন্ট থেকে লগআউট করতে চান?")) {
+      clearToken();
+      router.replace("/login");
+    }
   };
 
   const handleResetVendorPanel = () => {
@@ -523,6 +575,36 @@ export default function VendorProfilePage() {
           </div>
         </>
       )}
+
+      {/* ─── Account Logout ─── */}
+      <div style={{ marginTop: 24, padding: "16px", background: "rgba(255,255,255,.03)", border: "1px solid var(--border-1)", borderRadius: "var(--r-lg)", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
+        <div>
+          <div style={{ fontSize: ".92rem", fontWeight: 700, color: "var(--text-1)", fontFamily: "var(--font-bn)" }}>
+            🚪 ভেন্ডর অ্যাকাউন্ট লগআউট
+          </div>
+          <div style={{ fontSize: ".76rem", color: "var(--text-3)", fontFamily: "var(--font-bn)", marginTop: 2 }}>
+            বর্তমান সেশন নিরাপদে সমাপ্ত করতে লগআউট করুন।
+          </div>
+        </div>
+        <button
+          id="btn-vendor-logout"
+          type="button"
+          onClick={handleLogout}
+          style={{
+            padding: "8px 18px",
+            background: "rgba(239,68,68,.12)",
+            color: "#f87171",
+            border: "1px solid rgba(239,68,68,.3)",
+            borderRadius: "var(--r-md)",
+            fontSize: ".84rem",
+            fontWeight: 700,
+            fontFamily: "var(--font-bn)",
+            cursor: "pointer",
+          }}
+        >
+          লগআউট করুন
+        </button>
+      </div>
 
       {/* ─── Panel Reset ─── */}
       <div style={{ marginTop: 20, padding: "18px 16px", background: "rgba(239,68,68,.08)", border: "1px dashed rgba(239,68,68,.3)", borderRadius: "var(--r-lg)", textAlign: "center" }}>

@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useVendorStore } from "@/store/vendorStore";
+import { apiFetch, setToken, setStoredUser } from "@/lib/api";
 
 // Animated floating orbs in background (Same as Rider Portal)
 function Orbs() {
@@ -131,10 +132,26 @@ export default function LoginPage() {
       return;
     }
 
-    setTimeout(() => {
+    try {
+      const res = await apiFetch<{ accessToken: string; user: any }>("/api/auth/vendor/login", {
+        method: "POST",
+        body: JSON.stringify({ identifier: identifier.trim(), password }),
+      });
+
+      if (!res.success || !res.data) {
+        setError(res.error || "লগইন ব্যর্থ হয়েছে। সঠিক তথ্য দিন।");
+        setLoading(false);
+        return;
+      }
+
+      setToken(res.data.accessToken);
+      setStoredUser(res.data.user);
       setRole(loginType);
       router.replace("/");
-    }, 600);
+    } catch (err: any) {
+      setError("সার্ভারের সাথে সংযোগ স্থাপন করা যায়নি।");
+      setLoading(false);
+    }
   }
 
 
