@@ -2,100 +2,252 @@ import { emitSyncEvent } from "./sync";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
 
+let _inMemoryDuty: "ONLINE" | "OFFLINE" = "ONLINE";
+
 function getToken(): string | null {
   if (typeof window === "undefined") return null;
   return localStorage.getItem("rider_token");
 }
 
 export function setToken(token: string) {
-  localStorage.setItem("rider_token", token);
+  // Kept for backward-compatibility while migrating to HttpOnly cookies
+  if (typeof window !== "undefined") {
+    try { localStorage.setItem("rider_token", token); } catch {}
+  }
 }
 
 export function clearToken() {
-  localStorage.removeItem("rider_token");
-  localStorage.removeItem("rider_user");
+  if (typeof window !== "undefined") {
+    try {
+      localStorage.removeItem("rider_token");
+      localStorage.removeItem("rider_user");
+      localStorage.removeItem("rider_duty_status");
+    } catch {}
+    fetch("/api/auth/rider/logout", { method: "POST" }).catch(() => {});
+  }
 }
 
 export function getDutyStatus(): "ONLINE" | "OFFLINE" {
-  if (typeof window === "undefined") return "ONLINE";
-  return (localStorage.getItem("rider_duty_status") as "ONLINE" | "OFFLINE") || "ONLINE";
+  return _inMemoryDuty;
 }
 
-export function setDutyStatus(status: "ONLINE" | "OFFLINE") {
-  if (typeof window === "undefined") return;
-  localStorage.setItem("rider_duty_status", status);
-  window.dispatchEvent(new CustomEvent("rider_duty_change", { detail: { status } }));
+export function setDutyStatus(status: "ONLINE" | "OFFLINE", riderId?: string, riderName?: string) {
+  _inMemoryDuty = status;
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new CustomEvent("rider_duty_change", { detail: { status } }));
+  }
   if (status === "ONLINE") {
-    const user = localStorage.getItem("rider_user");
-    const name = user ? (JSON.parse(user).name || "রাইডার") : "রাইডার";
-    const id = user ? (JSON.parse(user).id || "rider-live") : "rider-live";
-    startGPSBroadcast(id, name);
+    startGPSBroadcast(riderId || "rider-live", riderName || "রাইডার");
   } else {
     stopGPSBroadcast();
   }
 }
 
 // ---------------------------------------------------------------------------
-// GPS Live Broadcast (Rider → localStorage → Admin can poll)
+// Adaptive GPS Live Broadcast — Battery Saving & Delta Compression Engine
 // ---------------------------------------------------------------------------
 let _gpsWatchId: number | null = null;
+let _gpsRetryCount = 0;
+const GPS_MAX_RETRIES = 3;
+const GPS_RETRY_DELAY_MS = 5000;
+
+export type GpsTrackingMode = "IDLE" | "ON_THE_WAY";
+let _gpsMode: GpsTrackingMode = "IDLE";
+let _lastBroadcastCoords: { lat: number; lng: number; ts: number } | null = null;
+let _activeRiderId = "rider-live";
+let _activeRiderName = "রাইডার";
+
+const MIN_MOVEMENT_METERS = 10; // Ignore GPS jitter / standing in traffic (< 10m)
+const HEARTBEAT_INTERVAL_MS = 50000; // Force heartbeat every 50s even if stationary
+const IDLE_MIN_INTERVAL_MS = 25000; // In IDLE: ping at most once every 25s
+const ACTIVE_MIN_INTERVAL_MS = 3500; // In ON_THE_WAY: ping every 3-5s
+
+function haversineMeters(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const R = 6371000;
+  const dLat = (lat2 - lat1) * (Math.PI / 180);
+  const dLon = (lon2 - lon1) * (Math.PI / 180);
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * (Math.PI / 180)) *
+      Math.cos(lat2 * (Math.PI / 180)) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
+
+export function setGpsMode(mode: GpsTrackingMode) {
+  if (_gpsMode === mode) return;
+  _gpsMode = mode;
+  // If active, restart watch with appropriate accuracy profile
+  if (_gpsWatchId !== null && typeof window !== "undefined") {
+    startGPSBroadcast(_activeRiderId, _activeRiderName);
+  }
+}
+
+export function getGpsMode(): GpsTrackingMode {
+  return _gpsMode;
+}
 
 export function startGPSBroadcast(riderId: string, riderName: string) {
-  if (typeof window === "undefined" || !navigator.geolocation) return;
+  _activeRiderId = riderId;
+  _activeRiderName = riderName;
+
+  if (typeof window === "undefined" || !navigator.geolocation) {
+    // Dispatch event so UI can show a warning
+    window?.dispatchEvent(new CustomEvent("rider_gps_unavailable", {
+      detail: { reason: "Geolocation API not available" }
+    }));
+    return;
+  }
+
   // Clear existing watch
   if (_gpsWatchId !== null) {
     navigator.geolocation.clearWatch(_gpsWatchId);
     _gpsWatchId = null;
   }
-  _gpsWatchId = navigator.geolocation.watchPosition(
-    (pos) => {
-      const payload = {
-        riderId,
-        riderName,
-        lat: pos.coords.latitude,
-        lng: pos.coords.longitude,
-        accuracy: pos.coords.accuracy,
-        duty: "ONLINE",
-        ts: Date.now(),
-      };
-      localStorage.setItem(`rider_gps_${riderId}`, JSON.stringify(payload));
-      // Notify same-tab listeners
-      window.dispatchEvent(new CustomEvent("rider_gps_update", { detail: payload }));
 
-      // Broadcast to Central Fastify API Engine
-      const token = getToken();
-      fetch(`${API_BASE}/api/riders/live-location`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
-        body: JSON.stringify({
+  _gpsRetryCount = 0;
+
+  function startWatch() {
+    const isHighAccuracy = _gpsMode === "ON_THE_WAY";
+
+    _gpsWatchId = navigator.geolocation.watchPosition(
+      (pos) => {
+        _gpsRetryCount = 0; // Reset on success
+
+        // Native / Android Mock Location check
+        const isMock = Boolean(
+          (pos as any).mocked ||
+          (pos.coords as any)?.isMocked ||
+          (pos as any).isMock
+        );
+
+        const lat = pos.coords.latitude;
+        const lng = pos.coords.longitude;
+        const now = Date.now();
+
+        const payload = {
           riderId,
           riderName,
-          lat: payload.lat,
-          lng: payload.lng,
-          accuracy: payload.accuracy,
-          dutyStatus: "ONLINE",
-        }),
-      }).catch(() => {});
-    },
-    (err) => {
-      // GPS denied - write a Dhaka fallback so admin map still shows rider
-      const payload = {
-        riderId,
-        riderName,
-        lat: 23.8103 + (Math.random() - 0.5) * 0.05,
-        lng: 90.4125 + (Math.random() - 0.5) * 0.05,
-        accuracy: 9999,
-        duty: "ONLINE",
-        ts: Date.now(),
-        gpsError: err.message,
-      };
-      localStorage.setItem(`rider_gps_${riderId}`, JSON.stringify(payload));
-    },
-    { enableHighAccuracy: true, maximumAge: 8000, timeout: 10000 }
-  );
+          lat,
+          lng,
+          accuracy: pos.coords.accuracy,
+          speed: pos.coords.speed,
+          heading: pos.coords.heading,
+          isMock,
+          duty: "ONLINE",
+          mode: _gpsMode,
+          ts: now,
+        };
+
+        // Store locally for same-tab access
+        try {
+          localStorage.setItem(`rider_gps_${riderId}`, JSON.stringify(payload));
+        } catch {}
+
+        // Notify same-tab listeners
+        window.dispatchEvent(new CustomEvent("rider_gps_update", { detail: payload }));
+
+        // ── Adaptive Throttling Check (Battery & Data Saving) ──
+        if (_lastBroadcastCoords) {
+          const elapsed = now - _lastBroadcastCoords.ts;
+          const minInterval = _gpsMode === "ON_THE_WAY" ? ACTIVE_MIN_INTERVAL_MS : IDLE_MIN_INTERVAL_MS;
+
+          // 1. Time throttle
+          if (elapsed < minInterval) {
+            return;
+          }
+
+          // 2. Movement check (< 10m in traffic / resting)
+          const distanceMeters = haversineMeters(
+            _lastBroadcastCoords.lat,
+            _lastBroadcastCoords.lng,
+            lat,
+            lng
+          );
+
+          if (distanceMeters < MIN_MOVEMENT_METERS && elapsed < HEARTBEAT_INTERVAL_MS) {
+            // Standing still or in traffic jam — skip redundant API network transmission
+            return;
+          }
+        }
+
+        // Passed throttle: record this broadcast
+        _lastBroadcastCoords = { lat, lng, ts: now };
+
+        // Broadcast compact delta payload to Central API Engine with fetch + retry
+        const token = getToken();
+        const sendWithRetry = (attempt = 0): Promise<void> => {
+          return fetch(`${API_BASE}/api/riders/live-location`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              ...(token ? { Authorization: `Bearer ${token}` } : {}),
+            },
+            body: JSON.stringify({
+              riderId,
+              lat: payload.lat,
+              lng: payload.lng,
+              accuracy: payload.accuracy,
+              speed: payload.speed,
+              heading: payload.heading,
+              isMock: payload.isMock,
+              dutyStatus: "ONLINE",
+              mode: _gpsMode,
+              ts: payload.ts,
+            }),
+            signal: AbortSignal.timeout(5000),
+          }).then(async (res) => {
+            if (res.status === 403) {
+              const data = await res.json().catch(() => ({}));
+              if (data?.fraudAlert) {
+                window.dispatchEvent(new CustomEvent("rider_security_alert", { detail: data }));
+              }
+            }
+          }).catch(() => {
+            if (attempt < 2) {
+              return new Promise((res) => setTimeout(res, 2000 * (attempt + 1)))
+                .then(() => sendWithRetry(attempt + 1));
+            }
+          });
+        };
+        sendWithRetry();
+      },
+      (err) => {
+        // GPS error — dispatch event for UI warning
+        window.dispatchEvent(new CustomEvent("rider_gps_error", {
+          detail: { code: err.code, message: err.message }
+        }));
+
+        if (err.code === 1) {
+          // PERMISSION_DENIED — don't retry, user must grant
+          console.warn("[GPS] Permission denied by user");
+          return;
+        }
+
+        // POSITION_UNAVAILABLE or TIMEOUT — retry with backoff
+        if (_gpsRetryCount < GPS_MAX_RETRIES) {
+          _gpsRetryCount++;
+          console.warn(`[GPS] Error ${err.code}, retrying (${_gpsRetryCount}/${GPS_MAX_RETRIES})...`);
+          setTimeout(() => {
+            if (_gpsWatchId !== null) {
+              navigator.geolocation.clearWatch(_gpsWatchId);
+              _gpsWatchId = null;
+            }
+            startWatch();
+          }, GPS_RETRY_DELAY_MS * _gpsRetryCount);
+        }
+      },
+      {
+        enableHighAccuracy: isHighAccuracy,
+        maximumAge: isHighAccuracy ? 3000 : 15000,
+        timeout: 15000,
+      }
+    );
+  }
+
+  startWatch();
 }
 
 export function stopGPSBroadcast() {
@@ -1345,7 +1497,7 @@ export async function apiFetch<T = unknown>(
     : `${API_BASE}${path}`;
 
   try {
-    const res = await fetch(targetUrl, { ...options, headers });
+    const res = await fetch(targetUrl, { ...options, headers, credentials: "include" });
     const json = await res.json();
     if (res.status === 401) {
       clearToken();
@@ -1681,14 +1833,25 @@ export function getRiderActiveSos(riderId: string): SosAlert | null {
   return alerts.find(a => a.riderId === riderId && a.status === "ACTIVE") || null;
 }
 
-export function triggerSosAlert(data: {
+export async function triggerSosAlert(data: {
   riderId: string;
   riderName: string;
   riderPhone: string;
   lat: number;
   lng: number;
   reason?: string;
-}): SosAlert {
+}): Promise<SosAlert> {
+  // 1. Persist to backend DB (Hub can see it)
+  try {
+    await apiFetch("/rider-portal/sos", {
+      method: "POST",
+      body: JSON.stringify({ lat: data.lat, lng: data.lng, reason: data.reason }),
+    });
+  } catch {
+    // Non-fatal — fall through to localStorage fallback
+  }
+
+  // 2. Also store locally for instant UI feedback
   const alerts = getActiveSosAlerts().filter(a => a.riderId !== data.riderId);
   const newAlert: SosAlert = {
     id: `sos-${Date.now()}`,
@@ -1711,12 +1874,19 @@ export function triggerSosAlert(data: {
   return newAlert;
 }
 
-export function resolveSosAlert(riderId: string): void {
+export async function resolveSosAlert(riderId: string): Promise<void> {
+  // Resolve on backend
+  try {
+    await apiFetch("/rider-portal/sos/resolve", { method: "POST" });
+  } catch {
+    // Non-fatal
+  }
+  // Also clear locally
   const alerts = getActiveSosAlerts();
   const updated = alerts.map(a => {
     if (a.riderId === riderId) return { ...a, status: "RESOLVED" as const };
     return a;
-  }).filter(a => a.status === "ACTIVE"); // keep active ones in the list
+  }).filter(a => a.status === "ACTIVE");
   if (typeof window !== "undefined") {
     try {
       localStorage.setItem(SOS_STORAGE_KEY, JSON.stringify(updated));
@@ -1791,4 +1961,24 @@ export function getPerformanceData(): RiderPerformance {
     if (raw) return JSON.parse(raw);
   } catch {}
   return DEFAULT_PERFORMANCE;
+}
+
+/**
+ * Fetch live performance data from backend API.
+ * Falls back to cached localStorage data if unavailable.
+ */
+export async function fetchPerformanceData(): Promise<RiderPerformance> {
+  try {
+    const res = await apiFetch<RiderPerformance>("/rider-portal/performance");
+    if (res.success && res.data) {
+      // Cache to localStorage for instant load next time
+      if (typeof window !== "undefined") {
+        try { localStorage.setItem("tatka_rider_performance", JSON.stringify(res.data)); } catch {}
+      }
+      return res.data;
+    }
+  } catch {
+    // Network error — use cached
+  }
+  return getPerformanceData();
 }

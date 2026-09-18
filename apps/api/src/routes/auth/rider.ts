@@ -1,7 +1,6 @@
 import type { FastifyInstance } from "fastify";
 import bcrypt from "bcryptjs";
 import { prisma } from "@tatka-bazar/database";
-import { loginSchema } from "@tatka-bazar/shared";
 
 export async function riderAuthRoutes(fastify: FastifyInstance) {
   // POST /auth/rider/register — self-registration for riders
@@ -67,6 +66,12 @@ export async function riderAuthRoutes(fastify: FastifyInstance) {
         email: rider.email,
       });
 
+      const isProd = process.env["NODE_ENV"] === "production";
+      reply.header(
+        "Set-Cookie",
+        `rider_token=${accessToken}; Path=/; Max-Age=604800; HttpOnly; SameSite=Lax${isProd ? "; Secure" : ""}`
+      );
+
       return reply.status(201).send({
         success: true,
         data: {
@@ -122,6 +127,12 @@ export async function riderAuthRoutes(fastify: FastifyInstance) {
       email: rider.email,
     });
 
+    const isProd = process.env["NODE_ENV"] === "production";
+    reply.header(
+      "Set-Cookie",
+      `rider_token=${accessToken}; Path=/; Max-Age=604800; HttpOnly; SameSite=Lax${isProd ? "; Secure" : ""}`
+    );
+
     return reply.send({
       success: true,
       data: {
@@ -138,5 +149,44 @@ export async function riderAuthRoutes(fastify: FastifyInstance) {
         },
       },
     });
+  });
+
+  // POST /auth/rider/logout — Clear cookie and set duty status OFFLINE in DB
+  fastify.post("/logout", async (request, reply) => {
+    try {
+      let riderId: string | undefined;
+
+      // Extract riderId from JWT or cookie
+      try {
+        const payload = await request.jwtVerify() as { sub: string };
+        riderId = payload?.sub;
+      } catch {
+        const cookieHeader = request.headers.cookie || "";
+        const match = cookieHeader.match(/rider_token=([^;]+)/);
+        if (match && match[1]) {
+          try {
+            const decoded = fastify.jwt.verify(match[1]) as { sub: string };
+            riderId = decoded?.sub;
+          } catch {}
+        }
+      }
+
+      // Update rider status to OFFLINE in database
+      if (riderId) {
+        await prisma.deliveryRider.update({
+          where: { id: riderId },
+          data: { status: "OFFLINE" },
+        }).catch(() => {});
+      }
+
+      reply.header(
+        "Set-Cookie",
+        "rider_token=; Path=/; Max-Age=0; HttpOnly; SameSite=Lax"
+      );
+
+      return reply.send({ success: true, message: "সফলভাবে লগআউট হয়েছে" });
+    } catch (err: any) {
+      return reply.status(500).send({ success: false, error: err.message });
+    }
   });
 }

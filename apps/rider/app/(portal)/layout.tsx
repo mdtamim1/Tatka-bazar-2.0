@@ -1,12 +1,17 @@
 "use client";
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { apiFetch, getDutyStatus, setDutyStatus, startGPSBroadcast, stopGPSBroadcast, getRiderActiveSos, resolveSosAlert, type RiderNotification, type Task, type SosAlert } from "@/lib/api";
-
+import { apiFetch, clearToken, getDutyStatus, setDutyStatus, startGPSBroadcast, stopGPSBroadcast, setGpsMode, getRiderActiveSos, resolveSosAlert, type RiderNotification, type Task, type SosAlert } from "@/lib/api";
+import { useRiderWebSocket, type WsMessage } from "@/hooks/useRiderWebSocket";
 import { sound } from "@/lib/sound";
+import { deviceBridge } from "@/lib/deviceBridge";
 import { ChatModal } from "@/components/ChatModal";
 import { SosModal } from "@/components/SosModal";
 import { PwaPrompt } from "@/components/PwaPrompt";
+import { UpdatePrompt } from "@/components/UpdatePrompt";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { usePushNotification } from "@/hooks/usePushNotification";
+import { queueOfflineAction } from "@/lib/offlineQueue";
 import { subscribeSyncEvent } from "@/lib/sync";
 import { useRiderSessionGuard } from "@/hooks/useRiderSessionGuard";
 import { SuspensionModal } from "@/components/SuspensionModal";
@@ -24,6 +29,7 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
   const pathname = usePathname();
   const router = useRouter();
   const [riderName, setRiderName] = useState("");
+  const [riderPhone, setRiderPhone] = useState("");
   const [riderId, setRiderId] = useState("");
   const [taskCount, setTaskCount] = useState(0);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -42,57 +48,78 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
   const [activeSos, setActiveSos] = useState<SosAlert | null>(null);
   const [isSosModalOpen, setIsSosModalOpen] = useState(false);
   const [isChatModalOpen, setIsChatModalOpen] = useState(false);
+  const [gpsError, setGpsError] = useState<string | null>(null);
+
+  // WebSocket fallback: if WS fails, fall back to polling
+  const [wsEnabled, setWsEnabled] = useState(true);
+  const [wsToken, setWsToken] = useState<string | null>(null);
+
+  // Push Notifications (FCM)
+  const { permissionStatus, requestPermission, isSupported: isPushSupported } = usePushNotification(riderId);
+  const [pushDismissed, setPushDismissed] = useState(false);
+
+  // Anti-Fraud & Security Notice (Fake GPS / Teleportation)
+  const [fraudNotice, setFraudNotice] = useState<string | null>(null);
 
   // Real-time Session Guard (Auto-detects Hub suspension and triggers auto-logout)
   const { isSuspended, suspendReason, suspendedAt, handleLogout } = useRiderSessionGuard(riderId, riderName);
 
   useEffect(() => {
-    const token = localStorage.getItem("rider_token");
-    if (!token || token.startsWith("rider-token-") || token.startsWith("demo_")) {
-      localStorage.removeItem("rider_token");
-      localStorage.removeItem("rider_user");
-      router.replace("/login");
-      return;
-    }
-
-    // Verify session against real DB
-    apiFetch<{ id: string; name: string }>("/rider-portal/me").then((res) => {
+    // Verify session directly against PostgreSQL database
+    apiFetch<{ id: string; name: string; phone: string; status: string }>("/rider-portal/me").then((res) => {
       if (!res.success || !res.data) {
-        localStorage.removeItem("rider_token");
-        localStorage.removeItem("rider_user");
+        clearToken();
         router.replace("/login");
+        return;
+      }
+
+      const rider = res.data;
+      const rId = rider.id || "";
+      const rName = rider.name?.split(" ")[0] || "";
+      const rPhone = rider.phone || "";
+      setRiderId(rId);
+      setRiderName(rName);
+      setRiderPhone(rPhone);
+
+      const serverDuty = (rider.status === "OFFLINE" ? "OFFLINE" : "ONLINE") as "ONLINE" | "OFFLINE";
+      setDuty(serverDuty);
+      setDutyStatus(serverDuty, rId, rName);
+
+      const token = (typeof window !== "undefined" ? localStorage.getItem("rider_token") : null) || rId;
+      setWsToken(token);
+
+      // Initial check for active SOS
+      setActiveSos(getRiderActiveSos(rId));
+
+      // Auto-start GPS if ONLINE on page load
+      if (serverDuty === "ONLINE") {
+        startGPSBroadcast(rId, rName);
+        setGpsActive(true);
       }
     });
-
-    const user = localStorage.getItem("rider_user");
-    let rId = "", rName = "";
-    if (user) {
-      try {
-        const parsed = JSON.parse(user);
-        rName = parsed.name?.split(" ")[0] || "";
-        rId = parsed.id || "";
-      } catch {}
-    }
-    setRiderName(rName);
-    setRiderId(rId);
-    const currentDuty = getDutyStatus();
-    setDuty(currentDuty);
-
-    // Initial check for active SOS
-    setActiveSos(getRiderActiveSos(rId));
-
-    // Auto-start GPS if ONLINE on page load
-    if (currentDuty === "ONLINE") {
-      startGPSBroadcast(rId, rName);
-      setGpsActive(true);
-    }
 
     const handleDutyChange = (e: any) => {
       if (e.detail?.status) setDuty(e.detail.status);
     };
 
     const handleSosChange = () => {
-      setActiveSos(getRiderActiveSos(rId));
+      setActiveSos(getRiderActiveSos(riderId));
+    };
+
+    // GPS error/unavailable UI feedback
+    const handleGpsError = (e: any) => {
+      const code = e.detail?.code;
+      if (code === 1) setGpsError("GPS অনুমতি দিন: সেটিংস > অনুমতি > অবস্থান");
+      else setGpsError("GPS সংকেত দুর্বল, পুনরায় চেষ্টা করছি...");
+      setTimeout(() => setGpsError(null), 8000);
+    };
+    const handleGpsUnavailable = () => {
+      setGpsError("এই ডিভাইসে GPS সমর্থিত নয়");
+    };
+
+    // WS connection failure → revert to polling
+    const handleWsFailed = () => {
+      setWsEnabled(false);
     };
 
     const unsubscribeSync = subscribeSyncEvent((payload) => {
@@ -107,18 +134,82 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
       }
     });
 
+    const handleSecurityAlert = (e: any) => {
+      const err = e.detail?.error || "ফেক জিপিএস বা অস্বাভাবিক গতিবিধি শনাক্ত হওয়ায় ডিউটি সাময়িক স্থগিত করা হয়েছে।";
+      setFraudNotice(err);
+      setDuty("OFFLINE");
+      setGpsActive(false);
+    };
+
     window.addEventListener("rider_duty_change", handleDutyChange);
     window.addEventListener("tatka_sos_alert_change", handleSosChange);
+    window.addEventListener("rider_gps_error", handleGpsError);
+    window.addEventListener("rider_gps_unavailable", handleGpsUnavailable);
+    window.addEventListener("ws_connection_failed", handleWsFailed);
+    window.addEventListener("rider_security_alert", handleSecurityAlert as any);
     return () => {
       window.removeEventListener("rider_duty_change", handleDutyChange);
       window.removeEventListener("tatka_sos_alert_change", handleSosChange);
+      window.removeEventListener("rider_gps_error", handleGpsError);
+      window.removeEventListener("rider_gps_unavailable", handleGpsUnavailable);
+      window.removeEventListener("ws_connection_failed", handleWsFailed);
+      window.removeEventListener("rider_security_alert", handleSecurityAlert as any);
       unsubscribeSync();
       stopGPSBroadcast();
     };
   }, [router]);
 
-  // Poll tasks every 3 seconds for instant real-time incoming orders
+  // ── WebSocket real-time message handler ──────────────────
+  const handleWsMessage = useCallback((msg: WsMessage) => {
+    switch (msg.type) {
+      case "TASK_NEW": {
+        const task = msg.payload as Task;
+        if (!task) break;
+        setTaskCount((prev) => prev + 1);
+        if (!seenTaskIdsRef.current.has(task.id) &&
+            (!task.orderNumber || !seenTaskIdsRef.current.has(task.orderNumber))) {
+          seenTaskIdsRef.current.add(task.id);
+          if (task.orderNumber) seenTaskIdsRef.current.add(task.orderNumber);
+          if (getDutyStatus() === "ONLINE" && !incomingOrder) {
+            showIncomingOrder(task);
+          }
+        }
+        break;
+      }
+      case "TASK_UPDATED":
+      case "TASK_CANCELLED":
+        // Refresh task count
+        apiFetch<Task[]>("/rider-portal/tasks").then((r) => {
+          if (r.success && Array.isArray(r.data)) setTaskCount(r.data.length);
+        }).catch(() => {});
+        break;
+      case "NOTIFICATION":
+        setUnreadCount((prev) => prev + 1);
+        sound.playSuccessChime();
+        break;
+      case "RIDER_SUSPENDED": {
+        const p = msg.payload as any;
+        window.dispatchEvent(new CustomEvent("tatka_realtime_event", {
+          detail: { type: "RIDER_SUSPENDED", riderId: msg.riderId, suspendReason: p?.reason, suspendedAt: p?.suspendedAt, timestamp: new Date().toISOString() }
+        }));
+        break;
+      }
+    }
+  }, [incomingOrder]);
+
+  // WebSocket connection — replaces 3s polling when available
+  const { isConnected: wsConnected } = useRiderWebSocket({
+    riderId,
+    token: wsToken,
+    onMessage: handleWsMessage,
+    enabled: wsEnabled && !!riderId && !!wsToken,
+  });
+
+  // Fallback polling — only active when WebSocket is NOT connected
+  // Poll tasks every 8 seconds as fallback (was 3s polling before WS)
   useEffect(() => {
+    if (wsConnected) return; // WS is up, no polling needed
+
     const poll = () => {
       apiFetch<Task[]>("/rider-portal/tasks").then(r => {
         if (r.success && Array.isArray(r.data)) {
@@ -131,24 +222,20 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
               if (t.orderNumber) seenTaskIdsRef.current.add(t.orderNumber);
             });
             initialLoadRef.current = false;
-            // If there are pending ready tasks waiting and rider is ONLINE, alert immediately!
             if (taskList.length > 0 && getDutyStatus() === "ONLINE" && !incomingOrder && taskList[0]) {
               showIncomingOrder(taskList[0]);
             }
             return;
           }
 
-          // Check for newly arrived unhandled tasks
           const brandNew = taskList.filter(
             (t) => !seenTaskIdsRef.current.has(t.id) && (!t.orderNumber || !seenTaskIdsRef.current.has(t.orderNumber))
           );
-
           if (brandNew.length > 0) {
             brandNew.forEach((t) => {
               seenTaskIdsRef.current.add(t.id);
               if (t.orderNumber) seenTaskIdsRef.current.add(t.orderNumber);
             });
-
             if (getDutyStatus() === "ONLINE" && !incomingOrder && brandNew[0]) {
               showIncomingOrder(brandNew[0]);
             }
@@ -156,10 +243,11 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
         }
       }).catch(() => {});
     };
+
     poll();
-    const id = setInterval(poll, 3000);
+    const id = setInterval(poll, 8000); // 8s fallback (WS preferred)
     return () => clearInterval(id);
-  }, [incomingOrder]);
+  }, [wsConnected, incomingOrder]);
 
   // Poll notifications
   useEffect(() => {
@@ -191,18 +279,29 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
   function toggleDuty() {
     const next = duty === "ONLINE" ? "OFFLINE" : "ONLINE";
     setDuty(next);
-    setDutyStatus(next); // this also calls startGPSBroadcast / stopGPSBroadcast
+    setDutyStatus(next, riderId, riderName); // this also calls startGPSBroadcast / stopGPSBroadcast
     setGpsActive(next === "ONLINE");
-    apiFetch("/rider-portal/duty-status", { method: "POST", body: JSON.stringify({ status: next }) });
+    apiFetch("/rider-portal/duty-status", { method: "PATCH", body: JSON.stringify({ status: next }) });
     if (next === "OFFLINE") {
       dismissIncomingOrder();
+      deviceBridge.stopVibration();
+    } else {
+      setGpsMode("IDLE");
     }
   }
+
+  // Dynamic GPS Tracking Mode: Switch to ON_THE_WAY during active delivery, IDLE when resting
+  useEffect(() => {
+    if (duty === "ONLINE") {
+      setGpsMode(taskCount > 0 ? "ON_THE_WAY" : "IDLE");
+    }
+  }, [taskCount, duty]);
 
   function showIncomingOrder(task: Task) {
     setIncomingOrder(task);
     setCountdown(TOTAL_COUNTDOWN);
     sound.startIncomingOrderAlert();
+    deviceBridge.vibrate("ORDER_INCOMING");
 
     if (countdownTimerRef.current) clearInterval(countdownTimerRef.current);
     countdownTimerRef.current = setInterval(() => {
@@ -218,6 +317,7 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
 
   function dismissIncomingOrder() {
     sound.stopIncomingOrderAlert();
+    deviceBridge.stopVibration();
     if (countdownTimerRef.current) {
       clearInterval(countdownTimerRef.current);
       countdownTimerRef.current = null;
@@ -230,7 +330,19 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
     const targetId = incomingOrder.id;
     dismissIncomingOrder();
     sound.playSuccessChime();
-    await apiFetch(`/rider-portal/tasks/${targetId}/accept`, { method: "POST" });
+    deviceBridge.vibrate("SUCCESS");
+    setGpsMode("ON_THE_WAY");
+    try {
+      await apiFetch(`/rider-portal/tasks/${targetId}/accept`, { method: "POST" });
+    } catch {
+      await queueOfflineAction({
+        url: `/rider-portal/tasks/${targetId}/accept`,
+        method: "POST",
+        headers: {},
+        body: {},
+        tag: `accept-${targetId}`,
+      });
+    }
     router.push(`/tasks/${targetId}`);
   }
 
@@ -248,7 +360,8 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
   ];
 
   return (
-    <div className="app-shell">
+    <ErrorBoundary>
+      <div className="app-shell">
       {/* Real-time Sync Flash Toast */}
       {syncNotice && (
         <div
@@ -276,6 +389,86 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
           <span>{syncNotice}</span>
         </div>
       )}
+
+      {/* GPS Error Toast */}
+      {gpsError && (
+        <div
+          style={{
+            position: "fixed", top: "16px", left: "50%", transform: "translateX(-50%)",
+            background: "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)",
+            color: "#1c1917", fontWeight: 800, fontSize: ".78rem",
+            padding: "8px 20px", borderRadius: "999px",
+            boxShadow: "0 6px 24px rgba(245,158,11,.5)", zIndex: 10002,
+            fontFamily: "var(--font-bn)", display: "flex", alignItems: "center", gap: "8px",
+            animation: "fadeIn 0.2s ease-out", whiteSpace: "nowrap",
+          }}
+        >
+          <span>📍</span>
+          <span>{gpsError}</span>
+        </div>
+      )}
+
+      {/* Anti-Fraud / Fake GPS Security Alert Banner */}
+      {fraudNotice && (
+        <div style={{
+          position: "fixed",
+          top: "16px",
+          left: "50%",
+          transform: "translateX(-50%)",
+          background: "linear-gradient(135deg, #ef4444 0%, #b91c1c 100%)",
+          color: "#fff",
+          fontWeight: 800,
+          fontSize: ".82rem",
+          padding: "12px 20px",
+          borderRadius: "16px",
+          boxShadow: "0 8px 30px rgba(239,68,68,.6)",
+          zIndex: 10003,
+          fontFamily: "var(--font-bn)",
+          display: "flex",
+          alignItems: "center",
+          gap: "12px",
+          maxWidth: "92%",
+          width: "max-content",
+          border: "1px solid rgba(255,255,255,0.2)",
+        }}>
+          <span style={{ fontSize: "1.4rem" }}>🚨</span>
+          <div style={{ textAlign: "left" }}>
+            <div style={{ fontWeight: 900, color: "#fff" }}>নিরাপত্তা সতর্কতা (Fraud Protection)</div>
+            <div style={{ fontSize: ".76rem", opacity: 0.95, fontWeight: 500 }}>{fraudNotice}</div>
+          </div>
+          <button
+            onClick={() => setFraudNotice(null)}
+            style={{
+              background: "rgba(0,0,0,0.25)",
+              border: "none",
+              color: "#fff",
+              borderRadius: "50%",
+              width: 26,
+              height: 26,
+              cursor: "pointer",
+              marginLeft: 6,
+              flexShrink: 0,
+            }}
+            title="বন্ধ করুন"
+          >
+            ✕
+          </button>
+        </div>
+      )}
+
+      {/* WS Disconnected Banner (subtle, shown only when disconnected after initial load) */}
+      {!wsConnected && wsEnabled && riderId && (
+        <div style={{
+          position: "fixed", bottom: "80px", right: "12px",
+          background: "rgba(239,68,68,0.15)", border: "1px solid rgba(239,68,68,0.4)",
+          color: "#fca5a5", fontSize: ".65rem", fontWeight: 700,
+          padding: "4px 10px", borderRadius: "999px", zIndex: 9999,
+          fontFamily: "var(--font-bn)",
+        }}>
+          🔴 পোলিং মোড
+        </div>
+      )}
+
 
       {/* Active SOS Emergency Banner */}
       {activeSos && (
@@ -393,6 +586,62 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
           </div>
         </div>
       </div>
+
+      {/* Optional Push Notification Permission Prompt */}
+      {duty === "ONLINE" && isPushSupported && permissionStatus === "default" && !pushDismissed && (
+        <div style={{
+          margin: "8px 16px 0",
+          padding: "10px 14px",
+          background: "linear-gradient(135deg, rgba(255,107,43,0.15), rgba(255,107,43,0.05))",
+          border: "1px solid rgba(255,107,43,0.35)",
+          borderRadius: "12px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: "10px",
+          position: "relative",
+          zIndex: 10,
+        }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: ".76rem", color: "#F0F6FF" }}>
+            <span style={{ fontSize: "1rem" }}>🔔</span>
+            <span>নতুন অর্ডারের পুশ অ্যালার্ট পেতে নোটিফিকেশন চালু করুন</span>
+          </div>
+          <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
+            <button
+              onClick={async () => {
+                const granted = await requestPermission();
+                if (!granted) setPushDismissed(true);
+              }}
+              style={{
+                background: "#FF6B2B",
+                border: "none",
+                color: "#fff",
+                padding: "5px 12px",
+                borderRadius: "8px",
+                fontSize: ".72rem",
+                fontWeight: 700,
+                cursor: "pointer",
+              }}
+            >
+              চালু করুন
+            </button>
+            <button
+              onClick={() => setPushDismissed(true)}
+              style={{
+                background: "transparent",
+                border: "none",
+                color: "rgba(255,255,255,0.4)",
+                fontSize: ".9rem",
+                cursor: "pointer",
+                padding: "2px 6px",
+              }}
+              title="বন্ধ করুন"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
 
       <main style={{ flex: 1 }}>{children}</main>
 
@@ -556,7 +805,7 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
         onClose={() => setIsSosModalOpen(false)}
         riderId={riderId}
         riderName={riderName || "রাইডার"}
-        riderPhone="01812345678"
+        riderPhone={riderPhone || "01700000000"}
         onSosTriggered={() => {
           setActiveSos(getRiderActiveSos(riderId));
         }}
@@ -578,6 +827,8 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
         suspendedAt={suspendedAt}
         onLogout={handleLogout}
       />
+      <UpdatePrompt />
     </div>
+    </ErrorBoundary>
   );
 }

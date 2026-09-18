@@ -164,18 +164,49 @@ model DeliveryRider {
   bazar            String?             // e.g., "Mirpur-10 Bazar"
   locationSetAt    DateTime?
 
-  approvedBy       AdminUser?          @relation("ApprovedBy", fields: [approvedById], references: [id])
-  kycApprovedBy    AdminUser?          @relation("RiderKycApproval", fields: [kycApprovedById], references: [id])
-  assignments      DeliveryAssignment[]
-  earningHistory   RiderEarning[]
-  withdrawRequests RiderWithdrawal[]
-  vendorAssignments VendorRiderAssignment[]
+  // Anti-Fraud & Teleportation Watchdog
+  isFlaggedForSpoofing Boolean           @default(false)
+  spoofReason          String?
+  flaggedAt            DateTime?
+  lastKnownLat         Float?
+  lastKnownLng         Float?
+  lastLocationTime     DateTime?
+
+  approvedBy         AdminUser?            @relation("ApprovedBy", fields: [approvedById], references: [id])
+  kycApprovedBy      AdminUser?            @relation("RiderKycApproval", fields: [kycApprovedById], references: [id])
+  assignments        DeliveryAssignment[]
+  earningHistory     RiderEarning[]
+  withdrawRequests   RiderWithdrawal[]
+  vendorAssignments  VendorRiderAssignment[]
+  pushTokens         RiderPushToken[]
+  auditLogs          AuditLog[]
+  riderNotifications RiderNotification[]
+  cashDeposits       RiderCashDeposit[]
+  sosAlerts          RiderSosAlert[]
+  ratings            RiderRating[]
 
   @@index([email])
   @@index([status])
   @@index([kycStatus])
   @@index([district, thana, bazar])
   @@map("delivery_riders")
+}
+
+// FCM Push Notification tokens for riders (multi-device support)
+model RiderPushToken {
+  id        String   @id @default(cuid())
+  riderId   String
+  fcmToken  String
+  platform  String   @default("web")  // "web", "android", "ios"
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  rider     DeliveryRider @relation(fields: [riderId], references: [id], onDelete: Cascade)
+
+  @@unique([riderId, fcmToken])
+  @@index([riderId, isActive])
+  @@map("rider_push_tokens")
 }
 
 // =============================================================================
@@ -530,13 +561,27 @@ model DeliveryAssignment {
   orderId     String             @unique
   riderId     String
   status      AssignmentStatus   @default(ASSIGNED)
-  assignedAt  DateTime           @default(now())
-  pickedAt    DateTime?
-  deliveredAt DateTime?
-  note        String?
+  assignedAt            DateTime           @default(now())
+  pickedAt              DateTime?
+  deliveredAt           DateTime?
+  deliveryOtp           String?            // 4-digit customer handover OTP
+  deliveryOtpVerifiedAt DateTime?          // verification timestamp
+  note                  String?            // general note / proof note
 
-  order       Order              @relation(fields: [orderId], references: [id])
-  rider       DeliveryRider      @relation(fields: [riderId], references: [id])
+  // Cancel Request Flow
+  cancelReason          String?            // রাইডারের বাতিলের কারণ
+  cancelRequestedAt     DateTime?          // বাতিল অনুরোধের সময়
+
+  // Return Flow (seller verifies return with 4-digit code)
+  returnCode            String?            // দোকানদারের 4-digit return verification code
+  returnAllowance       Decimal?           @db.Decimal(10, 2) // রিটার্নে রাইডার পাবে কত
+  returnVerifiedAt      DateTime?          // return code verified timestamp
+
+  // Rider Delivery Notes (JSON array of progress notes)
+  riderNotes            Json?              // [{id, note, riderName, createdAt}]
+
+  order                 Order              @relation(fields: [orderId], references: [id])
+  rider                 DeliveryRider      @relation(fields: [riderId], references: [id])
 
   @@index([riderId])
   @@index([status])
@@ -559,6 +604,93 @@ model VendorRiderAssignment {
   @@index([riderId])
   @@map("vendor_rider_assignments")
 }
+
+// =============================================================================
+// RIDER PORTAL — NOTIFICATIONS & CASH DEPOSITS
+// =============================================================================
+
+// Rider-specific notifications (separate from customer Notification model)
+model RiderNotification {
+  id        String        @id @default(uuid())
+  riderId   String
+  type      String        // "TASK" | "PAYMENT" | "SYSTEM" | "ORDER"
+  title     String
+  body      String
+  data      Json?
+  isRead    Boolean       @default(false)
+  createdAt DateTime      @default(now())
+
+  rider     DeliveryRider @relation(fields: [riderId], references: [id], onDelete: Cascade)
+
+  @@index([riderId])
+  @@index([riderId, isRead])
+  @@index([createdAt])
+  @@map("rider_notifications")
+}
+
+// Rider Cash Deposit — COD cash reconciliation (রাইডার সংগৃহীত ক্যাশ জমা দেওয়া)
+model RiderCashDeposit {
+  id            String        @id @default(uuid())
+  riderId       String
+  amount        Decimal       @db.Decimal(10, 2)
+  paymentMethod String        // "bKash" | "Nagad"
+  lastFour      String        // transaction শেষ ৪ সংখ্যা (manual verification)
+  status        String        @default("PENDING") // "PENDING" | "APPROVED" | "REJECTED"
+  approvedById  String?       // Hub admin who approved
+  approvedAt    DateTime?
+  adminNote     String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  rider         DeliveryRider @relation(fields: [riderId], references: [id], onDelete: Cascade)
+
+  @@index([riderId])
+  @@index([status])
+  @@index([riderId, createdAt(sort: Desc)])
+  @@map("rider_cash_deposits")
+}
+
+// Rider SOS Emergency Alert — real-time distress signal persisted in DB
+model RiderSosAlert {
+  id            String        @id @default(uuid())
+  riderId       String
+  riderName     String
+  riderPhone    String
+  lat           Float
+  lng           Float
+  reason        String?       // Optional reason / description
+  status        String        @default("ACTIVE") // "ACTIVE" | "RESOLVED"
+  resolvedById  String?       // Hub/Admin who resolved
+  resolvedAt    DateTime?
+  resolvedNote  String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  rider         DeliveryRider @relation(fields: [riderId], references: [id], onDelete: Cascade)
+
+  @@index([riderId])
+  @@index([status])
+  @@index([createdAt(sort: Desc)])
+  @@map("rider_sos_alerts")
+}
+
+// Rider Customer Rating — post-delivery rating from customer
+model RiderRating {
+  id             String        @id @default(uuid())
+  riderId        String
+  orderId        String?       @unique
+  rating         Int           // 1-5 stars
+  comment        String?
+  createdAt      DateTime      @default(now())
+
+  rider          DeliveryRider @relation(fields: [riderId], references: [id], onDelete: Cascade)
+
+  @@index([riderId])
+  @@index([riderId, createdAt(sort: Desc)])
+  @@map("rider_ratings")
+}
+
+
 
 // =============================================================================
 // B2B & ENTERPRISE
@@ -642,8 +774,10 @@ model Notification {
 }
 
 model AuditLog {
-  id           String    @id @default(uuid())
+  id           String         @id @default(uuid())
   adminUserId  String?
+  riderId      String?
+  actorRole    String?        // "RIDER", "ADMIN", "HUB", "SYSTEM", "VENDOR", "CUSTOMER"
   action       String
   entity       String
   entityId     String?
@@ -651,11 +785,14 @@ model AuditLog {
   newValues    Json?
   ipAddress    String?
   userAgent    String?
-  createdAt    DateTime  @default(now())
+  createdAt    DateTime       @default(now())
 
-  adminUser    AdminUser? @relation(fields: [adminUserId], references: [id])
+  adminUser    AdminUser?     @relation(fields: [adminUserId], references: [id])
+  rider        DeliveryRider? @relation(fields: [riderId], references: [id])
 
   @@index([adminUserId])
+  @@index([riderId])
+  @@index([actorRole])
   @@index([entity, entityId])
   @@index([createdAt])
   @@map("audit_logs")

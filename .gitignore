@@ -8,11 +8,11 @@ dist/
 out/
 build/
 
-# Environment
+# Environment — real values (never commit these)
 .env
 .env.local
 .env.*.local
-.env.example
+# Note: .env.example files ARE committed (they are templates, no real secrets)
 
 # Logs
 *.log
@@ -40,8 +40,7 @@ Thumbs.db
 *.tsbuildinfo
 
 # Temp files
+scratch/
 skin-o-deep-ocean-mineral-refreshing-s
-
-# Redis dump
-dump.rdb
+cloud flare task
 

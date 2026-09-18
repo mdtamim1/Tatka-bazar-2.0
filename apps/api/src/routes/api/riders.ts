@@ -5,7 +5,9 @@ import {
   updateRiderLocation,
   getRiderLocation,
   getAllActiveRiderLocations,
+  getNearbyRiders,
 } from "../../services/location/rider-tracking.js";
+import { validateRiderLocation } from "../../services/security/fraud-watchdog.js";
 
 export async function riderRoutes(fastify: FastifyInstance) {
   // GET /api/riders — list all delivery riders with counts
@@ -446,6 +448,13 @@ export async function riderRoutes(fastify: FastifyInstance) {
         speed?: number;
         accuracy?: number;
         dutyStatus?: "ONLINE" | "BUSY" | "OFFLINE";
+        isMock?: boolean;
+        mode?: "IDLE" | "ON_THE_WAY";
+        // Ultra-compact delta aliases
+        s?: number;
+        h?: number;
+        a?: number;
+        m?: boolean;
       };
 
       // Extract riderId from JWT if available, else from body
@@ -465,19 +474,46 @@ export async function riderRoutes(fastify: FastifyInstance) {
         return reply.status(400).send({ success: false, error: "Latitude and Longitude are required" });
       }
 
+      const speed = body.speed !== undefined ? body.speed : body.s;
+      const heading = body.heading !== undefined ? body.heading : body.h;
+      const accuracy = body.accuracy !== undefined ? body.accuracy : body.a;
+      const isMock = body.isMock !== undefined ? body.isMock : body.m;
+
+      // Run Anti-Fraud & Teleportation Watchdog
+      const fraudCheck = await validateRiderLocation({
+        riderId,
+        riderName: body.riderName,
+        lat: Number(body.lat),
+        lng: Number(body.lng),
+        isMock: Boolean(isMock),
+        clientSpeed: speed,
+        ipAddress: request.ip,
+        userAgent: request.headers["user-agent"],
+      });
+
+      if (!fraudCheck.isValid) {
+        return reply.status(403).send({
+          success: false,
+          error: fraudCheck.reason,
+          fraudAlert: true,
+          speedKmh: fraudCheck.calculatedSpeedKmh,
+        });
+      }
+
       const updated = updateRiderLocation({
         riderId,
         riderName: body.riderName,
         phone: body.phone,
         lat: Number(body.lat),
         lng: Number(body.lng),
-        heading: body.heading,
-        speed: body.speed,
-        accuracy: body.accuracy,
+        heading,
+        speed,
+        accuracy,
         dutyStatus: body.dutyStatus || "ONLINE",
       });
 
-      return reply.send({ success: true, data: updated });
+      // Return compact response with server timestamp
+      return reply.send({ success: true, ts: updated.updatedAt });
     } catch (err: any) {
       return reply.status(500).send({ success: false, error: err.message });
     }
@@ -502,6 +538,33 @@ export async function riderRoutes(fastify: FastifyInstance) {
         return reply.status(404).send({ success: false, error: "No active location found for rider" });
       }
       return reply.send({ success: true, data: coord });
+    } catch (err: any) {
+      return reply.status(500).send({ success: false, error: err.message });
+    }
+  });
+
+  // GET /api/riders/nearby — Query nearby online riders within radius (default 3km) using Redis GEO
+  fastify.get("/nearby", async (request, reply) => {
+    try {
+      const query = request.query as { lat?: string; lng?: string; radius?: string };
+      if (!query.lat || !query.lng) {
+        return reply.status(400).send({
+          success: false,
+          error: "lat and lng query parameters are required (e.g. ?lat=23.75&lng=90.39&radius=3)",
+        });
+      }
+
+      const lat = parseFloat(query.lat);
+      const lng = parseFloat(query.lng);
+      const radiusKm = query.radius ? Math.min(25, Math.max(0.5, parseFloat(query.radius))) : 3;
+
+      const nearby = await getNearbyRiders(lat, lng, radiusKm);
+      return reply.send({
+        success: true,
+        data: nearby,
+        count: nearby.length,
+        radiusKm,
+      });
     } catch (err: any) {
       return reply.status(500).send({ success: false, error: err.message });
     }

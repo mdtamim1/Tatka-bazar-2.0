@@ -40,6 +40,7 @@ import rateLimit from "@fastify/rate-limit";
 import helmet from "@fastify/helmet";
 import compress from "@fastify/compress";
 import underPressure from "@fastify/under-pressure";
+import { getRedisClient } from "@tatka-bazar/redis";
 
 import { healthRoute } from "./routes/health.js";
 import { customerAuthRoutes } from "./routes/auth/customer.js";
@@ -58,7 +59,11 @@ import { otpRoutes } from "./routes/api/otp.js";
 import { dispatchRoutes } from "./routes/api/dispatch.js";
 import { riderPortalRoutes } from "./routes/rider-portal/index.js";
 import { adminRoutes } from "./routes/api/admin.js";
+import { riderWebSocketRoutes } from "./routes/ws/rider.js";
+import { startBackgroundWorkers, stopBackgroundWorkers } from "./workers/background-jobs.js";
 import { xssSanitizerHook } from "./middleware/xss-sanitizer.js";
+// @ts-ignore -- @fastify/websocket has CJS default export
+import websocketPlugin from "@fastify/websocket";
 
 const PORT = Number(process.env["API_PORT"]) || 4000;
 const HOST = process.env["API_HOST"] || "0.0.0.0";
@@ -116,6 +121,13 @@ async function bootstrap() {
 
   await app.register(sensible);
 
+  // WebSocket Plugin — enables ws:// and wss:// real-time connections for riders
+  await app.register(websocketPlugin, {
+    options: {
+      maxPayload: 1024 * 1024, // 1MB max WS message size
+    },
+  });
+
   // Security Headers & MIME Sniffing Protection (X-Content-Type-Options: nosniff)
   await app.register(helmet, {
     contentSecurityPolicy: false, // Managed at edge / API level
@@ -167,25 +179,36 @@ async function bootstrap() {
     sign: { expiresIn: process.env["JWT_EXPIRY"] ?? "7d" },
   });
 
-  // Enterprise Adaptive Multi-Tier Rate Limiting (High Throughput + Anti-Abuse)
+  // Enterprise Adaptive Multi-Tier Rate Limiting backed by Redis & Cloudflare Real-IP
   await app.register(rateLimit, {
+    redis: getRedisClient(),
+    keyGenerator: (req) => {
+      // Prioritize Cloudflare proxy header, then x-forwarded-for, then socket IP
+      const cfIp = req.headers["cf-connecting-ip"];
+      if (typeof cfIp === "string" && cfIp) return cfIp;
+      const xff = req.headers["x-forwarded-for"];
+      if (typeof xff === "string" && xff) return xff.split(",")[0]?.trim() || req.ip;
+      return req.ip;
+    },
     max: (req) => {
       // High-frequency telemetry: Rider live GPS ping every 5s
       if (req.url.includes("/api/riders/live-location")) return 600;
       // High-traffic public catalog browsing (e-commerce storefront)
       if (req.url.startsWith("/api/products") || req.url.startsWith("/api/categories")) return 300;
-      // Strict brute-force protection on authentication endpoints
-      if (req.url.startsWith("/auth/")) return 25;
+      // Ultra-strict brute-force protection on rider & admin login (5 tries per minute)
+      if (req.url.includes("/login")) return 5;
+      // Strict auth endpoints (registration, verification)
+      if (req.url.startsWith("/auth/")) return 15;
       // Default standard API tier
       return 180;
     },
     timeWindow: "1 minute",
-    allowList: ["127.0.0.1", "localhost"],
+    allowList: ["127.0.0.1", "localhost", "::1"],
     errorResponseBuilder: (_request, context) => ({
       success: false,
       statusCode: 429,
       error: "Too Many Requests",
-      message: "Rate limit exceeded. Please wait a moment before sending more requests.",
+      message: "অতিরিক্ত রিকোয়েস্ট পাঠানো হয়েছে। দয়া করে কিছুক্ষণ অপেক্ষা করুন। (Rate limit exceeded)",
       retryAfter: context.after,
     }),
   });
@@ -215,6 +238,9 @@ async function bootstrap() {
   await app.register(riderPortalRoutes,  { prefix: "/rider-portal" });
   await app.register(dispatchRoutes,     { prefix: "/api/dispatch" });
   await app.register(adminRoutes,        { prefix: "/api/admin" });
+
+  // WebSocket Routes
+  await app.register(riderWebSocketRoutes, { prefix: "/ws" });
 
   // ---------------------------------------------------------------------------
   // Global Unified Mobile & Web Error Handler
@@ -251,6 +277,25 @@ async function bootstrap() {
     await app.listen({ port: PORT, host: HOST });
     console.log(`\n🚀 Tatka Bazar API running on http://${HOST}:${PORT}`);
     console.log(`📋 Allowed origins: ${ALLOWED_ORIGINS.join(", ")}\n`);
+    startBackgroundWorkers();
+
+    // ── Render Free Tier Keep-Alive ──────────────────────────────────────────
+    // Render free services sleep after 15min idle. Self-ping every 10min
+    // prevents sleep. Automatically disabled on paid hosts (RENDER != "true")
+    if (process.env["RENDER"] === "true") {
+      const selfUrl = process.env["RENDER_EXTERNAL_URL"] || `http://localhost:${PORT}`;
+      const PING_INTERVAL = 10 * 60 * 1000; // 10 minutes
+      setInterval(async () => {
+        try {
+          await fetch(`${selfUrl}/health`);
+          console.log("[KeepAlive] Self-ping OK");
+        } catch {
+          // Non-fatal — just log
+          console.warn("[KeepAlive] Self-ping failed");
+        }
+      }, PING_INTERVAL);
+      console.log(`🏓 Render keep-alive active → pinging ${selfUrl}/health every 10min`);
+    }
   } catch (err) {
     app.log.error(err);
     process.exit(1);
@@ -270,6 +315,7 @@ async function bootstrap() {
   const shutdown = async (signal: string) => {
     console.log(`\n🛑 Received ${signal}, initiating graceful server shutdown...`);
     try {
+      stopBackgroundWorkers();
       await app.close();
       console.log("✅ Fastify closed all connections cleanly.");
       process.exit(0);

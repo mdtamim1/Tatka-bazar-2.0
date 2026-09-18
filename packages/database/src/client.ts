@@ -32,9 +32,20 @@ if (!process.env["DATABASE_URL"]) {
 
   if (!process.env["DATABASE_URL"]) {
     process.env["DATABASE_URL"] = "postgresql://postgres:password@localhost:5432/tatka_bazar?schema=public&connection_limit=25&pool_timeout=10";
-  } else if (!process.env["DATABASE_URL"].includes("connection_limit")) {
-    const separator = process.env["DATABASE_URL"].includes("?") ? "&" : "?";
-    process.env["DATABASE_URL"] = `${process.env["DATABASE_URL"]}${separator}connection_limit=25&pool_timeout=10`;
+  } else {
+    const url = process.env["DATABASE_URL"];
+    const isPooler = url.includes(":6543") || url.includes(":6432") || url.includes("pooler");
+    const hasPgBouncer = url.includes("pgbouncer=true");
+    const hasLimit = url.includes("connection_limit=");
+
+    const params: string[] = [];
+    if (!hasLimit) params.push("connection_limit=25&pool_timeout=10");
+    if (isPooler && !hasPgBouncer) params.push("pgbouncer=true");
+
+    if (params.length > 0) {
+      const separator = url.includes("?") ? "&" : "?";
+      process.env["DATABASE_URL"] = `${url}${separator}${params.join("&")}`;
+    }
   }
 }
 

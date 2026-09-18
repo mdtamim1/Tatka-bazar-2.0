@@ -1,13 +1,15 @@
-"use client";
+﻿"use client";
 import React, { useEffect, useState } from "react";
-import { apiFetch, getPerformanceData, fullyResetRiderPanel, type RiderProfile, type RiderPerformance } from "@/lib/api";
+import { apiFetch, clearToken, fetchPerformanceData, fullyResetRiderPanel, DEFAULT_PERFORMANCE, type RiderProfile, type RiderPerformance } from "@/lib/api";
 import { LiveFaceCamModal } from "@/components/LiveFaceCamModal";
+
 
 const STEPS = ["ব্যক্তিগত তথ্য", "ঠিকানা", "পরিচয়পত্র"];
 
 export default function ProfilePage() {
   const [profile, setProfile] = useState<RiderProfile | null>(null);
-  const [perf] = useState<RiderPerformance>(getPerformanceData());
+  const [perf, setPerf] = useState<RiderPerformance | null>(null);
+
   const [loading, setLoading] = useState(true);
   const [step, setStep] = useState(0);
   const [saving, setSaving] = useState(false);
@@ -33,14 +35,16 @@ export default function ProfilePage() {
           photoUrl: String(p.photoUrl ?? ""),
         });
       } else {
-        localStorage.removeItem("rider_token");
-        localStorage.removeItem("rider_user");
+        clearToken();
         window.location.href = "/login";
         return;
       }
       setLoading(false);
     });
+    // Load live performance data from backend
+    fetchPerformanceData().then(p => setPerf(p));
   }, []);
+
 
   async function submitKyc() {
     setSaving(true);
@@ -65,6 +69,8 @@ export default function ProfilePage() {
   const locked = profile.kycStatus === "APPROVED";
   const initials = profile.name.split(" ").slice(0, 2).map(w => w[0]).join("").toUpperCase();
   const kycLabel: Record<string, string> = { PENDING: "KYC বাকি", SUBMITTED: "যাচাইয়ের অপেক্ষায়", APPROVED: "যাচাই সম্পন্ন ✓", REJECTED: "বাতিল হয়েছে" };
+  // Use DEFAULT_PERFORMANCE fallback while live data loads
+  const perfData = perf ?? DEFAULT_PERFORMANCE;
 
   return (
     <div className="page-content">
@@ -76,9 +82,9 @@ export default function ProfilePage() {
           <div className={`kyc-status-badge ${profile.kycStatus.toLowerCase()}`}>
             {kycLabel[profile.kycStatus] || profile.kycStatus}
           </div>
-          <div className={`tier-badge tier-${perf.tier.toLowerCase()}`}>
-            <span>{perf.tierBadgeEmoji}</span>
-            <span>{perf.tierTitleBn}</span>
+          <div className={`tier-badge tier-${(perf?.tier ?? "bronze").toLowerCase()}`}>
+            <span>{perf?.tierBadgeEmoji ?? "🥉"}</span>
+            <span>{perf?.tierTitleBn ?? "Bronze Rider"}</span>
           </div>
         </div>
       </div>
@@ -91,12 +97,12 @@ export default function ProfilePage() {
               পারফরম্যান্স ও রেটিং স্কোরকার্ড
             </div>
             <div style={{ fontSize: "1.1rem", fontWeight: 800, color: "var(--text-1)", marginTop: 2 }}>
-              {perf.tierBadgeEmoji} {perf.tierTitleBn}
+              {perfData.tierBadgeEmoji} {perfData.tierTitleBn}
             </div>
           </div>
-          <div className={`tier-badge tier-${perf.tier.toLowerCase()}`}>
-            <span>{perf.tierBadgeEmoji}</span>
-            <span>{perf.tierTitleBn.split(" ")[0]}</span>
+          <div className={`tier-badge tier-${perfData.tier.toLowerCase()}`}>
+            <span>{perfData.tierBadgeEmoji}</span>
+            <span>{perfData.tierTitleBn.split(" ")[0]}</span>
           </div>
         </div>
 
@@ -109,32 +115,32 @@ export default function ProfilePage() {
           display: "flex", alignItems: "center", gap: 8
         }}>
           <span style={{ fontSize: "1.2rem" }}>🎁</span>
-          <span><strong>টিয়ার সুবিধা:</strong> {perf.tierPerkBn}</span>
+          <span><strong>টিয়ার সুবিধা:</strong> {perfData.tierPerkBn}</span>
         </div>
 
         {/* 4-Box Core Metrics Grid */}
         <div className="perf-metric-grid">
           <div className="perf-metric-item">
             <div className="perf-metric-val" style={{ color: "#fbbf24", display: "flex", alignItems: "center", justifyContent: "center", gap: 4 }}>
-              <span>⭐</span> {perf.rating.toFixed(1)}
+              <span>⭐</span> {perfData.rating.toFixed(1)}
             </div>
-            <div className="perf-metric-lbl">গড় রেটিং ({perf.totalRatings} রিভিউ)</div>
+            <div className="perf-metric-lbl">গড় রেটিং ({perfData.totalRatings} রিভিউ)</div>
           </div>
           <div className="perf-metric-item">
             <div className="perf-metric-val" style={{ color: "#10b981" }}>
-              {perf.onTimeRate}%
+              {perfData.onTimeRate}%
             </div>
             <div className="perf-metric-lbl">অন-টাইম ডেলিভারি</div>
           </div>
           <div className="perf-metric-item">
             <div className="perf-metric-val" style={{ color: "#38bdf8" }}>
-              {perf.acceptanceRate}%
+              {perfData.acceptanceRate}%
             </div>
             <div className="perf-metric-lbl">অর্ডার গ্রহণ (Acceptance)</div>
           </div>
           <div className="perf-metric-item">
             <div className="perf-metric-val" style={{ color: "#a855f7" }}>
-              {perf.totalDeliveries} টি
+              {perfData.totalDeliveries} টি
             </div>
             <div className="perf-metric-lbl">মোট সফল ডেলিভারি</div>
           </div>
@@ -146,11 +152,11 @@ export default function ProfilePage() {
             ⭐ স্টার রেটিং অনুপাত
           </div>
           {[
-            { label: "৫ স্টার", count: perf.starsBreakdown.star5, pct: (perf.starsBreakdown.star5 / perf.totalRatings) * 100 },
-            { label: "৪ স্টার", count: perf.starsBreakdown.star4, pct: (perf.starsBreakdown.star4 / perf.totalRatings) * 100 },
-            { label: "৩ স্টার", count: perf.starsBreakdown.star3, pct: (perf.starsBreakdown.star3 / perf.totalRatings) * 100 },
-            { label: "২ স্টার", count: perf.starsBreakdown.star2, pct: (perf.starsBreakdown.star2 / perf.totalRatings) * 100 },
-            { label: "১ স্টার", count: perf.starsBreakdown.star1, pct: (perf.starsBreakdown.star1 / perf.totalRatings) * 100 },
+            { label: "৫ স্টার", count: perfData.starsBreakdown.star5, pct: perfData.totalRatings > 0 ? (perfData.starsBreakdown.star5 / perfData.totalRatings) * 100 : 0 },
+            { label: "৪ স্টার", count: perfData.starsBreakdown.star4, pct: perfData.totalRatings > 0 ? (perfData.starsBreakdown.star4 / perfData.totalRatings) * 100 : 0 },
+            { label: "৩ স্টার", count: perfData.starsBreakdown.star3, pct: perfData.totalRatings > 0 ? (perfData.starsBreakdown.star3 / perfData.totalRatings) * 100 : 0 },
+            { label: "২ স্টার", count: perfData.starsBreakdown.star2, pct: perfData.totalRatings > 0 ? (perfData.starsBreakdown.star2 / perfData.totalRatings) * 100 : 0 },
+            { label: "১ স্টার", count: perfData.starsBreakdown.star1, pct: perfData.totalRatings > 0 ? (perfData.starsBreakdown.star1 / perfData.totalRatings) * 100 : 0 },
           ].map((bar) => (
             <div key={bar.label} className="star-bar-row">
               <span style={{ width: 44, flexShrink: 0 }}>{bar.label}</span>
@@ -169,7 +175,7 @@ export default function ProfilePage() {
             <span>কাস্টমারদের সাম্প্রতিক মন্তব্য ও রিভিউ</span>
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-            {perf.recentReviews.map((rev) => (
+            {perfData.recentReviews.map((rev) => (
               <div key={rev.id} className="review-item-card">
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
@@ -453,8 +459,40 @@ export default function ProfilePage() {
         </>
       )}
 
+      {/* ─── Logout Button ─── */}
+      <div style={{ marginTop: 24 }}>
+        <button
+          id="btn-rider-logout"
+          type="button"
+          onClick={() => {
+            if (confirm("আপনি কি নিশ্চিতভাবে আপনার অ্যাকাউন্ট থেকে লগআউট করতে চান?")) {
+              clearToken();
+              window.location.href = "/login";
+            }
+          }}
+          style={{
+            width: "100%",
+            padding: "12px 18px",
+            background: "rgba(239, 68, 68, 0.12)",
+            color: "#ef4444",
+            border: "1px solid rgba(239, 68, 68, 0.3)",
+            borderRadius: "var(--r-md)",
+            fontSize: ".9rem",
+            fontWeight: 800,
+            fontFamily: "var(--font-bn)",
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 8,
+          }}
+        >
+          🚪 অ্যাকাউন্ট থেকে লগআউট করুন
+        </button>
+      </div>
+
       {/* ─── Panel Reset ─── */}
-      <div style={{ marginTop: 24, padding: "16px", background: "rgba(239,68,68,.08)", border: "1px dashed rgba(239,68,68,.3)", borderRadius: "var(--r-lg)", textAlign: "center" }}>
+      <div style={{ marginTop: 16, padding: "16px", background: "rgba(239,68,68,.08)", border: "1px dashed rgba(239,68,68,.3)", borderRadius: "var(--r-lg)", textAlign: "center" }}>
         <div style={{ fontSize: ".88rem", fontWeight: 700, color: "#ef4444", fontFamily: "var(--font-bn)" }}>
           🔄 রাইডার প্যানেল ডাটা রিসেট
         </div>

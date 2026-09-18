@@ -1,4 +1,4 @@
-import { getRedisClient } from "./client";
+import { getRedisClient } from "./client.js";
 
 // ============================================================
 // Tatka Bazar — Resilient Background Queue Engine

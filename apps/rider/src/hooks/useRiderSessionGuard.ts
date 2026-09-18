@@ -10,11 +10,13 @@ interface SuspensionState {
   suspendedAt?: string;
 }
 
+const HUB_BASE = process.env.NEXT_PUBLIC_HUB_URL || "https://hub-gamma-umber.vercel.app";
+
 const HUB_STATUS_ENDPOINTS = [
   "/api/sync/events", // local endpoint on rider server
-  "http://localhost:3004/api/public/status?type=rider", // Hub dev server
-  "https://hub.tatkabazar.com/api/public/status?type=rider", // Production hub
+  `${HUB_BASE}/api/public/status?type=rider`, // Production hub
 ];
+
 
 export function useRiderSessionGuard(riderId: string, riderName?: string) {
   const router = useRouter();
@@ -74,7 +76,9 @@ export function useRiderSessionGuard(riderId: string, riderName?: string) {
     async function checkStatus() {
       // First check local rider event route
       try {
-        const localRes = await fetch(`/api/sync/events?riderId=${encodeURIComponent(riderId)}`);
+        const localRes = await fetch(`/api/sync/events?riderId=${encodeURIComponent(riderId)}`, {
+          signal: AbortSignal.timeout(3000),
+        });
         if (localRes.ok) {
           const json = await localRes.json();
           if (json.isSuspended && isMounted) {
@@ -84,10 +88,9 @@ export function useRiderSessionGuard(riderId: string, riderName?: string) {
         }
       } catch {}
 
-      // Fallback check Hub public status (cloud Hub first, then local)
+      // Fallback check Hub public status
       const hubBases = [
         process.env.NEXT_PUBLIC_HUB_URL || "https://hub-gamma-umber.vercel.app",
-        "http://localhost:3004",
       ];
       for (const base of hubBases) {
         try {

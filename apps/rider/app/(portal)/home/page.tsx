@@ -1,7 +1,7 @@
 "use client";
 import React, { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { apiFetch, type BalanceData } from "@/lib/api";
+import { apiFetch, fetchPerformanceData, type BalanceData, type RiderPerformance } from "@/lib/api";
 
 function AnimatedNumber({ value, prefix = "" }: { value: number; prefix?: string }) {
   const [display, setDisplay] = useState(0);
@@ -29,6 +29,7 @@ export default function HomePage() {
   const [data, setData] = useState<BalanceData | null>(null);
   const [loading, setLoading] = useState(true);
   const [due, setDue] = useState(0);
+  const [perf, setPerf] = useState<RiderPerformance | null>(null);
   const cardRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -40,6 +41,8 @@ export default function HomePage() {
     apiFetch<{ due?: number }>("/rider-portal/me").then(r => {
       if (r.success && r.data) setDue(Number((r.data as any).due) || 0);
     });
+    // Live performance data from backend
+    fetchPerformanceData().then(p => setPerf(p));
   }, []);
 
   // 3D card mouse effect
@@ -68,11 +71,11 @@ export default function HomePage() {
         onClick={() => router.push("/profile")}
         title="সম্পূর্ণ পারফরম্যান্স ও রেটিং স্কোরকার্ড দেখুন"
       >
-        <span>🥉 ব্রোঞ্জ রাইডার</span>
+        <span>{perf?.tierBadgeEmoji ?? "🥉"} {perf?.tierTitleBn ?? "Bronze Rider"}</span>
         <span style={{ opacity: 0.5 }}>•</span>
-        <span>⭐ ৫.০ (নতুন রাইডার)</span>
+        <span>⭐ {perf ? perf.rating.toFixed(1) : "5.0"}{!perf || perf.totalRatings === 0 ? " (নতুন রাইডার)" : ` (${perf.totalRatings} রিভিউ)`}</span>
         <span style={{ opacity: 0.5 }}>•</span>
-        <span>⏱️ ১০০% অন-টাইম</span>
+        <span>📦 {perf ? perf.totalDeliveries : 0} ডেলিভারি</span>
       </div>
 
       <div className="balance-card-wrapper">

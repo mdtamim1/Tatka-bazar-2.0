@@ -1,8 +1,9 @@
 "use client";
 import React, { useEffect, useState, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { apiFetch, type ActiveTask } from "@/lib/api";
+import { apiFetch, type ActiveTask, setGpsMode } from "@/lib/api";
 import { sound } from "@/lib/sound";
+import { useWakeLock } from "@/hooks/useWakeLock";
 import { ChatModal } from "@/components/ChatModal";
 import { subscribeSyncEvent, emitSyncEvent } from "@/lib/sync";
 
@@ -71,6 +72,20 @@ export default function TaskDetailPage() {
 
   // Stage 1 -> 2 Transit
   const [transiting, setTransiting] = useState(false);
+
+  // Screen Wake Lock — keep display on during active delivery navigation
+  const isDelivering = Boolean(task && task.status !== "DELIVERED" && task.status !== "CANCELLED" && !success);
+  useWakeLock(isDelivering);
+
+  // Set high-accuracy GPS mode while on active delivery screen
+  useEffect(() => {
+    if (isDelivering) {
+      setGpsMode("ON_THE_WAY");
+    }
+    return () => {
+      setGpsMode("IDLE");
+    };
+  }, [isDelivering]);
 
   // Cancel Request Flow
   const [showCancelModal, setShowCancelModal] = useState(false);
@@ -887,18 +902,32 @@ export default function TaskDetailPage() {
                   </span>
                 )}
 
-                <a
-                  href={`tel:${task.order.customerPhone}`}
-                  style={{
-                    color: "var(--orange)", display: "inline-flex",
-                    alignItems: "center", gap: 4, textDecoration: "none", fontWeight: 700,
-                    background: "rgba(255,122,0,0.12)", border: "1px solid rgba(255,122,0,0.3)",
-                    padding: "4px 10px", borderRadius: "6px", fontSize: ".76rem",
-                  }}
-                  title="কাস্টমারকে সরাসরি কল করুন"
-                >
-                  📞 {task.order.customerPhone} (কল দিন)
-                </a>
+                {task.order.customerPhone?.includes("*") ? (
+                  <span
+                    style={{
+                      color: "var(--orange)", display: "inline-flex",
+                      alignItems: "center", gap: 4, fontWeight: 700,
+                      background: "rgba(255,122,0,0.12)", border: "1px solid rgba(255,122,0,0.3)",
+                      padding: "4px 10px", borderRadius: "6px", fontSize: ".76rem",
+                    }}
+                    title="কাস্টমারের ফোন নম্বর নিরাপত্তার স্বার্থে মাস্কড (সুরক্ষিত) রাখা হয়েছে"
+                  >
+                    🔒 {task.order.customerPhone} (মাস্কড)
+                  </span>
+                ) : (
+                  <a
+                    href={`tel:${task.order.customerPhone}`}
+                    style={{
+                      color: "var(--orange)", display: "inline-flex",
+                      alignItems: "center", gap: 4, textDecoration: "none", fontWeight: 700,
+                      background: "rgba(255,122,0,0.12)", border: "1px solid rgba(255,122,0,0.3)",
+                      padding: "4px 10px", borderRadius: "6px", fontSize: ".76rem",
+                    }}
+                    title="কাস্টমারকে সরাসরি কল করুন"
+                  >
+                    📞 {task.order.customerPhone} (কল দিন)
+                  </a>
+                )}
 
                 {task.order.hasAccount === false ? (
                   <button

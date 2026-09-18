@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Tatka Rider</string>
+    <string name="title_activity_main">Tatka Rider</string>
+    <string name="package_name">com.tatkabazar.rider</string>
+    <string name="custom_url_scheme">com.tatkabazar.rider</string>
+</resources>
