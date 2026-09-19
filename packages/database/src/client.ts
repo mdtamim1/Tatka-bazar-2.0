@@ -6,9 +6,11 @@ import path from "path";
 if (!process.env["DATABASE_URL"]) {
   const envCandidates = [
     path.resolve(process.cwd(), ".env"),
+    path.resolve(process.cwd(), "packages/database/.env"),
     path.resolve(process.cwd(), "../../.env"),
     path.resolve(process.cwd(), "../.env"),
-    "C:/Users/World/Desktop/Tatka-bazar-2.0-main/.env",
+    path.resolve(__dirname, "../.env"),
+    path.resolve(__dirname, "../../.env"),
   ];
   for (const envPath of envCandidates) {
     try {
