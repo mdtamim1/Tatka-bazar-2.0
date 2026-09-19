@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from "react";
 import {
   getChatMessages,
   sendChatMessage,
+  loadChatFromAPI,
   type ChatMessage,
 } from "@/lib/api";
 import { sound } from "@/lib/sound";
@@ -75,6 +76,10 @@ export function ChatModal({
 
   function loadMessages() {
     setMessages(getChatMessages(channelId));
+    // Also fetch from API to get persisted messages
+    loadChatFromAPI(channelId).then((serverMsgs) => {
+      if (serverMsgs.length > 0) setMessages(serverMsgs);
+    }).catch(() => {});
   }
 
   function handleSend(textToSend?: string) {

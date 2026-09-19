@@ -1750,6 +1750,7 @@ export interface ChatMessage {
   timestamp: string;
 }
 
+/** Read from local cache (instant) */
 export function getChatMessages(channelId: string): ChatMessage[] {
   if (typeof window === "undefined") return [];
   try {
@@ -1759,13 +1760,34 @@ export function getChatMessages(channelId: string): ChatMessage[] {
   return [];
 }
 
+/** Fetch messages from Redis-backed API and merge into local cache */
+export async function loadChatFromAPI(channelId: string): Promise<ChatMessage[]> {
+  try {
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "";
+    const res = await fetch(`${apiUrl}/api/chat/${encodeURIComponent(channelId)}`);
+    if (!res.ok) throw new Error("API unavailable");
+    const json = await res.json();
+    const serverMessages: ChatMessage[] = json.data || [];
+    // Merge server messages into local cache
+    if (typeof window !== "undefined" && serverMessages.length > 0) {
+      try {
+        localStorage.setItem(`tatka_chat_${channelId}`, JSON.stringify(serverMessages));
+        window.dispatchEvent(new CustomEvent("tatka_chat_updated", { detail: { channelId } }));
+      } catch {}
+    }
+    return serverMessages;
+  } catch {
+    // API unavailable — return local cache
+    return getChatMessages(channelId);
+  }
+}
+
 export function sendChatMessage(
   channelId: string,
   sender: "RIDER" | "CUSTOMER" | "SUPPORT",
   senderName: string,
   text: string
 ): ChatMessage {
-  const current = getChatMessages(channelId);
   const newMsg: ChatMessage = {
     id: `msg-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
     channelId,
@@ -1774,36 +1796,60 @@ export function sendChatMessage(
     text,
     timestamp: new Date().toISOString(),
   };
-  const updated = [...current, newMsg];
+
+  // 1. Update local cache immediately (optimistic UI)
   if (typeof window !== "undefined") {
     try {
+      const current = getChatMessages(channelId);
+      const updated = [...current, newMsg];
       localStorage.setItem(`tatka_chat_${channelId}`, JSON.stringify(updated));
       window.dispatchEvent(new CustomEvent("tatka_chat_updated", { detail: { channelId, message: newMsg } }));
-
-      // Sync across Vercel cloud dispatch endpoints
-      const endpoints = [
-        "/api/dispatch",
-        "https://tatka-bazar-2-0-vendor.vercel.app/api/dispatch",
-      ];
-      endpoints.forEach((url) => {
-        fetch(url, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            action: "SEND_CHAT",
-            orderId: channelId,
-            sender: sender === "RIDER" ? "RIDER" : "VENDOR",
-            senderName,
-            text,
-          }),
-        }).catch(() => {});
-      });
     } catch {}
   }
+
+  // 2. Persist to Redis via API (fire-and-forget)
+  const apiUrl = typeof window !== "undefined"
+    ? (process.env.NEXT_PUBLIC_API_URL || "")
+    : "";
+  if (apiUrl) {
+    fetch(`${apiUrl}/api/chat/${encodeURIComponent(channelId)}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        id: newMsg.id,
+        sender: newMsg.sender,
+        senderName: newMsg.senderName,
+        text: newMsg.text,
+        timestamp: newMsg.timestamp,
+      }),
+    }).catch(() => {}); // Non-blocking — message already shown locally
+  }
+
+  // 3. Legacy dispatch sync (keep for backward compatibility)
+  const endpoints = [
+    "/api/dispatch",
+    "https://tatka-bazar-2-0-vendor.vercel.app/api/dispatch",
+  ];
+  endpoints.forEach((url) => {
+    fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action: "SEND_CHAT",
+        orderId: channelId,
+        sender: sender === "RIDER" ? "RIDER" : "VENDOR",
+        senderName,
+        text,
+      }),
+    }).catch(() => {});
+  });
+
   return newMsg;
 }
 
+
 // ─── Emergency SOS System ───────────────────────────────────────────────────
+
 
 export interface SosAlert {
   id: string;

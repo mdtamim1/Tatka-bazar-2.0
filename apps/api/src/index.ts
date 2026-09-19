@@ -58,6 +58,7 @@ import { paymentRoutes } from "./routes/api/payment.js";
 import { otpRoutes } from "./routes/api/otp.js";
 import { dispatchRoutes } from "./routes/api/dispatch.js";
 import { riderPortalRoutes } from "./routes/rider-portal/index.js";
+import { chatRoutes } from "./routes/api/chat.js";
 import { adminRoutes } from "./routes/api/admin.js";
 import { riderWebSocketRoutes } from "./routes/ws/rider.js";
 import { startBackgroundWorkers, stopBackgroundWorkers } from "./workers/background-jobs.js";
@@ -238,6 +239,7 @@ async function bootstrap() {
   await app.register(riderPortalRoutes,  { prefix: "/rider-portal" });
   await app.register(dispatchRoutes,     { prefix: "/api/dispatch" });
   await app.register(adminRoutes,        { prefix: "/api/admin" });
+  await app.register(chatRoutes,         { prefix: "/api/chat" });
 
   // WebSocket Routes
   await app.register(riderWebSocketRoutes, { prefix: "/ws" });

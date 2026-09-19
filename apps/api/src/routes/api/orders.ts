@@ -415,4 +415,61 @@ export async function orderRoutes(fastify: FastifyInstance) {
       return reply.status(400).send({ success: false, error: err.message });
     }
   });
+
+  // POST /api/orders/:id/rate-rider — Customer rates the rider after delivery
+  fastify.post("/:id/rate-rider", async (request, reply) => {
+    const { id } = request.params as { id: string };
+    const body = request.body as { rating: number; comment?: string };
+
+    // Validate rating
+    if (!body.rating || body.rating < 1 || body.rating > 5 || !Number.isInteger(body.rating)) {
+      return reply.status(400).send({ success: false, error: "Rating must be an integer between 1 and 5" });
+    }
+
+    try {
+      // Get order with delivery assignment
+      const order = await prisma.order.findUnique({
+        where: { id },
+        include: {
+          deliveryAssignment: { select: { riderId: true, status: true } },
+        },
+      });
+
+      if (!order) {
+        return reply.status(404).send({ success: false, error: "Order not found" });
+      }
+
+      if (!order.deliveryAssignment) {
+        return reply.status(400).send({ success: false, error: "No rider assigned to this order" });
+      }
+
+      if (order.deliveryAssignment.status !== "DELIVERED") {
+        return reply.status(400).send({ success: false, error: "Order must be delivered before rating" });
+      }
+
+      // Check for duplicate rating
+      const existing = await (prisma as any).riderRating.findUnique({
+        where: { orderId: id },
+      });
+
+      if (existing) {
+        return reply.status(409).send({ success: false, error: "This order has already been rated" });
+      }
+
+      // Create rating
+      const rating = await (prisma as any).riderRating.create({
+        data: {
+          riderId: order.deliveryAssignment.riderId,
+          orderId: id,
+          rating: body.rating,
+          comment: body.comment?.trim() || null,
+        },
+      });
+
+      return reply.status(201).send({ success: true, data: rating });
+    } catch (err: any) {
+      fastify.log.error(err);
+      return reply.status(500).send({ success: false, error: err.message });
+    }
+  });
 }
