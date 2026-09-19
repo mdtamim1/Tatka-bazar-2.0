@@ -25,7 +25,7 @@ type MessageHandler = (msg: WsMessage) => void;
 const WS_BASE = (() => {
   if (typeof window === "undefined") return "";
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
-  return apiUrl.replace(/^http/, "ws").replace(/^https/, "wss");
+  return apiUrl.replace(/^https?:/, (m) => (m === "https:" ? "wss:" : "ws:"));
 })();
 
 const INITIAL_RECONNECT_DELAY = 1000;  // 1s
