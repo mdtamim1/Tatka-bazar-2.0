@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { triggerSosAlert } from "@/lib/api";
 import { sound } from "@/lib/sound";
+import { COMPANY_CONFIG } from "@/lib/company-config";
 
 interface SosModalProps {
   isOpen: boolean;
@@ -18,7 +19,7 @@ export function SosModal({
   onClose,
   riderId,
   riderName,
-  riderPhone = "01812345678",
+  riderPhone = "",
   onSosTriggered,
 }: SosModalProps) {
   const [countdown, setCountdown] = useState<number | null>(null);
@@ -197,7 +198,7 @@ export function SosModal({
           </a>
 
           <a
-            href="tel:09612345678"
+            href={`tel:${COMPANY_CONFIG.support.hotline}`}
             style={{
               display: "flex",
               flexDirection: "column",
@@ -217,7 +218,7 @@ export function SosModal({
           >
             <span style={{ fontSize: "1.4rem" }}>🏢</span>
             <span>কন্ট্রোল রুম হটলাইন</span>
-            <strong style={{ color: "#f59e0b", fontSize: ".88rem" }}>০৯৬১২৩৪৫৬৭৮</strong>
+            <strong style={{ color: "#f59e0b", fontSize: ".88rem" }}>{COMPANY_CONFIG.support.hotline}</strong>
           </a>
         </div>
 

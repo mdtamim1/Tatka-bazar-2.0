@@ -2,11 +2,9 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { apiFetch, type DepositRequest } from "@/lib/api";
+import { COMPANY_CONFIG } from "@/lib/company-config";
 
-const COMPANY_ACCOUNTS = [
-  { method: "bKash", icon: "💗", number: "01712-345678", color: "#e91e8c", bgColor: "rgba(233,30,140,.12)", borderColor: "rgba(233,30,140,.3)" },
-  { method: "Nagad", icon: "🟠", number: "01811-456789", color: "#f7941d", bgColor: "rgba(247,148,29,.12)", borderColor: "rgba(247,148,29,.3)" },
-];
+const COMPANY_ACCOUNTS = COMPANY_CONFIG.paymentAccounts as unknown as { method: string; icon: string; number: string; color: string; bgColor: string; borderColor: string }[];
 
 type Step = "info" | "form" | "pending_success";
 
@@ -167,7 +165,7 @@ export default function DepositPage() {
             যে নম্বর থেকে পাঠিয়েছেন তার শেষ ৪ সংখ্যা
           </label>
           <div style={{ fontSize: ".7rem", color: "var(--text-3)", fontFamily: "var(--font-bn)", marginBottom: 8, lineHeight: 1.5 }}>
-            উদাহরণ: 01712-34<strong>5678</strong> → শেষ ৪ সংখ্যা: <strong>5678</strong>
+            আপনার প্রেরক নম্বরের একদম শেষের ৪টি সংখ্যা লিখুন
           </div>
           <input
             id="deposit-last-four-input"

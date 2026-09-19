@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { login } from "@/lib/api";
+import { COMPANY_CONFIG } from "@/lib/company-config";
 
 // Animated floating orbs in the background
 function Orbs() {
@@ -101,7 +102,7 @@ export default function LoginPage() {
     // Suspension check before logging in
     const suspendReason = await checkRiderSuspension(identifier.trim());
     if (suspendReason) {
-      setError(`🚫 অ্যাকাউন্ট স্থগিত: ${suspendReason}। সহায়তার জন্য সাপোর্টে যোগাযোগ করুন: 01700-000000`);
+      setError(`🚫 অ্যাকাউন্ট স্থগিত: ${suspendReason}। সহায়তার জন্য সাপোর্টে যোগাযোগ করুন: ${COMPANY_CONFIG.support.phone}`);
       setLoading(false);
       return;
     }
@@ -113,7 +114,7 @@ export default function LoginPage() {
         const idToCheck = res.data?.user?.id || identifier.trim();
         const secondCheck = await checkRiderSuspension(idToCheck);
         if (secondCheck) {
-          setError(`🚫 অ্যাকাউন্ট স্থগিত: ${secondCheck}। সহায়তার জন্য সাপোর্টে যোগাযোগ করুন: 01700-000000`);
+          setError(`🚫 অ্যাকাউন্ট স্থগিত: ${secondCheck}। সহায়তার জন্য সাপোর্টে যোগাযোগ করুন: ${COMPANY_CONFIG.support.phone}`);
           localStorage.removeItem("rider_token");
           localStorage.removeItem("rider_user");
           setLoading(false);
@@ -290,7 +291,7 @@ export default function LoginPage() {
 
             <button
               type="button"
-              onClick={() => alert("সাহায্যের জন্য Tatka Bazar হেল্পলাইনে যোগাযোগ করুন: 01700-000000")}
+              onClick={() => alert(`সাহায্যের জন্য Tatka Bazar হেল্পলাইনে যোগাযোগ করুন: ${COMPANY_CONFIG.support.phone}`)}
               style={{
                 width: 38, height: 38, borderRadius: "50%",
                 display: "flex", alignItems: "center", justifyContent: "center",
@@ -347,7 +348,7 @@ export default function LoginPage() {
                 </div>
                 <div>{suspendedNotice}</div>
                 <div style={{ fontSize: ".76rem", color: "#A8C0D8", marginTop: 4 }}>
-                  সহায়তার জন্য অ্যাডমিন বা সাপোর্টে যোগাযোগ করুন: 01700-000000
+                  সহায়তার জন্য অ্যাডমিন বা সাপোর্টে যোগাযোগ করুন: {COMPANY_CONFIG.support.phone}
                 </div>
               </div>
             </div>
@@ -413,7 +414,7 @@ export default function LoginPage() {
                   <label style={{ fontSize: ".78rem", fontWeight: 600, color: "rgba(168,192,216,.8)", fontFamily: "var(--font-bn)" }}>পাসওয়ার্ড</label>
                   <span
                     style={{ fontSize: ".75rem", color: "rgba(255,107,43,.8)", cursor: "pointer", fontFamily: "var(--font-bn)" }}
-                    onClick={() => alert("পাসওয়ার্ড ভুলে গেলে এডমিনের সাথে যোগাযোগ করুন: 01700-000000")}
+                    onClick={() => alert(`পাসওয়ার্ড ভুলে গেলে এডমিনের সাথে যোগাযোগ করুন: ${COMPANY_CONFIG.support.phone}`)}
                   >
                     ভুলে গেছেন?
                   </span>

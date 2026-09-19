@@ -1,5 +1,6 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
+import { COMPANY_CONFIG } from "@/lib/company-config";
 import { useRouter } from "next/navigation";
 
 interface SuspensionModalProps {
@@ -140,7 +141,7 @@ export function SuspensionModal({
         >
           📞 যেকোনো সহায়তার জন্য সাপোর্ট সেন্টারে যোগাযোগ করুন:
           <div style={{ color: "#38bdf8", fontWeight: 700, fontSize: "13px", marginTop: "2px" }}>
-            01700-000000 (সকাল ৯টা - রাত ১১টা)
+            {COMPANY_CONFIG.support.phone} (সকাল ৯টা - রাত ১১টা)
           </div>
         </div>
 

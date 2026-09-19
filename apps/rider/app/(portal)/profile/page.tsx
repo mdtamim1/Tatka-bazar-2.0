@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 import React, { useEffect, useState } from "react";
 import { apiFetch, clearToken, fetchPerformanceData, fullyResetRiderPanel, DEFAULT_PERFORMANCE, type RiderProfile, type RiderPerformance } from "@/lib/api";
 import { LiveFaceCamModal } from "@/components/LiveFaceCamModal";
@@ -175,26 +175,32 @@ export default function ProfilePage() {
             <span>কাস্টমারদের সাম্প্রতিক মন্তব্য ও রিভিউ</span>
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-            {perfData.recentReviews.map((rev) => (
-              <div key={rev.id} className="review-item-card">
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                    <span style={{ fontSize: ".82rem", fontWeight: 700, color: "var(--text-1)" }}>{rev.customerName}</span>
-                    <span style={{ fontSize: ".68rem", color: "var(--text-3)" }}>• {rev.area}</span>
-                  </div>
-                  <div style={{ color: "#f59e0b", fontSize: ".76rem", letterSpacing: 1 }}>
-                    {"⭐".repeat(rev.rating)}
-                  </div>
-                </div>
-                <div style={{ fontSize: ".78rem", color: "var(--text-2)", lineHeight: 1.4, fontFamily: "var(--font-bn)", fontStyle: "italic" }}>
-                  “{rev.comment}”
-                </div>
-                <div style={{ fontSize: ".65rem", color: "var(--text-3)", marginTop: 4, display: "flex", justifyContent: "space-between" }}>
-                  <span>অর্ডার #{rev.orderNumber}</span>
-                  <span>{rev.date}</span>
-                </div>
+            {perfData.recentReviews.length === 0 ? (
+              <div style={{ fontSize: ".76rem", color: "var(--text-3)", textAlign: "center", padding: "16px 8px", background: "var(--bg-base)", borderRadius: "var(--r-md)", border: "1px dashed var(--border-1)", fontFamily: "var(--font-bn)" }}>
+                এখনও কোনো কাস্টমার রিভিউ জমা পড়েনি। সফল ডেলিভারি সম্পন্ন হলে রিভিউ এখানে প্রদর্শিত হবে।
               </div>
-            ))}
+            ) : (
+              perfData.recentReviews.map((rev) => (
+                <div key={rev.id} className="review-item-card">
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                      <span style={{ fontSize: ".82rem", fontWeight: 700, color: "var(--text-1)" }}>{rev.customerName}</span>
+                      <span style={{ fontSize: ".68rem", color: "var(--text-3)" }}>• {rev.area}</span>
+                    </div>
+                    <div style={{ color: "#f59e0b", fontSize: ".76rem", letterSpacing: 1 }}>
+                      {"⭐".repeat(rev.rating)}
+                    </div>
+                  </div>
+                  <div style={{ fontSize: ".78rem", color: "var(--text-2)", lineHeight: 1.4, fontFamily: "var(--font-bn)", fontStyle: "italic" }}>
+                    “{rev.comment}”
+                  </div>
+                  <div style={{ fontSize: ".65rem", color: "var(--text-3)", marginTop: 4, display: "flex", justifyContent: "space-between" }}>
+                    <span>অর্ডার #{rev.orderNumber}</span>
+                    <span>{rev.date}</span>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </div>
       </div>

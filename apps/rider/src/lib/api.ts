@@ -1,4 +1,5 @@
 import { emitSyncEvent } from "./sync";
+import { COMPANY_CONFIG } from "./company-config";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
 
@@ -768,7 +769,7 @@ function handleMockFallback<T>(path: string, options: RequestInit): { success: b
       active[idx].status = "CANCELLATION_REQUESTED";
       active[idx].cancellationReason = body.reason || "কাস্টমার পার্সেল রিসিভ করেননি";
       active[idx].cancellationRequestedAt = new Date().toISOString();
-      active[idx].hubPhone = "01711-998877";
+      active[idx].hubPhone = COMPANY_CONFIG.support.phone;
       active[idx].returnCode = returnOtp;
       setLocalStore("active_tasks", active);
 
@@ -778,7 +779,7 @@ function handleMockFallback<T>(path: string, options: RequestInit): { success: b
         id: "n-cancel-req-" + Date.now(),
         type: "TASK",
         title: "বাতিল অনুরোধ পাঠানো হয়েছে",
-        body: `অর্ডার #${active[idx].order.orderNumber}: বাতিলের আবেদন অ্যাডমিনে পাঠানো হয়েছে। প্রয়োজনে হাবে কল দিন (01711-998877)।`,
+        body: `অর্ডার #${active[idx].order.orderNumber}: বাতিলের আবেদন অ্যাডমিনে পাঠানো হয়েছে। প্রয়োজনে হাবে কল দিন (${COMPANY_CONFIG.support.phone})।`,
         isRead: false,
         createdAt: new Date().toISOString(),
       });

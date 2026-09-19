@@ -15,6 +15,7 @@ import { queueOfflineAction } from "@/lib/offlineQueue";
 import { subscribeSyncEvent } from "@/lib/sync";
 import { useRiderSessionGuard } from "@/hooks/useRiderSessionGuard";
 import { SuspensionModal } from "@/components/SuspensionModal";
+import { COMPANY_CONFIG } from "@/lib/company-config";
 
 function HomeIcon()   { return <svg fill="none" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>; }
 function TaskIcon()   { return <svg fill="none" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" /></svg>; }
@@ -565,7 +566,7 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
               </span>
             )}
           </button>
-          <a href="tel:+8801700000000" className="support-btn"><PhoneIcon />কল</a>
+          <a href={`tel:${COMPANY_CONFIG.support.phone}`} className="support-btn"><PhoneIcon />কল</a>
         </div>
       </header>
 
@@ -805,7 +806,7 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
         onClose={() => setIsSosModalOpen(false)}
         riderId={riderId}
         riderName={riderName || "রাইডার"}
-        riderPhone={riderPhone || "01700000000"}
+        riderPhone={riderPhone || COMPANY_CONFIG.support.phone}
         onSosTriggered={() => {
           setActiveSos(getRiderActiveSos(riderId));
         }}

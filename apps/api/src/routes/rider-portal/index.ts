@@ -115,32 +115,92 @@ export async function riderPortalRoutes(fastify: FastifyInstance) {
     }
   });
 
-  // POST /rider-portal/kyc
+  // POST /rider-portal/kyc — Hardened with server-side validation
   fastify.post("/kyc", async (request, reply) => {
     const { sub: riderId } = request.user as { sub: string };
+
     try {
       const rider = await prisma.deliveryRider.findUnique({ where: { id: riderId } });
       if (!rider) return reply.status(404).send({ success: false, error: "Not found" });
+
+      // Block re-submission if already approved OR already submitted awaiting review
       if (rider.kycStatus === "APPROVED") {
-        return reply.status(403).send({ success: false, error: "KYC already approved. Contact support to make changes." });
+        return reply.status(403).send({ success: false, error: "KYC অনুমোদিত হয়েছে। পরিবর্তনের জন্য সাপোর্টে যোগাযোগ করুন।" });
       }
+      if (rider.kycStatus === "SUBMITTED") {
+        return reply.status(409).send({ success: false, error: "KYC ইতিমধ্যে জমা দেওয়া হয়েছে এবং যাচাইয়ের অপেক্ষায় আছে।" });
+      }
+
       const body = request.body as {
         fatherName?: string; motherName?: string; dateOfBirth?: string;
         presentAddress?: string; permanentAddress?: string; nidNumber?: string;
         nidFrontUrl?: string; nidBackUrl?: string; photoUrl?: string;
       };
 
-      // Encrypt NID with AES-256-GCM before saving to database
-      const encryptedNid = body.nidNumber ? encryptPII(body.nidNumber) : null;
+      // ─── Server-side Validation ────────────────────────────────────────────
+
+      // 1. Required fields
+      if (!body.nidNumber?.trim()) {
+        return reply.status(400).send({ success: false, error: "NID নম্বর আবশ্যিক।" });
+      }
+      if (!body.nidFrontUrl || !body.nidBackUrl) {
+        return reply.status(400).send({ success: false, error: "NID-এর সামনে ও পিছনের ছবি আবশ্যিক।" });
+      }
+      if (!body.fatherName?.trim() || !body.motherName?.trim()) {
+        return reply.status(400).send({ success: false, error: "পিতা ও মাতার নাম আবশ্যিক।" });
+      }
+      if (!body.presentAddress?.trim()) {
+        return reply.status(400).send({ success: false, error: "বর্তমান ঠিকানা আবশ্যিক।" });
+      }
+
+      // 2. NID format — Bangladesh NID: 10, 13, or 17 digits only
+      const cleanNid = body.nidNumber.replace(/\s|-/g, "");
+      if (!/^\d{10}$|^\d{13}$|^\d{17}$/.test(cleanNid)) {
+        return reply.status(400).send({ success: false, error: "NID নম্বর অবশ্যই ১০, ১৩ বা ১৭ সংখ্যার হতে হবে।" });
+      }
+
+      // 3. Image validation — must be base64 data URI or HTTPS URL, max ~3MB base64
+      const MAX_BASE64_SIZE = 3 * 1024 * 1024 * 1.37; // ~3MB after base64 overhead
+      const isValidImageUrl = (url: string) => {
+        if (url.startsWith("data:image/")) return url.length < MAX_BASE64_SIZE;
+        if (/^https:\/\/.+\.(jpg|jpeg|png|webp)(\?.*)?$/i.test(url)) return true;
+        return false;
+      };
+
+      if (!isValidImageUrl(body.nidFrontUrl)) {
+        return reply.status(400).send({ success: false, error: "NID সামনের ছবি অবৈধ বা অনেক বড় (সর্বোচ্চ ৩ MB)।" });
+      }
+      if (!isValidImageUrl(body.nidBackUrl)) {
+        return reply.status(400).send({ success: false, error: "NID পিছনের ছবি অবৈধ বা অনেক বড় (সর্বোচ্চ ৩ MB)।" });
+      }
+      if (body.photoUrl && !isValidImageUrl(body.photoUrl)) {
+        return reply.status(400).send({ success: false, error: "প্রোফাইল ছবি অবৈধ বা অনেক বড় (সর্বোচ্চ ৩ MB)।" });
+      }
+
+      // 4. Date of birth sanity check — must be 18–65 years old
+      if (body.dateOfBirth) {
+        const dob = new Date(body.dateOfBirth);
+        const now = new Date();
+        const ageYears = (now.getTime() - dob.getTime()) / (1000 * 60 * 60 * 24 * 365.25);
+        if (isNaN(dob.getTime()) || ageYears < 18 || ageYears > 65) {
+          return reply.status(400).send({ success: false, error: "জন্ম তারিখ অবৈধ। রাইডারের বয়স ১৮–৬৫ বছরের মধ্যে হতে হবে।" });
+        }
+      }
+
+      // ─── Encrypt & Save ───────────────────────────────────────────────────
+      const encryptedNid = encryptPII(cleanNid);
 
       const updated = await prisma.deliveryRider.update({
         where: { id: riderId },
         data: {
-          fatherName: body.fatherName ?? null, motherName: body.motherName ?? null,
+          fatherName: body.fatherName.trim(), motherName: body.motherName.trim(),
           dateOfBirth: body.dateOfBirth ? new Date(body.dateOfBirth) : null,
-          presentAddress: body.presentAddress ?? null, permanentAddress: body.permanentAddress ?? null,
-          nidNumber: encryptedNid, nidFrontUrl: body.nidFrontUrl ?? null,
-          nidBackUrl: body.nidBackUrl ?? null, photoUrl: body.photoUrl ?? null,
+          presentAddress: body.presentAddress.trim(),
+          permanentAddress: body.permanentAddress?.trim() ?? null,
+          nidNumber: encryptedNid,
+          nidFrontUrl: body.nidFrontUrl,
+          nidBackUrl: body.nidBackUrl,
+          photoUrl: body.photoUrl ?? null,
           kycStatus: "SUBMITTED", kycSubmittedAt: new Date(),
         },
         select: { id: true, kycStatus: true, kycSubmittedAt: true },

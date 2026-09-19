@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { registerRider } from "@/lib/api";
+import { COMPANY_CONFIG } from "@/lib/company-config";
 
 // Animated floating orbs — same as login page
 function Orbs() {
@@ -293,7 +294,7 @@ export default function RegisterPage() {
             </Link>
             <button
               type="button"
-              onClick={() => alert("সাহায্যের জন্য Tatka Bazar হেল্পলাইনে যোগাযোগ করুন: 01700-000000")}
+              onClick={() => alert(`সাহায্যের জন্য Tatka Bazar হেল্পলাইনে যোগাযোগ করুন: ${COMPANY_CONFIG.support.phone}`)}
               style={{
                 width: 38, height: 38, borderRadius: 10,
                 background: "rgba(255,255,255,.06)",
@@ -368,7 +369,7 @@ export default function RegisterPage() {
                 id="reg-name"
                 type="text"
                 className="reg-input"
-                placeholder="যেমন: মোঃ সাকিব হাসান"
+                placeholder="আপনার পূর্ণ নাম লিখুন"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 required

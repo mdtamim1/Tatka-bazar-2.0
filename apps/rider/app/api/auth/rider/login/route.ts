@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { prisma } from "@tatka-bazar/database";
 import { signRiderToken } from "@/lib/jwt";
+import { COMPANY_CONFIG } from "@/lib/company-config";
 
 export const dynamic = "force-dynamic";
 
@@ -53,7 +54,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(
         {
           success: false,
-          error: "🚫 আপনার রাইডার অ্যাকাউন্টটি Hub অ্যাডমিন কর্তৃক সাময়িকভাবে স্থগিত (Suspended) করা হয়েছে। সহায়তার জন্য সাপোর্টে যোগাযোগ করুন: 01700-000000",
+          error: `🚫 আপনার রাইডার অ্যাকাউন্টটি Hub অ্যাডমিন কর্তৃক সাময়িকভাবে স্থগিত (Suspended) করা হয়েছে। সহায়তার জন্য সাপোর্টে যোগাযোগ করুন: ${COMPANY_CONFIG.support.phone}`,
           isSuspended: true,
         },
         { status: 403, headers: CORS_HEADERS }

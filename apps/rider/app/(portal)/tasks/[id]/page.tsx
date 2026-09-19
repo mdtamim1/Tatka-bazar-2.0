@@ -6,6 +6,7 @@ import { sound } from "@/lib/sound";
 import { useWakeLock } from "@/hooks/useWakeLock";
 import { ChatModal } from "@/components/ChatModal";
 import { subscribeSyncEvent, emitSyncEvent } from "@/lib/sync";
+import { COMPANY_CONFIG } from "@/lib/company-config";
 
 function confetti() {
   const canvas = document.createElement("canvas");
@@ -411,10 +412,10 @@ export default function TaskDetailPage() {
               <div>
                 <div style={{ fontSize: ".68rem", color: "var(--text-3)" }}>টাটকা বাজার সেন্ট্রাল হাব</div>
                 <div style={{ fontSize: ".92rem", fontWeight: 800, color: "var(--text-1)" }}>
-                  📞 {task.hubPhone || "01711-998877"}
+                  📞 {task.hubPhone || COMPANY_CONFIG.support.phone}
                 </div>
               </div>
-              <a href={`tel:${(task.hubPhone || "01711998877").replace(/[^0-9]/g, "")}`} className="hub-call-btn">
+              <a href={`tel:${(task.hubPhone || COMPANY_CONFIG.support.phone).replace(/[^0-9]/g, "")}`} className="hub-call-btn">
                 📞 সরাসরি কল দিন
               </a>
             </div>
@@ -991,9 +992,9 @@ export default function TaskDetailPage() {
             <div className="detail-info-item" style={{ gridColumn: "1/-1" }}>
               <div className="detail-info-label">দোকান ও ভেন্ডর যোগাযোগ</div>
               <div className="detail-info-value" style={{ display: "flex", gap: "8px", alignItems: "center", flexWrap: "wrap", marginTop: 4 }}>
-                <span style={{ fontWeight: 800 }}>🏪 {task.order.vendorName || "সবুজ খামার গ্রোসারি"}</span>
+                <span style={{ fontWeight: 800 }}>🏪 {task.order.vendorName || "সংশ্লিষ্ট ভেন্ডর"}</span>
                 <a
-                  href="tel:01711223344"
+                  href={`tel:${((task as any).vendorPhone || (task.order as any).vendorPhone || COMPANY_CONFIG.support.phone).replace(/[^0-9]/g, "")}`}
                   style={{
                     color: "var(--emerald)", display: "inline-flex",
                     alignItems: "center", gap: 4, textDecoration: "none", fontWeight: 700,
@@ -1002,7 +1003,7 @@ export default function TaskDetailPage() {
                   }}
                   title="ভেন্ডরকে সরাসরি কল করুন"
                 >
-                  📞 01711-223344 (কল দিন)
+                  📞 {(task as any).vendorPhone || (task.order as any).vendorPhone || COMPANY_CONFIG.support.phone} (কল দিন)
                 </a>
                 {!isOnTheWay ? (
                   <button
@@ -1070,10 +1071,10 @@ export default function TaskDetailPage() {
               <div>
                 <div style={{ fontSize: ".68rem", color: "var(--text-3)" }}>টাটকা বাজার সেন্ট্রাল হাব</div>
                 <div style={{ fontSize: ".90rem", fontWeight: 800, color: "var(--text-1)" }}>
-                  📞 {task.hubPhone || "01711-998877"}
+                  📞 {task.hubPhone || COMPANY_CONFIG.support.phone}
                 </div>
               </div>
-              <a href={`tel:${(task.hubPhone || "01711998877").replace(/[^0-9]/g, "")}`} className="hub-call-btn">
+              <a href={`tel:${(task.hubPhone || COMPANY_CONFIG.support.phone).replace(/[^0-9]/g, "")}`} className="hub-call-btn">
                 📞 হাবে কল দিন
               </a>
             </div>
