@@ -1,4 +1,4 @@
-﻿import type { FastifyInstance } from "fastify";
+import type { FastifyInstance } from "fastify";
 import { prisma } from "@tatka-bazar/database";
 import { encryptPII, maskPII } from "@tatka-bazar/shared";
 import { isRiderFraudLocked } from "../../services/security/fraud-watchdog.js";
@@ -1160,12 +1160,17 @@ export async function riderPortalRoutes(fastify: FastifyInstance) {
   fastify.get("/performance", async (request, reply) => {
     const { sub: riderId } = request.user as { sub: string };
     try {
-      const [ratingsAgg, deliveryCount, cancelledCount, allRatings, recentRatings] = await Promise.all([
+      const [ratingsAgg, deliveryCount, cancelledCount, allRatings, recentRatings, timedDeliveries] = await Promise.all([
         (prisma as any).riderRating.aggregate({ where: { riderId }, _avg: { rating: true }, _count: { rating: true } }),
         (prisma.deliveryAssignment as any).count({ where: { riderId, status: "DELIVERED" } }),
         (prisma.deliveryAssignment as any).count({ where: { riderId, status: "CANCELLED" } }),
         (prisma as any).riderRating.findMany({ where: { riderId }, select: { rating: true } }),
         (prisma as any).riderRating.findMany({ where: { riderId }, orderBy: { createdAt: "desc" }, take: 5 }),
+        // On-time rate: deliveries with both pickedAt and deliveredAt recorded
+        (prisma.deliveryAssignment as any).findMany({
+          where: { riderId, status: "DELIVERED", pickedAt: { not: null }, deliveredAt: { not: null } },
+          select: { pickedAt: true, deliveredAt: true },
+        }),
       ]);
       const totalDeliveries = Number(deliveryCount);
       const totalCancelled = Number(cancelledCount);
@@ -1173,6 +1178,15 @@ export async function riderPortalRoutes(fastify: FastifyInstance) {
       const avgRating = ratingsAgg._avg?.rating ? Number(ratingsAgg._avg.rating) : 5.0;
       const totalRatings = ratingsAgg._count?.rating || 0;
       const cancellationRate = totalJobs > 0 ? Math.round((totalCancelled / totalJobs) * 100) : 0;
+      // On-time rate: within 45 minutes of pickup (2700 seconds)
+      const ON_TIME_THRESHOLD_MS = 45 * 60 * 1000;
+      const onTimeDeliveries = (timedDeliveries as any[]).filter((d: any) => {
+        const durationMs = new Date(d.deliveredAt).getTime() - new Date(d.pickedAt).getTime();
+        return durationMs <= ON_TIME_THRESHOLD_MS;
+      }).length;
+      const onTimeRate = (timedDeliveries as any[]).length > 0
+        ? Math.round((onTimeDeliveries / (timedDeliveries as any[]).length) * 100)
+        : 100; // New rider with no data defaults to 100%
       let tier = "BRONZE", tierTitleBn = "Bronze Rider", tierBadgeEmoji = "🥉", tierPerkBn = "Basic commission";
       let nextTierTarget: any = { targetTier: "SILVER", deliveriesNeeded: Math.max(0, 50 - totalDeliveries), minRating: 4.0 };
       if (totalDeliveries >= 500) { tier = "PLATINUM"; tierTitleBn = "Platinum Rider"; tierBadgeEmoji = "💎"; tierPerkBn = "Max commission + priority dispatch"; nextTierTarget = null; }
@@ -1182,7 +1196,7 @@ export async function riderPortalRoutes(fastify: FastifyInstance) {
       for (const r of allRatings) {
         if (r.rating === 5) starsBreakdown.star5++; else if (r.rating === 4) starsBreakdown.star4++; else if (r.rating === 3) starsBreakdown.star3++; else if (r.rating === 2) starsBreakdown.star2++; else if (r.rating === 1) starsBreakdown.star1++;
       }
-      return reply.send({ success: true, data: { tier, tierTitleBn, tierBadgeEmoji, tierPerkBn, totalDeliveries, rating: Number(avgRating.toFixed(1)), totalRatings, onTimeRate: 98, acceptanceRate: Math.max(0, 100 - cancellationRate), cancellationRate, nextTierTarget, starsBreakdown, recentReviews: recentRatings.map((r: any) => ({ id: r.id, rating: r.rating, comment: r.comment || "", date: r.createdAt })) } });
+      return reply.send({ success: true, data: { tier, tierTitleBn, tierBadgeEmoji, tierPerkBn, totalDeliveries, rating: Number(avgRating.toFixed(1)), totalRatings, onTimeRate, acceptanceRate: Math.max(0, 100 - cancellationRate), cancellationRate, nextTierTarget, starsBreakdown, recentReviews: recentRatings.map((r: any) => ({ id: r.id, rating: r.rating, comment: r.comment || "", date: r.createdAt })) } });
     } catch (err: any) { return reply.status(500).send({ success: false, error: err.message }); }
   });
 }
