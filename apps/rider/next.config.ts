@@ -12,7 +12,16 @@ const hubDomain = (() => {
 })();
 
 const nextConfig: NextConfig = {
-  transpilePackages: ['@tatka-bazar/shared', '@tatka-bazar/database'],
+  transpilePackages: ['@tatka-bazar/shared', '@tatka-bazar/database', '@tatka-bazar/redis'],
+
+  webpack: (config) => {
+    config.resolve = config.resolve || {};
+    config.resolve.extensionAlias = {
+      '.js': ['.ts', '.tsx', '.js'],
+      '.mjs': ['.mts', '.mjs'],
+    };
+    return config;
+  },
 
   // Compress output
   compress: true,
