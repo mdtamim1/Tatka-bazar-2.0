@@ -1,4 +1,36 @@
 import { Redis } from "ioredis";
+import fs from "fs";
+import path from "path";
+
+// Auto-load REDIS_URL from .env files if not already set in process.env
+if (!process.env["REDIS_URL"]) {
+  const envCandidates = [
+    path.resolve(process.cwd(), ".env"),
+    path.resolve(process.cwd(), "apps/api/.env"),
+    path.resolve(process.cwd(), "packages/database/.env"),
+    path.resolve(process.cwd(), "../../.env"),
+    path.resolve(process.cwd(), "../.env"),
+  ];
+  for (const envPath of envCandidates) {
+    try {
+      if (fs.existsSync(envPath)) {
+        const content = fs.readFileSync(envPath, "utf-8");
+        for (const line of content.split("\n")) {
+          const trimmed = line.trim();
+          if (trimmed && !trimmed.startsWith("#") && trimmed.includes("=")) {
+            const eqIdx = trimmed.indexOf("=");
+            const key = trimmed.slice(0, eqIdx).trim();
+            const val = trimmed.slice(eqIdx + 1).trim().replace(/^["']|["']$/g, "");
+            if (!process.env[key]) {
+              process.env[key] = val;
+            }
+          }
+        }
+        if (process.env["REDIS_URL"]) break;
+      }
+    } catch {}
+  }
+}
 
 // ============================================================
 // Tatka Bazar — Resilient Redis Connection Manager
