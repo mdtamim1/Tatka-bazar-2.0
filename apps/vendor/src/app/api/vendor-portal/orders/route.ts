@@ -5,7 +5,7 @@ import { verifyVendorToken } from "@/lib/jwt";
 export const dynamic = "force-dynamic";
 
 const CORS_HEADERS = {
-  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Origin": process.env.NEXT_PUBLIC_STOREFRONT_URL || "*",
   "Access-Control-Allow-Methods": "GET, PATCH, OPTIONS",
   "Access-Control-Allow-Headers": "Content-Type, Authorization",
 };
@@ -14,45 +14,42 @@ export async function OPTIONS() {
   return new NextResponse(null, { status: 204, headers: CORS_HEADERS });
 }
 
+/** Shared helper: extract & verify vendor from Authorization header */
+function getVerifiedVendor(req: NextRequest) {
+  const authHeader = req.headers.get("authorization") || "";
+  const token = authHeader.replace(/^Bearer\s+/i, "").trim();
+  if (!token) return null;
+  return verifyVendorToken(token); // returns null if role !== "vendor"
+}
+
 export async function GET(req: NextRequest) {
   try {
-    const authHeader = req.headers.get("authorization") || "";
-    const token = authHeader.replace(/^Bearer\s+/i, "").trim();
-
-    if (!token) {
+    const payload = getVerifiedVendor(req);
+    if (!payload) {
       return NextResponse.json(
-        { success: false, error: "লগইন প্রয়োজন।" },
+        { success: false, error: "লগইন প্রয়োজন অথবা সেশনের মেয়াদ শেষ হয়েছে।" },
         { status: 401, headers: CORS_HEADERS }
       );
     }
 
-    const payload = verifyVendorToken(token);
-    if (!payload || !payload.sub) {
-      return NextResponse.json(
-        { success: false, error: "সেশনের মেয়াদ শেষ হয়েছে।" },
-        { status: 401, headers: CORS_HEADERS }
-      );
-    }
-
-    // Query real PostgreSQL database for orders belonging to this vendor or general queue
+    // 🔒 SECURITY FIX: Only fetch orders that belong STRICTLY to this vendor.
+    // Removed { vendorId: null } which was leaking all platform orders to every vendor.
     const dbOrders = await prisma.order.findMany({
       where: {
-        OR: [
-          { items: { some: { vendorId: payload.sub } } },
-          { items: { some: { vendorId: null } } },
-        ],
+        items: { some: { vendorId: payload.sub } },
       },
       include: {
         items: {
-          include: {
-            product: true,
-          },
+          where: { vendorId: payload.sub }, // Only this vendor's line items
+          include: { product: true },
         },
-        user: true,
+        user: {
+          select: { name: true, phone: true }, // minimal PII
+        },
         address: true,
         deliveryAssignment: {
           include: {
-            rider: true,
+            rider: { select: { name: true, phone: true, vehicleType: true } },
           },
         },
       },
@@ -61,34 +58,24 @@ export async function GET(req: NextRequest) {
     });
 
     const mappedOrders = dbOrders.map((ord) => {
-      // Map OrderStatus
       let mappedStatus: "PENDING" | "PROCESSING" | "READY_FOR_PICKUP" | "HANDED_TO_RIDER" | "COMPLETED" | "RETURNED" = "PENDING";
       switch (ord.status) {
-        case "PENDING":
-          mappedStatus = "PENDING";
-          break;
+        case "PENDING":      mappedStatus = "PENDING"; break;
         case "CONFIRMED":
-        case "PREPARING":
-          mappedStatus = "PROCESSING";
-          break;
-        case "READY_FOR_PICKUP":
-          mappedStatus = "READY_FOR_PICKUP";
-          break;
-        case "OUT_FOR_DELIVERY":
-          mappedStatus = "HANDED_TO_RIDER";
-          break;
-        case "DELIVERED":
-          mappedStatus = "COMPLETED";
-          break;
-        case "REFUNDED":
-          mappedStatus = "RETURNED";
-          break;
-        default:
-          mappedStatus = "PENDING";
+        case "PREPARING":    mappedStatus = "PROCESSING"; break;
+        case "READY_FOR_PICKUP": mappedStatus = "READY_FOR_PICKUP"; break;
+        case "OUT_FOR_DELIVERY": mappedStatus = "HANDED_TO_RIDER"; break;
+        case "DELIVERED":    mappedStatus = "COMPLETED"; break;
+        case "REFUNDED":     mappedStatus = "RETURNED"; break;
+        default:             mappedStatus = "PENDING";
       }
 
       const items = ord.items.map((it) => {
-        const isWeight = it.name.includes("কেজি") || it.name.includes("kg") || it.name.includes("মাছ") || it.name.includes("মাংস");
+        const isWeight =
+          it.name.includes("কেজি") ||
+          it.name.includes("kg") ||
+          it.name.includes("মাছ") ||
+          it.name.includes("মাংস");
         return {
           id: it.id,
           productId: it.productId,
@@ -107,14 +94,16 @@ export async function GET(req: NextRequest) {
       });
 
       const gross = Number(ord.total);
-      const net = Math.round(gross * 0.9); // 10% platform commission
+      const net = Math.round(gross * 0.9);
 
       return {
         id: ord.id,
         displayId: ord.orderNumber,
         customerName: ord.user.name || "গ্রাহক",
-        customerPhone: ord.user.phone || "01700000000",
-        customerAddress: ord.address ? `${ord.address.line1}, ${ord.address.area}, ${ord.address.city}` : "ঢাকা, বাংলাদেশ",
+        customerPhone: ord.user.phone || "",
+        customerAddress: ord.address
+          ? `${ord.address.line1}, ${ord.address.area}, ${ord.address.city}`
+          : "ঢাকা, বাংলাদেশ",
         deliveryZone: ord.address?.area || ord.address?.city || "ঢাকা জোন",
         createdAt: ord.createdAt.toISOString(),
         status: mappedStatus,
@@ -145,13 +134,10 @@ export async function GET(req: NextRequest) {
 
 export async function PATCH(req: NextRequest) {
   try {
-    const authHeader = req.headers.get("authorization") || "";
-    const token = authHeader.replace(/^Bearer\s+/i, "").trim();
-    const payload = verifyVendorToken(token);
-
-    if (!payload || !payload.sub) {
+    const payload = getVerifiedVendor(req);
+    if (!payload) {
       return NextResponse.json(
-        { success: false, error: "সেশনের মেয়াদ শেষ হয়েছে।" },
+        { success: false, error: "সেশনের মেয়াদ শেষ হয়েছে। আবার লগইন করুন।" },
         { status: 401, headers: CORS_HEADERS }
       );
     }
@@ -166,8 +152,34 @@ export async function PATCH(req: NextRequest) {
       );
     }
 
+    // 🔒 IDOR FIX: Verify the order actually contains items belonging to this vendor
+    // before allowing any mutation.
+    const orderOwnershipCheck = await prisma.order.findFirst({
+      where: {
+        id: orderId,
+        items: { some: { vendorId: payload.sub } },
+      },
+      select: { id: true, status: true },
+    });
+
+    if (!orderOwnershipCheck) {
+      return NextResponse.json(
+        { success: false, error: "এই অর্ডারটি আপনার অ্যাকাউন্টের সাথে সম্পর্কিত নয়।" },
+        { status: 403, headers: CORS_HEADERS }
+      );
+    }
+
     // Map vendor status back to Prisma OrderStatus
-    let dbStatus: "PENDING" | "CONFIRMED" | "PREPARING" | "READY_FOR_PICKUP" | "OUT_FOR_DELIVERY" | "DELIVERED" | "REFUNDED" | undefined;
+    let dbStatus:
+      | "PENDING"
+      | "CONFIRMED"
+      | "PREPARING"
+      | "READY_FOR_PICKUP"
+      | "OUT_FOR_DELIVERY"
+      | "DELIVERED"
+      | "REFUNDED"
+      | undefined;
+
     if (status === "PROCESSING" || status === "PREPARING") dbStatus = "PREPARING";
     else if (status === "READY_FOR_PICKUP") dbStatus = "READY_FOR_PICKUP";
     else if (status === "COMPLETED") dbStatus = "DELIVERED";
@@ -180,16 +192,28 @@ export async function PATCH(req: NextRequest) {
       });
     }
 
-    // If actual weight provided, update order item
+    // 🔒 IDOR FIX: If weight update requested, verify the itemId belongs to this vendor
     if (itemId && actualWeight) {
-      const item = await prisma.orderItem.findUnique({ where: { id: itemId } });
-      if (item) {
-        const newTotal = Number(item.price) * Number(actualWeight);
-        await prisma.orderItem.update({
-          where: { id: itemId },
-          data: { total: newTotal },
-        });
+      const item = await prisma.orderItem.findFirst({
+        where: {
+          id: itemId,
+          orderId: orderId,
+          vendorId: payload.sub, // 🔒 must belong to this vendor
+        },
+      });
+
+      if (!item) {
+        return NextResponse.json(
+          { success: false, error: "এই পণ্যটি আপনার অ্যাকাউন্টের সাথে সম্পর্কিত নয়।" },
+          { status: 403, headers: CORS_HEADERS }
+        );
       }
+
+      const newTotal = Number(item.price) * Number(actualWeight);
+      await prisma.orderItem.update({
+        where: { id: itemId },
+        data: { total: newTotal },
+      });
     }
 
     return NextResponse.json(

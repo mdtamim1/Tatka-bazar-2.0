@@ -43,4 +43,10 @@ Thumbs.db
 scratch/
 skin-o-deep-ocean-mineral-refreshing-s
 cloud flare task
+*.bat
+
+# Credentials & Service Account Keys
+*-firebase-adminsdk-*.json
+*.pem
+*.key
 

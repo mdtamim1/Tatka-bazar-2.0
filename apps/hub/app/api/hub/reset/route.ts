@@ -1,21 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
 import { resetDbHubData } from "@/lib/hubDb";
-import { validateSession } from "@/lib/hubStore";
+import { getSessionFromRequest, unauthorized, forbidden } from "@/lib/authMiddleware";
 
+// POST /api/hub/reset
+// SUPER_ADMIN only — wipes all hub DB data and resets in-memory store.
+// The insecure open GET handler has been removed to prevent unauthenticated DB wipes.
 export async function POST(req: NextRequest) {
-  const token = req.headers.get("authorization")?.replace("Bearer ", "");
-  if (token) {
-    const session = validateSession(token);
-    if (!session || session.role !== "SUPER_ADMIN") {
-      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
-    }
+  const session = getSessionFromRequest(req);
+
+  if (!session) {
+    return unauthorized();
   }
 
-  const res = await resetDbHubData();
-  return NextResponse.json(res);
-}
+  if (session.role !== "SUPER_ADMIN") {
+    return forbidden();
+  }
 
-export async function GET() {
   const res = await resetDbHubData();
   return NextResponse.json(res);
 }

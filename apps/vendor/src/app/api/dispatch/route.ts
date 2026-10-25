@@ -1,59 +1,78 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+import { verifyVendorToken } from "@/lib/jwt";
+import {
+  getTasks,
+  saveTasks,
+  getChatMessages,
+  addChatMessage,
+  resetDispatch,
+} from "@/lib/dispatchStore";
 
 export const dynamic = "force-dynamic";
 
-// Global in-memory queue to survive invocations on warm serverless instances
-const globalScope = globalThis as unknown as {
-  _tatka_dispatch_tasks?: any[];
-  _tatka_chat_messages?: Record<string, any[]>;
-};
-
-if (!globalScope._tatka_dispatch_tasks) {
-  globalScope._tatka_dispatch_tasks = [];
-}
-if (!globalScope._tatka_chat_messages) {
-  globalScope._tatka_chat_messages = {};
-}
+// 🔒 Shared secret for internal Hub-to-Vendor cross-portal calls.
+// Set INTERNAL_API_SECRET in .env on both Hub and Vendor portals.
+const INTERNAL_API_SECRET = process.env.INTERNAL_API_SECRET;
 
 const CORS_HEADERS = {
-  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Origin": process.env.NEXT_PUBLIC_STOREFRONT_URL || "*",
   "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Requested-With",
+  "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Internal-Secret",
 };
 
 export async function OPTIONS() {
-  return new NextResponse(null, {
-    status: 204,
-    headers: CORS_HEADERS,
-  });
+  return new NextResponse(null, { status: 204, headers: CORS_HEADERS });
 }
 
-export async function GET(request: Request) {
+/**
+ * Verifies that the caller is either:
+ *   1. A valid vendor JWT, OR
+ *   2. A trusted internal portal (Hub/Rider) using the INTERNAL_API_SECRET header.
+ */
+function isAuthorized(req: NextRequest): boolean {
+  // Internal portal-to-portal calls (Hub dispatching to Vendor)
+  const internalSecret = req.headers.get("x-internal-secret");
+  if (INTERNAL_API_SECRET && internalSecret === INTERNAL_API_SECRET) {
+    return true;
+  }
+
+  // Standard vendor JWT auth
+  const authHeader = req.headers.get("authorization") || "";
+  const token = authHeader.replace(/^Bearer\s+/i, "").trim();
+  if (token) {
+    const payload = verifyVendorToken(token);
+    if (payload) return true;
+  }
+
+  return false;
+}
+
+export async function GET(request: NextRequest) {
+  // 🔒 READ operations require auth too (dispatch list contains customer data)
+  if (!isAuthorized(request)) {
+    return NextResponse.json(
+      { success: false, error: "অননুমোদিত অনুরোধ।" },
+      { status: 401, headers: CORS_HEADERS }
+    );
+  }
+
   const { searchParams } = new URL(request.url);
   const orderId = searchParams.get("orderId");
   const all = searchParams.get("all");
   const chatOrderId = searchParams.get("chatOrderId");
 
-  // If requesting chat messages
   if (chatOrderId) {
-    const messages = globalScope._tatka_chat_messages?.[chatOrderId] || [];
-    return NextResponse.json(
-      { success: true, messages },
-      { headers: CORS_HEADERS }
-    );
+    const messages = await getChatMessages(chatOrderId);
+    return NextResponse.json({ success: true, messages }, { headers: CORS_HEADERS });
   }
 
-  const tasks = globalScope._tatka_dispatch_tasks || [];
+  const tasks = await getTasks();
 
   if (orderId) {
     const single = tasks.find((t: any) => t.id === orderId || t.orderNumber === orderId);
-    return NextResponse.json(
-      { success: true, task: single || null },
-      { headers: CORS_HEADERS }
-    );
+    return NextResponse.json({ success: true, task: single || null }, { headers: CORS_HEADERS });
   }
 
-  // Return all tasks if requested (for vendor sync)
   if (all === "true") {
     return NextResponse.json(
       { success: true, data: tasks, total: tasks.length },
@@ -61,22 +80,28 @@ export async function GET(request: Request) {
     );
   }
 
-  // Return unassigned / ready-for-pickup tasks
   const pendingTasks = tasks.filter((t: any) => !t.claimed && t.status === "READY_FOR_PICKUP");
-
   return NextResponse.json(
     { success: true, data: pendingTasks, total: pendingTasks.length },
     { headers: CORS_HEADERS }
   );
 }
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
+  // 🔒 All write operations require authorization
+  if (!isAuthorized(request)) {
+    return NextResponse.json(
+      { success: false, error: "অননুমোদিত অনুরোধ।" },
+      { status: 401, headers: CORS_HEADERS }
+    );
+  }
+
   try {
     const body = await request.json();
     const action = body.action || (body.task ? "READY_FOR_PICKUP" : "READY_FOR_PICKUP");
-    const tasks = globalScope._tatka_dispatch_tasks || [];
+    // Tasks fetched per-action via Redis-backed getTasks()
 
-    // 1. Ready For Pickup (Vendor adds new order)
+    // 1. Ready For Pickup (Vendor adds new order to dispatch queue)
     if (action === "READY_FOR_PICKUP") {
       const taskData = body.task || body;
       if (!taskData.id) {
@@ -112,14 +137,15 @@ export async function POST(request: Request) {
         pickedUpFromStore: false,
       };
 
+      const tasks = await getTasks();
       const filtered = tasks.filter((t: any) => t.id !== newTask.id);
       filtered.unshift(newTask);
-      globalScope._tatka_dispatch_tasks = filtered;
+      await saveTasks(filtered);
 
       return NextResponse.json(
         {
           success: true,
-          message: `অর্ডার #${newTask.orderNumber} সফলভাবে রাইডার ডিসপ্যাচ লাইনে যুক্ত হয়েছে!`,
+          message: `অর্ডার #${newTask.orderNumber} সফলভাবে রাইডার ডিসপ্যাচ লাইনে যুক্ত হয়েছে!`,
           task: newTask,
         },
         { headers: CORS_HEADERS }
@@ -135,6 +161,7 @@ export async function POST(request: Request) {
       const riderVehicle = body.riderVehicle || "";
       const riderTier = body.riderTier || "";
 
+      const tasks = await getTasks();
       const idx = tasks.findIndex((t: any) => t.id === targetId || t.orderNumber === targetId);
       if (idx !== -1 && tasks[idx]) {
         tasks[idx].claimed = true;
@@ -153,12 +180,12 @@ export async function POST(request: Request) {
           riderTier,
           claimedAt: new Date().toISOString(),
         };
-        globalScope._tatka_dispatch_tasks = tasks;
+        await saveTasks(tasks);
 
         return NextResponse.json(
           {
             success: true,
-            message: `টাস্ক ${riderName} কর্তৃক সফলভাবে গ্রহণ করা হয়েছে!`,
+            message: `টাস্ক ${riderName} কর্তৃক সফলভাবে গ্রহণ করা হয়েছে!`,
             task: tasks[idx],
           },
           { headers: CORS_HEADERS }
@@ -166,15 +193,20 @@ export async function POST(request: Request) {
       }
 
       return NextResponse.json(
-        { success: false, error: "টাস্ক পাওয়া যায়নি অথবা ইতিমধ্যে অন্য রাইডার গ্রহণ করেছেন।" },
+        { success: false, error: "টাস্ক পাওয়া যায়নি অথবা ইতিমধ্যে অন্য রাইডার গ্রহণ করেছেন।" },
         { status: 404, headers: CORS_HEADERS }
       );
     }
 
-    // 3. Status Update (e.g. Parcel Handed Over to Rider -> ON_THE_WAY, or DELIVERED)
+    // 3. Status Update
     if (action === "STATUS_UPDATE" || action === "HANDOVER" || action === "PICKUP") {
       const targetId = body.taskId || body.orderId;
-      const newStatus = action === "HANDOVER" || action === "PICKUP" ? "ON_THE_WAY" : (body.status || "ON_THE_WAY");
+      const newStatus =
+        action === "HANDOVER" || action === "PICKUP"
+          ? "ON_THE_WAY"
+          : body.status || "ON_THE_WAY";
+
+      const tasks = await getTasks();
       const idx = tasks.findIndex((t: any) => t.id === targetId || t.orderNumber === targetId);
 
       if (idx !== -1 && tasks[idx]) {
@@ -187,12 +219,12 @@ export async function POST(request: Request) {
         } else if (newStatus === "RETURNED") {
           tasks[idx].returnedAt = new Date().toISOString();
         }
-        globalScope._tatka_dispatch_tasks = tasks;
+        await saveTasks(tasks);
 
         return NextResponse.json(
           {
             success: true,
-            message: `টাস্ক স্ট্যাটাস '${newStatus}' হিসেবে আপডেট হয়েছে।`,
+            message: `টাস্ক স্ট্যাটাস '${newStatus}' হিসেবে আপডেট হয়েছে।`,
             task: tasks[idx],
           },
           { headers: CORS_HEADERS }
@@ -200,7 +232,7 @@ export async function POST(request: Request) {
       }
 
       return NextResponse.json(
-        { success: false, error: "টাস্ক পাওয়া যায়নি" },
+        { success: false, error: "টাস্ক পাওয়া যায়নি" },
         { status: 404, headers: CORS_HEADERS }
       );
     }
@@ -216,25 +248,22 @@ export async function POST(request: Request) {
         timestamp: new Date().toISOString(),
       };
 
-      const chatMap = globalScope._tatka_chat_messages || {};
-      if (!chatMap[orderId]) {
-        chatMap[orderId] = [];
-      }
-      chatMap[orderId].push(message);
-      globalScope._tatka_chat_messages = chatMap;
-
-      return NextResponse.json(
-        { success: true, message },
-        { headers: CORS_HEADERS }
-      );
+      await addChatMessage(orderId, message);
+      return NextResponse.json({ success: true, message }, { headers: CORS_HEADERS });
     }
 
-    // 5. Reset
+    // 5. Reset — 🔒 REQUIRES internal secret (Hub/Admin only, not vendor JWT)
     if (action === "RESET") {
-      globalScope._tatka_dispatch_tasks = [];
-      globalScope._tatka_chat_messages = {};
+      const internalSecret = request.headers.get("x-internal-secret");
+      if (!INTERNAL_API_SECRET || internalSecret !== INTERNAL_API_SECRET) {
+        return NextResponse.json(
+          { success: false, error: "রিসেট অপারেশনের জন্য Hub-লেভেল অনুমোদন প্রয়োজন।" },
+          { status: 403, headers: CORS_HEADERS }
+        );
+      }
+      await resetDispatch();
       return NextResponse.json(
-        { success: true, message: "ডিসপ্যাচ কিউ সফলভাবে রিসেট করা হয়েছে।" },
+        { success: true, message: "ডিসপ্যাচ কিউ সফলভাবে রিসেট করা হয়েছে।" },
         { headers: CORS_HEADERS }
       );
     }

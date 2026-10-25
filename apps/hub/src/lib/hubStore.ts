@@ -117,6 +117,11 @@ export function getVendors() { initHubStore(); return g._hub_vendors!; }
 export function getSettlements() { initHubStore(); return g._hub_settlements!; }
 export function getBroadcasts() { initHubStore(); return g._hub_broadcasts!; }
 export function getConfig() { initHubStore(); return g._hub_config!; }
+export function updateConfig(updates: Partial<HubConfig>): HubConfig {
+  initHubStore();
+  g._hub_config = { ...g._hub_config!, ...updates };
+  return g._hub_config;
+}
 
 // ─── Log Activity ───────────────────────────────────────────────
 export function logActivity(entry: Omit<HubActivityLog, "id" | "timestamp">) {

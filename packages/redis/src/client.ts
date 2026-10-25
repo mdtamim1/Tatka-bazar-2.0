@@ -62,6 +62,9 @@ function createRedisConnection(name: string): Redis {
       return 1000;
     },
     reconnectOnError(err) {
+      if (err.message.includes("max requests limit")) {
+        return false;
+      }
       const targetErrors = ["READONLY", "ETIMEDOUT", "ECONNREFUSED"];
       return targetErrors.some((e) => err.message.includes(e));
     },

@@ -166,6 +166,11 @@ export async function getDbRiders(): Promise<HubRider[]> {
             suspendReason: isSuspended ? (mem?.suspendReason || "Hub admin suspension") : undefined,
             paymentMethod: r.paymentMethod ? (r.paymentMethod as any) : undefined,
             paymentAccount: r.paymentAccount || undefined,
+            // Location — read from DB (set during Hub KYC approval)
+            district: r.district || mem?.district || undefined,
+            thana: r.thana || mem?.thana || undefined,
+            bazar: r.bazar || mem?.bazar || undefined,
+            locationSetAt: r.locationSetAt ? r.locationSetAt.toISOString() : mem?.locationSetAt || undefined,
           };
         });
       }
@@ -177,7 +182,10 @@ export async function getDbRiders(): Promise<HubRider[]> {
   return getRiders();
 }
 
-export async function updateDbRider(id: string, updates: Partial<HubRider>): Promise<HubRider | null> {
+export async function updateDbRider(
+  id: string,
+  updates: Partial<HubRider> & { vendorIds?: string[]; assignedBy?: string }
+): Promise<HubRider | null> {
   // Always update memory store cache
   const memRiders = getRiders();
   const idx = memRiders.findIndex((r) => r.id === id);
@@ -211,10 +219,35 @@ export async function updateDbRider(id: string, updates: Partial<HubRider>): Pro
         data.kycStatus = "REJECTED";
       }
 
+      // Persist location data (district/thana/bazar) set during KYC approval
+      if (updates.district || updates.thana || updates.bazar) {
+        if (updates.district) data.district = updates.district;
+        if (updates.thana) data.thana = updates.thana;
+        if (updates.bazar) data.bazar = updates.bazar;
+        data.locationSetAt = new Date();
+      }
+
       await prisma.deliveryRider.update({
         where: { id },
         data,
       });
+
+      // Persist vendor assignments to VendorRiderAssignment if provided
+      if (updates.vendorIds && Array.isArray(updates.vendorIds)) {
+        await prisma.vendorRiderAssignment.deleteMany({
+          where: { riderId: id },
+        });
+        if (updates.vendorIds.length > 0) {
+          await prisma.vendorRiderAssignment.createMany({
+            data: updates.vendorIds.map((vendorId) => ({
+              vendorId,
+              riderId: id,
+              assignedBy: updates.assignedBy || null,
+            })),
+            skipDuplicates: true,
+          });
+        }
+      }
     }
   } catch (err) {
     console.warn("[Hub DB] updateDbRider failed in DB:", (err as Error).message);
@@ -291,6 +324,11 @@ export async function getDbVendors(): Promise<HubVendor[]> {
             tradeLicense: mem?.tradeLicense || undefined,
             payoutMethod: mem?.payoutMethod || "BKASH",
             payoutAccount: mem?.payoutAccount || v.phone,
+            // Location — read from DB (set during Hub approval)
+            district: v.district || mem?.district || undefined,
+            thana: v.thana || mem?.thana || undefined,
+            bazar: v.bazar || mem?.bazar || undefined,
+            locationSetAt: v.locationSetAt ? v.locationSetAt.toISOString() : mem?.locationSetAt || undefined,
           };
         });
       }
@@ -324,6 +362,14 @@ export async function updateDbVendor(id: string, updates: Partial<HubVendor>): P
         data.status = "APPROVED";
         data.isActive = true;
         if (!memVendors[idx]?.approvedAt) data.approvedAt = new Date();
+      }
+
+      // Persist location assignment set during vendor approval
+      if (updates.district || updates.thana || updates.bazar) {
+        if (updates.district) data.district = updates.district;
+        if (updates.thana) data.thana = updates.thana;
+        if (updates.bazar) data.bazar = updates.bazar;
+        data.locationSetAt = new Date();
       }
 
       await prisma.vendor.update({
@@ -683,7 +729,60 @@ export async function updateDbSettlement(id: string, action: "APPROVE" | "REJECT
 }
 
 export async function getDbDeposits(): Promise<RiderDepositRequest[]> {
+  try {
+    if (await isDbAvailable()) {
+      const records = await (prisma as any).riderCashDeposit.findMany({
+        include: { rider: { select: { name: true, phone: true } } },
+        orderBy: { createdAt: "desc" },
+        take: 100,
+      }).catch(() => null);
+
+      if (records && records.length > 0) {
+        return records.map((d: any) => ({
+          id: d.id,
+          riderId: d.riderId,
+          riderName: d.rider?.name || "Rider",
+          riderPhone: d.rider?.phone || "",
+          amount: Number(d.amount) || 0,
+          paymentMethod: d.paymentMethod || "bKash",
+          transactionId: d.lastFour ? `TXN-***${d.lastFour}` : "N/A",
+          lastFour: d.lastFour || "",
+          status: (d.status || "PENDING") as "PENDING" | "APPROVED" | "REJECTED",
+          requestedAt: d.createdAt.toISOString(),
+          processedAt: d.approvedAt ? d.approvedAt.toISOString() : undefined,
+          processedBy: d.approvedById || undefined,
+          rejectionReason: d.adminNote || undefined,
+        }));
+      }
+    }
+  } catch (err) {
+    console.warn("[Hub DB] getDbDeposits fallback to memory:", (err as Error).message);
+  }
+
   return getDeposits();
+}
+
+export async function updateDbDeposit(
+  id: string,
+  action: "APPROVE" | "REJECT",
+  processedBy: string,
+  reason?: string
+): Promise<void> {
+  try {
+    if (await isDbAvailable()) {
+      await (prisma as any).riderCashDeposit.update({
+        where: { id },
+        data: {
+          status: action === "APPROVE" ? "APPROVED" : "REJECTED",
+          approvedAt: action === "APPROVE" ? new Date() : undefined,
+          approvedById: processedBy,
+          ...(reason && { adminNote: reason }),
+        },
+      }).catch(() => {});
+    }
+  } catch (err) {
+    console.warn("[Hub DB] updateDbDeposit failed:", (err as Error).message);
+  }
 }
 
 export async function resetDbHubData(): Promise<{ success: boolean; message: string }> {

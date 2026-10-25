@@ -6,6 +6,13 @@ function auth(req: NextRequest) {
   return token ? validateSession(token) : null;
 }
 
+// Internal secret sent to rider/vendor portals for webhook authentication.
+// Must match INTERNAL_API_SECRET in rider and vendor portals' .env files.
+const INTERNAL_SECRET =
+  process.env.INTERNAL_API_SECRET ||
+  process.env.INTERNAL_WEBHOOK_SECRET ||
+  "tatka-internal-secret-2026";
+
 // GET /api/proxy/dispatch — fetch active tasks from Rider portal
 export async function GET(req: NextRequest) {
   const session = auth(req);
@@ -22,7 +29,10 @@ export async function GET(req: NextRequest) {
     try {
       const controller = new AbortController();
       const t = setTimeout(() => controller.abort(), 3000);
-      const res = await fetch(url, { signal: controller.signal });
+      const res = await fetch(url, {
+        signal: controller.signal,
+        headers: { "X-Internal-Secret": INTERNAL_SECRET },
+      });
       clearTimeout(t);
       if (res.ok) {
         const json = await res.json();
@@ -49,7 +59,10 @@ export async function POST(req: NextRequest) {
     endpoints.map((url) =>
       fetch(url, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "X-Internal-Secret": INTERNAL_SECRET,
+        },
         body: JSON.stringify(body),
         signal: AbortSignal.timeout(3000),
       })

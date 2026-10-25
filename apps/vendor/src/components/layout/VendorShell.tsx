@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import VendorHeader from "./VendorHeader";
+import VendorSidebar from "./VendorSidebar";
 import VendorMobileNav from "./VendorMobileNav";
 import NotificationDrawer from "@/components/common/NotificationDrawer";
 import RoleSwitcherModal from "@/components/common/RoleSwitcherModal";
@@ -27,6 +28,7 @@ export default function VendorShell({
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [isRoleModalOpen, setIsRoleModalOpen] = useState(false);
   const [isShortcutsOpen, setIsShortcutsOpen] = useState(false);
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
   // Live store values
   const {
@@ -164,19 +166,68 @@ export default function VendorShell({
 
   return (
     <div className="app-shell">
-      {/* Top Header Bar + Duty Switch Bar (Rider Portal Style) */}
+      {/* Top Header Bar */}
       <VendorHeader
         onOpenNotifications={() => setIsNotificationOpen(true)}
         onOpenRoleModal={() => setIsRoleModalOpen(true)}
         onOpenShortcuts={() => setIsShortcutsOpen(true)}
+        onOpenSidebar={() => setIsMobileSidebarOpen(true)}
       />
 
-      {/* Main Operational Surface */}
-      <main style={{ flex: 1 }}>
-        {children}
-      </main>
+      {/* Body: Sidebar + Main content */}
+      <div style={{ display: "flex", flex: 1, overflow: "hidden", minHeight: 0 }}>
 
-      {/* Bottom Navigation (Fixed on all screens, Rider Portal Style) */}
+        {/* ── Desktop Sidebar (lg+) ── */}
+        <div
+          className="hidden lg:flex flex-shrink-0"
+          style={{ height: "calc(100vh - 64px)", position: "sticky", top: 64 }}
+        >
+          <VendorSidebar />
+        </div>
+
+        {/* ── Mobile Sidebar Overlay ── */}
+        {isMobileSidebarOpen && (
+          <div
+            style={{
+              position: "fixed",
+              inset: 0,
+              zIndex: 50,
+              display: "flex",
+            }}
+          >
+            {/* Backdrop */}
+            <div
+              style={{
+                position: "absolute",
+                inset: 0,
+                background: "rgba(5,8,16,0.7)",
+                backdropFilter: "blur(4px)",
+              }}
+              onClick={() => setIsMobileSidebarOpen(false)}
+            />
+            {/* Drawer */}
+            <div
+              style={{
+                position: "relative",
+                zIndex: 1,
+                height: "100%",
+                display: "flex",
+                flexDirection: "column",
+                animation: "slideInLeft 0.25s ease",
+              }}
+            >
+              <VendorSidebar onClose={() => setIsMobileSidebarOpen(false)} />
+            </div>
+          </div>
+        )}
+
+        {/* ── Main Content ── */}
+        <main style={{ flex: 1, overflow: "auto", minWidth: 0 }}>
+          {children}
+        </main>
+      </div>
+
+      {/* Bottom Navigation (Mobile only) */}
       <VendorMobileNav
         onOpenNotifications={() => setIsNotificationOpen(true)}
         onOpenRoleModal={() => setIsRoleModalOpen(true)}

@@ -15,14 +15,30 @@ import { useVendorStore } from "@/store/vendorStore";
 import { Product } from "@/types/vendor";
 import { translations } from "@/utils/translations";
 import StockAdjustModal from "@/components/common/StockAdjustModal";
+import { apiFetch } from "@/lib/api";
 
 export default function InventoryPage() {
-  const { language, products, stockLogs, profile, updateProfile } =
+  const { language, products, stockLogs, profile, updateProfile, setProducts } =
     useVendorStore();
   const t = translations[language];
 
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    try {
+      const res = await apiFetch<any[]>("/api/vendor-portal/products");
+      if (res.success && Array.isArray(res.data)) {
+        setProducts(res.data);
+      }
+    } catch {
+      // silent
+    } finally {
+      setRefreshing(false);
+    }
+  };
 
   const inStockCount = products.filter(
     (p) => p.stockQty > p.lowStockThreshold
@@ -57,23 +73,33 @@ export default function InventoryPage() {
           <p className="text-xs text-slate-400 mt-0.5">{t.inventorySub}</p>
         </div>
 
-        {/* Auto-Hide Zero Stock Toggle */}
-        <div className="flex items-center gap-2 p-2 rounded-lg bg-[#111C20] border border-[#20333B] text-xs">
-          <input
-            type="checkbox"
-            id="autoHide"
-            checked={profile.autoHideZeroStock}
-            onChange={(e) =>
-              updateProfile({ autoHideZeroStock: e.target.checked })
-            }
-            className="w-4 h-4 rounded text-emerald-500 accent-emerald-500 cursor-pointer"
-          />
-          <label
-            htmlFor="autoHide"
-            className="text-slate-300 font-medium cursor-pointer"
+        <div className="flex items-center gap-3">
+          <button
+            onClick={handleRefresh}
+            className="p-2 rounded-lg bg-[#111C20] border border-[#20333B] text-slate-300 hover:text-white transition-colors"
+            title="রিফ্রেশ"
           >
-            {t.autoHideStockDesc}
-          </label>
+            <RefreshCw size={14} className={refreshing ? "animate-spin" : ""} />
+          </button>
+
+          {/* Auto-Hide Zero Stock Toggle */}
+          <div className="flex items-center gap-2 p-2 rounded-lg bg-[#111C20] border border-[#20333B] text-xs">
+            <input
+              type="checkbox"
+              id="autoHide"
+              checked={profile.autoHideZeroStock}
+              onChange={(e) =>
+                updateProfile({ autoHideZeroStock: e.target.checked })
+              }
+              className="w-4 h-4 rounded text-emerald-500 accent-emerald-500 cursor-pointer"
+            />
+            <label
+              htmlFor="autoHide"
+              className="text-slate-300 font-medium cursor-pointer"
+            >
+              {t.autoHideStockDesc}
+            </label>
+          </div>
         </div>
       </div>
 

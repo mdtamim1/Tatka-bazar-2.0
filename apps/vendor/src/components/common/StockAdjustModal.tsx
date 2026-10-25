@@ -1,10 +1,11 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Package, X, ArrowRight, Save } from "lucide-react";
+import { Package, X, Save, Loader2 } from "lucide-react";
 import { useVendorStore } from "@/store/vendorStore";
 import { Product, StockAdjustmentReason } from "@/types/vendor";
 import { translations } from "@/utils/translations";
+import { apiFetch } from "@/lib/api";
 
 interface StockAdjustModalProps {
   isOpen: boolean;
@@ -23,12 +24,15 @@ export default function StockAdjustModal({
   const [newQty, setNewQty] = useState<number>(0);
   const [reason, setReason] = useState<StockAdjustmentReason>("RESTOCK");
   const [notes, setNotes] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [apiError, setApiError] = useState<string | null>(null);
 
   useEffect(() => {
     if (product) {
       setNewQty(product.stockQty);
       setReason("RESTOCK");
       setNotes("");
+      setApiError(null);
     }
   }, [product, isOpen]);
 
@@ -36,10 +40,31 @@ export default function StockAdjustModal({
 
   const delta = newQty - product.stockQty;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    adjustStock(product.id, newQty, reason, notes);
-    onClose();
+    setSaving(true);
+    setApiError(null);
+
+    try {
+      // 🔒 PATCH to DB — persist stock change before updating Zustand
+      const res = await apiFetch("/api/vendor-portal/products", {
+        method: "PATCH",
+        body: JSON.stringify({
+          productId: product.id,
+          stock: newQty,
+        }),
+      });
+
+      if (!res.success) throw new Error(res.error || "স্টক আপডেট ব্যর্থ হয়েছে।");
+
+      // Update Zustand store after DB success
+      adjustStock(product.id, newQty, reason, notes);
+      onClose();
+    } catch (err: any) {
+      setApiError(err.message || "নেটওয়ার্ক সমস্যা হয়েছে।");
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -134,24 +159,32 @@ export default function StockAdjustModal({
               onChange={(e) => setNotes(e.target.value)}
               placeholder="e.g. Crate count mismatch, batch arrival #12"
               className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-emerald-500 focus:bg-white transition-colors"
-            >
-            </input>
+            />
           </div>
+
+          {/* Error */}
+          {apiError && (
+            <div style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.3)", borderRadius: 10, padding: "10px 14px", color: "#DC2626", fontSize: "0.78rem", fontWeight: 600 }}>
+              ⚠️ {apiError}
+            </div>
+          )}
 
           <div className="pt-3 border-t border-slate-100 flex items-center justify-end gap-2.5">
             <button
               type="button"
               onClick={onClose}
-              className="py-2.5 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition-colors"
+              disabled={saving}
+              className="py-2.5 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition-colors disabled:opacity-50"
             >
               {t.cancelBtn}
             </button>
             <button
               type="submit"
-              className="py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold flex items-center gap-1.5 shadow-sm transition-all active:scale-95"
+              disabled={saving}
+              className="py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold flex items-center gap-1.5 shadow-sm transition-all active:scale-95 disabled:opacity-60"
             >
-              <Save size={15} />
-              <span>{t.adjustStockBtn}</span>
+              {saving ? <Loader2 size={15} className="animate-spin" /> : <Save size={15} />}
+              <span>{saving ? "সেভ হচ্ছে..." : t.adjustStockBtn}</span>
             </button>
           </div>
         </form>

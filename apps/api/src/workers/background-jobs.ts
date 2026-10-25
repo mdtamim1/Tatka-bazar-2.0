@@ -149,7 +149,7 @@ export function startBackgroundWorkers(): void {
         // TODO: integrate with BD SMS provider (e.g., SSL Commerz SMS, Bulk SMS BD)
       }
     },
-    { pollIntervalMs: 1000 }
+    { pollIntervalMs: 300, idlePollIntervalMs: 15000 }
   );
 
   // 2. Dispatch & Trip Summary Worker
@@ -162,7 +162,7 @@ export function startBackgroundWorkers(): void {
         console.log(`[Worker:TripSummary] Processed background trip metrics for assignment ${assignmentId}, rider ${riderId}, order ${orderId}`);
       }
     },
-    { pollIntervalMs: 1500 }
+    { pollIntervalMs: 500, idlePollIntervalMs: 20000 }
   );
 }
 

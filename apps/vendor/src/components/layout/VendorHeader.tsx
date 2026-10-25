@@ -25,12 +25,14 @@ interface VendorHeaderProps {
   onOpenNotifications: () => void;
   onOpenRoleModal?: () => void;
   onOpenShortcuts?: () => void;
+  onOpenSidebar?: () => void;
 }
 
 export default function VendorHeader({
   onToggleMobileSidebar,
   onOpenNotifications,
   onOpenRoleModal,
+  onOpenSidebar,
 }: VendorHeaderProps) {
   const {
     language,
@@ -68,6 +70,31 @@ export default function VendorHeader({
         </div>
 
         <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+
+          {/* Hamburger button — mobile sidebar toggle (hidden on desktop) */}
+          <button
+            id="mobile-sidebar-btn"
+            type="button"
+            aria-label="মেনু খুলুন"
+            onClick={onOpenSidebar || onToggleMobileSidebar}
+            className="lg:hidden"
+            style={{
+              background: "rgba(255,255,255,0.06)",
+              border: "1px solid rgba(255,255,255,0.10)",
+              borderRadius: 10,
+              width: 38,
+              height: 38,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: "#A8C0D8",
+              cursor: "pointer",
+            }}
+          >
+            <svg fill="none" viewBox="0 0 24 24" style={{ width: 18, height: 18, stroke: "currentColor" }}>
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          </button>
 
           {/* Central Support Chat Button */}
           <button

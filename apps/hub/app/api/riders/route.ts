@@ -115,7 +115,11 @@ export async function PATCH(req: NextRequest) {
     updated.balance = (prev.balance || 0) + Number(body.balanceDelta);
   }
 
-  await updateDbRider(body.id, updated);
+  await updateDbRider(body.id, {
+    ...updated,
+    vendorIds: body.vendorIds,
+    assignedBy: session.memberId,
+  });
 
   await logDbActivity({
     actorId: session.memberId,

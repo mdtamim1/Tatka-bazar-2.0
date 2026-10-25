@@ -34,6 +34,14 @@ const ADMIN_ENDPOINTS = [
   "https://tatka-bazar-2-0-admin.vercel.app/api/dispatch",
 ];
 
+// Internal secret for webhook authentication.
+// Must match INTERNAL_API_SECRET in rider and vendor portals' .env files.
+// Falls back to INTERNAL_WEBHOOK_SECRET for backward compatibility.
+const INTERNAL_SECRET =
+  process.env.INTERNAL_API_SECRET ||
+  process.env.INTERNAL_WEBHOOK_SECRET ||
+  "tatka-internal-secret-2026";
+
 export async function broadcastToPortals(event: PortalSyncEvent): Promise<void> {
   // 1. Redis Pub/Sub Realtime Broadcast (Non-blocking)
   publishEvent(REDIS_CHANNELS.PORTAL_EVENTS, event.type, event).catch(() => {});
@@ -41,7 +49,7 @@ export async function broadcastToPortals(event: PortalSyncEvent): Promise<void> 
   // 2. Redis Durable Queue for Guaranteed Delivery with Retries
   enqueueJob(QUEUES.SYNC, event, { maxRetries: 3 }).catch(() => {});
 
-  // 3. Direct HTTP Webhooks (Fire and forget)
+  // 3. Direct HTTP Webhooks with X-Internal-Secret authentication
   const baseTargets = event.targetType === "RIDER" ? RIDER_ENDPOINTS : VENDOR_ENDPOINTS;
   const targets = [...baseTargets, ...ADMIN_ENDPOINTS];
 
@@ -51,7 +59,11 @@ export async function broadcastToPortals(event: PortalSyncEvent): Promise<void> 
       const timeoutId = setTimeout(() => controller.abort(), 2500);
       await fetch(url, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          // Added: secret header so receiving portals can verify the request origin
+          "X-Internal-Secret": INTERNAL_SECRET,
+        },
         body: JSON.stringify(event),
         signal: controller.signal,
       });

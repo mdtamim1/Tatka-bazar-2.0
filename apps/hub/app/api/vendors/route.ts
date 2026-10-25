@@ -12,11 +12,30 @@ function auth(req: NextRequest) {
   return token ? validateSession(token) : null;
 }
 
-// GET /api/vendors
+// GET /api/vendors — supports ?status=APPROVED&district=Dhaka&thana=Mirpur&bazar=Mirpur-10+Bazar
 export async function GET(req: NextRequest) {
   const session = auth(req);
   if (!session) return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
-  const vendors = await getDbVendors();
+
+  const { searchParams } = new URL(req.url);
+  const statusFilter = searchParams.get("status");
+  const districtFilter = searchParams.get("district");
+  const thanaFilter = searchParams.get("thana");
+  const bazarFilter = searchParams.get("bazar");
+
+  let vendors = await getDbVendors();
+
+  if (statusFilter) {
+    vendors = vendors.filter((v) =>
+      statusFilter === "APPROVED"
+        ? v.status === "ACTIVE"
+        : v.status === statusFilter
+    );
+  }
+  if (districtFilter) vendors = vendors.filter((v) => v.district === districtFilter);
+  if (thanaFilter) vendors = vendors.filter((v) => v.thana === thanaFilter);
+  if (bazarFilter) vendors = vendors.filter((v) => v.bazar === bazarFilter);
+
   return NextResponse.json({ success: true, data: vendors });
 }
 

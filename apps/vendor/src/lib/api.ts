@@ -5,6 +5,16 @@ export interface ApiResponse<T = any> {
   isSuspended?: boolean;
 }
 
+// ─────────────────────────────────────────────────────────────────
+// Token Helpers
+// Tokens are stored in both:
+//   1. localStorage  — for client-side reads (JS)
+//   2. document.cookie — for server-side middleware reads (Edge)
+// ─────────────────────────────────────────────────────────────────
+
+const COOKIE_NAME = "vendor_token";
+const COOKIE_OPTIONS = "path=/; SameSite=Lax; max-age=604800"; // 7 days, match JWT expiry
+
 export function getToken(): string | null {
   if (typeof window === "undefined") return null;
   return localStorage.getItem("vendor_token");
@@ -13,12 +23,18 @@ export function getToken(): string | null {
 export function setToken(token: string) {
   if (typeof window === "undefined") return;
   localStorage.setItem("vendor_token", token);
+  // 🔒 Also set as cookie so Next.js middleware can read it server-side
+  // Use Secure flag on HTTPS (production)
+  const isSecure = window.location.protocol === "https:";
+  document.cookie = `${COOKIE_NAME}=${token}; ${COOKIE_OPTIONS}${isSecure ? "; Secure" : ""}`;
 }
 
 export function clearToken() {
   if (typeof window === "undefined") return;
   localStorage.removeItem("vendor_token");
   localStorage.removeItem("vendor_user");
+  // Also clear the cookie
+  document.cookie = `${COOKIE_NAME}=; path=/; max-age=0; SameSite=Lax`;
 }
 
 export function getStoredUser(): any | null {
@@ -33,8 +49,15 @@ export function getStoredUser(): any | null {
 
 export function setStoredUser(user: any) {
   if (typeof window === "undefined") return;
-  localStorage.setItem("vendor_user", typeof user === "string" ? user : JSON.stringify(user));
+  localStorage.setItem(
+    "vendor_user",
+    typeof user === "string" ? user : JSON.stringify(user)
+  );
 }
+
+// ─────────────────────────────────────────────────────────────────
+// Authenticated Fetch Wrapper
+// ─────────────────────────────────────────────────────────────────
 
 export async function apiFetch<T = any>(
   endpoint: string,
@@ -44,7 +67,7 @@ export async function apiFetch<T = any>(
 
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
-    ...(options.headers as Record<string, string> || {}),
+    ...((options.headers as Record<string, string>) || {}),
   };
 
   if (token) {
@@ -61,7 +84,11 @@ export async function apiFetch<T = any>(
 
     if (res.status === 401) {
       clearToken();
-      if (typeof window !== "undefined" && !window.location.pathname.startsWith("/login") && !window.location.pathname.startsWith("/signup")) {
+      if (
+        typeof window !== "undefined" &&
+        !window.location.pathname.startsWith("/login") &&
+        !window.location.pathname.startsWith("/signup")
+      ) {
         window.location.href = "/login";
       }
       return {

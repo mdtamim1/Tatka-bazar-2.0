@@ -1,4 +1,4 @@
-import { getRedisClient } from "./client.js";
+import { getRedisClient } from "./client";
 
 // ============================================================
 // Tatka Bazar — Redis Caching Service

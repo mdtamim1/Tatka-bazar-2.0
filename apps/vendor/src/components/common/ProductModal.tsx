@@ -1,10 +1,11 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { X, PackagePlus, Save } from "lucide-react";
+import { X, PackagePlus, Save, Loader2 } from "lucide-react";
 import { useVendorStore } from "@/store/vendorStore";
 import { Product, ProductCategory, PricingType, WeightUnit } from "@/types/vendor";
 import { translations } from "@/utils/translations";
+import { apiFetch } from "@/lib/api";
 
 interface ProductModalProps {
   isOpen: boolean;
@@ -17,8 +18,10 @@ export default function ProductModal({
   productToEdit,
   onClose,
 }: ProductModalProps) {
-  const { language, addProduct, updateProduct, profile } = useVendorStore();
+  const { language, addProduct, updateProduct, deleteProduct, profile } = useVendorStore();
   const t = translations[language];
+  const [saving, setSaving] = useState(false);
+  const [apiError, setApiError] = useState<string | null>(null);
 
   const [name, setName] = useState("");
   const [nameBn, setNameBn] = useState("");
@@ -74,50 +77,81 @@ export default function ProductModal({
 
   if (!isOpen) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setSaving(true);
+    setApiError(null);
 
-    if (productToEdit) {
-      updateProduct(productToEdit.id, {
-        name,
-        nameBn,
-        category,
-        pricingType,
-        unit,
-        pricePerUnit,
-        comparePrice,
-        sku,
-        stockQty,
-        lowStockThreshold,
-        isWholesaleEligible,
-        wholesaleMinQty,
-        imageUrl,
-        description,
-        descriptionBn,
-      });
-    } else {
-      addProduct({
-        vendorId: profile.id,
-        name,
-        nameBn,
-        category,
-        pricingType,
-        unit,
-        pricePerUnit,
-        comparePrice,
-        sku,
-        stockQty,
-        lowStockThreshold,
-        isPublished: true,
-        isWholesaleEligible,
-        wholesaleMinQty,
-        imageUrl,
-        description,
-        descriptionBn,
-      });
+    const payload = {
+      name: nameBn || name,  // prefer Bangla name as canonical
+      nameBn,
+      price: pricePerUnit,
+      comparePrice,
+      stock: stockQty,
+      description: descriptionBn || description,
+      imageUrl,
+      sku,
+      isPublished: true,
+    };
+
+    try {
+      if (productToEdit) {
+        // 🔒 PATCH — update in DB first, then update Zustand
+        const res = await apiFetch("/api/vendor-portal/products", {
+          method: "PATCH",
+          body: JSON.stringify({ productId: productToEdit.id, ...payload }),
+        });
+        if (!res.success) throw new Error(res.error || "আপডেট ব্যর্থ হয়েছে।");
+        updateProduct(productToEdit.id, {
+          name,
+          nameBn,
+          category,
+          pricingType,
+          unit,
+          pricePerUnit,
+          comparePrice,
+          sku,
+          stockQty,
+          lowStockThreshold,
+          isWholesaleEligible,
+          wholesaleMinQty,
+          imageUrl,
+          description,
+          descriptionBn,
+        });
+      } else {
+        // 🔒 POST — create in DB first, then update Zustand
+        const res = await apiFetch("/api/vendor-portal/products", {
+          method: "POST",
+          body: JSON.stringify(payload),
+        });
+        if (!res.success) throw new Error(res.error || "পণ্য তৈরি ব্যর্থ হয়েছে।");
+        addProduct({
+          vendorId: profile.id,
+          name,
+          nameBn,
+          category,
+          pricingType,
+          unit,
+          pricePerUnit,
+          comparePrice,
+          sku,
+          stockQty,
+          lowStockThreshold,
+          isPublished: true,
+          isWholesaleEligible,
+          wholesaleMinQty,
+          imageUrl,
+          description,
+          descriptionBn,
+        });
+      }
+      onClose();
+    } catch (err: any) {
+      setApiError(err.message || "অজানা সমস্যা হয়েছে।");
+    } finally {
+      setSaving(false);
     }
-
-    onClose();
   };
 
   return (
@@ -354,20 +388,29 @@ export default function ProductModal({
             )}
           </div>
 
+          {/* Error message */}
+          {apiError && (
+            <div style={{ background: "rgba(239,68,68,0.12)", border: "1px solid rgba(239,68,68,0.3)", borderRadius: 10, padding: "10px 14px", color: "#FCA5A5", fontSize: "0.78rem", fontWeight: 600 }}>
+              ⚠️ {apiError}
+            </div>
+          )}
+
           <div className="pt-2 border-t border-[#20333B] flex items-center justify-end gap-2.5">
             <button
               type="button"
               onClick={onClose}
-              className="py-2 px-3 rounded-lg bg-[#152227] hover:bg-[#1c2c33] border border-[#20333B] text-slate-300 text-xs font-medium"
+              disabled={saving}
+              className="py-2 px-3 rounded-lg bg-[#152227] hover:bg-[#1c2c33] border border-[#20333B] text-slate-300 text-xs font-medium disabled:opacity-50"
             >
               {t.cancelBtn}
             </button>
             <button
               type="submit"
-              className="py-2 px-4 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold flex items-center gap-1.5 shadow-md shadow-emerald-950"
+              disabled={saving}
+              className="py-2 px-4 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold flex items-center gap-1.5 shadow-md shadow-emerald-950 disabled:opacity-60"
             >
-              <Save size={15} />
-              <span>{t.saveProductBtn}</span>
+              {saving ? <Loader2 size={15} className="animate-spin" /> : <Save size={15} />}
+              <span>{saving ? "সেভ হচ্ছে..." : t.saveProductBtn}</span>
             </button>
           </div>
         </form>

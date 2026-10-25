@@ -1,4 +1,4 @@
-import { getRedisClient, getRedisSubscriber, isRedisConnected } from "./client.js";
+import { getRedisClient, getRedisSubscriber, isRedisConnected } from "./client";
 
 // ============================================================
 // Tatka Bazar — Redis Pub/Sub Event Bus
